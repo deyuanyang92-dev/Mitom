@@ -114,3 +114,10 @@ def test_rrna_hmm_lookup_by_phylum(tmp_path):
     (tmp_path / "Annelida.rrnL.hmm").write_text("")
     assert mc.rrna_hmm(tmp_path, "annelida", "rrnL") == tmp_path / "Annelida.rrnL.hmm"
     assert mc.rrna_hmm(tmp_path, "Mollusca", "rrnL") is None and mc.rrna_hmm(tmp_path, None, "rrnS") is None
+
+
+def test_clean_protein_for_exonerate():
+    """RefSeq proteins carry J / B / Z / U / O and a trailing *: exonerate stops on them (NC_037188.1, nad5 reference
+    with J at residue 324)."""
+    assert mc.clean_protein("MAJLBZUO*") == "MAXLXXXX"
+    assert mc.clean_protein("mkvl") == "MKVL"

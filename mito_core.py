@@ -164,12 +164,17 @@ def loci(hits: List[Hit]) -> List[List[Hit]]:
     return sorted(out, key=lambda L: -max(x.bits for x in L))
 
 
+def clean_protein(seq: str) -> str:
+    """exonerate stops on letters outside the 20 amino acids + X (RefSeq proteins carry J, B, Z, U, O, *)."""
+    return re.sub(r"[^ACDEFGHIKLMNPQRSTVWY]", "X", seq.upper().rstrip("*"))
+
+
 def reference_proteins(db_fasta: Path, ids: List[str]) -> Dict[str, str]:
     want = set(ids)
     out = {}
     for r in SeqIO.parse(str(db_fasta), "fasta"):
         if r.id in want:
-            out[r.id] = str(r.seq)
+            out[r.id] = clean_protein(str(r.seq))
             if len(out) == len(want):
                 break
     return out
@@ -183,11 +188,15 @@ def exonerate_best(exonerate: str, window: str, prots: Dict[str, str], code: int
     best = None
     for rid, seq in prots.items():
         (tmp / "q.fa").write_text(f">{rid}\n{seq}\n")
-        p = run([exonerate, "--model", EXONERATE_MODEL, "--geneticcode", str(code), "--bestn", "1", "--showalignment", "no",
+        try:
+            p = run([exonerate, "--model", EXONERATE_MODEL, "--geneticcode", str(code), "--bestn", "1", "--showalignment", "no",
                  "--showvulgar", "no", "--score", str(EXONERATE_MIN_SCORE),
                  "--ryo", "RYO\t%qi\t%ql\t%qab\t%qae\t%tab\t%tae\t%s\n",
                  *(["--exhaustive", "yes"] if EXONERATE_MODEL.endswith("bestfit") else []),   # non-local models need full DP
                  str(tmp / "q.fa"), str(tmp / "w.fa")], log)
+        except RuntimeError as exc:                        # one bad reference must not lose the gene
+            log.warning(f"[core] exonerate with {rid}: {exc}")
+            continue
         for line in p.stdout.splitlines():
             if line.startswith("RYO\t"):
                 c = line.split("\t")

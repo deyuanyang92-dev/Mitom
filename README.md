@@ -98,7 +98,7 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。`
 
 `--core native`（默认）= MitoM 自己的核心（`mito_core.py`：blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m；rRNA 用按门的 profile HMM；tRNA 用 MiTFi 协方差模型 + MiTFi），只需一个 conda 环境，每条记录约 1–2 分钟；`--core hybrid` = MitoZ 蛋白基因/rRNA + MITOS2 tRNA + MITOS2 漏注救回（需另装 mitoz、mitos 环境）；`--core mitoz` = 只用 MitoZ 作为核心。三者都运行全部 MitoM 自有步骤。
 
-**Benchmark（多类群，2026-10）/ Metazoa benchmark**：8 个门 × 3 条 RefSeq 线粒体基因组（环节、节肢、脊索、刺胞、棘皮、软体、线虫、扁形），裸序列输入，与 NCBI 注释逐基因比较，并用 table2asn 检查能否直接提交（`docs/benchmark_metazoa_2026-10.md`，数据 `benchmark/results/metazoa_mini_2026-10/`）。四个工具都完成的 17 条：蛋白基因两端完全一致 MitoM 82%、MitoZ 78%、MITOS2 51%、MitoFinder 59%；rRNA 两端一致 38% / 25% / 16% / 9%；tRNA 找回 98% / 93% / 96% / 97%；记录无明显错误 10/17、1/17、0/17、0/17；0 个 NCBI ERROR 的记录 MitoM 17/24，MitoZ 4/18，MITOS2 与 MitoFinder 0。每条用时中位数 175 s / 249 s / 385 s / 204 s；峰值内存 0.7 / 0.5 / 1.0 / 0.24 GB（MitoM 的内存来自其内部的 MITOS2 tRNA 搜索）。MitoZ 不支持刺胞和扁形动物（无 clade）；MitoFinder 需要用户提供近缘参考基因组，2 条因无近缘参考失败。安装、功能、便捷性的对比见同一文档。 **原生核心（2026-10-22，默认 `--core native`，不再调用 MitoZ）在同一 24 条上**：蛋白基因两端一致 247/306（MitoZ 路线 240，MitoZ 174/230；17 条共同记录 82.6% / 82.1% / 78.4%），rRNA 3 nt 内 50%（48% / 27%），tRNA 3 nt 内 81%（81% / 79%），每条用时中位 109 s（175 / 249），峰值内存 0.32 GB（0.73 / 0.49），NCBI ERROR 记录 1（2 / 13）；只需一个 conda 环境。表见 `benchmark/results/metazoa_mini_2026-10/report_native.md`。
+**Benchmark（多类群，2026-10）/ Metazoa benchmark**：8 个门 × 3 条 RefSeq 线粒体基因组（环节、节肢、脊索、刺胞、棘皮、软体、线虫、扁形），裸序列输入，与 NCBI 注释逐基因比较，并用 table2asn 检查能否直接提交（`docs/benchmark_metazoa_2026-10.md`，数据 `benchmark/results/metazoa_mini_2026-10/`）。四个工具都完成的 17 条：蛋白基因两端完全一致 MitoM 82%、MitoZ 78%、MITOS2 51%、MitoFinder 59%；rRNA 两端一致 38% / 25% / 16% / 9%；tRNA 找回 98% / 93% / 96% / 97%；记录无明显错误 10/17、1/17、0/17、0/17；0 个 NCBI ERROR 的记录 MitoM 17/24，MitoZ 4/18，MITOS2 与 MitoFinder 0。每条用时中位数 175 s / 249 s / 385 s / 204 s；峰值内存 0.7 / 0.5 / 1.0 / 0.24 GB（MitoM 的内存来自其内部的 MITOS2 tRNA 搜索）。MitoZ 不支持刺胞和扁形动物（无 clade）；MitoFinder 需要用户提供近缘参考基因组，2 条因无近缘参考失败。安装、功能、便捷性的对比见同一文档。 **原生核心（2026-10-22，默认 `--core native`，不再调用 MitoZ）在同一 24 条上**：蛋白基因两端一致 247/306（MitoZ 路线 240，MitoZ 174/230；17 条共同记录 82.6% / 82.1% / 78.4%），rRNA 3 nt 内 50%（48% / 27%），tRNA 3 nt 内 81%（81% / 79%），每条用时中位 109 s（175 / 249），峰值内存 0.32 GB（0.73 / 0.49），NCBI ERROR 记录 1（2 / 13）；只需一个 conda 环境。表见 `benchmark/results/metazoa_mini_2026-10/report_native.md`。 在 30 个门 173 条 RefSeq 记录上：蛋白基因两端一致 79.0%（MitoZ 路线 66.7%），30 个门中 25 个提升，NCBI ERROR 记录 11 vs 113，每条用时中位 146 s vs 325 s（`benchmark/results/metazoa_173_2026-10/`）。
 On 17 records all four tools finished (8 phyla), protein genes with both ends exactly as RefSeq: MitoM 82 %, MitoZ 78 %, MITOS2 51 %, MitoFinder 59 %; records with zero NCBI table2asn errors: MitoM 17 of 24, MitoZ 4 of 18, MITOS2 and MitoFinder none. Details, installation and feature comparison: `docs/benchmark_metazoa_2026-10.md`.
 
 **Benchmark（环节动物，2026-10）/ Annelida benchmark**：40 条 RefSeq 环节动物线粒体基因组，裸序列输入，与 NCBI 注释比较（`docs/benchmark_annelida_2026-10.md`，数据 `benchmark/results/annelida_2026-10/`）。蛋白基因两端完全一致：MitoM 80%、MitoZ 63%、MITOS2 54%、MitoFinder 48%；有明显错误（缺基因、内部终止、重复、边界差 >30 nt）的记录：MitoM 16/40、MitoZ 36/40、MITOS2 39/40、MitoFinder 34/39；每条用时中位数 MitoM 100 s、MitoZ 244 s、MITOS2 353 s、MitoFinder 206 s。
@@ -116,9 +116,9 @@ On 17 records all four tools finished (8 phyla), protein genes with both ends ex
 
 **第三方软件 / Third-party tools**
 
-本软件调用的软件不随本仓库分发，需要单独安装（`install.sh`），并各自保留原有许可证：例如 MitoZ 为 GPL-3.0，MITOS2 为 MIT（据 bioconda 包信息）。
+默认核心（`--core native`）调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）由 `install.sh` 装入 conda 环境，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`install.sh` 另外下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MitoZ（GPL-3.0）只在 `--core hybrid` / `--core mitoz` 时需要，并不随本仓库分发。
 
-The tools that MitoM runs are not distributed with this repository and are installed separately (`install.sh`). Each keeps its own license, e.g. MitoZ GPL-3.0 and MITOS2 MIT (per their bioconda packages).
+The programs the default core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) are installed into a conda environment by `install.sh` and keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `install.sh` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MitoZ (GPL-3.0) is needed only for `--core hybrid` / `--core mitoz` and is not distributed here.
 
 **致谢 / Acknowledgements**
 
@@ -333,12 +333,13 @@ In `sample_dir` mode, exact filenames are preferred. If exact names are absent, 
 → 统计和合并输出
 ```
 
-### 用 Conda 环境运行 / Run With A Conda MitoZ Environment
+### 用 MitoZ 核心运行（可选）/ Run With The MitoZ Core (optional, --core hybrid)
 
 ```bash
 python3 batch_mitoz.py run \
   -i /path/to/input_fasta_or_genbank \
   -o mitoz_run_out \
+  --core hybrid \
   --conda_env_mitoz mitoz3.6 \
   --scheduler_backend threads \
   --threads 8 \

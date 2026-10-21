@@ -1,0 +1,347 @@
+tool	kind	stratum	value	n_truth	found	recall	exact	le3	gt3	strand_error	name_error	name_unverifiable	missed	fp	records	ok	failed	timeout	unsupported	with_obvious_error
+mitom_native	PCG	all	all	2178	2154	0.989	1720	134	300	0	3	0	21	29						
+mitom_native	PCG	annotation_method	MitoFinder	26	26	1.0	20	1	5	0	0	0	0	0						
+mitom_native	PCG	annotation_method	MitoZ	52	52	1.0	41	3	8	0	0	0	0	0						
+mitom_native	PCG	annotation_method	unknown	2100	2076	0.9886	1659	130	287	0	3	0	21	29						
+mitom_native	PCG	common_ok	yes	2178	2154	0.989	1720	134	300	0	3	0	21	29						
+mitom_native	PCG	evidence_tier	A-longread	152	147	0.9671	108	11	28	0	1	0	4	7						
+mitom_native	PCG	evidence_tier	A-transcriptome	64	64	1.0	60	1	3	0	0	0	0	0						
+mitom_native	PCG	evidence_tier	B	1962	1943	0.9903	1552	122	269	0	2	0	17	22						
+mitom_native	PCG	phylum	Acanthocephala	72	72	1.0	49	6	17	0	0	0	0	0						
+mitom_native	PCG	phylum	Annelida	156	156	1.0	123	13	20	0	0	0	0	0						
+mitom_native	PCG	phylum	Arthropoda	156	156	1.0	129	9	18	0	0	0	0	0						
+mitom_native	PCG	phylum	Brachiopoda	77	77	1.0	52	3	22	0	0	0	0	0						
+mitom_native	PCG	phylum	Bryozoa	77	77	1.0	60	9	8	0	0	0	0	0						
+mitom_native	PCG	phylum	Chaetognatha	55	55	1.0	45	2	8	0	0	0	0	2						
+mitom_native	PCG	phylum	Chordata	156	156	1.0	130	22	4	0	0	0	0	0						
+mitom_native	PCG	phylum	Cnidaria	155	154	0.9935	135	1	18	0	0	0	1	1						
+mitom_native	PCG	phylum	Ctenophora	42	36	0.8571	19	4	13	0	2	0	4	12						
+mitom_native	PCG	phylum	Echinodermata	156	156	1.0	135	5	16	0	0	0	0	0						
+mitom_native	PCG	phylum	Entoprocta	26	26	1.0	22	4	0	0	0	0	0	0						
+mitom_native	PCG	phylum	Gastrotricha	13	13	1.0	13	0	0	0	0	0	0	0						
+mitom_native	PCG	phylum	Gnathostomulida	26	25	0.9615	21	0	4	0	0	0	1	1						
+mitom_native	PCG	phylum	Hemichordata	78	78	1.0	56	5	17	0	0	0	0	0						
+mitom_native	PCG	phylum	Kinorhyncha	38	38	1.0	33	0	5	0	0	0	0	0						
+mitom_native	PCG	phylum	Mollusca	153	151	0.9869	117	5	29	0	0	0	2	3						
+mitom_native	PCG	phylum	Nematoda	149	146	0.9799	119	9	18	0	1	0	2	0						
+mitom_native	PCG	phylum	Nematomorpha	26	23	0.8846	6	5	12	0	0	0	3	1						
+mitom_native	PCG	phylum	Nemertea	78	78	1.0	65	6	7	0	0	0	0	0						
+mitom_native	PCG	phylum	Onychophora	52	51	0.9808	36	6	9	0	0	0	1	1						
+mitom_native	PCG	phylum	Orthonectida	13	11	0.8462	5	2	4	0	0	0	2	0						
+mitom_native	PCG	phylum	Phoronida	13	13	1.0	11	1	1	0	0	0	0	0						
+mitom_native	PCG	phylum	Placozoa	37	34	0.9189	29	1	4	0	0	0	3	2						
+mitom_native	PCG	phylum	Platyhelminthes	145	144	0.9931	117	2	25	0	0	0	1	2						
+mitom_native	PCG	phylum	Porifera	78	78	1.0	75	0	3	0	0	0	0	0						
+mitom_native	PCG	phylum	Priapulida	13	13	1.0	8	0	5	0	0	0	0	0						
+mitom_native	PCG	phylum	Rotifera	24	23	0.9583	19	2	2	0	0	0	1	3						
+mitom_native	PCG	phylum	Tardigrada	39	39	1.0	30	4	5	0	0	0	0	0						
+mitom_native	PCG	phylum	Xenacoelomorpha	75	75	1.0	61	8	6	0	0	0	0	1						
+mitom_native	PCG	post_cutoff	no	1225	1215	0.9918	1036	72	107	0	1	0	9	13						
+mitom_native	PCG	post_cutoff	yes	953	939	0.9853	684	62	193	0	2	0	12	16						
+mitom_native	PCG	structure_stress	no	2110	2088	0.9896	1671	133	284	0	3	0	19	27						
+mitom_native	PCG	structure_stress	yes	68	66	0.9706	49	1	16	0	0	0	2	2						
+mitom_native	intron	all	all	9	6	0.6667	3	2	1	1	0	0	2	6						
+mitom_native	intron	annotation_method	unknown	9	6	0.6667	3	2	1	1	0	0	2	6						
+mitom_native	intron	common_ok	yes	9	6	0.6667	3	2	1	1	0	0	2	6						
+mitom_native	intron	evidence_tier	B	9	6	0.6667	3	2	1	1	0	0	2	6						
+mitom_native	intron	phylum	Cnidaria	4	4	1.0	3	1	0	0	0	0	0	4						
+mitom_native	intron	phylum	Placozoa	5	2	0.4	0	1	1	1	0	0	2	2						
+mitom_native	intron	post_cutoff	no	2	2	1.0	1	1	0	0	0	0	0	4						
+mitom_native	intron	post_cutoff	yes	7	4	0.5714	2	1	1	1	0	0	2	2						
+mitom_native	intron	structure_stress	no	9	6	0.6667	3	2	1	1	0	0	2	5						
+mitom_native	intron	structure_stress	yes	0	0		0	0	0	0	0	0	0	1						
+mitom_native	rRNA	all	all	347	327	0.9424	112	52	163	0	0	0	20	10						
+mitom_native	rRNA	annotation_method	MitoFinder	4	4	1.0	2	1	1	0	0	0	0	0						
+mitom_native	rRNA	annotation_method	MitoZ	8	8	1.0	3	3	2	0	0	0	0	0						
+mitom_native	rRNA	annotation_method	unknown	335	315	0.9403	107	48	160	0	0	0	20	10						
+mitom_native	rRNA	common_ok	yes	347	327	0.9424	112	52	163	0	0	0	20	10						
+mitom_native	rRNA	evidence_tier	A-longread	24	22	0.9167	5	2	15	0	0	0	2	0						
+mitom_native	rRNA	evidence_tier	A-transcriptome	8	8	1.0	3	3	2	0	0	0	0	2						
+mitom_native	rRNA	evidence_tier	B	315	297	0.9429	104	47	146	0	0	0	18	8						
+mitom_native	rRNA	phylum	Acanthocephala	12	11	0.9167	2	0	9	0	0	0	1	1						
+mitom_native	rRNA	phylum	Annelida	24	24	1.0	7	10	7	0	0	0	0	0						
+mitom_native	rRNA	phylum	Arthropoda	22	22	1.0	12	4	6	0	0	0	0	2						
+mitom_native	rRNA	phylum	Brachiopoda	12	12	1.0	9	0	3	0	0	0	0	0						
+mitom_native	rRNA	phylum	Bryozoa	12	12	1.0	4	3	5	0	0	0	0	0						
+mitom_native	rRNA	phylum	Chaetognatha	10	10	1.0	0	0	10	0	0	0	0	0						
+mitom_native	rRNA	phylum	Chordata	24	24	1.0	18	3	3	0	0	0	0	0						
+mitom_native	rRNA	phylum	Cnidaria	24	24	1.0	0	0	24	0	0	0	0	0						
+mitom_native	rRNA	phylum	Ctenophora	8	1	0.125	0	0	1	0	0	0	7	0						
+mitom_native	rRNA	phylum	Echinodermata	24	24	1.0	8	6	10	0	0	0	0	0						
+mitom_native	rRNA	phylum	Entoprocta	4	4	1.0	4	0	0	0	0	0	0	0						
+mitom_native	rRNA	phylum	Gastrotricha	2	2	1.0	0	0	2	0	0	0	0	0						
+mitom_native	rRNA	phylum	Gnathostomulida	4	3	0.75	0	0	3	0	0	0	1	1						
+mitom_native	rRNA	phylum	Hemichordata	12	12	1.0	4	5	3	0	0	0	0	0						
+mitom_native	rRNA	phylum	Kinorhyncha	6	5	0.8333	0	0	5	0	0	0	1	1						
+mitom_native	rRNA	phylum	Mollusca	24	23	0.9583	8	5	10	0	0	0	1	1						
+mitom_native	rRNA	phylum	Nematoda	26	24	0.9231	5	3	16	0	0	0	2	0						
+mitom_native	rRNA	phylum	Nematomorpha	4	3	0.75	0	2	1	0	0	0	1	1						
+mitom_native	rRNA	phylum	Nemertea	12	12	1.0	10	1	1	0	0	0	0	0						
+mitom_native	rRNA	phylum	Onychophora	8	8	1.0	0	0	8	0	0	0	0	0						
+mitom_native	rRNA	phylum	Orthonectida	2	1	0.5	0	0	1	0	0	0	1	1						
+mitom_native	rRNA	phylum	Phoronida	2	2	1.0	2	0	0	0	0	0	0	0						
+mitom_native	rRNA	phylum	Placozoa	9	5	0.5556	0	0	5	0	0	0	4	1						
+mitom_native	rRNA	phylum	Platyhelminthes	24	24	1.0	9	5	10	0	0	0	0	0						
+mitom_native	rRNA	phylum	Porifera	12	12	1.0	2	1	9	0	0	0	0	0						
+mitom_native	rRNA	phylum	Priapulida	2	2	1.0	1	0	1	0	0	0	0	0						
+mitom_native	rRNA	phylum	Rotifera	4	4	1.0	1	0	3	0	0	0	0	0						
+mitom_native	rRNA	phylum	Tardigrada	6	5	0.8333	2	0	3	0	0	0	1	1						
+mitom_native	rRNA	phylum	Xenacoelomorpha	12	12	1.0	4	4	4	0	0	0	0	0						
+mitom_native	rRNA	post_cutoff	no	198	189	0.9545	74	21	94	0	0	0	9	3						
+mitom_native	rRNA	post_cutoff	yes	149	138	0.9262	38	31	69	0	0	0	11	7						
+mitom_native	rRNA	structure_stress	no	334	315	0.9431	110	52	153	0	0	0	19	10						
+mitom_native	rRNA	structure_stress	yes	13	12	0.9231	2	0	10	0	0	0	1	0						
+mitom_native	record	all	all												173	173	0	0	0	121
+mitom_native	record	annotation_method	MitoFinder												2	2	0	0	0	1
+mitom_native	record	annotation_method	MitoZ												4	4	0	0	0	1
+mitom_native	record	annotation_method	unknown												167	167	0	0	0	119
+mitom_native	record	common_ok	yes												173	173	0	0	0	121
+mitom_native	record	evidence_tier	A-longread												12	12	0	0	0	11
+mitom_native	record	evidence_tier	A-transcriptome												5	5	0	0	0	3
+mitom_native	record	evidence_tier	B												156	156	0	0	0	107
+mitom_native	record	phylum	Acanthocephala												6	6	0	0	0	6
+mitom_native	record	phylum	Annelida												12	12	0	0	0	7
+mitom_native	record	phylum	Arthropoda												12	12	0	0	0	7
+mitom_native	record	phylum	Brachiopoda												6	6	0	0	0	3
+mitom_native	record	phylum	Bryozoa												6	6	0	0	0	5
+mitom_native	record	phylum	Chaetognatha												5	5	0	0	0	5
+mitom_native	record	phylum	Chordata												12	12	0	0	0	2
+mitom_native	record	phylum	Cnidaria												12	12	0	0	0	12
+mitom_native	record	phylum	Ctenophora												4	4	0	0	0	4
+mitom_native	record	phylum	Echinodermata												12	12	0	0	0	7
+mitom_native	record	phylum	Entoprocta												2	2	0	0	0	0
+mitom_native	record	phylum	Gastrotricha												1	1	0	0	0	1
+mitom_native	record	phylum	Gnathostomulida												2	2	0	0	0	2
+mitom_native	record	phylum	Hemichordata												6	6	0	0	0	6
+mitom_native	record	phylum	Kinorhyncha												3	3	0	0	0	3
+mitom_native	record	phylum	Mollusca												12	12	0	0	0	9
+mitom_native	record	phylum	Nematoda												12	12	0	0	0	10
+mitom_native	record	phylum	Nematomorpha												2	2	0	0	0	2
+mitom_native	record	phylum	Nemertea												6	6	0	0	0	1
+mitom_native	record	phylum	Onychophora												4	4	0	0	0	4
+mitom_native	record	phylum	Orthonectida												1	1	0	0	0	1
+mitom_native	record	phylum	Phoronida												1	1	0	0	0	0
+mitom_native	record	phylum	Placozoa												3	3	0	0	0	3
+mitom_native	record	phylum	Platyhelminthes												12	12	0	0	0	5
+mitom_native	record	phylum	Porifera												6	6	0	0	0	6
+mitom_native	record	phylum	Priapulida												1	1	0	0	0	1
+mitom_native	record	phylum	Rotifera												3	3	0	0	0	2
+mitom_native	record	phylum	Tardigrada												3	3	0	0	0	3
+mitom_native	record	phylum	Xenacoelomorpha												6	6	0	0	0	4
+mitom_native	record	post_cutoff	no												98	98	0	0	0	66
+mitom_native	record	post_cutoff	yes												75	75	0	0	0	55
+mitom_native	record	structure_stress	no												167	167	0	0	0	115
+mitom_native	record	structure_stress	yes												6	6	0	0	0	6
+mitom_native	tRNA	all	all	3335	3023	0.9064	2166	369	165	24	32	323	256	119						
+mitom_native	tRNA	annotation_method	MitoFinder	44	44	1.0	29	8	1	0	0	6	0	0						
+mitom_native	tRNA	annotation_method	MitoZ	88	88	1.0	63	24	1	0	0	0	0	0						
+mitom_native	tRNA	annotation_method	unknown	3203	2891	0.9026	2074	337	163	24	32	317	256	119						
+mitom_native	tRNA	common_ok	yes	3335	3023	0.9064	2166	369	165	24	32	323	256	119						
+mitom_native	tRNA	evidence_tier	A-longread	245	240	0.9796	190	15	9	0	2	26	3	2						
+mitom_native	tRNA	evidence_tier	A-transcriptome	113	106	0.9381	78	13	2	3	2	13	2	3						
+mitom_native	tRNA	evidence_tier	B	2977	2677	0.8992	1898	341	154	21	28	284	251	114						
+mitom_native	tRNA	phylum	Acanthocephala	132	68	0.5152	32	10	17	0	2	9	62	8						
+mitom_native	tRNA	phylum	Annelida	265	263	0.9925	193	48	4	0	2	18	0	2						
+mitom_native	tRNA	phylum	Arthropoda	264	259	0.9811	205	13	5	4	1	36	0	1						
+mitom_native	tRNA	phylum	Brachiopoda	148	128	0.8649	99	8	3	0	1	18	19	0						
+mitom_native	tRNA	phylum	Bryozoa	130	104	0.8	69	13	9	0	3	13	23	1						
+mitom_native	tRNA	phylum	Chaetognatha	4	4	1.0	0	1	3	0	0	0	0	35						
+mitom_native	tRNA	phylum	Chordata	264	264	1.0	228	8	0	0	0	28	0	0						
+mitom_native	tRNA	phylum	Cnidaria	20	19	0.95	19	0	0	1	0	0	0	12						
+mitom_native	tRNA	phylum	Echinodermata	266	262	0.985	188	41	4	2	0	29	2	1						
+mitom_native	tRNA	phylum	Entoprocta	45	45	1.0	36	5	4	0	0	0	0	0						
+mitom_native	tRNA	phylum	Gastrotricha	22	20	0.9091	19	1	0	0	0	0	2	0						
+mitom_native	tRNA	phylum	Gnathostomulida	39	36	0.9231	28	4	4	0	0	0	3	6						
+mitom_native	tRNA	phylum	Hemichordata	133	128	0.9624	114	7	4	2	2	3	1	2						
+mitom_native	tRNA	phylum	Kinorhyncha	68	60	0.8824	39	3	10	0	0	8	8	2						
+mitom_native	tRNA	phylum	Mollusca	266	252	0.9474	168	40	15	10	0	29	4	4						
+mitom_native	tRNA	phylum	Nematoda	274	213	0.7774	122	36	19	1	2	36	58	8						
+mitom_native	tRNA	phylum	Nematomorpha	44	36	0.8182	22	5	1	0	1	8	7	1						
+mitom_native	tRNA	phylum	Nemertea	133	132	0.9925	114	16	2	0	0	0	1	1						
+mitom_native	tRNA	phylum	Onychophora	69	32	0.4638	7	0	22	0	8	3	29	18						
+mitom_native	tRNA	phylum	Orthonectida	22	19	0.8636	12	3	0	1	0	4	2	0						
+mitom_native	tRNA	phylum	Phoronida	22	22	1.0	18	0	0	0	0	4	0	0						
+mitom_native	tRNA	phylum	Placozoa	71	67	0.9437	58	1	1	0	3	7	1	2						
+mitom_native	tRNA	phylum	Platyhelminthes	263	249	0.9468	142	48	17	0	1	42	13	2						
+mitom_native	tRNA	phylum	Porifera	108	103	0.9537	90	3	2	0	4	8	1	3						
+mitom_native	tRNA	phylum	Priapulida	22	22	1.0	17	0	1	0	0	4	0	0						
+mitom_native	tRNA	phylum	Rotifera	43	31	0.7209	22	5	3	0	1	1	11	5						
+mitom_native	tRNA	phylum	Tardigrada	67	64	0.9552	39	15	10	0	0	0	3	1						
+mitom_native	tRNA	phylum	Xenacoelomorpha	131	121	0.9237	66	35	5	3	1	15	6	4						
+mitom_native	tRNA	post_cutoff	no	1900	1667	0.8774	1135	221	123	11	26	188	196	94						
+mitom_native	tRNA	post_cutoff	yes	1435	1356	0.9449	1031	148	42	13	6	135	60	25						
+mitom_native	tRNA	structure_stress	no	3272	2962	0.9053	2114	368	164	24	30	316	256	112						
+mitom_native	tRNA	structure_stress	yes	63	61	0.9683	52	1	1	0	2	7	0	7						
+mitom_v1	PCG	all	all	2178	2138	0.9816	1453	138	547	0	1	0	39	31						
+mitom_v1	PCG	annotation_method	MitoFinder	26	26	1.0	21	1	4	0	0	0	0	0						
+mitom_v1	PCG	annotation_method	MitoZ	52	52	1.0	43	2	7	0	0	0	0	0						
+mitom_v1	PCG	annotation_method	unknown	2100	2060	0.981	1389	135	536	0	1	0	39	31						
+mitom_v1	PCG	common_ok	yes	2178	2138	0.9816	1453	138	547	0	1	0	39	31						
+mitom_v1	PCG	evidence_tier	A-longread	152	149	0.9803	109	11	29	0	0	0	3	0						
+mitom_v1	PCG	evidence_tier	A-transcriptome	64	64	1.0	55	1	8	0	0	0	0	0						
+mitom_v1	PCG	evidence_tier	B	1962	1925	0.9811	1289	126	510	0	1	0	36	31						
+mitom_v1	PCG	phylum	Acanthocephala	72	66	0.9167	14	6	46	0	0	0	6	4						
+mitom_v1	PCG	phylum	Annelida	156	156	1.0	129	14	13	0	0	0	0	0						
+mitom_v1	PCG	phylum	Arthropoda	156	156	1.0	123	8	25	0	0	0	0	0						
+mitom_v1	PCG	phylum	Brachiopoda	77	76	0.987	27	4	45	0	0	0	1	3						
+mitom_v1	PCG	phylum	Bryozoa	77	77	1.0	53	8	16	0	0	0	0	0						
+mitom_v1	PCG	phylum	Chaetognatha	55	55	1.0	35	2	18	0	0	0	0	0						
+mitom_v1	PCG	phylum	Chordata	156	156	1.0	131	22	3	0	0	0	0	0						
+mitom_v1	PCG	phylum	Cnidaria	155	154	0.9935	119	2	33	0	0	0	1	1						
+mitom_v1	PCG	phylum	Ctenophora	42	35	0.8333	7	1	27	0	0	0	7	2						
+mitom_v1	PCG	phylum	Echinodermata	156	156	1.0	136	6	14	0	0	0	0	0						
+mitom_v1	PCG	phylum	Entoprocta	26	26	1.0	16	5	5	0	0	0	0	0						
+mitom_v1	PCG	phylum	Gastrotricha	13	13	1.0	6	1	6	0	0	0	0	1						
+mitom_v1	PCG	phylum	Gnathostomulida	26	25	0.9615	7	2	16	0	0	0	1	0						
+mitom_v1	PCG	phylum	Hemichordata	78	77	0.9872	57	4	16	0	0	0	1	1						
+mitom_v1	PCG	phylum	Kinorhyncha	38	36	0.9474	15	0	21	0	0	0	2	1						
+mitom_v1	PCG	phylum	Mollusca	153	153	1.0	117	4	32	0	0	0	0	2						
+mitom_v1	PCG	phylum	Nematoda	149	146	0.9799	99	11	36	0	0	0	3	0						
+mitom_v1	PCG	phylum	Nematomorpha	26	21	0.8077	10	3	8	0	0	0	5	2						
+mitom_v1	PCG	phylum	Nemertea	78	78	1.0	62	6	10	0	0	0	0	0						
+mitom_v1	PCG	phylum	Onychophora	52	52	1.0	16	8	28	0	0	0	0	1						
+mitom_v1	PCG	phylum	Orthonectida	13	10	0.7692	3	2	5	0	0	0	3	0						
+mitom_v1	PCG	phylum	Phoronida	13	13	1.0	8	1	4	0	0	0	0	1						
+mitom_v1	PCG	phylum	Placozoa	37	33	0.8919	18	0	15	0	0	0	4	3						
+mitom_v1	PCG	phylum	Platyhelminthes	145	145	1.0	107	0	38	0	0	0	0	0						
+mitom_v1	PCG	phylum	Porifera	78	78	1.0	73	0	5	0	0	0	0	0						
+mitom_v1	PCG	phylum	Priapulida	13	13	1.0	5	1	7	0	0	0	0	1						
+mitom_v1	PCG	phylum	Rotifera	24	24	1.0	9	2	13	0	0	0	0	0						
+mitom_v1	PCG	phylum	Tardigrada	39	39	1.0	22	3	14	0	0	0	0	3						
+mitom_v1	PCG	phylum	Xenacoelomorpha	75	69	0.92	29	12	28	0	1	0	5	5						
+mitom_v1	PCG	post_cutoff	no	1225	1206	0.9845	776	85	345	0	1	0	18	21						
+mitom_v1	PCG	post_cutoff	yes	953	932	0.978	677	53	202	0	0	0	21	10						
+mitom_v1	PCG	structure_stress	no	2110	2072	0.982	1411	136	525	0	1	0	37	29						
+mitom_v1	PCG	structure_stress	yes	68	66	0.9706	42	2	22	0	0	0	2	2						
+mitom_v1	intron	all	all	9	4	0.4444	3	1	0	0	0	0	5	4						
+mitom_v1	intron	annotation_method	unknown	9	4	0.4444	3	1	0	0	0	0	5	4						
+mitom_v1	intron	common_ok	yes	9	4	0.4444	3	1	0	0	0	0	5	4						
+mitom_v1	intron	evidence_tier	B	9	4	0.4444	3	1	0	0	0	0	5	4						
+mitom_v1	intron	phylum	Cnidaria	4	4	1.0	3	1	0	0	0	0	0	2						
+mitom_v1	intron	phylum	Placozoa	5	0	0.0	0	0	0	0	0	0	5	2						
+mitom_v1	intron	post_cutoff	no	2	2	1.0	1	1	0	0	0	0	0	2						
+mitom_v1	intron	post_cutoff	yes	7	2	0.2857	2	0	0	0	0	0	5	2						
+mitom_v1	intron	structure_stress	no	9	4	0.4444	3	1	0	0	0	0	5	3						
+mitom_v1	intron	structure_stress	yes	0	0		0	0	0	0	0	0	0	1						
+mitom_v1	rRNA	all	all	347	336	0.9683	113	43	180	0	0	0	11	8						
+mitom_v1	rRNA	annotation_method	MitoFinder	4	4	1.0	2	1	1	0	0	0	0	0						
+mitom_v1	rRNA	annotation_method	MitoZ	8	8	1.0	3	3	2	0	0	0	0	0						
+mitom_v1	rRNA	annotation_method	unknown	335	324	0.9672	108	39	177	0	0	0	11	8						
+mitom_v1	rRNA	common_ok	yes	347	336	0.9683	113	43	180	0	0	0	11	8						
+mitom_v1	rRNA	evidence_tier	A-longread	24	24	1.0	5	2	17	0	0	0	0	0						
+mitom_v1	rRNA	evidence_tier	A-transcriptome	8	8	1.0	3	1	4	0	0	0	0	2						
+mitom_v1	rRNA	evidence_tier	B	315	304	0.9651	105	40	159	0	0	0	11	6						
+mitom_v1	rRNA	phylum	Acanthocephala	12	11	0.9167	1	1	9	0	0	0	1	1						
+mitom_v1	rRNA	phylum	Annelida	24	24	1.0	7	10	7	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Arthropoda	22	22	1.0	12	1	9	0	0	0	0	2						
+mitom_v1	rRNA	phylum	Brachiopoda	12	12	1.0	9	0	3	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Bryozoa	12	12	1.0	4	3	5	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Chaetognatha	10	10	1.0	0	0	10	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Chordata	24	24	1.0	19	3	2	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Cnidaria	24	24	1.0	0	0	24	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Ctenophora	8	8	1.0	0	0	8	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Echinodermata	24	24	1.0	8	6	10	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Entoprocta	4	4	1.0	4	0	0	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Gastrotricha	2	2	1.0	0	0	2	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Gnathostomulida	4	3	0.75	0	0	3	0	0	0	1	1						
+mitom_v1	rRNA	phylum	Hemichordata	12	12	1.0	4	5	3	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Kinorhyncha	6	4	0.6667	0	0	4	0	0	0	2	1						
+mitom_v1	rRNA	phylum	Mollusca	24	24	1.0	11	4	9	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Nematoda	26	24	0.9231	4	0	20	0	0	0	2	0						
+mitom_v1	rRNA	phylum	Nematomorpha	4	3	0.75	0	2	1	0	0	0	1	1						
+mitom_v1	rRNA	phylum	Nemertea	12	12	1.0	10	1	1	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Onychophora	8	8	1.0	0	0	8	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Orthonectida	2	1	0.5	0	0	1	0	0	0	1	1						
+mitom_v1	rRNA	phylum	Phoronida	2	2	1.0	2	0	0	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Placozoa	9	7	0.7778	0	0	7	0	0	0	2	0						
+mitom_v1	rRNA	phylum	Platyhelminthes	24	24	1.0	8	4	12	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Porifera	12	12	1.0	2	0	10	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Priapulida	2	2	1.0	1	0	1	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Rotifera	4	4	1.0	1	0	3	0	0	0	0	0						
+mitom_v1	rRNA	phylum	Tardigrada	6	5	0.8333	2	0	3	0	0	0	1	1						
+mitom_v1	rRNA	phylum	Xenacoelomorpha	12	12	1.0	4	3	5	0	0	0	0	0						
+mitom_v1	rRNA	post_cutoff	no	198	192	0.9697	74	15	103	0	0	0	6	3						
+mitom_v1	rRNA	post_cutoff	yes	149	144	0.9664	39	28	77	0	0	0	5	5						
+mitom_v1	rRNA	structure_stress	no	334	324	0.9701	111	43	170	0	0	0	10	8						
+mitom_v1	rRNA	structure_stress	yes	13	12	0.9231	2	0	10	0	0	0	1	0						
+mitom_v1	record	all	all												173	173	0	0	0	161
+mitom_v1	record	annotation_method	MitoFinder												2	2	0	0	0	2
+mitom_v1	record	annotation_method	MitoZ												4	4	0	0	0	3
+mitom_v1	record	annotation_method	unknown												167	167	0	0	0	156
+mitom_v1	record	common_ok	yes												173	173	0	0	0	161
+mitom_v1	record	evidence_tier	A-longread												12	12	0	0	0	12
+mitom_v1	record	evidence_tier	A-transcriptome												5	5	0	0	0	5
+mitom_v1	record	evidence_tier	B												156	156	0	0	0	144
+mitom_v1	record	phylum	Acanthocephala												6	6	0	0	0	6
+mitom_v1	record	phylum	Annelida												12	12	0	0	0	8
+mitom_v1	record	phylum	Arthropoda												12	12	0	0	0	12
+mitom_v1	record	phylum	Brachiopoda												6	6	0	0	0	5
+mitom_v1	record	phylum	Bryozoa												6	6	0	0	0	5
+mitom_v1	record	phylum	Chaetognatha												5	5	0	0	0	5
+mitom_v1	record	phylum	Chordata												12	12	0	0	0	12
+mitom_v1	record	phylum	Cnidaria												12	12	0	0	0	12
+mitom_v1	record	phylum	Ctenophora												4	4	0	0	0	4
+mitom_v1	record	phylum	Echinodermata												12	12	0	0	0	10
+mitom_v1	record	phylum	Entoprocta												2	2	0	0	0	1
+mitom_v1	record	phylum	Gastrotricha												1	1	0	0	0	1
+mitom_v1	record	phylum	Gnathostomulida												2	2	0	0	0	2
+mitom_v1	record	phylum	Hemichordata												6	6	0	0	0	6
+mitom_v1	record	phylum	Kinorhyncha												3	3	0	0	0	3
+mitom_v1	record	phylum	Mollusca												12	12	0	0	0	12
+mitom_v1	record	phylum	Nematoda												12	12	0	0	0	12
+mitom_v1	record	phylum	Nematomorpha												2	2	0	0	0	2
+mitom_v1	record	phylum	Nemertea												6	6	0	0	0	5
+mitom_v1	record	phylum	Onychophora												4	4	0	0	0	4
+mitom_v1	record	phylum	Orthonectida												1	1	0	0	0	1
+mitom_v1	record	phylum	Phoronida												1	1	0	0	0	1
+mitom_v1	record	phylum	Placozoa												3	3	0	0	0	3
+mitom_v1	record	phylum	Platyhelminthes												12	12	0	0	0	10
+mitom_v1	record	phylum	Porifera												6	6	0	0	0	6
+mitom_v1	record	phylum	Priapulida												1	1	0	0	0	1
+mitom_v1	record	phylum	Rotifera												3	3	0	0	0	3
+mitom_v1	record	phylum	Tardigrada												3	3	0	0	0	3
+mitom_v1	record	phylum	Xenacoelomorpha												6	6	0	0	0	6
+mitom_v1	record	post_cutoff	no												98	98	0	0	0	92
+mitom_v1	record	post_cutoff	yes												75	75	0	0	0	69
+mitom_v1	record	structure_stress	no												167	167	0	0	0	155
+mitom_v1	record	structure_stress	yes												6	6	0	0	0	6
+mitom_v1	tRNA	all	all	3335	3050	0.9145	2179	367	175	24	27	329	234	121						
+mitom_v1	tRNA	annotation_method	MitoFinder	44	44	1.0	29	8	1	0	0	6	0	0						
+mitom_v1	tRNA	annotation_method	MitoZ	88	88	1.0	64	23	1	0	0	0	0	0						
+mitom_v1	tRNA	annotation_method	unknown	3203	2918	0.911	2086	336	173	24	27	323	234	121						
+mitom_v1	tRNA	common_ok	yes	3335	3050	0.9145	2179	367	175	24	27	329	234	121						
+mitom_v1	tRNA	evidence_tier	A-longread	245	243	0.9918	192	15	8	0	1	28	1	1						
+mitom_v1	tRNA	evidence_tier	A-transcriptome	113	107	0.9469	79	13	2	3	1	13	2	1						
+mitom_v1	tRNA	evidence_tier	B	2977	2700	0.907	1908	339	165	21	25	288	231	119						
+mitom_v1	tRNA	phylum	Acanthocephala	132	70	0.5303	32	10	17	0	2	11	60	9						
+mitom_v1	tRNA	phylum	Annelida	265	263	0.9925	193	48	4	0	2	18	0	2						
+mitom_v1	tRNA	phylum	Arthropoda	264	260	0.9848	213	10	1	4	0	36	0	0						
+mitom_v1	tRNA	phylum	Brachiopoda	148	131	0.8851	100	8	5	0	0	18	17	0						
+mitom_v1	tRNA	phylum	Bryozoa	130	106	0.8154	70	12	11	0	3	13	21	2						
+mitom_v1	tRNA	phylum	Chaetognatha	4	4	1.0	0	1	3	0	0	0	0	40						
+mitom_v1	tRNA	phylum	Chordata	264	264	1.0	228	8	0	0	0	28	0	0						
+mitom_v1	tRNA	phylum	Cnidaria	20	19	0.95	19	0	0	1	0	0	0	12						
+mitom_v1	tRNA	phylum	Echinodermata	266	262	0.985	188	41	4	2	1	29	1	0						
+mitom_v1	tRNA	phylum	Entoprocta	45	45	1.0	36	5	4	0	0	0	0	0						
+mitom_v1	tRNA	phylum	Gastrotricha	22	20	0.9091	19	1	0	0	0	0	2	0						
+mitom_v1	tRNA	phylum	Gnathostomulida	39	38	0.9744	29	4	5	0	0	0	1	5						
+mitom_v1	tRNA	phylum	Hemichordata	133	129	0.9699	118	7	1	2	1	3	1	2						
+mitom_v1	tRNA	phylum	Kinorhyncha	68	60	0.8824	39	3	10	0	0	8	8	2						
+mitom_v1	tRNA	phylum	Mollusca	266	254	0.9549	168	40	15	10	0	31	2	1						
+mitom_v1	tRNA	phylum	Nematoda	274	218	0.7956	120	36	23	1	2	39	53	7						
+mitom_v1	tRNA	phylum	Nematomorpha	44	36	0.8182	22	5	1	0	1	8	7	1						
+mitom_v1	tRNA	phylum	Nemertea	133	132	0.9925	113	16	3	0	0	0	1	1						
+mitom_v1	tRNA	phylum	Onychophora	69	38	0.5507	7	0	28	0	8	3	23	22						
+mitom_v1	tRNA	phylum	Orthonectida	22	20	0.9091	12	4	0	1	0	4	1	0						
+mitom_v1	tRNA	phylum	Phoronida	22	22	1.0	18	0	0	0	0	4	0	0						
+mitom_v1	tRNA	phylum	Placozoa	71	67	0.9437	58	1	1	0	3	7	1	2						
+mitom_v1	tRNA	phylum	Platyhelminthes	263	252	0.9582	142	49	19	0	0	42	11	2						
+mitom_v1	tRNA	phylum	Porifera	108	103	0.9537	90	3	2	0	3	8	2	1						
+mitom_v1	tRNA	phylum	Priapulida	22	22	1.0	17	0	1	0	0	4	0	0						
+mitom_v1	tRNA	phylum	Rotifera	43	31	0.7209	22	5	3	0	1	1	11	5						
+mitom_v1	tRNA	phylum	Tardigrada	67	64	0.9552	40	15	9	0	0	0	3	0						
+mitom_v1	tRNA	phylum	Xenacoelomorpha	131	120	0.916	66	35	5	3	0	14	8	5						
+mitom_v1	tRNA	post_cutoff	no	1900	1686	0.8874	1143	218	134	11	23	191	180	100						
+mitom_v1	tRNA	post_cutoff	yes	1435	1364	0.9505	1036	149	41	13	4	138	54	21						
+mitom_v1	tRNA	structure_stress	no	3272	2989	0.9135	2127	366	174	24	25	322	234	114						
+mitom_v1	tRNA	structure_stress	yes	63	61	0.9683	52	1	1	0	2	7	0	7						

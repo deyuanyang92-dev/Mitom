@@ -285,6 +285,65 @@ the divergent bivalve genes (NC_083122.1 cox2 / nad1 / nad4 / nad4l: RefSeq star
 protein), one bivalve 12S and one nematode atp8 not found, 8-nt tRNA-Tyr ends in two ticks. Tables:
 `benchmark/results/metazoa_mini_2026-10/report_native.md`.
 
+### The native core on the 173-record set (30 phyla)
+
+The same comparison on the 173 RefSeq records of 30 phyla that drove the optimisation (`mitom_v1` = the MitoZ-based
+route as run on 2026-10-21, before the curation rules of this benchmark; `mitom_native` = the native core with all
+rules; rRNA HMM library without the benchmark records, so the small phyla have no HMM and fall back to the covariance
+models):
+
+| | MitoZ-based route | native core |
+|---|---|---|
+| protein genes both ends exact (of 2178) | 1453 (66.7 %) | 1720 (79.0 %) |
+| protein genes within 3 nt | 73.0 % | 85.1 % |
+| protein genes missed | 39 | 21 |
+| rRNAs within 3 nt / found | 45.0 % / 96.8 % | 47.3 % / 94.2 % |
+| tRNAs within 3 nt / found | 76.3 % / 91.5 % | 76.0 % / 90.6 % |
+| boundaries > 30 nt off | 384 | 208 |
+| records with an NCBI table2asn ERROR | 113 | 11 |
+| records with any obvious error | 161 | 121 |
+| median s / record (2 threads) | 325 | 146 |
+| peak memory, median / max | - | 0.38 GB / 3.2 GB (the max is the optional MITOS2 rescue of records with a missing gene) |
+
+Protein genes both ends exact per phylum (records per phylum in the second column):
+
+| phylum | records | mitom_v1 | mitom_native |
+|---|---|---|---|
+| Annelida | 12 | 82.7% | 78.8% |
+| Arthropoda | 12 | 78.8% | 82.7% |
+| Chordata | 12 | 84.0% | 83.3% |
+| Cnidaria | 12 | 76.8% | 87.1% |
+| Echinodermata | 12 | 87.2% | 86.5% |
+| Mollusca | 12 | 76.5% | 76.5% |
+| Nematoda | 12 | 66.4% | 79.9% |
+| Platyhelminthes | 12 | 73.8% | 80.7% |
+| Acanthocephala | 6 | 19.4% | 68.1% |
+| Brachiopoda | 6 | 35.1% | 67.5% |
+| Bryozoa | 6 | 68.8% | 77.9% |
+| Hemichordata | 6 | 73.1% | 71.8% |
+| Nemertea | 6 | 79.5% | 83.3% |
+| Porifera | 6 | 93.6% | 96.2% |
+| Xenacoelomorpha | 6 | 38.7% | 81.3% |
+| Chaetognatha | 5 | 63.6% | 81.8% |
+| Ctenophora | 4 | 16.7% | 45.2% |
+| Onychophora | 4 | 30.8% | 69.2% |
+| Kinorhyncha | 3 | 39.5% | 86.8% |
+| Placozoa | 3 | 48.6% | 78.4% |
+| Rotifera | 3 | 37.5% | 79.2% |
+| Tardigrada | 3 | 56.4% | 76.9% |
+| Entoprocta | 2 | 61.5% | 84.6% |
+| Gnathostomulida | 2 | 26.9% | 80.8% |
+| Nematomorpha | 2 | 38.5% | 23.1% |
+| Gastrotricha | 1 | 46.2% | 100.0% |
+| Orthonectida | 1 | 23.1% | 38.5% |
+| Phoronida | 1 | 61.5% | 84.6% |
+| Priapulida | 1 | 38.5% | 61.5% |
+
+The native core is ahead in 25 of the 30 phyla, most in the phyla MitoZ has no protein profiles for (Acanthocephala
+19 -> 68 %, Xenacoelomorpha 39 -> 81 %, Kinorhyncha 40 -> 87 %, Brachiopoda 35 -> 68 %, Onychophora 31 -> 69 %), and
+within 1-4 % of the MitoZ route in Annelida, Chordata, Echinodermata and Hemichordata. Tables:
+`benchmark/results/metazoa_173_2026-10/`.
+
 ## How it was run
 
 ```bash

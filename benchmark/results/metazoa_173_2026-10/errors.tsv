@@ -1,0 +1,941 @@
+tool	accession	phylum	error	gene	detail
+mitom_v1	NC_016754.1	Acanthocephala	boundary_gt30	atp6	3275..3859+ vs 3419..3818+
+mitom_v1	NC_016754.1	Acanthocephala	boundary_gt30	nad3	3861..4196+ vs 3819..4196+
+mitom_v1	NC_016754.1	Acanthocephala	boundary_gt30	nad4	5260..6519+ vs 5311..6407+
+mitom_v1	NC_016754.1	Acanthocephala	boundary_gt30	nad2	13378..14280+ vs 13375..14084+
+mitom_v1	NC_016754.1	Acanthocephala	boundary_gt30	rrnS	11047..11599+ vs 10967..11599+
+mitom_v1	NC_016754.1	Acanthocephala	name_error	T	4949..5001+ vs 4927..4984+
+mitom_v1	NC_016754.1	Acanthocephala	name_error	N	13322..13377+ vs 13310..13374+
+mitom_native	NC_016754.1	Acanthocephala	boundary_gt30	rrnL	1713..2662+ vs 2083..2662+
+mitom_native	NC_016754.1	Acanthocephala	boundary_gt30	rrnS	11047..11599+ vs 10967..11599+
+mitom_native	NC_016754.1	Acanthocephala	name_error	T	4949..5001+ vs 4927..4984+
+mitom_native	NC_016754.1	Acanthocephala	name_error	N	13322..13377+ vs 13310..13374+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	nad6	2722..3063+ vs 2638..3063+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	atp6	3211..3748+ vs 3352..3763+
+mitom_v1	NC_022921.1	Acanthocephala	missing_gene	nad4l	5008..5266+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	nad4	5268..6519+ vs 5268..6581+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	nad5	6568..8157+ vs 6568..7675+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	cox3	12021..12724+ vs 12084..12750+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	nad2	12942..13853+ vs 12990..13746+
+mitom_v1	NC_022921.1	Acanthocephala	boundary_gt30	rrnL	1712..2634+ vs 1588..2578+
+mitom_v1	NC_022921.1	Acanthocephala	missing_gene	rrnS	11282..12740+
+mitom_v1	NC_022921.1	Acanthocephala	internal_stop	nad3	
+mitom_native	NC_022921.1	Acanthocephala	boundary_gt30	nad4	5268..6519+ vs 5268..6581+
+mitom_native	NC_022921.1	Acanthocephala	boundary_gt30	nad1	9362..10238+ vs 9362..10402+
+mitom_native	NC_022921.1	Acanthocephala	boundary_gt30	cox3	12021..12724+ vs 12021..12770+
+mitom_native	NC_022921.1	Acanthocephala	boundary_gt30	rrnL	1712..2634+ vs 1588..2578+
+mitom_native	NC_022921.1	Acanthocephala	missing_gene	rrnS	11282..12740+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	nad6	2636..3080+ vs 2750..3080+
+mitom_v1	NC_026516.1	Acanthocephala	missing_gene	atp6	3286..3822+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	nad3	3831..4164+ vs 3753..4164+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	nad4	6042..7319+ vs 6018..7188+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	nad5	7373..9022+ vs 7466..8648+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	nad1	10301..11155+ vs 10259..11155+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	nad2	13870..14721+ vs 13837..14440+
+mitom_v1	NC_026516.1	Acanthocephala	boundary_gt30	rrnL	1667..2584+ vs 1667..2749+
+mitom_native	NC_026516.1	Acanthocephala	boundary_gt30	rrnL	1667..2584+ vs 1667..2635+
+mitom_v1	NC_029766.1	Acanthocephala	missing_gene	nad6	2676..3111+
+mitom_v1	NC_029766.1	Acanthocephala	missing_gene	atp6	3153..3845+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	nad3	3845..4174+ vs 3938..4174+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	nad4l	5001..5222+ vs 4863..5222+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	nad4	5228..6457+ vs 5477..6457+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	nad5	6512..8104+ vs 6617..7640+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	nad2	13060..13956+ vs 13027..13956+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	rrnL	1702..2622+ vs 2065..2652+
+mitom_v1	NC_029766.1	Acanthocephala	boundary_gt30	rrnS	10754..11364+ vs 10819..11363+
+mitom_native	NC_029766.1	Acanthocephala	boundary_gt30	rrnL	1702..2622+ vs 2065..2675+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	atp6	3243..3806+ vs 3324..3806+
+mitom_v1	NC_060482.1	Acanthocephala	missing_gene	nad4l	4968..5232+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	nad4	5238..6515+ vs 5445..6399+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	nad5	6567..8228+ vs 6663..7748+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	cox3	12077..12796+ vs 12152..12796+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	nad2	12994..13890+ vs 13009..13768+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	rrnL	1696..2597+ vs 1598..2604+
+mitom_v1	NC_060482.1	Acanthocephala	boundary_gt30	rrnS	10549..11306+ vs 10727..11307+
+mitom_native	NC_060482.1	Acanthocephala	boundary_gt30	rrnL	1696..2597+ vs 1598..2604+
+mitom_native	NC_060482.1	Acanthocephala	boundary_gt30	rrnS	10549..11306+ vs 10727..11307+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	atp6	3149..3787+ vs 3353..3787+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	nad3	3790..4245+ vs 3790..4135+
+mitom_v1	NC_060484.1	Acanthocephala	missing_gene	nad4l	4983..5247+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	nad4	5256..6515+ vs 5211..6309+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	nad5	6567..8232+ vs 6630..8232+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	nad1	9472..10320+ vs 9460..9929+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	cox2	11373..11948+ vs 11412..11948+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	cox3	12007..12729+ vs 12109..12729+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	rrnL	1685..2583+ vs 1596..2590+
+mitom_v1	NC_060484.1	Acanthocephala	boundary_gt30	rrnS	10674..11280+ vs 10605..11411+
+mitom_native	NC_060484.1	Acanthocephala	boundary_gt30	nad6	2643..3084+ vs 2745..3084+
+mitom_native	NC_060484.1	Acanthocephala	boundary_gt30	atp6	3149..3787+ vs 3242..3787+
+mitom_native	NC_060484.1	Acanthocephala	boundary_gt30	nad3	3790..4245+ vs 3790..4135+
+mitom_native	NC_060484.1	Acanthocephala	boundary_gt30	nad4	5256..6515+ vs 5223..6515+
+mitom_native	NC_060484.1	Acanthocephala	boundary_gt30	rrnL	1685..2583+ vs 2049..2590+
+mitom_native	NC_060484.1	Acanthocephala	boundary_gt30	rrnS	10674..11280+ vs 10778..11372+
+mitom_v1	NC_044092.1	Annelida	boundary_gt30	cox3	2658..3482+ vs 2703..3482+
+mitom_v1	NC_044092.1	Annelida	boundary_gt30	cox1	15465..17036+ vs 1..1539+
+mitom_v1	NC_044092.1	Annelida	boundary_gt30	rrnL	10204..11436+ vs 10149..11436+
+mitom_native	NC_044092.1	Annelida	boundary_gt30	cox1	15465..17036+ vs 1..1539+
+mitom_native	NC_044092.1	Annelida	boundary_gt30	rrnL	10204..11436+ vs 10149..11436+
+mitom_native	NC_046790.1	Annelida	boundary_gt30	nad2	14283..15288+ vs 14283..15203+
+mitom_v1	NC_061323.1	Annelida	boundary_gt30	atp8	2342..2492+ vs 2387..2492+
+mitom_v1	NC_061323.1	Annelida	boundary_gt30	rrnL	11337..12316+ vs 11185..12351+
+mitom_v1	NC_061323.1	Annelida	name_error	S	14001..14057+ vs 14001..14057+
+mitom_native	NC_061323.1	Annelida	boundary_gt30	rrnL	11337..12316+ vs 11185..12351+
+mitom_native	NC_061323.1	Annelida	name_error	S	14001..14057+ vs 14001..14057+
+mitom_native	NC_069205.1	Annelida	boundary_gt30	nad2	8416..9420+ vs 8422..9384+
+mitom_v1	NC_069206.1	Annelida	boundary_gt30	cob	12935..14104+ vs 12968..14104+
+mitom_native	NC_069206.1	Annelida	boundary_gt30	nad1	6412..7438+ vs 6451..7440+
+mitom_native	NC_069206.1	Annelida	boundary_gt30	cob	12935..14104+ vs 12968..14104+
+mitom_v1	NC_069297.1	Annelida	boundary_gt30	rrnS	14925..15792+ vs 14925..15849+
+mitom_v1	NC_069297.1	Annelida	name_error	S	13661..13726+ vs 13661..13726+
+mitom_native	NC_069297.1	Annelida	boundary_gt30	rrnS	14925..15792+ vs 14925..15849+
+mitom_native	NC_069297.1	Annelida	name_error	S	13661..13726+ vs 13661..13726+
+mitom_v1	NC_072223.1	Annelida	boundary_gt30	rrnL	11351..12326+ vs 11200..12367+
+mitom_native	NC_072223.1	Annelida	boundary_gt30	nad2	14099..15092+ vs 14099..14986+
+mitom_native	NC_072223.1	Annelida	boundary_gt30	rrnL	11351..12326+ vs 11200..12367+
+mitom_v1	NC_020774.1	Arthropoda	boundary_gt30	nad4l	9443..9736- vs 9443..9781-
+mitom_v1	NC_020774.1	Arthropoda	boundary_gt30	rrnS	14039..14834- vs 14040..14917-
+mitom_v1	NC_020774.1	Arthropoda	strand_error	H	8049..8115+ vs 8049..8115-
+mitom_native	NC_020774.1	Arthropoda	strand_error	H	8049..8115+ vs 8049..8115-
+mitom_v1	NC_035061.1	Arthropoda	boundary_gt30	rrnS	13843..14588- vs 13843..14636-
+mitom_v1	NC_035061.1	Arthropoda	strand_error	Q	62..130+ vs 62..130-
+mitom_v1	NC_035061.1	Arthropoda	strand_error	M	130..195- vs 130..195+
+mitom_v1	NC_035061.1	Arthropoda	strand_error	V	13774..13842+ vs 13774..13842-
+mitom_native	NC_035061.1	Arthropoda	strand_error	Q	62..130+ vs 62..130-
+mitom_native	NC_035061.1	Arthropoda	strand_error	M	130..195- vs 130..195+
+mitom_native	NC_035061.1	Arthropoda	name_error	Y	1404..1466- vs 1404..1437-
+mitom_native	NC_035061.1	Arthropoda	strand_error	V	13774..13842+ vs 13774..13842-
+mitom_v1	NC_044669.1	Arthropoda	boundary_gt30	nad4l	9633..9923- vs 9633..9977-
+mitom_v1	NC_046851.1	Arthropoda	boundary_gt30	nad4l	9356..9643- vs 9356..9688-
+mitom_v1	NC_066979.1	Arthropoda	boundary_gt30	nad4l	9311..9586- vs 9311..9631-
+mitom_v1	NC_066979.1	Arthropoda	boundary_gt30	rrnS	13699..14441- vs 13695..14505-
+mitom_native	NC_066979.1	Arthropoda	boundary_gt30	nad5	6270..7943- vs 6270..7898-
+mitom_v1	NC_067900.1	Arthropoda	boundary_gt30	nad1	10940..11885- vs 10890..11885-
+mitom_v1	NC_067900.1	Arthropoda	boundary_gt30	rrnS	13274..14058- vs 13274..14307-
+mitom_native	NC_067900.1	Arthropoda	boundary_gt30	rrnS	13274..14058- vs 13274..13903-
+mitom_v1	NC_067930.1	Arthropoda	boundary_gt30	rrnS	8072..8766- vs 8072..9071-
+mitom_native	NC_067930.1	Arthropoda	boundary_gt30	rrnS	8072..8766- vs 8072..8687-
+mitom_v1	NC_069055.1	Arthropoda	boundary_gt30	nad5	6250..7891- vs 6232..7817-
+mitom_v1	NC_069055.1	Arthropoda	boundary_gt30	rrnL	12420..13593- vs 12420..13637-
+mitom_v1	NC_069055.1	Arthropoda	boundary_gt30	rrnS	13696..14350- vs 13699..14433-
+mitom_v1	NC_069055.1	Arthropoda	internal_stop	nad5	
+mitom_native	NC_069055.1	Arthropoda	boundary_gt30	rrnL	12420..13593- vs 12420..13637-
+mitom_native	NC_069055.1	Arthropoda	boundary_gt30	rrnS	13696..14350- vs 13699..14433-
+mitom_native	NC_069055.1	Arthropoda	internal_stop	nad4l	
+mitom_v1	NC_069241.1	Arthropoda	boundary_gt30	cox1	1416..2949+ vs 1374..2949+
+mitom_v1	NC_069241.1	Arthropoda	boundary_gt30	nad4l	9443..9733- vs 9443..9820-
+mitom_native	NC_069241.1	Arthropoda	boundary_gt30	nad4l	9443..9733- vs 9443..9820-
+mitom_v1	NC_002322.1	Brachiopoda	boundary_gt30	nad5	3576..5255+ vs 3600..5119+
+mitom_v1	NC_002322.1	Brachiopoda	boundary_gt30	nad3	5834..6170+ vs 5801..6170+
+mitom_v1	NC_002322.1	Brachiopoda	boundary_gt30	nad2	7881..8729+ vs 7917..8729+
+mitom_v1	NC_002322.1	Brachiopoda	boundary_gt30	R	6227..6280+ vs 6178..6293+
+mitom_v1	NC_003086.1	Brachiopoda	boundary_gt30	cox3	3038..3811+ vs 3002..3811+
+mitom_v1	NC_003086.1	Brachiopoda	boundary_gt30	nad1	9245..10145+ vs 9284..10145+
+mitom_v1	NC_003086.1	Brachiopoda	boundary_gt30	nad4l	11745..12017+ vs 11700..12017+
+mitom_v1	NC_003086.1	Brachiopoda	boundary_gt30	nad2	13323..14246+ vs 13356..14145+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	cox1	1..1722+ vs 1..1607+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	cox2	1944..2693+ vs 2097..2693+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	nad2	2999..4036+ vs 3035..3926+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	cob	9359..10615+ vs 9356..10505+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	atp6	16441..17169+ vs 16651..17169+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	nad6	19016..19621+ vs 19064..19621+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	nad3	20824..21321+ vs 20866..21321+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	nad5	21475..23223+ vs 21466..22762+
+mitom_v1	NC_036679.1	Brachiopoda	boundary_gt30	cox3	24830..25705+ vs 24785..25592+
+mitom_native	NC_036679.1	Brachiopoda	name_error	Q	5036..5102+ vs 5036..5102+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	cob	1598..2702+ vs 1532..2722+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	atp6	3049..3663+ vs 3154..3663+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	nad3	6049..6382+ vs 6013..6382+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	cox3	7038..7817+ vs 7086..7817+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	nad4	12766..14092+ vs 12886..14092+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	rrnL	9687..10808+ vs 9689..10840+
+mitom_v1	NC_039685.1	Brachiopoda	boundary_gt30	R	6439..6492+ vs 6390..6505+
+mitom_native	NC_039685.1	Brachiopoda	boundary_gt30	atp6	3049..3663+ vs 3154..3663+
+mitom_native	NC_039685.1	Brachiopoda	boundary_gt30	rrnL	9687..10808+ vs 9689..10840+
+mitom_v1	NC_085563.1	Brachiopoda	boundary_gt30	cox1	1..1725+ vs 22..1622+
+mitom_v1	NC_085563.1	Brachiopoda	boundary_gt30	cox3	3155..4081+ vs 3173..3962+
+mitom_v1	NC_085563.1	Brachiopoda	boundary_gt30	nad2	7568..8527+ vs 7568..8396+
+mitom_v1	NC_085563.1	Brachiopoda	boundary_gt30	atp6	15003..15737+ vs 15222..15737+
+mitom_v1	NC_085563.1	Brachiopoda	missing_gene	nad6	16288..16782+
+mitom_v1	NC_085563.1	Brachiopoda	boundary_gt30	nad5	18955..20595+ vs 18949..20116+
+mitom_v1	NC_085563.1	Brachiopoda	boundary_gt30	rrnS	1813..3076+ vs 2188..3076+
+mitom_native	NC_085563.1	Brachiopoda	boundary_gt30	nad4	4452..5756+ vs 4599..5756+
+mitom_native	NC_085563.1	Brachiopoda	boundary_gt30	nad2	7568..8527+ vs 7505..8527+
+mitom_native	NC_085563.1	Brachiopoda	boundary_gt30	nad4l	15825..16109+ vs 15774..16109+
+mitom_native	NC_085563.1	Brachiopoda	boundary_gt30	nad6	16288..16782+ vs 16201..16782+
+mitom_native	NC_085563.1	Brachiopoda	boundary_gt30	nad3	17659..18066+ vs 17572..18066+
+mitom_native	NC_085563.1	Brachiopoda	boundary_gt30	rrnS	1813..3076+ vs 2235..3076+
+mitom_v1	NC_008192.1	Bryozoa	boundary_gt30	nad5	783..2222+ vs 699..2222+
+mitom_v1	NC_008192.1	Bryozoa	boundary_gt30	rrnL	4001..4670- vs 3937..4978-
+mitom_v1	NC_008192.1	Bryozoa	boundary_gt30	rrnS	7315..7967+ vs 7272..7967+
+mitom_v1	NC_008192.1	Bryozoa	name_error	Y	2450..2501+ vs 2441..2491+
+mitom_native	NC_008192.1	Bryozoa	boundary_gt30	rrnL	4001..4670- vs 3937..4978-
+mitom_native	NC_008192.1	Bryozoa	boundary_gt30	rrnS	7315..7967+ vs 7272..7967+
+mitom_native	NC_008192.1	Bryozoa	name_error	Y	2450..2501+ vs 2441..2491+
+mitom_v1	NC_015646.1	Bryozoa	boundary_gt30	nad5	6395..7754+ vs 6362..7754+
+mitom_v1	NC_015646.1	Bryozoa	boundary_gt30	cox2	7916..8586- vs 7855..8586-
+mitom_v1	NC_015646.1	Bryozoa	boundary_gt30	nad4l	9106..9348+ vs 9052..9348+
+mitom_v1	NC_015646.1	Bryozoa	boundary_gt30	cox3	11594..12361+ vs 11654..12361+
+mitom_v1	NC_015646.1	Bryozoa	boundary_gt30	rrnS	3836..4576- vs 3832..4790-
+mitom_v1	NC_015646.1	Bryozoa	name_error	N	1824..1879- vs 1823..1880-
+mitom_native	NC_015646.1	Bryozoa	boundary_gt30	nad5	6395..7754+ vs 6395..7858+
+mitom_native	NC_015646.1	Bryozoa	boundary_gt30	cox2	7916..8586- vs 7855..8586-
+mitom_native	NC_015646.1	Bryozoa	boundary_gt30	rrnS	3836..4576- vs 3832..4417-
+mitom_native	NC_015646.1	Bryozoa	name_error	N	1824..1879- vs 1823..1880-
+mitom_native	NC_016722.1	Bryozoa	boundary_gt30	cox2	5441..6116+ vs 5441..6265+
+mitom_v1	NC_018355.1	Bryozoa	name_error	V	11065..11131- vs 11066..11132+
+mitom_native	NC_018355.1	Bryozoa	name_error	V	11065..11131- vs 11066..11132+
+mitom_v1	NC_038192.1	Bryozoa	boundary_gt30	nad5	10660..12330- vs 10660..12381-
+mitom_v1	NC_038192.1	Bryozoa	boundary_gt30	nad4l	13807..14109- vs 13807..14169-
+mitom_native	NC_038192.1	Bryozoa	boundary_gt30	nad5	10660..12330- vs 10660..12381-
+mitom_native	NC_038192.1	Bryozoa	boundary_gt30	rrnL	8285..9628+ vs 8285..9549+
+mitom_v1	NC_006083.1	Chaetognatha	boundary_gt30	cox2	1550..2221+ vs 1610..2221+
+mitom_v1	NC_006083.1	Chaetognatha	boundary_gt30	nad3	3187..3507+ vs 3220..3507+
+mitom_v1	NC_006083.1	Chaetognatha	boundary_gt30	rrnS	5227..5753+ vs 5229..5832+
+mitom_v1	NC_006083.1	Chaetognatha	boundary_gt30	rrnL	10488..11423+ vs 10495..11305+
+mitom_native	NC_006083.1	Chaetognatha	boundary_gt30	rrnS	5227..5753+ vs 5229..5832+
+mitom_native	NC_006083.1	Chaetognatha	boundary_gt30	rrnL	10488..11423+ vs 10495..11305+
+mitom_v1	NC_006386.1	Chaetognatha	boundary_gt30	nad5	3060..4610- vs 3060..4661-
+mitom_v1	NC_006386.1	Chaetognatha	boundary_gt30	cox3	10401..11184+ vs 10458..11184+
+mitom_v1	NC_006386.1	Chaetognatha	boundary_gt30	rrnL	6275..7545+ vs 6725..7401+
+mitom_v1	NC_006386.1	Chaetognatha	boundary_gt30	rrnS	11185..11905+ vs 11249..11905+
+mitom_native	NC_006386.1	Chaetognatha	boundary_gt30	rrnL	6275..7545+ vs 6725..7401+
+mitom_native	NC_006386.1	Chaetognatha	boundary_gt30	rrnS	11185..11905+ vs 11249..11905+
+mitom_v1	NC_013810.1	Chaetognatha	boundary_gt30	cox2	1..654+ vs 37..654+
+mitom_v1	NC_013810.1	Chaetognatha	boundary_gt30	nad5	5900..7447- vs 5900..7528-
+mitom_v1	NC_013810.1	Chaetognatha	boundary_gt30	nad4l	7447..7662- vs 7447..7701-
+mitom_v1	NC_013810.1	Chaetognatha	boundary_gt30	rrnL	8872..9898+ vs 9031..9778+
+mitom_native	NC_013810.1	Chaetognatha	boundary_gt30	rrnL	8872..9898+ vs 8960..9843+
+mitom_v1	NC_013811.1	Chaetognatha	boundary_gt30	nad5	5060..6565- vs 5060..6604-
+mitom_v1	NC_013811.1	Chaetognatha	boundary_gt30	nad4l	6579..6890- vs 6579..6947-
+mitom_v1	NC_013811.1	Chaetognatha	boundary_gt30	cox1	8883..10463+ vs 8883..10401+
+mitom_v1	NC_013811.1	Chaetognatha	boundary_gt30	cox2	10444..11049+ vs 10516..11049+
+mitom_v1	NC_013811.1	Chaetognatha	boundary_gt30	rrnL	7988..8882+ vs 8029..8784+
+mitom_native	NC_013811.1	Chaetognatha	boundary_gt30	cox1	8883..10463+ vs 8883..10401+
+mitom_native	NC_013811.1	Chaetognatha	boundary_gt30	rrnL	7988..8882+ vs 8029..8784+
+mitom_v1	NC_013814.1	Chaetognatha	boundary_gt30	cox2	1..660+ vs 43..660+
+mitom_v1	NC_013814.1	Chaetognatha	boundary_gt30	nad4l	7021..7248- vs 7021..7296-
+mitom_v1	NC_013814.1	Chaetognatha	boundary_gt30	rrnS	3729..4348+ vs 3710..4277+
+mitom_v1	NC_013814.1	Chaetognatha	boundary_gt30	rrnL	9951..11059+ vs 10183..10980+
+mitom_native	NC_013814.1	Chaetognatha	boundary_gt30	rrnS	3729..4348+ vs 3710..4277+
+mitom_native	NC_013814.1	Chaetognatha	boundary_gt30	rrnL	9951..11059+ vs 10183..11016+
+mitom_native	NC_028416.1	Chordata	boundary_gt30	rrnL	1100..2985+ vs 1100..2562+
+mitom_v1	NC_088493.1	Chordata	boundary_gt30	nad6	15915..16442- vs 15915..16196-
+mitom_native	NC_088493.1	Chordata	boundary_gt30	nad6	15915..16442- vs 15915..16196-
+mitom_v1	NC_006902.1	Cnidaria	boundary_gt30	nad2	6263..7360+ vs 6164..7360+
+mitom_v1	NC_006902.1	Cnidaria	boundary_gt30	nad6	7393..7986+ vs 7426..7986+
+mitom_v1	NC_006902.1	Cnidaria	boundary_gt30	nad4l	13861..14160+ vs 13822..14160+
+mitom_v1	NC_006902.1	Cnidaria	boundary_gt30	rrnL	72..2337+ vs 72..2276+
+mitom_native	NC_006902.1	Cnidaria	boundary_gt30	rrnL	72..2337+ vs 72..2276+
+mitom_v1	NC_022829.1	Cnidaria	boundary_gt30	nad2	6250..7347+ vs 6151..7347+
+mitom_v1	NC_022829.1	Cnidaria	boundary_gt30	nad6	7380..7973+ vs 7413..7973+
+mitom_v1	NC_022829.1	Cnidaria	boundary_gt30	rrnL	72..2331+ vs 72..2433+
+mitom_v1	NC_022829.1	Cnidaria	boundary_gt30	rrnS	10420..11595+ vs 10368..11602+
+mitom_native	NC_022829.1	Cnidaria	boundary_gt30	rrnL	72..2331+ vs 72..2433+
+mitom_native	NC_022829.1	Cnidaria	boundary_gt30	rrnS	10420..11595+ vs 10368..11601+
+mitom_v1	NC_027103.1	Cnidaria	missing_gene	cox1	7543..10327+
+mitom_v1	NC_027103.1	Cnidaria	boundary_gt30	nad2	12542..13639+ vs 12464..13639+
+mitom_v1	NC_027103.1	Cnidaria	boundary_gt30	nad6	16989..17600+ vs 17022..17600+
+mitom_v1	NC_027103.1	Cnidaria	boundary_gt30	rrnL	1294..3643+ vs 1294..3830+
+mitom_v1	NC_027103.1	Cnidaria	internal_stop	nad5	
+mitom_native	NC_027103.1	Cnidaria	missing_gene	nad5	1..19852+
+mitom_native	NC_027103.1	Cnidaria	boundary_gt30	rrnL	1294..3643+ vs 1294..3830+
+mitom_v1	NC_031213.1	Cnidaria	boundary_gt30	nad5	6079..7908+ vs 6025..7495+
+mitom_v1	NC_031213.1	Cnidaria	boundary_gt30	nad4l	9730..10026+ vs 9649..10026+
+mitom_v1	NC_031213.1	Cnidaria	boundary_gt30	rrnL	283..2048- vs 1..2107-
+mitom_native	NC_031213.1	Cnidaria	boundary_gt30	nad5	6079..7908+ vs 6079..7495+
+mitom_native	NC_031213.1	Cnidaria	boundary_gt30	rrnL	283..2048- vs 330..2107-
+mitom_v1	NC_046405.1	Cnidaria	boundary_gt30	cox1	1..2980+ vs 1..2883+
+mitom_v1	NC_046405.1	Cnidaria	boundary_gt30	rrnS	4660..5856+ vs 4528..5863+
+mitom_v1	NC_046405.1	Cnidaria	boundary_gt30	rrnL	7718..10461+ vs 8136..10328+
+mitom_native	NC_046405.1	Cnidaria	boundary_gt30	rrnS	4660..5856+ vs 4528..5862+
+mitom_native	NC_046405.1	Cnidaria	boundary_gt30	rrnL	7718..10461+ vs 7672..10414+
+mitom_v1	NC_046775.1	Cnidaria	boundary_gt30	rrnL	1563..3239- vs 1549..3397-
+mitom_native	NC_046775.1	Cnidaria	boundary_gt30	rrnL	1563..3239- vs 1570..3397-
+mitom_v1	NC_062009.1	Cnidaria	boundary_gt30	nad2	1976..3331+ vs 1940..3331+
+mitom_v1	NC_062009.1	Cnidaria	boundary_gt30	cox1	9615..11183+ vs 9615..11282+
+mitom_v1	NC_062009.1	Cnidaria	boundary_gt30	rrnL	19..1946+ vs 99..1939+
+mitom_v1	NC_062009.1	Cnidaria	boundary_gt30	rrnS	11223..12272+ vs 11283..12339+
+mitom_v1	NC_062009.1	Cnidaria	internal_stop	cox1	
+mitom_native	NC_062009.1	Cnidaria	boundary_gt30	nad2	1976..3331+ vs 1940..3331+
+mitom_native	NC_062009.1	Cnidaria	boundary_gt30	nad3	15130..15483+ vs 15088..15483+
+mitom_native	NC_062009.1	Cnidaria	boundary_gt30	rrnS	11223..12272+ vs 11184..12339+
+mitom_v1	NC_062023.1	Cnidaria	boundary_gt30	atp8	8381..8632- vs 8381..8596-
+mitom_v1	NC_062023.1	Cnidaria	boundary_gt30	rrnL	19..1973+ vs 140..2002+
+mitom_v1	NC_062023.1	Cnidaria	boundary_gt30	rrnS	11094..12139+ vs 11184..12189+
+mitom_native	NC_062023.1	Cnidaria	boundary_gt30	atp8	8381..8632- vs 8381..8596-
+mitom_native	NC_062023.1	Cnidaria	boundary_gt30	rrnS	11094..12139+ vs 11184..12189+
+mitom_v1	NC_073494.1	Cnidaria	boundary_gt30	nad2	11347..12504+ vs 11131..12504+
+mitom_v1	NC_073494.1	Cnidaria	boundary_gt30	rrnS	1749..2674+ vs 1598..2678+
+mitom_v1	NC_073494.1	Cnidaria	boundary_gt30	rrnL	9160..11342+ vs 9296..11130+
+mitom_v1	NC_073494.1	Cnidaria	strand_error	M	16466..16532+ vs 16466..16536-
+mitom_native	NC_073494.1	Cnidaria	boundary_gt30	nad2	11347..12504+ vs 11131..12504+
+mitom_native	NC_073494.1	Cnidaria	boundary_gt30	rrnS	1749..2674+ vs 1597..2678+
+mitom_native	NC_073494.1	Cnidaria	boundary_gt30	rrnL	9160..11342+ vs 9132..11130+
+mitom_native	NC_073494.1	Cnidaria	strand_error	M	16466..16532+ vs 16466..16536-
+mitom_v1	NC_080261.1	Cnidaria	boundary_gt30	nad1	397..1410+ vs 436..1410+
+mitom_v1	NC_080261.1	Cnidaria	boundary_gt30	rrnS	14543..15738+ vs 14672..15745+
+mitom_v1	NC_080261.1	Cnidaria	boundary_gt30	rrnL	17752..20392+ vs 18024..20254+
+mitom_native	NC_080261.1	Cnidaria	boundary_gt30	rrnS	14543..15738+ vs 14320..15744+
+mitom_native	NC_080261.1	Cnidaria	boundary_gt30	rrnL	17752..20392+ vs 17655..20310+
+mitom_v1	NC_080948.1	Cnidaria	boundary_gt30	rrnL	1760..3325- vs 1689..3327-
+mitom_native	NC_080948.1	Cnidaria	boundary_gt30	rrnL	1760..3325- vs 1689..3350-
+mitom_v1	NC_080956.1	Cnidaria	boundary_gt30	nad4l	9892..10191+ vs 9826..10191+
+mitom_v1	NC_080956.1	Cnidaria	boundary_gt30	rrnL	473..2047- vs 437..2176-
+mitom_native	NC_080956.1	Cnidaria	boundary_gt30	rrnL	473..2047- vs 493..2176-
+mitom_v1	NC_016117.1	Ctenophora	boundary_gt30	cox1	1..1524+ vs 1..1414+
+mitom_v1	NC_016117.1	Ctenophora	boundary_gt30	nad5	6527..7933+ vs 6584..7443+
+mitom_v1	NC_016117.1	Ctenophora	boundary_gt30	rrnL	3521..4398+ vs 3638..4396+
+mitom_native	NC_016117.1	Ctenophora	missing_gene	rrnS	3153..3520+
+mitom_native	NC_016117.1	Ctenophora	missing_gene	rrnL	3521..4398+
+mitom_v1	NC_038065.1	Ctenophora	missing_gene	nad6	3099..3302+
+mitom_v1	NC_038065.1	Ctenophora	boundary_gt30	nad4	4699..5781+ vs 4741..5678+
+mitom_v1	NC_038065.1	Ctenophora	missing_gene	nad4l	5799..5969+
+mitom_v1	NC_038065.1	Ctenophora	boundary_gt30	nad5	5981..7459+ vs 6080..7163+
+mitom_v1	NC_038065.1	Ctenophora	boundary_gt30	cob	10863..11918+ vs 10875..11868+
+mitom_v1	NC_038065.1	Ctenophora	boundary_gt30	nad1	11837..12751+ vs 11870..12734+
+mitom_v1	NC_038065.1	Ctenophora	boundary_gt30	rrnS	1880..2255+ vs 1966..2269+
+mitom_v1	NC_038065.1	Ctenophora	boundary_gt30	rrnL	2256..3105+ vs 2270..3322+
+mitom_native	NC_038065.1	Ctenophora	missing_gene	nad6	3099..3302+
+mitom_native	NC_038065.1	Ctenophora	missing_gene	nad3	4324..4698+
+mitom_native	NC_038065.1	Ctenophora	boundary_gt30	nad4l	5799..5969+ vs 5763..5969+
+mitom_native	NC_038065.1	Ctenophora	boundary_gt30	nad5	5981..7459+ vs 6023..7459+
+mitom_native	NC_038065.1	Ctenophora	boundary_gt30	cob	10863..11918+ vs 10824..11906+
+mitom_native	NC_038065.1	Ctenophora	boundary_gt30	nad1	11837..12751+ vs 11897..12751+
+mitom_native	NC_038065.1	Ctenophora	missing_gene	rrnS	1880..2255+
+mitom_native	NC_038065.1	Ctenophora	boundary_gt30	rrnL	2256..3105+ vs 2656..3313+
+mitom_native	NC_038065.1	Ctenophora	internal_stop	atp6	
+mitom_native	NC_038065.1	Ctenophora	internal_stop	nad6	
+mitom_native	NC_038065.1	Ctenophora	internal_stop	cob	
+mitom_v1	NC_045305.1	Ctenophora	boundary_gt30	cox3	1513..2256+ vs 1702..2256+
+mitom_v1	NC_045305.1	Ctenophora	missing_gene	nad4	2556..3638+
+mitom_v1	NC_045305.1	Ctenophora	missing_gene	nad4l	3638..3826+
+mitom_v1	NC_045305.1	Ctenophora	boundary_gt30	nad5	3823..5196+ vs 3901..4817+
+mitom_v1	NC_045305.1	Ctenophora	boundary_gt30	rrnS	203..566+ vs 45..448+
+mitom_v1	NC_045305.1	Ctenophora	boundary_gt30	rrnL	567..1439+ vs 473..1330+
+mitom_native	NC_045305.1	Ctenophora	name_error	nad4l	3638..3826+ vs 3722..3826+
+mitom_native	NC_045305.1	Ctenophora	boundary_gt30	nad5	3823..5196+ vs 3862..5196+
+mitom_native	NC_045305.1	Ctenophora	missing_gene	rrnS	203..566+
+mitom_native	NC_045305.1	Ctenophora	missing_gene	rrnL	567..1439+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	cox1	1..1539+ vs 1..1408+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	cox2	1684..2241+ vs 1639..2241+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	cox3	5673..6413+ vs 5865..6413+
+mitom_v1	NC_045864.1	Ctenophora	missing_gene	nad2	6425..7141+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	nad4	7452..8534+ vs 7578..8343+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	cob	8541..9644+ vs 8598..9644+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	nad5	9651..11159+ vs 9729..10647+
+mitom_v1	NC_045864.1	Ctenophora	missing_gene	nad6	11998..12195+
+mitom_v1	NC_045864.1	Ctenophora	missing_gene	nad4l	12197..12529+
+mitom_v1	NC_045864.1	Ctenophora	boundary_gt30	rrnL	4067..4999+ vs 4161..5048+
+mitom_native	NC_045864.1	Ctenophora	name_error	nad2	6425..7141+ vs 6593..7141+
+mitom_native	NC_045864.1	Ctenophora	boundary_gt30	cob	8541..9644+ vs 8577..9644+
+mitom_native	NC_045864.1	Ctenophora	boundary_gt30	nad5	9651..11159+ vs 9729..11159+
+mitom_native	NC_045864.1	Ctenophora	missing_gene	nad6	11998..12195+
+mitom_native	NC_045864.1	Ctenophora	missing_gene	nad4l	12197..12529+
+mitom_native	NC_045864.1	Ctenophora	missing_gene	rrnL	4067..4999+
+mitom_native	NC_045864.1	Ctenophora	missing_gene	rrnS	5060..5646+
+mitom_v1	NC_001627.1	Echinodermata	strand_error	F	5930..6001- vs 5930..6001+
+mitom_v1	NC_001627.1	Echinodermata	strand_error	N	11910..11981+ vs 11910..11981-
+mitom_native	NC_001627.1	Echinodermata	boundary_gt30	rrnL	7490..9020- vs 7508..8528-
+mitom_native	NC_001627.1	Echinodermata	strand_error	F	5930..6001- vs 5930..6001+
+mitom_native	NC_001627.1	Echinodermata	strand_error	N	11910..11981+ vs 11910..11981-
+mitom_v1	NC_040150.1	Echinodermata	boundary_gt30	rrnL	526..1867- vs 517..1921-
+mitom_v1	NC_040150.1	Echinodermata	name_error	L	4636..4685+ vs 4636..4685+
+mitom_native	NC_040150.1	Echinodermata	boundary_gt30	rrnL	526..1867- vs 517..1921-
+mitom_native	NC_044109.1	Echinodermata	boundary_gt30	atp8	2731..2895+ vs 2731..2826+
+mitom_v1	NC_054230.1	Echinodermata	boundary_gt30	rrnL	14567..16169+ vs 14503..16188+
+mitom_native	NC_054230.1	Echinodermata	boundary_gt30	rrnL	14567..16169+ vs 14503..16161+
+mitom_v1	NC_063787.1	Echinodermata	boundary_gt30	rrnL	14561..16163- vs 14279..16186-
+mitom_v1	NC_065088.1	Echinodermata	boundary_gt30	rrnS	12063..12885+ vs 12065..12945+
+mitom_native	NC_065088.1	Echinodermata	boundary_gt30	rrnS	12063..12885+ vs 12065..12945+
+mitom_v1	NC_068797.1	Echinodermata	boundary_gt30	rrnL	7623..9139- vs 7624..9179-
+mitom_native	NC_068797.1	Echinodermata	boundary_gt30	rrnL	7623..9139- vs 7624..9179-
+mitom_v1	NC_083273.1	Echinodermata	boundary_gt30	rrnL	3219..4177+ vs 3115..4649+
+mitom_native	NC_083273.1	Echinodermata	boundary_gt30	rrnL	3219..4177+ vs 3115..4649+
+mitom_v1	NC_010432.1	Entoprocta	boundary_gt30	nad2	9523..10529- vs 9656..10529-
+mitom_v1	NC_010432.1	Entoprocta	boundary_gt30	cox3	11567..12316- vs 11567..12354-
+mitom_v1	NC_010432.1	Entoprocta	internal_stop	cox3	
+mitom_v1	NC_026985.1	Gastrotricha	boundary_gt30	nad5	4947..6563+ vs 4869..6448+
+mitom_v1	NC_026985.1	Gastrotricha	boundary_gt30	atp6	6959..7426+ vs 6752..7426+
+mitom_v1	NC_026985.1	Gastrotricha	boundary_gt30	nad2	11845..12816+ vs 11806..12816+
+mitom_v1	NC_026985.1	Gastrotricha	boundary_gt30	rrnS	7580..8327+ vs 7637..8039+
+mitom_v1	NC_026985.1	Gastrotricha	boundary_gt30	rrnL	8489..9440+ vs 8040..9462+
+mitom_native	NC_026985.1	Gastrotricha	boundary_gt30	rrnS	7580..8327+ vs 7637..8323+
+mitom_native	NC_026985.1	Gastrotricha	boundary_gt30	rrnL	8489..9440+ vs 8387..9462+
+mitom_v1	NC_026983.1	Gnathostomulida	boundary_gt30	nad5	1977..3533+ vs 1917..3533+
+mitom_v1	NC_026983.1	Gnathostomulida	missing_gene	nad6	10667..11113+
+mitom_v1	NC_026983.1	Gnathostomulida	boundary_gt30	nad4l	12551..12760+ vs 12506..12760+
+mitom_v1	NC_026983.1	Gnathostomulida	boundary_gt30	nad4	12870..14030+ vs 12762..13926+
+mitom_v1	NC_026983.1	Gnathostomulida	boundary_gt30	rrnS	6716..7448- vs 6729..7328-
+mitom_v1	NC_026983.1	Gnathostomulida	boundary_gt30	rrnL	8368..8872+ vs 8278..8887+
+mitom_native	NC_026983.1	Gnathostomulida	missing_gene	nad5	1977..3533+
+mitom_native	NC_026983.1	Gnathostomulida	boundary_gt30	rrnS	6716..7448- vs 6729..7328-
+mitom_native	NC_026983.1	Gnathostomulida	boundary_gt30	rrnL	8368..8872+ vs 8278..8887+
+mitom_v1	NC_026984.1	Gnathostomulida	boundary_gt30	nad4	6195..7433+ vs 6339..7308+
+mitom_v1	NC_026984.1	Gnathostomulida	boundary_gt30	nad5	9206..10804+ vs 9173..10804+
+mitom_v1	NC_026984.1	Gnathostomulida	boundary_gt30	atp6	12234..12833+ vs 12159..12837+
+mitom_v1	NC_026984.1	Gnathostomulida	boundary_gt30	nad2	13065..13823+ vs 13032..13823+
+mitom_v1	NC_026984.1	Gnathostomulida	boundary_gt30	rrnS	183..907- vs 194..787-
+mitom_v1	NC_026984.1	Gnathostomulida	missing_gene	rrnL	1117..2513+
+mitom_native	NC_026984.1	Gnathostomulida	boundary_gt30	nad2	13065..13823+ vs 13098..13823+
+mitom_native	NC_026984.1	Gnathostomulida	boundary_gt30	rrnS	183..907- vs 194..787-
+mitom_native	NC_026984.1	Gnathostomulida	missing_gene	rrnL	1117..2513+
+mitom_v1	NC_001887.1	Hemichordata	boundary_gt30	cox1	5180..6739+ vs 5138..6739+
+mitom_v1	NC_001887.1	Hemichordata	internal_stop	cox1	
+mitom_native	NC_001887.1	Hemichordata	boundary_gt30	cox1	5180..6739+ vs 5138..6739+
+mitom_native	NC_001887.1	Hemichordata	internal_stop	cox1	
+mitom_v1	NC_007438.1	Hemichordata	name_error	K	12113..12183+ vs 12113..12183+
+mitom_native	NC_007438.1	Hemichordata	name_error	K	12113..12183+ vs 12113..12183+
+mitom_v1	NC_013877.1	Hemichordata	boundary_gt30	nad5	10687..12675+ vs 10738..12675+
+mitom_v1	NC_013877.1	Hemichordata	boundary_gt30	cob	12675..13874+ vs 12675..13821+
+mitom_v1	NC_013877.1	Hemichordata	strand_error	S	10670..10737- vs 10670..10737+
+mitom_native	NC_013877.1	Hemichordata	boundary_gt30	cob	12675..13874+ vs 12675..13821+
+mitom_native	NC_013877.1	Hemichordata	strand_error	S	10670..10737- vs 10670..10737+
+mitom_v1	NC_040107.1	Hemichordata	boundary_gt30	cox1	6374..7912+ vs 6323..7912+
+mitom_v1	NC_040107.1	Hemichordata	boundary_gt30	cox2	8112..8747+ vs 8064..8747+
+mitom_v1	NC_040107.1	Hemichordata	missing_gene	atp8	8812..8976+
+mitom_v1	NC_040107.1	Hemichordata	strand_error	Y	6293..6363+ vs 6293..6363-
+mitom_native	NC_040107.1	Hemichordata	boundary_gt30	cox1	6374..7912+ vs 6326..7912+
+mitom_native	NC_040107.1	Hemichordata	boundary_gt30	cox2	8112..8747+ vs 8064..8747+
+mitom_native	NC_040107.1	Hemichordata	strand_error	Y	6293..6363+ vs 6326..6363-
+mitom_v1	NC_040108.1	Hemichordata	boundary_gt30	nad4l	37..330+ vs 15393..15746+
+mitom_v1	NC_040108.1	Hemichordata	boundary_gt30	cox1	9368..10909+ vs 9320..10909+
+mitom_v1	NC_040108.1	Hemichordata	boundary_gt30	cox2	11101..11739+ vs 11053..11739+
+mitom_native	NC_040108.1	Hemichordata	boundary_gt30	nad5	1843..3708+ vs 1954..3708+
+mitom_native	NC_040108.1	Hemichordata	boundary_gt30	cox1	9368..10909+ vs 9323..10909+
+mitom_native	NC_040108.1	Hemichordata	boundary_gt30	cox2	11101..11739+ vs 11053..11739+
+mitom_native	NC_040108.1	Hemichordata	name_error	Y	9290..9359- vs 9323..9359-
+mitom_native	NC_040109.1	Hemichordata	boundary_gt30	nad5	11412..13355+ vs 11361..13355+
+mitom_v1	NC_031872.1	Kinorhyncha	missing_gene	atp8	3215..3361+
+mitom_v1	NC_031872.1	Kinorhyncha	boundary_gt30	nad2	8453..9445+ vs 8453..9326+
+mitom_v1	NC_031872.1	Kinorhyncha	boundary_gt30	atp6	10946..11593+ vs 10991..11593+
+mitom_v1	NC_031872.1	Kinorhyncha	boundary_gt30	nad5	13294..14985+ vs 13357..14985+
+mitom_v1	NC_031872.1	Kinorhyncha	boundary_gt30	rrnL	3440..4421+ vs 3422..4507+
+mitom_native	NC_031872.1	Kinorhyncha	boundary_gt30	rrnL	3440..4421+ vs 3422..4525+
+mitom_v1	NC_031873.1	Kinorhyncha	boundary_gt30	nad5	13616..15304+ vs 13565..15304+
+mitom_v1	NC_031873.1	Kinorhyncha	boundary_gt30	rrnL	3438..4451+ vs 3296..4464+
+mitom_native	NC_031873.1	Kinorhyncha	boundary_gt30	rrnL	3438..4451+ vs 3296..4485+
+mitom_v1	NC_045069.1	Kinorhyncha	boundary_gt30	cox3	8691..9500+ vs 8766..9500+
+mitom_v1	NC_045069.1	Kinorhyncha	missing_gene	nad6	9621..10070+
+mitom_v1	NC_045069.1	Kinorhyncha	boundary_gt30	nad4	11564..12853+ vs 11702..12758+
+mitom_v1	NC_045069.1	Kinorhyncha	missing_gene	rrnS	2067..2832+
+mitom_v1	NC_045069.1	Kinorhyncha	missing_gene	rrnL	3248..4359+
+mitom_native	NC_045069.1	Kinorhyncha	boundary_gt30	nad5	13425..14399+ vs 13425..14609+
+mitom_native	NC_045069.1	Kinorhyncha	boundary_gt30	rrnS	2067..2832+ vs 2194..2832+
+mitom_native	NC_045069.1	Kinorhyncha	missing_gene	rrnL	3248..4359+
+mitom_native	NC_045069.1	Kinorhyncha	internal_stop	nad5	
+mitom_v1	NC_006886.2	Mollusca	boundary_gt30	cox3	6003..6795+ vs 6003..6938+
+mitom_native	NC_006886.2	Mollusca	boundary_gt30	cox3	6003..6795+ vs 6003..6938+
+mitom_native	NC_006886.2	Mollusca	boundary_gt30	rrnL	15501..16744+ vs 15501..16683+
+mitom_v1	NC_018362.1	Mollusca	boundary_gt30	nad4	14645..15983+ vs 14645..16021+
+mitom_native	NC_018362.1	Mollusca	boundary_gt30	nad4	14645..15983+ vs 14645..16021+
+mitom_v1	NC_037188.1	Mollusca	boundary_gt30	nad4l	9125..9421+ vs 9050..9421+
+mitom_v1	NC_061910.1	Mollusca	boundary_gt30	nad4l	11771..12067+ vs 11690..12067+
+mitom_v1	NC_061910.1	Mollusca	boundary_gt30	rrnS	6435..7330+ vs 6349..7330+
+mitom_v1	NC_061910.1	Mollusca	strand_error	M	5875..5943+ vs 5876..5943-
+mitom_v1	NC_061910.1	Mollusca	strand_error	Y	5947..6014+ vs 5948..6014-
+mitom_v1	NC_061910.1	Mollusca	strand_error	C	6015..6079+ vs 6015..6079-
+mitom_v1	NC_061910.1	Mollusca	strand_error	W	6080..6147+ vs 6080..6147-
+mitom_v1	NC_061910.1	Mollusca	strand_error	Q	6145..6210+ vs 6146..6210-
+mitom_v1	NC_061910.1	Mollusca	strand_error	G	6212..6278+ vs 6212..6278-
+mitom_v1	NC_061910.1	Mollusca	strand_error	E	6280..6348+ vs 6280..6348-
+mitom_v1	NC_061910.1	Mollusca	strand_error	T	11686..11753+ vs 11686..11753-
+mitom_native	NC_061910.1	Mollusca	boundary_gt30	nad4l	11771..12067+ vs 11771..11951+
+mitom_native	NC_061910.1	Mollusca	boundary_gt30	rrnS	6435..7330+ vs 6349..7330+
+mitom_native	NC_061910.1	Mollusca	strand_error	M	5875..5943+ vs 5876..5943-
+mitom_native	NC_061910.1	Mollusca	strand_error	Y	5947..6014+ vs 5948..6014-
+mitom_native	NC_061910.1	Mollusca	strand_error	C	6015..6079+ vs 6015..6079-
+mitom_native	NC_061910.1	Mollusca	strand_error	W	6080..6147+ vs 6080..6147-
+mitom_native	NC_061910.1	Mollusca	strand_error	Q	6145..6210+ vs 6146..6210-
+mitom_native	NC_061910.1	Mollusca	strand_error	G	6212..6278+ vs 6212..6278-
+mitom_native	NC_061910.1	Mollusca	strand_error	E	6280..6348+ vs 6280..6348-
+mitom_native	NC_061910.1	Mollusca	strand_error	T	11686..11753+ vs 11686..11753-
+mitom_v1	NC_063753.1	Mollusca	boundary_gt30	nad3	1632..1997+ vs 1668..1997+
+mitom_v1	NC_063753.1	Mollusca	boundary_gt30	nad4	2561..3716+ vs 2522..3716+
+mitom_v1	NC_063753.1	Mollusca	boundary_gt30	nad2	11054..12034+ vs 11054..11923+
+mitom_v1	NC_063753.1	Mollusca	boundary_gt30	rrnS	5849..6676+ vs 5829..6764+
+mitom_native	NC_063753.1	Mollusca	boundary_gt30	nad3	1632..1997+ vs 1593..1997+
+mitom_native	NC_063753.1	Mollusca	boundary_gt30	nad4	2561..3716+ vs 2387..3716+
+mitom_native	NC_063753.1	Mollusca	boundary_gt30	rrnS	5849..6676+ vs 5829..6764+
+mitom_v1	NC_063769.1	Mollusca	boundary_gt30	nad4l	9208..9504+ vs 9124..9504+
+mitom_v1	NC_063769.1	Mollusca	boundary_gt30	rrnS	3903..4787+ vs 3833..4785+
+mitom_native	NC_063769.1	Mollusca	boundary_gt30	rrnS	3903..4787+ vs 3833..4785+
+mitom_v1	NC_068082.1	Mollusca	strand_error	T	9644..9711- vs 9644..9711+
+mitom_v1	NC_068082.1	Mollusca	strand_error	P	11436..11501+ vs 11436..11501-
+mitom_native	NC_068082.1	Mollusca	strand_error	T	9644..9711- vs 9644..9711+
+mitom_native	NC_068082.1	Mollusca	strand_error	P	11436..11501+ vs 11436..11501-
+mitom_v1	NC_072228.1	Mollusca	boundary_gt30	nad4l	12141..12437+ vs 12081..12437+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	cox1	1..1656+ vs 61..1537+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	nad6	1735..2226+ vs 1696..2226+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	atp6	7967..8671+ vs 8123..8671+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	cox2	8775..9914+ vs 8775..9573+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	cox3	10260..11084+ vs 10260..11046+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	nad2	16167..17204+ vs 16167..17079+
+mitom_v1	NC_083122.1	Mollusca	boundary_gt30	rrnS	6288..7549+ vs 6288..7144+
+mitom_native	NC_083122.1	Mollusca	boundary_gt30	cox1	1..1656+ vs 55..1656+
+mitom_native	NC_083122.1	Mollusca	boundary_gt30	cox2	8775..9914+ vs 8880..9914+
+mitom_native	NC_083122.1	Mollusca	boundary_gt30	nad4	11492..12823+ vs 12044..12823+
+mitom_native	NC_083122.1	Mollusca	boundary_gt30	rrnL	4470..5962+ vs 4606..5885+
+mitom_native	NC_083122.1	Mollusca	missing_gene	rrnS	6288..7549+
+mitom_v1	NC_084457.1	Mollusca	boundary_gt30	nad6	2941..3375+ vs 2908..3375+
+mitom_v1	NC_084457.1	Mollusca	boundary_gt30	nad5	3419..5041+ vs 3353..5015+
+mitom_native	NC_084457.1	Mollusca	boundary_gt30	nad6	2941..3375+ vs 2908..3375+
+mitom_native	NC_084457.1	Mollusca	missing_gene	atp8	8723..8875-
+mitom_v1	NC_086642.1	Mollusca	boundary_gt30	nad5	1631..3277+ vs 1536..3277+
+mitom_v1	NC_086642.1	Mollusca	internal_stop	nad5	
+mitom_native	NC_086642.1	Mollusca	boundary_gt30	nad4l	4155..4452+ vs 4155..4619+
+mitom_native	NC_086642.1	Mollusca	missing_gene	atp8	6702..6853-
+mitom_v1	NC_001861.1	Nematoda	boundary_gt30	nad4l	7132..7374+ vs 7192..7374+
+mitom_v1	NC_001861.1	Nematoda	boundary_gt30	rrnS	7375..8058+ vs 7375..8110+
+mitom_native	NC_001861.1	Nematoda	boundary_gt30	rrnS	7375..8058+ vs 7375..8116+
+mitom_v1	NC_002681.1	Nematoda	boundary_gt30	rrnS	6091..6778+ vs 6091..6476+
+mitom_v1	NC_002681.1	Nematoda	boundary_gt30	rrnL	6833..7779+ vs 6477..7779+
+mitom_v1	NC_005928.1	Nematoda	boundary_gt30	nad5	5370..6917+ vs 5430..6917+
+mitom_native	NC_005928.1	Nematoda	boundary_gt30	rrnL	4570..5298- vs 4570..5012-
+mitom_v1	NC_008047.1	Nematoda	missing_gene	rrnL	16485..17330+
+mitom_v1	NC_008047.1	Nematoda	missing_gene	rrnS	17331..18002+
+mitom_v1	NC_008047.1	Nematoda	name_error	Y	2605..2658- vs 2595..2649+
+mitom_native	NC_008047.1	Nematoda	missing_gene	rrnL	16485..17330+
+mitom_native	NC_008047.1	Nematoda	missing_gene	rrnS	17331..18002+
+mitom_native	NC_008047.1	Nematoda	name_error	Y	2605..2658- vs 2595..2649+
+mitom_v1	NC_008640.1	Nematoda	missing_gene	nad3	7901..8254+
+mitom_v1	NC_008640.1	Nematoda	missing_gene	nad3	10933..11286+
+mitom_v1	NC_008640.1	Nematoda	boundary_gt30	rrnS	3267..3928+ vs 3163..3919+
+mitom_v1	NC_008640.1	Nematoda	boundary_gt30	rrnL	16497..17335- vs 16432..17335-
+mitom_native	NC_008640.1	Nematoda	missing_gene	nad3	7901..8254+
+mitom_native	NC_008640.1	Nematoda	missing_gene	nad3	10933..11286+
+mitom_native	NC_008640.1	Nematoda	boundary_gt30	rrnS	3267..3928+ vs 3163..3919+
+mitom_native	NC_008640.1	Nematoda	boundary_gt30	rrnL	16497..17335- vs 16432..17335-
+mitom_v1	NC_013831.1	Nematoda	boundary_gt30	nad5	3948..5529+ vs 3897..5529+
+mitom_v1	NC_013831.1	Nematoda	boundary_gt30	rrnL	2570..3531+ vs 2888..3531+
+mitom_v1	NC_013831.1	Nematoda	internal_stop	nad4	
+mitom_v1	NC_017750.1	Nematoda	boundary_gt30	atp8	13055..13219+ vs 13109..13219+
+mitom_v1	NC_017750.1	Nematoda	boundary_gt30	rrnS	9425..10122+ vs 9433..9837+
+mitom_v1	NC_017750.1	Nematoda	boundary_gt30	rrnL	10180..11190+ vs 9838..11148+
+mitom_v1	NC_017750.1	Nematoda	boundary_gt30	E	2318..2374+ vs 2318..2411+
+mitom_v1	NC_017750.1	Nematoda	name_error	A	13845..13899+ vs 13845..13899+
+mitom_native	NC_017750.1	Nematoda	boundary_gt30	E	2318..2374+ vs 2318..2411+
+mitom_native	NC_017750.1	Nematoda	name_error	A	13845..13899+ vs 13845..13899+
+mitom_v1	NC_027697.1	Nematoda	boundary_gt30	nad6	13050..13484- vs 13050..13445-
+mitom_v1	NC_027697.1	Nematoda	boundary_gt30	rrnL	2207..3165- vs 2206..2848-
+mitom_v1	NC_027697.1	Nematoda	strand_error	L	10222..10292+ vs 10222..10292-
+mitom_native	NC_027697.1	Nematoda	boundary_gt30	cox1	4150..5727- vs 4938..5727-
+mitom_native	NC_027697.1	Nematoda	strand_error	L	10222..10292+ vs 10222..10292-
+mitom_v1	NC_033868.1	Nematoda	boundary_gt30	nad1	65..982- vs 103..982-
+mitom_v1	NC_033868.1	Nematoda	boundary_gt30	atp6	5290..5901- vs 5328..5901-
+mitom_v1	NC_033868.1	Nematoda	boundary_gt30	rrnS	1131..1736+ vs 1131..1785+
+mitom_v1	NC_033868.1	Nematoda	boundary_gt30	Q	983..1034+ vs 983..1073+
+mitom_v1	NC_033868.1	Nematoda	boundary_gt30	D	5234..5289- vs 5225..5328-
+mitom_native	NC_033868.1	Nematoda	boundary_gt30	nad1	65..982- vs 103..982-
+mitom_native	NC_033868.1	Nematoda	boundary_gt30	atp6	5290..5901- vs 5328..5901-
+mitom_native	NC_033868.1	Nematoda	boundary_gt30	rrnS	1131..1736+ vs 1131..1785+
+mitom_native	NC_033868.1	Nematoda	boundary_gt30	Q	983..1034+ vs 983..1073+
+mitom_native	NC_033868.1	Nematoda	boundary_gt30	D	5234..5289- vs 5225..5328-
+mitom_v1	NC_036308.1	Nematoda	missing_gene	cox3	4126..4887+
+mitom_v1	NC_036308.1	Nematoda	boundary_gt30	atp6	8336..9002+ vs 8426..8933+
+mitom_v1	NC_036308.1	Nematoda	boundary_gt30	nad5	13142..14725+ vs 13106..14725+
+mitom_v1	NC_036308.1	Nematoda	boundary_gt30	nad6	17238..17708+ vs 17232..17646+
+mitom_v1	NC_036308.1	Nematoda	boundary_gt30	rrnS	1..714+ vs 317..833+
+mitom_native	NC_036308.1	Nematoda	boundary_gt30	cob	14912..16007+ vs 14912..16808+
+mitom_native	NC_036308.1	Nematoda	name_error	cox3	16052..16813+ vs 15746..16808+
+mitom_v1	NC_085811.1	Nematoda	boundary_gt30	rrnL	2636..3554+ vs 2947..3539+
+mitom_native	NC_085811.1	Nematoda	boundary_gt30	nad5	3929..5476+ vs 3986..5476+
+mitom_v1	NC_044095.1	Nematomorpha	missing_gene	atp8	2434..2532+
+mitom_v1	NC_044095.1	Nematomorpha	boundary_gt30	atp6	2542..3228+ vs 2809..3228+
+mitom_v1	NC_044095.1	Nematomorpha	boundary_gt30	nad4	5056..6382+ vs 5113..6382+
+mitom_v1	NC_044095.1	Nematomorpha	boundary_gt30	nad5	6443..8191+ vs 6455..7781+
+mitom_v1	NC_044095.1	Nematomorpha	missing_gene	nad6	9972..10472+
+mitom_native	NC_044095.1	Nematomorpha	missing_gene	atp8	2434..2532+
+mitom_native	NC_044095.1	Nematomorpha	boundary_gt30	nad5	6443..8191+ vs 6455..7774+
+mitom_native	NC_044095.1	Nematomorpha	missing_gene	nad2	8361..9341-
+mitom_v1	NC_085569.1	Nematomorpha	missing_gene	atp8	2364..2483+
+mitom_v1	NC_085569.1	Nematomorpha	missing_gene	nad4l	4602..4862+
+mitom_v1	NC_085569.1	Nematomorpha	boundary_gt30	nad4	5003..6176+ vs 4874..6184+
+mitom_v1	NC_085569.1	Nematomorpha	boundary_gt30	nad5	6293..7660+ vs 6215..7409+
+mitom_v1	NC_085569.1	Nematomorpha	missing_gene	nad6	9160..9702+
+mitom_v1	NC_085569.1	Nematomorpha	missing_gene	rrnL	1..12037-
+mitom_v1	NC_085569.1	Nematomorpha	name_error	A	4382..4436+ vs 4409..4493+
+mitom_native	NC_085569.1	Nematomorpha	missing_gene	atp8	2364..2483+
+mitom_native	NC_085569.1	Nematomorpha	boundary_gt30	atp6	2490..3173+ vs 2535..3173+
+mitom_native	NC_085569.1	Nematomorpha	boundary_gt30	nad3	4045..4381+ vs 4045..4347+
+mitom_native	NC_085569.1	Nematomorpha	boundary_gt30	nad4	5003..6176+ vs 4853..6184+
+mitom_native	NC_085569.1	Nematomorpha	boundary_gt30	nad5	6293..7660+ vs 6233..7660+
+mitom_native	NC_085569.1	Nematomorpha	missing_gene	rrnL	1..12037-
+mitom_native	NC_085569.1	Nematomorpha	name_error	A	4382..4436+ vs 4409..4493+
+mitom_v1	NC_012821.1	Nemertea	boundary_gt30	nad4l	7135..7440+ vs 7093..7440+
+mitom_v1	NC_014869.1	Nemertea	boundary_gt30	nad4l	6277..6582+ vs 6220..6582+
+mitom_v1	NC_014869.1	Nemertea	boundary_gt30	cox1	13137..14672+ vs 13101..14672+
+mitom_v1	NC_009082.1	Onychophora	boundary_gt30	nad2	4421..5422+ vs 4388..5422+
+mitom_v1	NC_009082.1	Onychophora	boundary_gt30	rrnS	789..1392- vs 786..1214-
+mitom_v1	NC_009082.1	Onychophora	boundary_gt30	rrnL	1393..2597+ vs 1215..2550+
+mitom_v1	NC_009082.1	Onychophora	name_error	M	9661..9720+ vs 9644..9711+
+mitom_v1	NC_009082.1	Onychophora	name_error	C	11855..11916+ vs 11851..11919-
+mitom_v1	NC_009082.1	Onychophora	name_error	E	13667..13718- vs 13668..13719+
+mitom_v1	NC_009082.1	Onychophora	internal_stop	nad3	
+mitom_native	NC_009082.1	Onychophora	boundary_gt30	nad3	9291..9642+ vs 9291..9681+
+mitom_native	NC_009082.1	Onychophora	boundary_gt30	rrnS	789..1392- vs 865..1483-
+mitom_native	NC_009082.1	Onychophora	boundary_gt30	rrnL	1393..2597+ vs 1484..2550+
+mitom_native	NC_009082.1	Onychophora	name_error	M	9661..9720+ vs 9685..9745-
+mitom_native	NC_009082.1	Onychophora	name_error	C	11855..11916+ vs 11851..11919-
+mitom_native	NC_009082.1	Onychophora	name_error	E	13667..13718- vs 13668..13719+
+mitom_v1	NC_010961.1	Onychophora	boundary_gt30	rrnL	9625..10913- vs 9606..10796-
+mitom_v1	NC_010961.1	Onychophora	boundary_gt30	rrnS	14540..15125- vs 14576..15262-
+mitom_v1	NC_010961.1	Onychophora	name_error	V	1563..1624+ vs 1561..1624-
+mitom_v1	NC_010961.1	Onychophora	name_error	T	7995..8055+ vs 8003..8060+
+mitom_v1	NC_010961.1	Onychophora	name_error	S	8047..8106- vs 8026..8087+
+mitom_v1	NC_010961.1	Onychophora	name_error	H	10865..10932+ vs 10870..10940+
+mitom_native	NC_010961.1	Onychophora	boundary_gt30	rrnL	9625..10913- vs 9588..10796-
+mitom_native	NC_010961.1	Onychophora	boundary_gt30	rrnS	14540..15125- vs 14576..15262-
+mitom_native	NC_010961.1	Onychophora	name_error	V	1563..1624+ vs 1561..1624-
+mitom_native	NC_010961.1	Onychophora	name_error	T	7995..8055+ vs 8003..8060+
+mitom_native	NC_010961.1	Onychophora	name_error	H	10865..10932+ vs 10870..10940+
+mitom_v1	NC_014273.1	Onychophora	boundary_gt30	rrnL	11784..12756- vs 11796..12894-
+mitom_v1	NC_014273.1	Onychophora	boundary_gt30	rrnS	12871..13539- vs 12895..13673-
+mitom_v1	NC_014273.1	Onychophora	name_error	K	3357..3432+ vs 3394..3461+
+mitom_v1	NC_014273.1	Onychophora	boundary_gt30	F	5597..5678- vs 5629..5678-
+mitom_native	NC_014273.1	Onychophora	boundary_gt30	rrnL	11784..12756- vs 11796..12894-
+mitom_native	NC_014273.1	Onychophora	boundary_gt30	rrnS	12871..13539- vs 12895..13673-
+mitom_native	NC_014273.1	Onychophora	name_error	K	3357..3432+ vs 3394..3461+
+mitom_native	NC_014273.1	Onychophora	boundary_gt30	F	5597..5678- vs 5629..5678-
+mitom_native	NC_014273.1	Onychophora	name_error	T	9050..9129+ vs 9087..9142-
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	nad3	3875..4226+ vs 3914..4226+
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	nad6	9569..9919- vs 9416..9919-
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	nad4l	11673..11969+ vs 11706..11969+
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	rrnS	9949..10624- vs 9920..10335-
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	rrnL	10526..11631+ vs 10394..11620+
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	V	6425..6461- vs 6393..6467-
+mitom_v1	NC_015890.1	Onychophora	boundary_gt30	Y	8315..8357+ vs 8324..8401+
+mitom_v1	NC_015890.1	Onychophora	internal_stop	nad6	
+mitom_native	NC_015890.1	Onychophora	missing_gene	cox3	3090..3875+
+mitom_native	NC_015890.1	Onychophora	boundary_gt30	rrnL	10526..11631+ vs 10635..11620+
+mitom_native	NC_015890.1	Onychophora	boundary_gt30	Y	8315..8357+ vs 8324..8401+
+mitom_v1	NC_060553.1	Orthonectida	boundary_gt30	nad4	700..1950- vs 900..1926-
+mitom_v1	NC_060553.1	Orthonectida	missing_gene	nad6	4946..5397+
+mitom_v1	NC_060553.1	Orthonectida	missing_gene	atp8	6585..6701+
+mitom_v1	NC_060553.1	Orthonectida	missing_gene	nad4l	10763..11038+
+mitom_v1	NC_060553.1	Orthonectida	boundary_gt30	nad2	11978..12868+ vs 12068..12833+
+mitom_v1	NC_060553.1	Orthonectida	boundary_gt30	nad5	12874..14541+ vs 12835..14186+
+mitom_v1	NC_060553.1	Orthonectida	missing_gene	rrnL	7165..8392-
+mitom_v1	NC_060553.1	Orthonectida	boundary_gt30	rrnS	8457..9141+ vs 8771..9141+
+mitom_v1	NC_060553.1	Orthonectida	strand_error	F	3537..3597+ vs 3537..3597-
+mitom_native	NC_060553.1	Orthonectida	boundary_gt30	nad4	700..1950- vs 700..1791-
+mitom_native	NC_060553.1	Orthonectida	missing_gene	nad6	4946..5397+
+mitom_native	NC_060553.1	Orthonectida	missing_gene	atp8	6585..6701+
+mitom_native	NC_060553.1	Orthonectida	boundary_gt30	nad2	11978..12868+ vs 12011..12868+
+mitom_native	NC_060553.1	Orthonectida	missing_gene	rrnL	7165..8392-
+mitom_native	NC_060553.1	Orthonectida	boundary_gt30	rrnS	8457..9141+ vs 8771..9141+
+mitom_native	NC_060553.1	Orthonectida	strand_error	F	3537..3597+ vs 3537..3597-
+mitom_v1	NC_018761.1	Phoronida	boundary_gt30	nad6	10825..11316- vs 10825..11352-
+mitom_v1	NC_008151.3	Placozoa	boundary_gt30	nad6	12612..13538+ vs 12663..13538+
+mitom_v1	NC_008151.3	Placozoa	missing_gene	cox1	16353..18904-
+mitom_v1	NC_008151.3	Placozoa	boundary_gt30	nad2	24615..26285+ vs 24858..26285+
+mitom_v1	NC_008151.3	Placozoa	missing_gene	cox1	33980..50291+
+mitom_v1	NC_008151.3	Placozoa	missing_gene	rrnL	8895..9790+
+mitom_v1	NC_008151.3	Placozoa	boundary_gt30	rrnL	26444..28253+ vs 27001..28376+
+mitom_v1	NC_008151.3	Placozoa	boundary_gt30	rrnS	30496..31671+ vs 30686..31537+
+mitom_v1	NC_008151.3	Placozoa	name_error	L	3686..3758- vs 3686..3758-
+mitom_v1	NC_008151.3	Placozoa	name_error	S	12052..12123+ vs 12052..12123+
+mitom_v1	NC_008151.3	Placozoa	internal_stop	cox1	
+mitom_native	NC_008151.3	Placozoa	missing_gene	cox1	16353..18904-
+mitom_native	NC_008151.3	Placozoa	missing_gene	cox1	33980..50291+
+mitom_native	NC_008151.3	Placozoa	missing_gene	rrnL	8895..9790+
+mitom_native	NC_008151.3	Placozoa	boundary_gt30	rrnL	26444..28253+ vs 27092..28388+
+mitom_native	NC_008151.3	Placozoa	boundary_gt30	rrnS	30496..31671+ vs 30729..32269+
+mitom_native	NC_008151.3	Placozoa	name_error	L	3686..3758- vs 3686..3758-
+mitom_native	NC_008151.3	Placozoa	name_error	S	12052..12123+ vs 12052..12123+
+mitom_v1	NC_015309.1	Placozoa	boundary_gt30	nad2	8176..10053- vs 8176..9531-
+mitom_v1	NC_015309.1	Placozoa	boundary_gt30	nad6	24401..25237- vs 24401..25165-
+mitom_v1	NC_015309.1	Placozoa	boundary_gt30	cox2	29616..30473+ vs 29724..30473+
+mitom_v1	NC_015309.1	Placozoa	missing_gene	cox1	30788..55883+
+mitom_v1	NC_015309.1	Placozoa	boundary_gt30	rrnS	3989..5515- vs 4429..5361-
+mitom_v1	NC_015309.1	Placozoa	boundary_gt30	rrnL	6053..8025- vs 6069..7484-
+mitom_v1	NC_015309.1	Placozoa	boundary_gt30	rrnL	26895..27670- vs 25796..27480-
+mitom_v1	NC_015309.1	Placozoa	name_error	W	26698..26768- vs 26698..26768-
+mitom_v1	NC_015309.1	Placozoa	internal_stop	cox1	
+mitom_v1	NC_015309.1	Placozoa	duplicate_gene	rrnL	
+mitom_native	NC_015309.1	Placozoa	missing_gene	cox1	30788..55883+
+mitom_native	NC_015309.1	Placozoa	boundary_gt30	rrnS	3989..5515- vs 3959..5405-
+mitom_native	NC_015309.1	Placozoa	boundary_gt30	rrnL	6053..8025- vs 6120..7463-
+mitom_native	NC_015309.1	Placozoa	missing_gene	rrnL	26895..27670-
+mitom_native	NC_015309.1	Placozoa	name_error	W	26698..26768- vs 26698..26768-
+mitom_v1	NC_041549.1	Placozoa	boundary_gt30	nad6	2063..2557+ vs 2006..2557+
+mitom_v1	NC_041549.1	Placozoa	missing_gene	nad1	7244..8233+
+mitom_v1	NC_041549.1	Placozoa	boundary_gt30	nad2	10306..11907+ vs 10639..11907+
+mitom_v1	NC_041549.1	Placozoa	boundary_gt30	nad4l	14056..14355- vs 14056..14394-
+mitom_v1	NC_041549.1	Placozoa	missing_gene	rrnL	1..742+
+mitom_v1	NC_041549.1	Placozoa	boundary_gt30	rrnS	14586..15800- vs 14558..15681-
+mitom_v1	NC_041549.1	Placozoa	boundary_gt30	rrnL	15801..18034- vs 16513..18159-
+mitom_v1	NC_041549.1	Placozoa	internal_stop	cox1	
+mitom_native	NC_041549.1	Placozoa	boundary_gt30	nad6	2063..2557+ vs 1991..2557+
+mitom_native	NC_041549.1	Placozoa	boundary_gt30	nad5	8447..10288+ vs 8447..9634+
+mitom_native	NC_041549.1	Placozoa	boundary_gt30	nad2	10306..11907+ vs 10579..11907+
+mitom_native	NC_041549.1	Placozoa	boundary_gt30	intron	4154..5045+ vs 4154..10060+
+mitom_native	NC_041549.1	Placozoa	strand_error	intron	11000..12234- vs 10145..21857+
+mitom_native	NC_041549.1	Placozoa	missing_gene	rrnL	1..742+
+mitom_native	NC_041549.1	Placozoa	boundary_gt30	rrnS	14586..15800- vs 14558..15678-
+mitom_native	NC_041549.1	Placozoa	missing_gene	rrnL	15801..18034-
+mitom_v1	NC_034715.1	Platyhelminthes	boundary_gt30	rrnL	8514..9480+ vs 8393..9480+
+mitom_native	NC_034715.1	Platyhelminthes	boundary_gt30	rrnL	8514..9480+ vs 8393..9480+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	cob	1560..2660+ vs 1593..2660+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	nad1	4015..4887+ vs 4057..4887+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	cox3	5986..6774+ vs 5953..6774+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	nad6	6777..7214+ vs 6726..7047+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	nad2	8181..9071+ vs 8238..9071+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	nad4	10166..11392+ vs 10238..11392+
+mitom_v1	NC_035255.1	Platyhelminthes	boundary_gt30	rrnS	11450..12188+ vs 11509..12204+
+mitom_native	NC_035255.1	Platyhelminthes	boundary_gt30	cob	1560..2660+ vs 1482..2660+
+mitom_native	NC_035255.1	Platyhelminthes	boundary_gt30	nad3	5601..5951+ vs 5601..6008+
+mitom_native	NC_035255.1	Platyhelminthes	boundary_gt30	cox3	5986..6774+ vs 5953..6774+
+mitom_native	NC_035255.1	Platyhelminthes	boundary_gt30	rrnL	2969..3835+ vs 3295..3845+
+mitom_native	NC_035255.1	Platyhelminthes	boundary_gt30	rrnS	11450..12188+ vs 11509..12204+
+mitom_v1	NC_036051.1	Platyhelminthes	boundary_gt30	nad2	6726..7758+ vs 6669..7758+
+mitom_v1	NC_036051.1	Platyhelminthes	boundary_gt30	cox2	12877..13596+ vs 12943..13596+
+mitom_v1	NC_048467.1	Platyhelminthes	boundary_gt30	nad5	11697..13274+ vs 11649..13274+
+mitom_v1	NC_048467.1	Platyhelminthes	boundary_gt30	rrnL	8519..9508+ vs 8911..9511+
+mitom_v1	NC_048467.1	Platyhelminthes	boundary_gt30	rrnS	9571..10304+ vs 9512..10304+
+mitom_native	NC_048467.1	Platyhelminthes	boundary_gt30	nad4l	1849..2118+ vs 1849..2080+
+mitom_native	NC_048467.1	Platyhelminthes	boundary_gt30	cox2	10305..10895+ vs 10263..10895+
+mitom_native	NC_048467.1	Platyhelminthes	boundary_gt30	rrnL	8519..9508+ vs 8519..9569+
+mitom_native	NC_048467.1	Platyhelminthes	boundary_gt30	rrnS	9571..10304+ vs 9570..10262+
+mitom_v1	NC_062047.1	Platyhelminthes	boundary_gt30	cox1	8576..10142+ vs 8576..10237+
+mitom_v1	NC_062047.1	Platyhelminthes	boundary_gt30	cox2	12057..12680+ vs 12021..12680+
+mitom_v1	NC_062047.1	Platyhelminthes	boundary_gt30	rrnL	10358..11325+ vs 10358..11259+
+mitom_v1	NC_062047.1	Platyhelminthes	boundary_gt30	rrnS	11326..12055+ vs 11260..12020+
+mitom_native	NC_062047.1	Platyhelminthes	boundary_gt30	nad6	1..469+ vs 1..426+
+mitom_native	NC_062047.1	Platyhelminthes	boundary_gt30	cox1	8576..10142+ vs 8576..10237+
+mitom_native	NC_062047.1	Platyhelminthes	name_error	Q	5260..5320+ vs 5260..5320+
+mitom_v1	NC_085462.1	Platyhelminthes	boundary_gt30	cox3	4268..4825+ vs 4034..4825+
+mitom_v1	NC_085462.1	Platyhelminthes	boundary_gt30	nad1	5980..6810+ vs 5914..6810+
+mitom_v1	NC_085462.1	Platyhelminthes	boundary_gt30	cox2	6907..8247+ vs 6907..7973+
+mitom_v1	NC_085462.1	Platyhelminthes	boundary_gt30	nad2	8851..9816+ vs 8908..9816+
+mitom_v1	NC_085462.1	Platyhelminthes	boundary_gt30	rrnL	11128..12129+ vs 11125..12168+
+mitom_native	NC_085462.1	Platyhelminthes	boundary_gt30	cox3	4268..4825+ vs 4034..4825+
+mitom_native	NC_085462.1	Platyhelminthes	boundary_gt30	nad1	5980..6810+ vs 5914..6810+
+mitom_native	NC_085462.1	Platyhelminthes	boundary_gt30	cox2	6907..8247+ vs 7285..8247+
+mitom_native	NC_085462.1	Platyhelminthes	missing_gene	nad4	18778..20169+
+mitom_native	NC_085462.1	Platyhelminthes	boundary_gt30	rrnL	11128..12129+ vs 11530..12168+
+mitom_v1	NC_010209.1	Porifera	boundary_gt30	rrnL	9..2450+ vs 307..2493+
+mitom_v1	NC_010209.1	Porifera	name_error	I	13412..13484+ vs 13412..13484+
+mitom_native	NC_010209.1	Porifera	boundary_gt30	rrnL	9..2450+ vs 1..2493+
+mitom_native	NC_010209.1	Porifera	name_error	I	13412..13484+ vs 13412..13484+
+mitom_v1	NC_014868.1	Porifera	boundary_gt30	rrnL	60..2532+ vs 366..2588+
+mitom_v1	NC_014868.1	Porifera	boundary_gt30	rrnS	17208..18481+ vs 17161..18481+
+mitom_v1	NC_014868.1	Porifera	name_error	I	7495..7566+ vs 7495..7566+
+mitom_native	NC_014868.1	Porifera	boundary_gt30	rrnL	60..2532+ vs 1..2588+
+mitom_native	NC_014868.1	Porifera	boundary_gt30	rrnS	17208..18481+ vs 17161..18481+
+mitom_native	NC_014868.1	Porifera	name_error	I	7495..7566+ vs 7495..7566+
+mitom_v1	NC_021422.1	Porifera	boundary_gt30	nad4l	8892..9188+ vs 8811..9188+
+mitom_v1	NC_021422.1	Porifera	boundary_gt30	cox2	9259..9963+ vs 9205..9963+
+mitom_v1	NC_021422.1	Porifera	boundary_gt30	rrnL	205..2434+ vs 376..2404+
+mitom_v1	NC_021422.1	Porifera	boundary_gt30	rrnS	15616..16422+ vs 15523..16422+
+mitom_native	NC_021422.1	Porifera	boundary_gt30	cox2	9259..9963+ vs 9220..9963+
+mitom_native	NC_021422.1	Porifera	boundary_gt30	rrnL	205..2434+ vs 158..2389+
+mitom_native	NC_021422.1	Porifera	boundary_gt30	rrnS	15616..16422+ vs 15523..16579+
+mitom_v1	NC_025335.1	Porifera	boundary_gt30	rrnL	32..2449+ vs 1..2473+
+mitom_native	NC_025335.1	Porifera	boundary_gt30	rrnL	32..2449+ vs 1..2473+
+mitom_v1	NC_035983.1	Porifera	boundary_gt30	nad5	5640..7541+ vs 5607..7541+
+mitom_v1	NC_035983.1	Porifera	boundary_gt30	rrnL	2..2508+ vs 362..2376+
+mitom_v1	NC_035983.1	Porifera	boundary_gt30	rrnS	12699..13983- vs 12699..14039-
+mitom_v1	NC_035983.1	Porifera	name_error	I	3557..3629+ vs 3557..3629+
+mitom_native	NC_035983.1	Porifera	boundary_gt30	rrnS	12699..13983- vs 12699..14039-
+mitom_native	NC_035983.1	Porifera	name_error	I	3557..3629+ vs 3557..3629+
+mitom_v1	NC_085825.1	Porifera	boundary_gt30	nad2	18391..19602+ vs 18172..19602+
+mitom_v1	NC_085825.1	Porifera	boundary_gt30	rrnL	392..2618+ vs 413..2911+
+mitom_v1	NC_085825.1	Porifera	boundary_gt30	rrnS	22505..23757+ vs 22126..23757+
+mitom_native	NC_085825.1	Porifera	boundary_gt30	nad2	18391..19602+ vs 18172..19602+
+mitom_native	NC_085825.1	Porifera	boundary_gt30	nad5	19782..21632+ vs 19782..21344+
+mitom_native	NC_085825.1	Porifera	boundary_gt30	rrnL	392..2618+ vs 1..2911+
+mitom_native	NC_085825.1	Porifera	boundary_gt30	rrnS	22505..23757+ vs 22126..23757+
+mitom_native	NC_085825.1	Porifera	name_error	Q	15654..15721+ vs 15654..15721+
+mitom_v1	NC_008557.1	Priapulida	boundary_gt30	nad6	4505..5029- vs 4543..5029-
+mitom_v1	NC_008557.1	Priapulida	boundary_gt30	nad4	5482..6894+ vs 5482..6832+
+mitom_v1	NC_008557.1	Priapulida	boundary_gt30	nad5	6898..8581+ vs 6898..8629+
+mitom_native	NC_008557.1	Priapulida	boundary_gt30	nad4	5482..6894+ vs 5482..6832+
+mitom_native	NC_008557.1	Priapulida	boundary_gt30	nad5	6898..8581+ vs 6898..8629+
+mitom_v1	NC_010472.1	Rotifera	boundary_gt30	nad2	7219..8108+ vs 7228..7966+
+mitom_v1	NC_010472.1	Rotifera	boundary_gt30	atp6	9137..9746+ vs 9263..9746+
+mitom_v1	NC_010472.1	Rotifera	boundary_gt30	rrnL	9849..10955+ vs 9812..10955+
+mitom_native	NC_010472.1	Rotifera	boundary_gt30	rrnL	9849..10955+ vs 9812..10955+
+mitom_v1	NC_010484.1	Rotifera	boundary_gt30	nad4	2547..3848+ vs 2691..3848+
+mitom_v1	NC_013568.1	Rotifera	boundary_gt30	atp6	3121..3717+ vs 3175..3717+
+mitom_v1	NC_013568.1	Rotifera	boundary_gt30	nad4	6192..7364+ vs 6423..7364+
+mitom_v1	NC_013568.1	Rotifera	boundary_gt30	nad2	14488..15313+ vs 14488..15354+
+mitom_v1	NC_013568.1	Rotifera	boundary_gt30	rrnL	1894..2422+ vs 1656..2422+
+mitom_v1	NC_013568.1	Rotifera	name_error	L	1619..1675+ vs 1595..1655+
+mitom_native	NC_013568.1	Rotifera	missing_gene	cox3	10367..11134+
+mitom_native	NC_013568.1	Rotifera	boundary_gt30	rrnL	1894..2422+ vs 1656..2422+
+mitom_native	NC_013568.1	Rotifera	name_error	L	1619..1675+ vs 1595..1655+
+mitom_v1	NC_014848.1	Tardigrada	boundary_gt30	nad4	6330..7638- vs 6324..7509-
+mitom_v1	NC_014848.1	Tardigrada	boundary_gt30	rrnL	12358..14269- vs 13109..14269-
+mitom_v1	NC_014848.1	Tardigrada	internal_stop	nad1	
+mitom_native	NC_014848.1	Tardigrada	boundary_gt30	rrnL	12358..14269- vs 13121..14269-
+mitom_v1	NC_015829.1	Tardigrada	missing_gene	rrnL	9248..11530-
+mitom_native	NC_015829.1	Tardigrada	missing_gene	rrnL	9248..11530-
+mitom_v1	NC_031407.1	Tardigrada	boundary_gt30	nad6	8124..8621+ vs 8124..8586+
+mitom_v1	NC_031407.1	Tardigrada	boundary_gt30	cob	8623..9675+ vs 8587..9675+
+mitom_v1	NC_031407.1	Tardigrada	boundary_gt30	rrnL	11224..12351- vs 11155..12351-
+mitom_native	NC_031407.1	Tardigrada	boundary_gt30	rrnL	11224..12351- vs 11190..12351-
+mitom_v1	NC_008556.1	Xenacoelomorpha	boundary_gt30	nad6	12041..12553- vs 12235..12547-
+mitom_v1	NC_008556.1	Xenacoelomorpha	strand_error	E	12554..12620+ vs 12554..12620-
+mitom_native	NC_008556.1	Xenacoelomorpha	strand_error	E	12554..12620+ vs 12554..12620-
+mitom_v1	NC_014578.1	Xenacoelomorpha	boundary_gt30	cox2	1688..2428+ vs 1793..2428+
+mitom_v1	NC_014578.1	Xenacoelomorpha	boundary_gt30	atp6	3459..4160+ vs 3588..4160+
+mitom_v1	NC_014578.1	Xenacoelomorpha	boundary_gt30	nad5	5534..7309- vs 5534..7114-
+mitom_v1	NC_014578.1	Xenacoelomorpha	boundary_gt30	nad4	9174..10523+ vs 9375..10523+
+mitom_v1	NC_014578.1	Xenacoelomorpha	boundary_gt30	rrnS	4689..5452+ vs 4786..5452+
+mitom_v1	NC_014578.1	Xenacoelomorpha	boundary_gt30	rrnL	7476..8417+ vs 7706..8417+
+mitom_native	NC_014578.1	Xenacoelomorpha	boundary_gt30	rrnS	4689..5452+ vs 4786..5452+
+mitom_native	NC_014578.1	Xenacoelomorpha	name_error	Q	4241..4303- vs 4241..4303-
+mitom_v1	NC_029217.1	Xenacoelomorpha	boundary_gt30	nad5	6380..8110+ vs 6419..8110+
+mitom_v1	NC_029217.1	Xenacoelomorpha	missing_gene	nad6	12148..12660-
+mitom_v1	NC_029219.1	Xenacoelomorpha	missing_gene	nad6	12087..12599-
+mitom_v1	NC_034946.1	Xenacoelomorpha	missing_gene	nad6	3102..3564+
+mitom_v1	NC_034946.1	Xenacoelomorpha	boundary_gt30	atp6	4888..5486+ vs 4990..5486+
+mitom_v1	NC_034946.1	Xenacoelomorpha	name_error	atp8	5554..5731+ vs 5620..6402+
+mitom_v1	NC_034946.1	Xenacoelomorpha	missing_gene	cox2	5740..6402+
+mitom_v1	NC_034946.1	Xenacoelomorpha	boundary_gt30	nad1	6559..7498+ vs 6574..7602+
+mitom_v1	NC_034946.1	Xenacoelomorpha	boundary_gt30	nad4	10800..12119+ vs 10971..12119+
+mitom_v1	NC_034946.1	Xenacoelomorpha	boundary_gt30	nad5	12636..14387+ vs 12744..14387+
+mitom_v1	NC_034946.1	Xenacoelomorpha	boundary_gt30	rrnL	3463..4766+ vs 3310..4766+
+mitom_native	NC_034946.1	Xenacoelomorpha	boundary_gt30	nad6	3102..3564+ vs 3102..3626+
+mitom_native	NC_034946.1	Xenacoelomorpha	boundary_gt30	nad1	6559..7498+ vs 6559..7602+
+mitom_native	NC_034946.1	Xenacoelomorpha	boundary_gt30	rrnL	3463..4766+ vs 3627..4766+
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	nad1	900..1784- vs 900..1895-
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	nad5	7198..8907- vs 7198..8736-
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	nad2	9181..10233- vs 9181..10176-
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	nad6	12336..12887+ vs 12369..12887+
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	cox2	14026..14640+ vs 13933..14640+
+mitom_v1	NC_034948.1	Xenacoelomorpha	missing_gene	atp6	15273..15956+
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	nad4	16060..17403+ vs 16225..17403+
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	cob	17482..18570- vs 17449..18579-
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	rrnL	3340..4772+ vs 3563..4712+
+mitom_v1	NC_034948.1	Xenacoelomorpha	boundary_gt30	rrnS	4773..5698+ vs 4713..5694+
+mitom_v1	NC_034948.1	Xenacoelomorpha	strand_error	N	3274..3339- vs 3274..3339+
+mitom_v1	NC_034948.1	Xenacoelomorpha	strand_error	H	15977..16042+ vs 15977..16042-
+mitom_native	NC_034948.1	Xenacoelomorpha	boundary_gt30	cob	17482..18570- vs 17449..18570-
+mitom_native	NC_034948.1	Xenacoelomorpha	boundary_gt30	rrnL	3340..4772+ vs 3563..4781+
+mitom_native	NC_034948.1	Xenacoelomorpha	strand_error	N	3274..3339- vs 3274..3339+
+mitom_native	NC_034948.1	Xenacoelomorpha	strand_error	H	15977..16042+ vs 15977..16042-
+mitom_v1	NC_022921.1	Acanthocephala	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_026516.1	Acanthocephala	table2asn_error		7 ERROR/REJECT
+mitom_v1	NC_029766.1	Acanthocephala	table2asn_error		9 ERROR/REJECT
+mitom_v1	NC_060482.1	Acanthocephala	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_060484.1	Acanthocephala	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_007933.1	Annelida	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_069205.1	Annelida	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_069206.1	Annelida	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_082192.1	Annelida	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_020774.1	Arthropoda	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_027109.1	Arthropoda	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_035061.1	Arthropoda	table2asn_error		7 ERROR/REJECT
+mitom_v1	NC_044669.1	Arthropoda	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_045231.1	Arthropoda	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_046851.1	Arthropoda	table2asn_error		5 ERROR/REJECT
+mitom_v1	NC_066979.1	Arthropoda	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_067797.1	Arthropoda	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_067900.1	Arthropoda	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_067930.1	Arthropoda	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_069055.1	Arthropoda	table2asn_error		7 ERROR/REJECT
+mitom_v1	NC_069241.1	Arthropoda	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_002322.1	Brachiopoda	table2asn_error		18 ERROR/REJECT
+mitom_v1	NC_039685.1	Brachiopoda	table2asn_error		22 ERROR/REJECT
+mitom_v1	NC_085563.1	Brachiopoda	table2asn_error		13 ERROR/REJECT
+mitom_v1	NC_008192.1	Bryozoa	table2asn_error		6 ERROR/REJECT
+mitom_v1	NC_016722.1	Bryozoa	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_038192.1	Bryozoa	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_006386.1	Chaetognatha	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_013810.1	Chaetognatha	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_013811.1	Chaetognatha	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_013814.1	Chaetognatha	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_002082.1	Chordata	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_009732.1	Chordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_011638.1	Chordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_026285.1	Chordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_028416.1	Chordata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_049998.1	Chordata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_053107.1	Chordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_057981.1	Chordata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_062277.1	Chordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_063745.1	Chordata	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_083035.1	Chordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_088493.1	Chordata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_027103.1	Cnidaria	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_046405.1	Cnidaria	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_046775.1	Cnidaria	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_062009.1	Cnidaria	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_038065.1	Ctenophora	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_045305.1	Ctenophora	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_001627.1	Echinodermata	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_023772.1	Echinodermata	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_027063.1	Echinodermata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_040150.1	Echinodermata	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_054230.1	Echinodermata	table2asn_error		6 ERROR/REJECT
+mitom_v1	NC_061414.1	Echinodermata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_063787.1	Echinodermata	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_068797.1	Echinodermata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_083273.1	Echinodermata	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_010432.1	Entoprocta	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_026985.1	Gastrotricha	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_026984.1	Gnathostomulida	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_001887.1	Hemichordata	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_007438.1	Hemichordata	table2asn_error		6 ERROR/REJECT
+mitom_v1	NC_013877.1	Hemichordata	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_040107.1	Hemichordata	table2asn_error		5 ERROR/REJECT
+mitom_v1	NC_040108.1	Hemichordata	table2asn_error		5 ERROR/REJECT
+mitom_v1	NC_040109.1	Hemichordata	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_031872.1	Kinorhyncha	table2asn_error		6 ERROR/REJECT
+mitom_v1	NC_006886.2	Mollusca	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_018362.1	Mollusca	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_063753.1	Mollusca	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_065650.1	Mollusca	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_068082.1	Mollusca	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_083122.1	Mollusca	table2asn_error		14 ERROR/REJECT
+mitom_v1	NC_086642.1	Mollusca	table2asn_error		9 ERROR/REJECT
+mitom_v1	NC_001861.1	Nematoda	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_005928.1	Nematoda	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_008640.1	Nematoda	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_013831.1	Nematoda	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_028229.1	Nematoda	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_033868.1	Nematoda	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_036308.1	Nematoda	table2asn_error		7 ERROR/REJECT
+mitom_v1	NC_085811.1	Nematoda	table2asn_error		7 ERROR/REJECT
+mitom_v1	NC_044095.1	Nematomorpha	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_085569.1	Nematomorpha	table2asn_error		10 ERROR/REJECT
+mitom_v1	NC_012821.1	Nemertea	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_014869.1	Nemertea	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_023523.1	Nemertea	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_023929.1	Nemertea	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_023931.1	Nemertea	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_009082.1	Onychophora	table2asn_error		6 ERROR/REJECT
+mitom_v1	NC_010961.1	Onychophora	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_014273.1	Onychophora	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_015890.1	Onychophora	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_060553.1	Orthonectida	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_018761.1	Phoronida	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_008151.3	Placozoa	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_015309.1	Placozoa	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_041549.1	Placozoa	table2asn_error		5 ERROR/REJECT
+mitom_v1	NC_002545.1	Platyhelminthes	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_009938.1	Platyhelminthes	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_017613.1	Platyhelminthes	table2asn_error		3 ERROR/REJECT
+mitom_v1	NC_034715.1	Platyhelminthes	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_035255.1	Platyhelminthes	table2asn_error		22 ERROR/REJECT
+mitom_v1	NC_036051.1	Platyhelminthes	table2asn_error		12 ERROR/REJECT
+mitom_v1	NC_061205.1	Platyhelminthes	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_062047.1	Platyhelminthes	table2asn_error		7 ERROR/REJECT
+mitom_v1	NC_008557.1	Priapulida	table2asn_error		1 ERROR/REJECT
+mitom_v1	NC_010484.1	Rotifera	table2asn_error		2 ERROR/REJECT
+mitom_v1	NC_014848.1	Tardigrada	table2asn_error		18 ERROR/REJECT
+mitom_v1	NC_015829.1	Tardigrada	table2asn_error		4 ERROR/REJECT
+mitom_v1	NC_031407.1	Tardigrada	table2asn_error		10 ERROR/REJECT
+mitom_v1	NC_034946.1	Xenacoelomorpha	table2asn_error		4 ERROR/REJECT
+mitom_native	NC_060484.1	Acanthocephala	table2asn_error		1 ERROR/REJECT
+mitom_native	NC_069055.1	Arthropoda	table2asn_error		2 ERROR/REJECT
+mitom_native	NC_046775.1	Cnidaria	table2asn_error		1 ERROR/REJECT
+mitom_native	NC_038065.1	Ctenophora	table2asn_error		9 ERROR/REJECT
+mitom_native	NC_001887.1	Hemichordata	table2asn_error		2 ERROR/REJECT
+mitom_native	NC_045069.1	Kinorhyncha	table2asn_error		2 ERROR/REJECT
+mitom_native	NC_006886.2	Mollusca	table2asn_error		1 ERROR/REJECT
+mitom_native	NC_028229.1	Nematoda	table2asn_error		1 ERROR/REJECT
+mitom_native	NC_085811.1	Nematoda	table2asn_error		1 ERROR/REJECT
+mitom_native	NC_023523.1	Nemertea	table2asn_error		1 ERROR/REJECT
+mitom_native	NC_010961.1	Onychophora	table2asn_error		1 ERROR/REJECT
