@@ -33,7 +33,7 @@ from typing import Dict, List, Optional
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
+from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, ExactPosition, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
@@ -77,12 +77,15 @@ def _merge(parts: List[FeatureLocation]) -> List[FeatureLocation]:
 
 
 def _shift(part: FeatureLocation, off: int, n: int) -> List[FeatureLocation]:
-    """Move one part by off on a circle of length n; split at the origin (biological order kept)."""
+    """Move one part by off on a circle of length n; split at the origin (biological order kept). Partial markers
+    (<start, >end) stay on their position: table2asn accepts a 5'- / 3'-partial CDS without start / stop codon."""
     s = (int(part.start) + off) % n
     e = s + int(part.end) - int(part.start)
+    sp = BeforePosition if isinstance(part.start, BeforePosition) else ExactPosition
+    ep = AfterPosition if isinstance(part.end, AfterPosition) else ExactPosition
     if e <= n:
-        return [FeatureLocation(s, e, part.strand)]
-    a, b = FeatureLocation(s, n, part.strand), FeatureLocation(0, e - n, part.strand)
+        return [FeatureLocation(sp(s), ep(e), part.strand)]
+    a, b = FeatureLocation(sp(s), n, part.strand), FeatureLocation(0, ep(e - n), part.strand)
     return [b, a] if part.strand == -1 else [a, b]
 
 
@@ -106,8 +109,10 @@ def lift_to_ncbi(pred: SeqRecord, ncbi_seq: Seq) -> SeqRecord:
     out.annotations = dict(pred.annotations)
     for f in pred.features:
         parts = list(f.location.parts)
-        if rc:
-            parts = [FeatureLocation(n - int(p.end), n - int(p.start), -(p.strand or 1)) for p in parts]
+        if rc:                                           # a <start becomes a >end and vice versa
+            parts = [FeatureLocation(BeforePosition(n - int(p.end)) if isinstance(p.end, AfterPosition) else n - int(p.end),
+                                     AfterPosition(n - int(p.start)) if isinstance(p.start, BeforePosition) else n - int(p.start),
+                                     -(p.strand or 1)) for p in parts]
         new = _merge([x for p in parts for x in _shift(p, off, n)])
         loc = new[0] if len(new) == 1 else CompoundLocation(new)
         q = dict(f.qualifiers)
@@ -155,7 +160,8 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
         return [[sys.executable, str(PIPE / "batch_mitoz.py"), "run", "-i", str(bare), "-o", str(out / "raw"),
                  "--clade", clade, "--genetic_code", code, "--threads", str(threads), "--max_tasks", "1",
                  *(["--if_reannotation_2", "auto"] if tool == "mitom_auto" else []),
-                 *(["--core", "native"] if tool == "mitom_native" else [])]]
+                 *(["--core", "native"] if tool == "mitom_native" else []),
+                 *(["--rrna_hmm_lib", os.environ["MITOM_RRNA_LIB"]] if os.environ.get("MITOM_RRNA_LIB") else [])]]
     if tool == "ours":
         clade = row["mitoz_clade"]
         return [[sys.executable, str(PIPE / "batch_mitoz.py"), "run", "-i", str(bare), "-o", str(out / "raw"),

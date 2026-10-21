@@ -8,8 +8,9 @@ nearest in-frame start codon upstream of the alignment (at most <residues before
 nearest downstream (10 codons), else the gene is 5'-partial; the end is the last aligned codon (plus the stop codon
 when it follows directly) - the stop (first in-frame stop, or an abbreviated T / TA before the next tRNA / gene) is
 placed by mito_curate.py P3, which knows the neighbours. rRNA ends and NCBI names are left to it as before.
-rRNAs: Infernal cmsearch (fast mode) with the MITOS2 covariance models (refseq89m/ncRNA/rrnS.cm, rrnL.cm), best
-cluster of hits; an rRNA without a hit is left to MitoM's per-phylum rRNA HMM step (cheaper than cmsearch --nohmm).
+rRNAs: the per-phylum profile HMM of MitoM (models/rrna_hmm, nhmmer; --phylum) when the library has the phylum, else
+Infernal cmsearch (fast mode, local) with the MITOS2 covariance models (refseq89m/ncRNA/rrnS.cm, rrnL.cm), best
+cluster of hits; an rRNA still missing is left to MitoM's later rRNA HMM step.
 tRNAs: cmsearch with the MiTFi tRNA models (refseq89m/ncRNA/trn*.cm; a sensitive pass for models without a hit) and
 MiTFi (mitfi_import.jar of the mitos package) for hit selection and anticodons - the same programs MITOS2 runs.
 
@@ -44,6 +45,7 @@ from Bio.SeqRecord import SeqRecord
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_env  # noqa: E402
+import mito_rrna_hmm  # noqa: E402  (per-phylum rRNA profile HMMs: nhmmer search, best span)
 
 PCG = ("atp6", "atp8", "cob", "cox1", "cox2", "cox3", "nad1", "nad2", "nad3", "nad4", "nad4l", "nad5", "nad6")
 NAMES = {                                   # MitoZ-style /gene and /product, understood by every later MitoM step
@@ -68,7 +70,7 @@ MIN_REF_COVER = 0.25       # the best alignment must cover this fraction of its 
 WINDOW = 300               # nt of genome on each side of a locus given to exonerate
 START_UP_EXTRA = 10        # start codon search: upstream codons beyond the residues missing from the alignment
 START_DOWN = 10            # ... and downstream codons when none upstream
-CM_EVALUE = 1e-3           # cmsearch fast pass (MITOS2 --ncev)
+CM_EVALUE = 0.01           # cmsearch fast pass and MiTFi threshold of that pass (MITOS2 runmitos default --ncev)
 CM_EVALUE_SENSITIVE = 0.1  # cmsearch --max pass for models without a hit (MITOS2 sensitive pass)
 RRNA_CLUSTER = 500         # rRNA hits of one model on one strand closer than this are one gene
 EXONERATE_MODEL = "protein2dna"   # protein2dna:bestfit = whole reference protein aligned (set by --exonerate_model)
@@ -195,6 +197,15 @@ def exonerate_best(exonerate: str, window: str, prots: Dict[str, str], code: int
     return best
 
 
+def coding_frame(window: str, tab: int, tae: int, table: CodonTable.CodonTable) -> int:
+    """Start of the aligned region moved to the reading frame with the fewest stop codons over [tab, tae): a
+    frameshift early in the alignment (exonerate protein2dna) otherwise shifts every codon of the gene
+    (NC_086642.1 nad5: 78 internal stops, both ends 5 nt off)."""
+    stops = set(table.stop_codons)
+    best = min(range(3), key=lambda d: sum(1 for c in range(tab + d, tae - 2, 3) if window[c:c + 3] in stops))
+    return tab + best
+
+
 def place_cds(window: str, tab: int, tae: int, missing_n: int, table: CodonTable.CodonTable) \
         -> Tuple[int, int, bool]:
     """Start and end (0-based half-open) of the CDS on the plus-strand window from the alignment [tab, tae):
@@ -295,6 +306,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
         if (qae - qab) < MIN_REF_COVER * reflen:
             log.info(f"[core] {gene}: alignment covers {qae - qab} of {reflen} residues: skipped")
             continue
+        tab = coding_frame(window, tab, tae, table)        # a frameshift near the start can put the alignment off frame
         s, e, partial = place_cds(window, tab, tae, qab, table)
         gs, ge = window_to_genome(ws, we, strand, s, e)
         feats.append(Feature("CDS", gene, gs, ge, strand, f"ref {ref} score {score:.0f} cover {qae - qab}/{reflen}",
@@ -306,8 +318,9 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
 
 # ── RNAs ─────────────────────────────────────────────────────────────────────
 def cmsearch(cm: str, model: Path, genome_fa: Path, out: Path, sensitive: bool, log, rrna: bool = False) -> Path:
-    """cmsearch as MITOS2 runs it: --cpu 1 --notextw --smxsize 80000 -g; fast pass --noF4b; sensitive --max."""
-    cmd = [cm, "--cpu", "1", "--notextw", "--smxsize", "80000", "-g", "--tblout", str(out.with_suffix(".tbl"))]
+    """cmsearch as MITOS2 runs it (local mode, --cpu 1 --notextw --smxsize 80000); fast pass --noF4b -E 0.01,
+    sensitive pass --max -E 0.1 (rRNA: --nohmm). Local mode finds the truncated tRNAs of nematodes."""
+    cmd = [cm, "--cpu", "1", "--notextw", "--smxsize", "80000", "--tblout", str(out.with_suffix(".tbl"))]
     if sensitive:
         cmd += ["--nohmm" if rrna else "--max", "-E", str(CM_EVALUE_SENSITIVE)]
     else:
@@ -330,9 +343,32 @@ def tbl_hits(tbl: Path) -> List[Tuple[int, int, int, float, float]]:
     return hits
 
 
-def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log) -> List[Feature]:
+def rrna_hmm(lib: Path, phylum: Optional[str], model: str) -> Optional[Path]:
+    """The per-phylum profile HMM of model (rrnS / rrnL) in lib for `phylum`, None when there is none."""
+    if not phylum or not lib.is_dir():
+        return None
+    name = {p.name.split(".")[0].lower(): p.name.split(".")[0] for p in lib.glob("*.hmm")}.get(phylum.lower())
+    p = lib / f"{name}.{model}.hmm" if name else None
+    return p if p and p.is_file() else None
+
+
+def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, phylum: Optional[str] = None,
+                   rrna_lib: Optional[Path] = None) -> List[Feature]:
+    """12S / 16S: the per-phylum profile HMM (nhmmer, ~0.1 GB, seconds) when the library has the record's phylum,
+    else the MITOS2 covariance model (cmsearch, 0.4-0.6 GB, 10 s). On the 24-record benchmark both find the same
+    genes (leave-out library); R1 of mito_curate.py then fits the ends to the flanking genes."""
     feats = []
+    lib = rrna_lib or mito_rrna_hmm.LIB
     for model in ("rrnS", "rrnL"):
+        hmm = rrna_hmm(lib, phylum, model)
+        if hmm is not None:
+            span = mito_rrna_hmm.best_span(mito_rrna_hmm.nhmmer(hmm, genome_fa))
+            if span is not None:
+                feats.append(Feature("rRNA", model, span.start, span.end, span.strand,
+                                     f"nhmmer {hmm.name} bits {span.score:.0f}", score=span.score))
+                log.info(f"[core] {model}: {span.start + 1}..{span.end} ({'+' if span.strand == 1 else '-'}) by {hmm.name}")
+                continue
+            log.info(f"[core] {model}: no nhmmer hit with {hmm.name}; trying the covariance model")
         cm = refdir / "ncRNA" / f"{model}.cm"
         hits = tbl_hits(cmsearch(tools["cmsearch"], cm, genome_fa, tmp / f"{model}.out", False, log, rrna=True).with_suffix(".tbl"))
         if not hits:
@@ -366,23 +402,25 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
 
     jar, codes = tools["mitfi"]
 
-    def mitfi(outs: List[Path]) -> List[Feature]:
+    def mitfi(outs: List[Path], evalue: float) -> List[Feature]:
         cmd = [tools["java"], "-jar", str(jar), "-code", str(code), "-codefile", str(codes), "-structure", "-genome",
-               str(genome_fa), "-glength", str(len(genome)), "-evalue", str(CM_EVALUE_SENSITIVE), "-overlap", "10"]
+               str(genome_fa), "-glength", str(len(genome)), "-evalue", str(evalue), "-overlap", "10"]
         for o in outs:
             cmd += ["-in", str(o)]
         return parse_mitfi(run(cmd, log).stdout, log)
 
+    # MITOS2's procedure (runmitos.py): fast pass judged at E <= 0.001 - a model whose only hits are weaker counts
+    # as empty and is searched again with --max; the final MiTFi run accepts E <= 0.1
     with ThreadPoolExecutor(max(1, threads)) as ex:
         outs = list(ex.map(lambda m: search(m, False), models))
-    feats = mitfi(outs)
-    accepted = {f.model for f in feats}                    # MITOS2: models without an accepted tRNA get the --max pass
+    feats = mitfi(outs, CM_EVALUE)
+    accepted = {f.model for f in feats}
     missing = [m for m in models if m.stem not in accepted]
     if missing:
         log.info(f"[core] tRNA sensitive pass for {len(missing)} model(s): " + " ".join(m.stem for m in missing))
         with ThreadPoolExecutor(max(1, threads)) as ex:
             list(ex.map(lambda m: search(m, True), missing))
-        feats = mitfi(outs)
+        feats = mitfi(outs, CM_EVALUE_SENSITIVE)
     log.info(f"[core] tRNAs: {len(feats)}")
     return feats
 
@@ -422,7 +460,7 @@ def parse_mitfi(text: str, log) -> List[Feature]:
         except (IndexError, ValueError) as exc:
             log.warning(f"[core] MiTFi line not understood ({exc}): {line[:80]}")
             continue
-        if not (tophit or copy):
+        if not (tophit or (copy and evalue <= CM_EVALUE)):    # MITOS2: a copy (second hit of a model) only when E <= 0.001
             continue
         name = trna_name(aa, anticodon, model)
         if not name or start >= stop:
@@ -498,7 +536,7 @@ def annotate(args) -> int:
         gfa = tmp / fa.name
         gfa.write_text(f">{prefix}\n{genome}\n")
         feats = annotate_pcgs(genome, gfa, refdir, code, args.threads, tools, tmp, log)
-        feats += annotate_rrnas(gfa, refdir, tools, tmp, log)
+        feats += annotate_rrnas(gfa, refdir, tools, tmp, log, args.phylum, Path(args.rrna_lib) if args.rrna_lib else None)
         if not args.no_trna:
             feats += annotate_trnas(genome, gfa, refdir, code, args.threads, tools, tmp, log)
         if args.keep_tmp:
@@ -526,6 +564,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     a.add_argument("--threads", type=int, default=2)
     a.add_argument("--refdir", default=None, help="MITOS2 reference data (refseq89m); default from mito_env")
     a.add_argument("--no_trna", action="store_true", help="skip the tRNA step")
+    a.add_argument("--phylum", default=None, help="phylum of the record: selects the per-phylum rRNA profile HMM")
+    a.add_argument("--rrna_lib", default=None, help="rRNA profile HMM library (default models/rrna_hmm)")
     a.add_argument("--keep_tmp", action="store_true", help="keep blastx / cmsearch / MiTFi files in <out>/core_tmp")
     a.add_argument("--exonerate_model", default=EXONERATE_MODEL, help="exonerate model (protein2dna, protein2dna:bestfit)")
     a.add_argument("--blastx"), a.add_argument("--exonerate"), a.add_argument("--cmsearch"), a.add_argument("--java")

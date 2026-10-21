@@ -95,3 +95,22 @@ def test_window_to_genome_minus_strand():
     assert (gs, ge) == (230, 260)
     assert str(Seq(genome[gs:ge]).reverse_complement()) == rc_window[s:e]
     assert mc.window_to_genome(ws, we, 1, s, e) == (140, 170)
+
+
+def test_coding_frame_picks_the_frame_without_stops():
+    body = "ATG" + ("TTA" + "ATA" + "GCA" + "CTT" + "AAA") * 8 + "TAA"       # the shifted frames hold TAA / TAG codons
+    window = "GG" + body + "GCC" * 5                                        # the gene starts at 2
+    stops = set(T5.stop_codons)
+    end = 2 + len(body) - 3
+    n = [sum(1 for c in range(2 + d, end - 2, 3) if window[c:c + 3] in stops) for d in range(3)]
+    assert n[0] == 0 and n[1] > 0 and n[2] > 0, n                         # the test sequence is as intended
+    assert mc.coding_frame(window, 2, end, T5) == 2
+    assert mc.coding_frame(window, 1, end, T5) == 2                        # off by one: corrected
+    assert mc.coding_frame(window, 3, end, T5) == 5                        # the other way: next codon of the true frame
+
+
+def test_rrna_hmm_lookup_by_phylum(tmp_path):
+    (tmp_path / "Annelida.rrnS.hmm").write_text("")
+    (tmp_path / "Annelida.rrnL.hmm").write_text("")
+    assert mc.rrna_hmm(tmp_path, "annelida", "rrnL") == tmp_path / "Annelida.rrnL.hmm"
+    assert mc.rrna_hmm(tmp_path, "Mollusca", "rrnL") is None and mc.rrna_hmm(tmp_path, None, "rrnS") is None

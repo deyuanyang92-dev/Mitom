@@ -766,3 +766,19 @@ def test_p3_end_without_stop_signal_takes_the_tail_before_a_deep_stop():
     rows = _curate_rec(rec)
     assert int(_by(rec, "CDS", "ND1").location.end) == 154, rows
     assert any(r["rule"] == "P3" and "before the next feature" in r["reason"] for r in rows)
+
+
+def test_o1_abbreviated_stop_at_the_sequence_end_beats_a_deep_continuation():
+    """NC_065213.1 / NC_065650.1 nad2: the gene reaches the sequence end without a stop codon; the first stop lies
+    23-29 nt inside cox1 at the origin, NCBI ends the gene with the TA at the sequence end."""
+    from Bio.SeqFeature import FeatureLocation
+    cox1 = "ATG" + "GCC" * 5 + "GCT" + "AAG" + "GCC" * 20 + "TAA"     # at the origin; a ND2-frame TAA at 21..23
+    nad2 = "ATG" + "GCC" * 30 + "T"                                     # ends with T at the sequence end (T + AT: no stop)
+    seq = cox1 + "GCC" * 10 + nad2
+    L = len(seq)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, len(cox1), 1), "COX1"),
+                       ("CDS", FeatureLocation(L - len(nad2), L - 1, 1), "ND2")], "circular")   # core end: aligned codon
+    rows = _curate_rec(rec)
+    nd2 = _by(rec, "CDS", "ND2")
+    assert len(nd2.location.parts) == 1 and int(nd2.location.end) == L, rows
+    assert nd2.qualifiers.get("transl_except") == [f"(pos:{L},aa:TERM)"]

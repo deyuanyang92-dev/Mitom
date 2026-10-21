@@ -359,3 +359,18 @@ def test_reference_for_mitofinder_drops_unknown_cds_only():
     assert [(f.type, f.qualifiers["gene"][0]) for f in out.features] == \
         [("gene", "COX1"), ("CDS", "COX1"), ("gene", "trnM"), ("tRNA", "trnM")]
     assert len(r.features) == 6 and str(out.seq) == str(seq)
+
+
+def test_lift_keeps_partial_markers():
+    """A 5'-partial CDS (start codon not determined) must stay partial after rotation / reverse-complement, else
+    table2asn reports StartCodon errors the tool did not make."""
+    from Bio.SeqFeature import AfterPosition, BeforePosition
+    pseq = (NCBI[500:] + NCBI[:500]).reverse_complement()
+    f = feat(FeatureLocation(BeforePosition(200), 800, 1))
+    out = mr.lift_to_ncbi(rec(pseq, [f]), NCBI)
+    loc = out.features[0].location
+    assert loc.strand == -1 and isinstance(loc.parts[0].end, AfterPosition)      # the < start is now a > end (the
+    assert not any(isinstance(p.start, BeforePosition) for p in loc.parts)       # part holding the high coordinate)
+    g = feat(FeatureLocation(100, AfterPosition(400), 1))
+    out2 = mr.lift_to_ncbi(rec(Seq(str(NCBI)), [g]), NCBI)
+    assert isinstance(out2.features[0].location.end, AfterPosition)

@@ -2325,6 +2325,10 @@ def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args) -> 
         cmd += ["--refdir", str(g("mitos_refdir"))]
     if g("mitos_bin"):
         cmd += ["--mitos_bin", str(g("mitos_bin"))]
+    if g("phylum"):
+        cmd += ["--phylum", str(g("phylum"))]
+    if g("rrna_hmm_lib"):
+        cmd += ["--rrna_lib", str(g("rrna_hmm_lib"))]
     return cmd
 
 
@@ -2553,6 +2557,10 @@ def main():
             cmd += ["--refdir", str(args["mitos_refdir"])]
         if args.get("mitos_bin"):
             cmd += ["--mitos_bin", str(args["mitos_bin"])]
+        if args.get("phylum"):
+            cmd += ["--phylum", str(args["phylum"])]
+        if args.get("rrna_hmm_lib"):
+            cmd += ["--rrna_lib", str(args["rrna_hmm_lib"])]
         fast = None
     else:
         cmd = build_tool_cmd(
@@ -2673,6 +2681,7 @@ def run_snakemake_for_annotation_tasks(
         "mitoz_fast": getattr(args, "mitoz_fast", ""),
         "core": getattr(args, "core", "hybrid"), "mito_core": str(MITO_CORE),
         "mitos_refdir": getattr(args, "mitos_refdir", None), "mitos_bin": getattr(args, "mitos_bin", None),
+        "phylum": getattr(args, "phylum", None), "rrna_hmm_lib": getattr(args, "rrna_hmm_lib", None),
     }
     args_json.write_text(json.dumps(args_payload, indent=2, ensure_ascii=False) + "\n",
                          encoding="utf-8")

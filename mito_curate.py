@@ -413,6 +413,26 @@ class Curator:
         end = next((c + 3 for c in range(b - (b - a + 1) % 3, len(ss) - 2, 3) if ss[c:c + 3] in self.stops), None)
         if end is None or end <= self.L:
             return
+        if covered and end - self.L > MAX_FEATURE_OVERLAP:
+            # the stop lies well inside the feature at the origin: an in-frame T / TA ending at the sequence end is the
+            # abbreviated stop NCBI annotates (NC_065213.1, NC_065650.1 nad2 before cox1: 23 / 29 nt continuations)
+            for tail in (2, 1):
+                if (self.L - tail - a + 1) % 3 == 0 and s[self.L - tail:self.L] == ("T", "TA")[tail - 1]:
+                    old = span(f)
+                    gs, ge = self.from_tx(f, a, self.L)
+                    set_span(f, gs, ge)
+                    g = gene_feature(self.rec, f)
+                    if g is not None and simple(g):
+                        set_span(g, gs, ge)
+                    f.qualifiers.pop("translation", None)
+                    pos = (f"{ge - tail + 1}..{ge}" if tail > 1 else f"{ge}") if f.location.strand == 1 else \
+                        (f"complement({gs}..{gs + tail - 1})" if tail > 1 else f"complement({gs})")
+                    f.qualifiers["transl_except"] = [f"(pos:{pos},aa:TERM)"]
+                    f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n] \
+                        + [POLYA_NOTE]
+                    self.log(f, "O1", old, (gs, ge), f"abbreviated stop {('T', 'TA')[tail - 1]} at the sequence end "
+                             f"(the first complete stop lies {end - self.L} nt inside the gene at the origin)")
+                    return
         old, k = span(f), end - self.L
         if f.location.strand == 1:
             f.location = CompoundLocation([FeatureLocation(a - 1, self.L, 1), FeatureLocation(0, k, 1)])

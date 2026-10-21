@@ -1,6 +1,7 @@
-# Our own steps: mito_intron.py (exonerate, BLAST, Infernal), mito_curate.py / ncbi_validate.py (table2asn),
-# optional extra tRNA methods for mito_trna.py (ARAGORN, tRNAscan-SE), rRNA HMM fallback (HMMER nhmmer;
-# MAFFT only to rebuild the HMM library, mito_rrna_hmm.py). Versions = those validated 2026-10.
+# Our own steps: the native annotation core mito_core.py (blastx, exonerate, Infernal cmsearch, HMMER nhmmer, Java for
+# MiTFi), mito_intron.py (exonerate, BLAST, Infernal), mito_curate.py / ncbi_validate.py (table2asn), optional extra
+# tRNA methods for mito_trna.py (ARAGORN, tRNAscan-SE), rRNA HMM fallback (HMMER nhmmer; MAFFT only to rebuild the
+# HMM library, mito_rrna_hmm.py). Versions = those validated 2026-10.
 name: mitotools
 channels: [conda-forge, bioconda]
 dependencies:
@@ -14,3 +15,4 @@ dependencies:
   - trnascan-se=2.0.13
   - hmmer=3.4
   - mafft=7.526
+  - openjdk>=17          # MiTFi (models/mitfi/mitfi_import.jar), the tRNA selection step of mito_core.py
