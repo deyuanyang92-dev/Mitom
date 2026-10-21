@@ -34,8 +34,10 @@ MITOS_REF = "refseq89m"
 TOOLS = {
     "mitoz":       ("MitoZ annotation (batch_mitoz.py)", "mitoz"),
     "runmitos":    ("MITOS2 tRNA (default tRNA step; mito_trna.py)", "mitos"),
-    "exonerate":   ("intron models (mito_intron.py)", "mitotools"),
-    "cmsearch":    ("intron typing (mito_intron.py)", "mitotools"),
+    "exonerate":   ("protein gene boundaries (mito_core.py --core native); intron models (mito_intron.py)", "mitotools"),
+    "cmsearch":    ("rRNA / tRNA models (mito_core.py --core native); intron typing (mito_intron.py)", "mitotools"),
+    "blastx":      ("protein gene search (mito_core.py --core native)", "mitotools"),
+    "java":        ("MiTFi tRNA selection (mito_core.py --core native; the mitos environment has one)", "mitos"),
     "blastp":      ("intron homolog search (mito_intron.py)", "mitotools"),
     "table2asn":   ("NCBI validation (mito_curate.py, ncbi_validate.py)", "mitotools"),
     "nhmmer":      ("rRNA HMM fallback (mito_rrna_hmm.py search)", "mitotools"),
