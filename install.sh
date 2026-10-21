@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # install.sh - one command installs everything the mitogenome annotation workflow needs:
-#   conda environments mitoz (MitoZ 3.6), mitos (MITOS2 2.1.10), mitotools (exonerate, BLAST, Infernal,
-#   table2asn, ARAGORN, tRNAscan-SE, HMMER, MAFFT), the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked),
-#   Biopython for the system python3, the `mitom` command (~/.local/bin/mitom), then mito_env.py doctor
-#   --write-config so no tool path has to be typed.
+#   the conda environment mitotools (BLAST, exonerate, Infernal, HMMER, Java for MiTFi, table2asn, ARAGORN,
+#   tRNAscan-SE, MAFFT) - all the native core (mito_core.py, the default) and the MitoM steps use - the MITOS2
+#   reference data refseq89m (Zenodo 4284483, md5 checked: protein sets, rRNA and tRNA models), Biopython for the
+#   system python3, the `mitom` command (~/.local/bin/mitom), then mito_env.py doctor --write-config so no tool path
+#   has to be typed. `--envs "mitotools mitoz mitos"` also installs MitoZ 3.6 and MITOS2 2.1.10 for --core hybrid.
 # Existing environments are kept (--force recreates them). Safe to run again.
 #
 # Platforms (checked with mamba solves, 2026-10-20):
@@ -13,12 +14,12 @@
 #   macOS Apple Silicon           as macOS Intel, through Rosetta 2 (osx-64 packages)
 #   Windows (native)              not supported by the bioinformatics packages: use WSL2 or Docker
 #
-# Usage: bash install.sh [--force] [--refdir DIR] [--envs "mitoz mitos mitotools"]
+# Usage: bash install.sh [--force] [--refdir DIR] [--envs "mitotools mitoz mitos"]
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REFDIR="${MITOS_REFDIR:-$HOME/mitos_refs}"
-ENVS="mitoz mitos mitotools"
+ENVS="mitotools"            # the native core needs only this one; --envs "mitotools mitoz mitos" adds --core hybrid
 FORCE=0
 REF_URL="https://zenodo.org/records/4284483/files/refseq89m.tar.bz2"
 REF_MD5="bb6325e27612e61a6995e88e8ffcecf8"
@@ -88,8 +89,8 @@ for e in $ENVS; do
   "$SOLVER" env create -y -n "$e" -f "$HERE/env/$e.yml" 2>/dev/null || "$SOLVER" env create -n "$e" -f "$HERE/env/$e.yml"
 done
 
-# ── MITOS2 reference data ────────────────────────────────────────────────────
-if [[ " $ENVS " == *" mitos "* ]] || env_exists mitos; then
+# ── MITOS2 reference data (refseq89m: the protein sets, rRNA and tRNA models of the native core) ──
+if true; then
   if [ -d "$REFDIR/refseq89m" ]; then
     say "MITOS2 reference data present: $REFDIR/refseq89m"
   else

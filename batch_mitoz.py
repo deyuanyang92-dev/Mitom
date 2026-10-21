@@ -2215,7 +2215,7 @@ def check_environment(args: argparse.Namespace) -> List[str]:
         raise RuntimeError(f"Python 3.8+ required, found {major}.{minor}")
     logging.info(f"[ENV] Python {major}.{minor} ✔")
 
-    if getattr(args, "cmd", None) in ("annotate", "run") and getattr(args, "core", "hybrid") == "native":
+    if getattr(args, "cmd", None) in ("annotate", "run") and getattr(args, "core", "native") == "native":
         import mito_env
         for prog in ("blastx", "exonerate", "cmsearch", "java"):
             found = mito_env.find(prog, None)
@@ -2362,7 +2362,7 @@ def mitoz_annotate_one(
     for x in args.mitoz_extra or []:
         base_args += shlex.split(str(x))
 
-    if getattr(args, "core", "hybrid") == "native":
+    if getattr(args, "core", "native") == "native":
         cmd = native_core_cmd(fasta_file, workdir, internal_id, args)
     else:
         cmd = build_tool_cmd(
@@ -2679,7 +2679,7 @@ def run_snakemake_for_annotation_tasks(
         "mitoz_extra": args.mitoz_extra or [], "conda_env_mitoz": args.conda_env_mitoz,
         "mitoz_path": args.mitoz_path, "conda_exe": args.conda_exe,
         "mitoz_fast": getattr(args, "mitoz_fast", ""),
-        "core": getattr(args, "core", "hybrid"), "mito_core": str(MITO_CORE),
+        "core": getattr(args, "core", "native"), "mito_core": str(MITO_CORE),
         "mitos_refdir": getattr(args, "mitos_refdir", None), "mitos_bin": getattr(args, "mitos_bin", None),
         "phylum": getattr(args, "phylum", None), "rrna_hmm_lib": getattr(args, "rrna_hmm_lib", None),
     }
@@ -3193,9 +3193,9 @@ def resolve_tools(args: argparse.Namespace) -> str:
         if hasattr(args, "rrna_hmm") and not getattr(args, "phylum", None):
             args.phylum = phylum
         announce(f"[CLADE] auto: {phylum or 'no taxonomy'} -> --clade {args.clade} --genetic_code {args.genetic_code}")
-    if getattr(args, "core", "hybrid") == "native":
+    if getattr(args, "core", "native") == "native":
         args.mitoz_fast = ""                                 # MitoZ is not run; the clade only names the protein set
-    if getattr(args, "core", "hybrid") == "mitoz":
+    if getattr(args, "core", "native") == "mitoz":
         if args.clade not in MITOZ_CLADES:
             return f"ERROR: --core mitoz needs a MitoZ clade ({', '.join(MITOZ_CLADES)}); use --core hybrid"
         changed = [f"{k} {getattr(args, k)}" for k, v in (("trna", "mitoz"), ("rescue", "no"), ("rrna_hmm", "no"))
@@ -3928,7 +3928,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     # round 1 ran with the fast MITOS2 tRNA mode (it only oriented the sequence): samples that end with the round-1
     # annotation (no orientation gene, failed round 2...) get the sensitive tRNA pass now (review C finding 8)
     try:
-        if getattr(args, "core", "hybrid") != "native":      # mito_core.py already runs the sensitive tRNA pass
+        if getattr(args, "core", "native") != "native":      # mito_core.py already runs the sensitive tRNA pass
             resensitise_trnas(args, phase1_fast_finalised(
                 finalised, phase1_fast=os.environ.get("YZZ_PHASE1_FAST") == "1"), out_root)
     except Exception as exc:
@@ -4299,14 +4299,15 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Conda env containing MitoZ (e.g. mitoz3.6).")
         g.add_argument("--mitoz_path",      default=None,
                        help="Path to MitoZ executable or directory.")
-        g.add_argument("--core", choices=["hybrid", "mitoz", "native"], default="hybrid",
+        g.add_argument("--core", choices=["native", "hybrid", "mitoz"], default="native",
                        help="Annotation core only - every MitoM step (reorientation, round-2 annotation, metadata "
-                            "transfer, introns, tRNA origin fix) runs with any. hybrid (default): MitoZ protein "
-                            "genes / rRNAs (+ extended clades) with MITOS2 tRNAs and MITOS2 rescue of missed genes; "
-                            "mitoz: MitoZ alone (= --trna mitoz --rescue no --rrna_hmm no; "
-                            "overrides explicit --rescue / --rrna_hmm values and says so); "
-                            "native: MitoM's own core (mito_core.py: blastx + exonerate on the MITOS2 reference "
-                            "proteins, Infernal with the MITOS2 rRNA / MiTFi tRNA models) - no MitoZ needed.")
+                            "transfer, introns, tRNA origin fix) runs with any. native (default): MitoM's own core "
+                            "(mito_core.py: blastx + exonerate on the MITOS2 reference proteins, per-phylum rRNA "
+                            "profile HMMs, Infernal + MiTFi with the MITOS2 tRNA models; one conda environment, no "
+                            "MitoZ); hybrid: MitoZ protein genes / rRNAs (+ extended clades) with MITOS2 tRNAs and "
+                            "MITOS2 rescue of missed genes (needs the mitoz and mitos environments); mitoz: MitoZ "
+                            "alone (= --trna mitoz --rescue no --rrna_hmm no; overrides explicit --rescue / "
+                            "--rrna_hmm values and says so).")
         g.add_argument("--trna", choices=["mitos2", "mitoz"], default="mitos2",
                        help="tRNA step inside MitoZ: mitos2 (default) = MITOS2 with its sensitive pass run in "
                             "parallel (same MiTFi Metazoa models and same tRNAs as runmitos); falls back to MiTFi "

@@ -1,4 +1,4 @@
-# Mitogenome annotation workflow (MitoZ + MITOS2 + mitotools + refseq89m) for any system with Docker
+# MitoM mitogenome annotation workflow (native core: mitotools environment + refseq89m) for any system with Docker
 # (Windows, macOS incl. Apple Silicon via emulation, Linux). Built by install.sh in a clean Ubuntu.
 #   docker build -t mitom .
 #   docker run --rm -v "$PWD":/data mitom mitom run -i /data/genomes.gb -o /data/out

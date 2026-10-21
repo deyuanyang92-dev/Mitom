@@ -375,7 +375,8 @@ def run_one(tool: str, row: dict, root: Path, threads: int, timeout: int, recoll
     ncbi = SeqIO.read(str(root / "gb" / f"{acc}.gb"), "genbank")
     out.mkdir(parents=True, exist_ok=True)
     if old:
-        st = {"status": "ok", "seconds": old["seconds"], "step_seconds": old["step_seconds"], "error": ""}
+        st = {"status": "ok", "seconds": old["seconds"], "step_seconds": old["step_seconds"], "error": "",
+              **({"peak_rss_mb": old["peak_rss_mb"]} if old.get("peak_rss_mb") else {})}
     else:
         (out / "in.fa").write_text(f">{acc}\n{ncbi.seq}\n")
         cmds = build_cmd(tool, row, root / "bare" / acc, out, threads)

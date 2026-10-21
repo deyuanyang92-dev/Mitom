@@ -219,11 +219,78 @@ From the 173-record run (`benchmark/sets/mito_bench_2026-10.tsv`), each with a r
 - tRNAs: all tools that use MiTFi (MitoM, MitoZ, MITOS2) find the same genes (~69 % both ends exact, ~81 % within 3 nt);
   nematode and acanthocephalan tRNAs with reduced structures are missed by every tool.
 
+## MitoM native core (2026-10-22): the same benchmark without MitoZ
+
+MitoM now has its own annotation core (`mito_core.py`, the default `--core native`): protein genes by blastx against
+the MITOS2 reference protein sets (refseq89m, MIT licence) and exonerate protein2dna for the boundaries, rRNAs by
+MitoM's per-phylum profile HMMs (nhmmer), tRNAs by Infernal with the MiTFi covariance models and MiTFi - exactly the
+tRNA procedure MITOS2 runs. It needs one conda environment (mitotools) plus the reference data; MitoZ and the MITOS2
+package are no longer required (`--core hybrid` still offers the old route). The native core was run on the same
+24 records and evaluated together with the four tools above (`mitom` = the MitoZ-based route, `mitom_native` = the
+native core; rRNA HMM library rebuilt without the benchmark records):
+
+| tool | records | ok | failed | timeout | unsupported | with obvious error | median s/record | median peak RAM (MB) | max peak RAM (MB) |
+|---|---|---|---|---|---|---|---|---|---|
+| mitom | 24 | 24 | 0 | 0 | 0 | 13 | 175 | 732 | 1113 |
+| mitom_native | 24 | 24 | 0 | 0 | 0 | 14 | 109 | 320 | 1126 |
+| mitoz | 24 | 18 | 0 | 0 | 6 | 17 | 249 | 492 | 719 |
+| mitos2 | 24 | 24 | 0 | 0 | 0 | 24 | 385 | 953 | 1929 |
+| mitofinder | 24 | 22 | 2 | 0 | 0 | 22 | 204 | 238 | 283 |
+
+| tool | kind | truth | recall | both ends exact | within 3 nt |
+|---|---|---|---|---|---|
+| mitom | PCG | 218 | 100.0% | 82.1% | 89.9% |
+| mitom_native | PCG | 218 | 99.5% | 82.6% | 89.9% |
+| mitoz | PCG | 218 | 100.0% | 78.4% | 86.2% |
+| mitos2 | PCG | 218 | 99.1% | 50.5% | 57.8% |
+| mitofinder | PCG | 218 | 97.7% | 59.2% | 72.0% |
+| mitom | rRNA | 32 | 100.0% | 37.5% | 65.6% |
+| mitom_native | rRNA | 32 | 100.0% | 28.1% | 62.5% |
+| mitoz | rRNA | 32 | 87.5% | 25.0% | 28.1% |
+| mitos2 | rRNA | 32 | 96.9% | 15.6% | 25.0% |
+| mitofinder | rRNA | 32 | 90.6% | 9.4% | 28.1% |
+| mitom | tRNA | 371 | 97.8% | 69.5% | 82.2% |
+| mitom_native | tRNA | 371 | 96.8% | 69.0% | 81.7% |
+| mitoz | tRNA | 371 | 92.5% | 68.5% | 79.2% |
+| mitos2 | tRNA | 371 | 96.0% | 68.2% | 80.9% |
+| mitofinder | tRNA | 371 | 96.5% | 67.1% | 79.0% |
+
+| phylum | records | mitom | mitom_native | mitoz | mitos2 | mitofinder |
+|---|---|---|---|---|---|---|
+| Annelida | 3 | 71.8% | 76.9% | 61.5% | 43.6% | 33.3% |
+| Arthropoda | 3 | 97.4% | 94.9% | 89.7% | 53.8% | 69.2% |
+| Chordata | 3 | 89.7% | 87.2% | 82.1% | 79.5% | 69.2% |
+| Cnidaria | 3 | 84.6% | 92.3% | - | 69.2% | 87.2% |
+| Echinodermata | 3 | 87.2% | 87.2% | 92.3% | 48.7% | 74.4% |
+| Mollusca | 3 | 63.2% | 52.6% | 47.4% | 42.1% | 39.5% |
+| Nematoda | 3 | 75.0% | 80.6% | 80.6% | 27.8% | 50.0% |
+| Platyhelminthes | 3 | 56.8% | 73.0% | - | 59.5% | 32.4% |
+
+Obvious errors on the 17 records every tool finished:
+
+| error | mitom | mitom_native | mitoz | mitos2 | mitofinder |
+|---|---|---|---|---|---|
+| boundary_gt30 | 6 | 7 | 14 | 48 | 29 |
+| table2asn_error | 0 | 0 | 12 | 17 | 17 |
+| missing_gene | 0 | 1 | 4 | 3 | 8 |
+| name_error | 0 | 0 | 0 | 0 | 7 |
+| internal_stop | 0 | 0 | 3 | 0 | 3 |
+| duplicate_gene | 0 | 0 | 0 | 3 | 0 |
+| records with any error | 6 | 7 | 16 | 17 | 17 |
+
+Native core vs the MitoZ-based route: protein genes 247 vs 240 exact of 306 (common 17: 82.6 % vs 82.1 %), rRNAs
+and tRNAs within 1-3 genes of it (both far above MitoZ), half the run time (median 109 s vs 175 s), less than half
+the memory (0.32 GB vs 0.73 GB; MitoZ 0.49 GB), 1 record with an NCBI ERROR vs 2. Remaining differences: starts of
+the divergent bivalve genes (NC_083122.1 cox2 / nad1 / nad4 / nad4l: RefSeq starts far upstream of any reference
+protein), one bivalve 12S and one nematode atp8 not found, 8-nt tRNA-Tyr ends in two ticks. Tables:
+`benchmark/results/metazoa_mini_2026-10/report_native.md`.
+
 ## How it was run
 
 ```bash
 cd benchmark
-# 24 records: 3 per phylum from the 173-record set (gb/ and bare/ come from mito_sample.py)
+# 24 records: 3 per phylum from the 173-record set (gb/ and bare/ come from mito_sample.py); add mitom_native to --tools
+# for the native core (MITOM_RRNA_LIB=<library without the benchmark records> for a fair rRNA test)
 python3 mito_bench_run.py --set sets/mito_bench_mini_2026-10.tsv --root <root> --split all \
     --tools mitom,mitoz,mitos2,mitofinder --jobs 8 --threads 2 --timeout 7200 \
     --mitofinder <MitoFinder>/mitofinder --ref_pool <refs.gb>     # one closest RefSeq record per species

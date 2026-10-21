@@ -226,15 +226,15 @@ def test_extended_clade_accepted_and_needs_code(tmp_path):
 
 
 def test_core_choice_keeps_mitom_steps():
-    """--core only picks the annotation core: hybrid (default; MitoZ genes + MITOS2 tRNAs + MITOS2 rescue) or
-    mitoz (MitoZ alone: MiTFi tRNAs, no rescue). Reorientation, round-2 annotation, metadata transfer,
-    introns are MitoM's own steps (user 2026-10-21) and stay on with either core."""
+    """--core only picks the annotation core: native (default, mito_core.py), hybrid (MitoZ genes + MITOS2 tRNAs +
+    MITOS2 rescue) or mitoz (MitoZ alone: MiTFi tRNAs, no rescue). Reorientation, round-2 annotation, metadata
+    transfer, introns are MitoM's own steps (user 2026-10-21) and stay on with every core."""
     p = bm.build_parser()
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--core", "mitoz"])
     assert bm.resolve_tools(a) == "" and (a.trna, a.rescue) == ("mitoz", "no")
     assert (a.which_gene_first, a.if_reannotation_2, a.preserve_phase1_metadata, a.intron_fix) == ("cox1", "auto", "yes", "auto")
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca"])
-    assert bm.resolve_tools(a) == "" and (a.core, a.trna, a.rescue) == ("hybrid", "mitos2", "auto")
+    assert bm.resolve_tools(a) == "" and (a.core, a.trna, a.rescue) == ("native", "mitos2", "auto")
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Animal", "--genetic_code", "5", "--core", "mitoz"])
     assert "MitoZ" in bm.resolve_tools(a)
 

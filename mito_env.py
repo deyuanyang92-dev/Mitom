@@ -32,21 +32,21 @@ HERE = Path(__file__).resolve().parent
 MITOS_REF = "refseq89m"
 # what each program is needed for, and the conda environment (env/*.yml) that installs it
 TOOLS = {
-    "mitoz":       ("MitoZ annotation (batch_mitoz.py)", "mitoz"),
-    "runmitos":    ("MITOS2 tRNA (default tRNA step; mito_trna.py)", "mitos"),
-    "exonerate":   ("protein gene boundaries (mito_core.py --core native); intron models (mito_intron.py)", "mitotools"),
-    "cmsearch":    ("rRNA / tRNA models (mito_core.py --core native); intron typing (mito_intron.py)", "mitotools"),
-    "blastx":      ("protein gene search (mito_core.py --core native)", "mitotools"),
-    "java":        ("MiTFi tRNA selection (mito_core.py --core native; the mitos environment has one)", "mitos"),
+    "mitoz":       ("optional: --core hybrid / mitoz (MitoZ annotation)", "mitoz"),
+    "runmitos":    ("optional: --core hybrid tRNA step, MITOS2 rescue of missed genes (mito_rescue.py)", "mitos"),
+    "exonerate":   ("protein gene boundaries (mito_core.py); intron models (mito_intron.py)", "mitotools"),
+    "cmsearch":    ("tRNA / rRNA covariance models (mito_core.py); intron typing (mito_intron.py)", "mitotools"),
+    "blastx":      ("protein gene search (mito_core.py)", "mitotools"),
+    "java":        ("MiTFi tRNA selection (mito_core.py, the default core)", "mitotools"),
     "blastp":      ("intron homolog search (mito_intron.py)", "mitotools"),
     "table2asn":   ("NCBI validation (mito_curate.py, ncbi_validate.py)", "mitotools"),
-    "nhmmer":      ("rRNA HMM fallback (mito_rrna_hmm.py search)", "mitotools"),
+    "nhmmer":      ("per-phylum rRNA profile HMMs (mito_core.py, mito_rrna_hmm.py)", "mitotools"),
     "mafft":       ("optional: rebuild the rRNA HMM library (mito_rrna_hmm.py build)", "mitotools"),
     "arwen":       ("optional extra tRNA method (mito_trna.py)", "mitotools"),
     "aragorn":     ("optional extra tRNA method (mito_trna.py)", "mitotools"),
     "tRNAscan-SE": ("optional extra tRNA method (mito_trna.py)", "mitotools"),
 }
-REQUIRED = ("mitoz", "runmitos", "exonerate", "cmsearch", "blastp", "table2asn")
+REQUIRED = ("blastx", "exonerate", "cmsearch", "nhmmer", "java", "blastp", "table2asn")   # the native core (default)
 
 
 def config_path() -> Path:
