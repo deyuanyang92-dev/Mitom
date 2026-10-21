@@ -225,17 +225,21 @@ class Curator:
                     cand.append(self.L + 1 - ge)
         return min(cand) if cand else None
 
-    def next_feature_start(self, f: SeqFeature) -> Optional[int]:
-        """Transcript position where the nearest downstream feature (tRNA, rRNA, CDS, either strand) begins."""
+    def next_feature(self, f: SeqFeature) -> Tuple[Optional[int], Optional[str]]:
+        """Transcript position where the nearest downstream feature (tRNA, rRNA, CDS, either strand) begins, and
+        its type."""
         s, e = span(f)
         cand = []
         for g in self.others(f):
             for gs, ge in spans(g):
                 if f.location.strand == 1 and gs > s:
-                    cand.append(gs)
+                    cand.append((gs, g.type))
                 if f.location.strand == -1 and ge < e:
-                    cand.append(self.L + 1 - ge)
-        return min(cand) if cand else None
+                    cand.append((self.L + 1 - ge, g.type))
+        return min(cand) if cand else (None, None)
+
+    def next_feature_start(self, f: SeqFeature) -> Optional[int]:
+        return self.next_feature(f)[0]
 
     def tx(self, f: SeqFeature) -> Tuple[int, int]:
         s, e = span(f)
@@ -285,7 +289,7 @@ class Curator:
         new_b = b
         trna = self.downstream_trna_start(f)
         down = self.downstream_gene_start(f)
-        nfs = self.next_feature_start(f)               # nearest feature downstream, either strand
+        nfs, nfs_type = self.next_feature(f)           # nearest feature downstream, either strand
         reach = None                                   # furthest position a complete stop may reach (None: no limit)
         if nfs is not None:
             reach = nfs - 1 + (MAX_PCG_OVERLAP if down is not None and nfs == down else MAX_FEATURE_OVERLAP)
@@ -334,12 +338,32 @@ class Curator:
                     break
             else:
                 self.log(f, "P4", old, old, "no complete or abbreviated stop before the downstream tRNA - check manually")
-        elif first_stop is not None and first_stop != b and abs(first_stop - b) <= 3 * self.a.max_start_shift \
-                and (reach is None or first_stop <= reach or not has_tail):
-            # complete stop overlapping the tRNA by 1-2 nt is within tRNA boundary uncertainty: kept; an end that
-            # already is an abbreviated stop is not moved deeper than `reach` into the next feature (NC_067900.1 nad1:
-            # 50 nt into the antisense tRNA / rRNA); an end without any stop signal is completed regardless
-            new_b, why_end = first_stop, "first in-frame complete stop codon"
+        elif first_stop is not None and first_stop != b and abs(first_stop - b) <= 3 * self.a.max_start_shift:
+            if reach is None or first_stop <= reach:
+                # complete stop overlapping the tRNA by 1-2 nt is within tRNA boundary uncertainty: kept
+                new_b, why_end = first_stop, "first in-frame complete stop codon"
+            elif not has_tail and nfs_type == "rRNA":
+                # no stop signal at all and only an rRNA start in the way: that start is soft (R1 fills rRNAs to the
+                # flanking genes and trims them back), so the gene is completed and R1 moves the rRNA (review C case)
+                new_b, why_end = first_stop, "first in-frame complete stop codon"
+            elif not has_tail:
+                # the first complete stop lies deeper inside the next feature than NCBI records go (NC_067900.1 nad1:
+                # 50 nt into the antisense tRNA): the gene ends with T / TA (or a stop) right before that feature
+                for gap in SPACERS:
+                    end = nfs - 1 - gap
+                    tail = (end - new_a + 1) % 3
+                    if end > new_a + 30 and tail in (1, 2) and s[end - tail:end] == ("T", "TA")[tail - 1]:
+                        new_b, why_end = end, "abbreviated stop T/TA immediately before the next feature" + \
+                            (f" ({gap:+d} nt spacer)" if gap else "")
+                        break
+                    if end > new_a + 30 and tail == 0 and s[end - 3:end] in self.stops:
+                        new_b, why_end = end, "complete stop codon immediately before the next feature" + \
+                            (f" ({gap:+d} nt spacer)" if gap else "")
+                        break
+                else:
+                    self.log(f, "P4", old, old, "first complete stop lies inside the next feature, no abbreviated stop "
+                             "before it - check manually")
+            # else: the annotated end already is an abbreviated stop before that feature: kept
         elif first_stop is not None and first_stop > b and first_stop - b <= MAX_END_EXTENSION and \
                 (reach is None or first_stop <= reach):
             # the core's end stops short (C-terminal homology lost: nad5 / nad4 / nad2 / cox1 in divergent phyla,

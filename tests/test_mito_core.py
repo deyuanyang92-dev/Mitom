@@ -55,8 +55,8 @@ def test_parse_mitfi_selects_tophits_and_copies_and_resolves_overlaps():
         ">X|5|9900|9950|1|1|67|20.0|5E-2|0.0|25|0||?|trnQ.cm|0|0|?", "SEQ", "STRUCT",         # neither: dropped
     ])
     feats = mc.parse_mitfi(text, LOG)
-    assert [(f.name, f.start, f.end, f.strand, f.anticodon, f.acpos) for f in feats] == \
-        [("trnN", 1540, 1601, 1, "gtt", 27), ("trnE", 9749, 9812, -1, "ttc", 30)]
+    assert [(f.name, f.start, f.end, f.strand, f.anticodon, f.acpos, f.model) for f in feats] == \
+        [("trnN", 1540, 1601, 1, "gtt", 27, "trnN"), ("trnE", 9749, 9812, -1, "ttc", 30, "trnA")]
 
 
 def test_loci_groups_same_strand_hits():
@@ -80,5 +80,18 @@ def test_write_genbank_names(tmp_path):
                for f in rec.features)
     trnas = [f for f in rec.features if f.type == "tRNA"]
     assert trnas[0].qualifiers["product"] == ["tRNA-Leu"]
-    assert trnas[0].qualifiers["anticodon"] == ["(pos:331..333,aa:Leu,seq:tag)"]            # NCBI form, genome coordinates
-    assert trnas[1].qualifiers["anticodon"] == ["(pos:complement(408..410),aa:Trp,seq:tca)"]
+    assert trnas[0].qualifiers["note"][0] == "anticodon: UAG"           # the MITOS2-style note mito_curate reads
+    assert "anticodon" not in trnas[1].qualifiers                        # no positional qualifier: it would not follow re-orientation
+
+
+def test_window_to_genome_minus_strand():
+    """Benchmark 2026-10-22: every minus-strand protein gene was placed at a mirrored position (gs = n - (ws + e))."""
+    from Bio.Seq import Seq
+    genome = "".join("ACGT"[(i * 7 + i // 3) % 4] for i in range(400))
+    ws, we = 100, 300
+    rc_window = str(Seq(genome[ws:we]).reverse_complement())
+    s, e = 40, 70                                                      # a stretch of the minus-strand window
+    gs, ge = mc.window_to_genome(ws, we, -1, s, e)
+    assert (gs, ge) == (230, 260)
+    assert str(Seq(genome[gs:ge]).reverse_complement()) == rc_window[s:e]
+    assert mc.window_to_genome(ws, we, 1, s, e) == (140, 170)

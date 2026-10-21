@@ -8,7 +8,8 @@ nearest in-frame start codon upstream of the alignment (at most <residues before
 nearest downstream (10 codons), else the gene is 5'-partial; the end is the last aligned codon (plus the stop codon
 when it follows directly) - the stop (first in-frame stop, or an abbreviated T / TA before the next tRNA / gene) is
 placed by mito_curate.py P3, which knows the neighbours. rRNA ends and NCBI names are left to it as before.
-rRNAs: Infernal cmsearch with the MITOS2 covariance models (refseq89m/ncRNA/rrnS.cm, rrnL.cm), best cluster of hits.
+rRNAs: Infernal cmsearch (fast mode) with the MITOS2 covariance models (refseq89m/ncRNA/rrnS.cm, rrnL.cm), best
+cluster of hits; an rRNA without a hit is left to MitoM's per-phylum rRNA HMM step (cheaper than cmsearch --nohmm).
 tRNAs: cmsearch with the MiTFi tRNA models (refseq89m/ncRNA/trn*.cm; a sensitive pass for models without a hit) and
 MiTFi (mitfi_import.jar of the mitos package) for hit selection and anticodons - the same programs MITOS2 runs.
 
@@ -58,15 +59,19 @@ NAMES = {                                   # MitoZ-style /gene and /product, un
 AA3 = {"A": "Ala", "C": "Cys", "D": "Asp", "E": "Glu", "F": "Phe", "G": "Gly", "H": "His", "I": "Ile", "K": "Lys",
        "L": "Leu", "M": "Met", "N": "Asn", "P": "Pro", "Q": "Gln", "R": "Arg", "S": "Ser", "T": "Thr", "V": "Val",
        "W": "Trp", "Y": "Tyr"}
-BLAST_EVALUE = 1e-3
+BLAST_EVALUE = 10          # blastx is only the locator; short divergent genes (atp8, nad6, nad4l) score weakly
+BLAST_MIN_BITS = 35        # weakest locus accepted (exonerate then has to align it)
+EXONERATE_MIN_SCORE = 40   # exonerate --score (default 100 loses short divergent genes)
 LOCUS_GAP = 150            # blastx hits of one gene closer than this (same strand) form one locus
-MIN_REF_COVER = 0.6        # the best alignment must cover this fraction of its reference protein
+MIN_REF_COVER = 0.25       # the best alignment must cover this fraction of its reference protein (divergent genes
+                           # align only in their conserved core; the start / stop rules complete them)
 WINDOW = 300               # nt of genome on each side of a locus given to exonerate
 START_UP_EXTRA = 10        # start codon search: upstream codons beyond the residues missing from the alignment
 START_DOWN = 10            # ... and downstream codons when none upstream
 CM_EVALUE = 1e-3           # cmsearch fast pass (MITOS2 --ncev)
 CM_EVALUE_SENSITIVE = 0.1  # cmsearch --max pass for models without a hit (MITOS2 sensitive pass)
 RRNA_CLUSTER = 500         # rRNA hits of one model on one strand closer than this are one gene
+EXONERATE_MODEL = "protein2dna"   # protein2dna:bestfit = whole reference protein aligned (set by --exonerate_model)
 
 
 @dataclass
@@ -93,6 +98,7 @@ class Feature:
     partial5: bool = False
     anticodon: str = ""
     acpos: int = -1            # tRNA: 0-based position of the anticodon within the tRNA (MiTFi)
+    model: str = ""            # tRNA: the covariance model that found it
     score: float = 0.0
 
 
@@ -127,16 +133,21 @@ def run(cmd: List[str], log: logging.Logger, **kw) -> subprocess.CompletedProces
 
 
 # ── protein genes ────────────────────────────────────────────────────────────
-def blastx_gene(blastx: str, genome_fa: Path, db: Path, code: int, gene: str, threads: int, log) -> List[Hit]:
+def blastx_gene(blastx: str, genome_fa: Path, db: Path, code: int, gene: str, threads: int, log,
+                sensitive: bool = False) -> List[Hit]:
+    """blastx of the genome against one gene's protein set. Default: standard settings (1-2 s per gene); sensitive:
+    word size 2, BLOSUM45, no composition statistics (3-4 s per gene), run only for genes the default pass misses."""
+    extra = ["-seg", "no", "-comp_based_stats", "0", "-word_size", "2", "-matrix", "BLOSUM45"] if sensitive else ["-seg", "no"]
     p = run([blastx, "-query", str(genome_fa), "-db", str(db), "-query_gencode", str(code), "-evalue", str(BLAST_EVALUE),
-             "-outfmt", "6 qseqid sseqid pident length qstart qend sstart send evalue bitscore slen",
-             "-max_target_seqs", "20", "-num_threads", str(max(1, threads))], log)
+             *extra, "-outfmt", "6 qseqid sseqid pident length qstart qend sstart send evalue bitscore slen",
+             "-max_target_seqs", "50", "-num_threads", str(max(1, threads))], log)
     hits = []
     for line in p.stdout.splitlines():
         c = line.split("\t")
         qs, qe = int(c[4]), int(c[5])
         strand = 1 if qs <= qe else -1
-        hits.append(Hit(gene, c[1], min(qs, qe) - 1, max(qs, qe), strand, float(c[9]), int(c[6]), int(c[7]), int(c[10])))
+        if float(c[9]) >= BLAST_MIN_BITS:
+            hits.append(Hit(gene, c[1], min(qs, qe) - 1, max(qs, qe), strand, float(c[9]), int(c[6]), int(c[7]), int(c[10])))
     return hits
 
 
@@ -170,8 +181,10 @@ def exonerate_best(exonerate: str, window: str, prots: Dict[str, str], code: int
     best = None
     for rid, seq in prots.items():
         (tmp / "q.fa").write_text(f">{rid}\n{seq}\n")
-        p = run([exonerate, "--model", "protein2dna", "--geneticcode", str(code), "--bestn", "1", "--showalignment", "no",
-                 "--showvulgar", "no", "--ryo", "RYO\t%qi\t%ql\t%qab\t%qae\t%tab\t%tae\t%s\n",
+        p = run([exonerate, "--model", EXONERATE_MODEL, "--geneticcode", str(code), "--bestn", "1", "--showalignment", "no",
+                 "--showvulgar", "no", "--score", str(EXONERATE_MIN_SCORE),
+                 "--ryo", "RYO\t%qi\t%ql\t%qab\t%qae\t%tab\t%tae\t%s\n",
+                 *(["--exhaustive", "yes"] if EXONERATE_MODEL.endswith("bestfit") else []),   # non-local models need full DP
                  str(tmp / "q.fa"), str(tmp / "w.fa")], log)
         for line in p.stdout.splitlines():
             if line.startswith("RYO\t"):
@@ -191,7 +204,23 @@ def place_cds(window: str, tab: int, tae: int, missing_n: int, table: CodonTable
     starts, stops = set(table.start_codons), set(table.stop_codons)
     a = tab                                                # exonerate's alignment start is the first aligned codon
     start, partial = a, True
+    if missing_n > START_UP_EXTRA:
+        # a local alignment that misses many N-terminal residues of a full-length reference (divergent N-terminus):
+        # the start is expected ~3 x missing_n nt upstream; take the in-frame start codon nearest to that position
+        # (within +-10 codons, no stop in between), else fall through to MitoZ's nearest-upstream rule
+        target = a - 3 * missing_n
+        best = None
+        c = a - 3
+        while c >= 0 and c >= target - 3 * START_UP_EXTRA and window[c:c + 3] not in stops:
+            if window[c:c + 3] in starts and abs(c - target) <= 3 * START_UP_EXTRA and \
+                    (best is None or abs(c - target) < abs(best - target)):
+                best = c
+            c -= 3
+        if best is not None:
+            start, partial = best, False
     for j in range(0, missing_n + START_UP_EXTRA + 1):     # upstream, nearest first (j = 0: the aligned start itself)
+        if not partial:
+            break
         c = a - 3 * j
         if c < 0:
             break
@@ -215,6 +244,12 @@ def place_cds(window: str, tab: int, tae: int, missing_n: int, table: CodonTable
     return start, min(end, len(window)), partial
 
 
+def window_to_genome(ws: int, we: int, strand: int, s: int, e: int) -> Tuple[int, int]:
+    """Plus-strand genome coordinates (0-based half-open) of [s, e) on the window that covers genome [ws, we):
+    the window reads forward on +, reverse-complemented on -, so on - the window's start is the genome's end."""
+    return (ws + s, ws + e) if strand == 1 else (we - e, we - s)
+
+
 def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads: int, tools: dict, tmp: Path, log) \
         -> List[Feature]:
     table = CodonTable.unambiguous_dna_by_id[code]
@@ -224,6 +259,11 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
     with ThreadPoolExecutor(max(1, threads)) as ex:
         all_hits = dict(zip(PCG, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
                                                                  code, g, 1, log), PCG)))
+        missing = [g for g in PCG if not all_hits[g]]
+        if missing:
+            log.info(f"[core] sensitive blastx for {len(missing)} gene(s) without a hit: " + " ".join(missing))
+            all_hits.update(zip(missing, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
+                                                                        code, g, 1, log, sensitive=True), missing)))
     for gene in PCG:
         hits = all_hits[gene]
         if not hits:
@@ -240,13 +280,12 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             if len(refs) == 3:
                 break
         prots = reference_proteins(refdir / "featureProt" / f"{gene}.fas", refs)
-        # window on the gene's own strand
-        if strand == 1:
-            ws, we = max(0, ls - WINDOW), min(n, le + WINDOW)
-            window = genome[ws:we]
-        else:
-            ws, we = max(0, ls - WINDOW), min(n, le + WINDOW)
-            window = rc[n - we:n - ws]
+        # window on the gene's own strand: plus interval [ws, we) of the genome, reverse-complemented for minus genes;
+        # wide enough for a whole reference protein on either side of the blastx locus (blastx may find only the
+        # conserved half of a divergent gene: NC_083122.1 nad4 was placed 552 nt late with a fixed 300-nt margin)
+        margin = 3 * max(h.slen for h in locus) + WINDOW
+        ws, we = max(0, ls - margin), min(n, le + margin)
+        window = genome[ws:we] if strand == 1 else rc[n - we:n - ws]
         best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
         if best is None:
             log.info(f"[core] {gene}: exonerate found no alignment")
@@ -257,10 +296,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             log.info(f"[core] {gene}: alignment covers {qae - qab} of {reflen} residues: skipped")
             continue
         s, e, partial = place_cds(window, tab, tae, qab, table)
-        if strand == 1:
-            gs, ge = ws + s, ws + e
-        else:
-            gs, ge = n - (ws + e), n - (ws + s)
+        gs, ge = window_to_genome(ws, we, strand, s, e)
         feats.append(Feature("CDS", gene, gs, ge, strand, f"ref {ref} score {score:.0f} cover {qae - qab}/{reflen}",
                              partial5=partial, score=score))
         log.info(f"[core] {gene}: {gs + 1}..{ge} ({'+' if strand == 1 else '-'}) ref {ref} score {score:.0f}"
@@ -300,9 +336,9 @@ def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log) -
         cm = refdir / "ncRNA" / f"{model}.cm"
         hits = tbl_hits(cmsearch(tools["cmsearch"], cm, genome_fa, tmp / f"{model}.out", False, log, rrna=True).with_suffix(".tbl"))
         if not hits:
-            hits = tbl_hits(cmsearch(tools["cmsearch"], cm, genome_fa, tmp / f"{model}.sens.out", True, log, rrna=True).with_suffix(".tbl"))
-        if not hits:
-            log.info(f"[core] {model}: no cmsearch hit")
+            # no sensitive (--nohmm) pass: 2.4 GB and 2 min per model; a missing rRNA is found later by MitoM's
+            # per-phylum rRNA HMM step (mito_rrna_hmm.py, nhmmer)
+            log.info(f"[core] {model}: no cmsearch hit (left to the rRNA HMM step)")
             continue
         clusters: List[List[tuple]] = []
         for h in sorted(hits, key=lambda x: (x[2], x[0])):
@@ -328,20 +364,25 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
     def search(model: Path, sensitive: bool) -> Path:
         return cmsearch(tools["cmsearch"], model, genome_fa, tmp / f"{seqname}_{model.stem}.cmout", sensitive, log)
 
+    jar, codes = tools["mitfi"]
+
+    def mitfi(outs: List[Path]) -> List[Feature]:
+        cmd = [tools["java"], "-jar", str(jar), "-code", str(code), "-codefile", str(codes), "-structure", "-genome",
+               str(genome_fa), "-glength", str(len(genome)), "-evalue", str(CM_EVALUE_SENSITIVE), "-overlap", "10"]
+        for o in outs:
+            cmd += ["-in", str(o)]
+        return parse_mitfi(run(cmd, log).stdout, log)
+
     with ThreadPoolExecutor(max(1, threads)) as ex:
         outs = list(ex.map(lambda m: search(m, False), models))
-    missing = [m for m, o in zip(models, outs) if not tbl_hits(o.with_suffix(".tbl"))]
+    feats = mitfi(outs)
+    accepted = {f.model for f in feats}                    # MITOS2: models without an accepted tRNA get the --max pass
+    missing = [m for m in models if m.stem not in accepted]
     if missing:
         log.info(f"[core] tRNA sensitive pass for {len(missing)} model(s): " + " ".join(m.stem for m in missing))
         with ThreadPoolExecutor(max(1, threads)) as ex:
             list(ex.map(lambda m: search(m, True), missing))
-    jar, codes = tools["mitfi"]
-    cmd = [tools["java"], "-jar", str(jar), "-code", str(code), "-codefile", str(codes), "-structure", "-genome",
-           str(genome_fa), "-glength", str(len(genome)), "-evalue", str(CM_EVALUE_SENSITIVE), "-overlap", "10"]
-    for o in outs:
-        cmd += ["-in", str(o)]
-    p = run(cmd, log)
-    feats = parse_mitfi(p.stdout, log)
+        feats = mitfi(outs)
     log.info(f"[core] tRNAs: {len(feats)}")
     return feats
 
@@ -386,8 +427,10 @@ def parse_mitfi(text: str, log) -> List[Feature]:
         name = trna_name(aa, anticodon, model)
         if not name or start >= stop:
             continue
+        mm = re.search(r"(trn[A-Z](?:[12])?)\.cm", model)
         feats.append(Feature("tRNA", name, start, stop, strand, f"MiTFi {model} bits {bits:.1f} E {evalue:.1e}"
-                             + (" copy" if copy and not tophit else ""), anticodon=anticodon, acpos=acpos, score=bits))
+                             + (" copy" if copy and not tophit else ""), anticodon=anticodon, acpos=acpos, score=bits,
+                             model=mm.group(1) if mm else model))
     # overlapping tRNAs of different models: keep the better score (MITOS2 keeps both as copies of a locus)
     feats.sort(key=lambda f: -f.score)
     kept: List[Feature] = []
@@ -421,14 +464,8 @@ def write_genbank(genome: str, feats: List[Feature], code: int, prefix: str, top
             loc = FeatureLocation(f.start, f.end, f.strand)
             aa3 = AA3.get(f.name[3], "Xaa")
             q = {"gene": [gene], "product": [f"tRNA-{aa3}"], "note": [f.note]}
-            if f.anticodon and f.acpos >= 0:               # NCBI form; mito_curate reads the seq: part for L1/L2, S1/S2
-                if f.strand == 1:
-                    a = f.start + f.acpos + 1
-                    pos = f"{a}..{a + 2}"
-                else:
-                    b = f.end - f.acpos
-                    pos = f"complement({b - 2}..{b})"
-                q["anticodon"] = [f"(pos:{pos},aa:{aa3},seq:{f.anticodon})"]
+            if f.anticodon:                                # as MITOS2 output is written: mito_curate reads this note
+                q["note"] = [f"anticodon: {f.anticodon.upper().replace('T', 'U')}", f.note]
         rec.features.append(SeqFeature(loc, type="gene", qualifiers={"gene": [gene]}))
         rec.features.append(SeqFeature(loc, type=f.kind, qualifiers=q))
     SeqIO.write(rec, str(out), "genbank")
@@ -478,6 +515,7 @@ def annotate(args) -> int:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    global EXONERATE_MODEL
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("annotate", help="annotate one mitogenome FASTA")
@@ -489,10 +527,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     a.add_argument("--refdir", default=None, help="MITOS2 reference data (refseq89m); default from mito_env")
     a.add_argument("--no_trna", action="store_true", help="skip the tRNA step")
     a.add_argument("--keep_tmp", action="store_true", help="keep blastx / cmsearch / MiTFi files in <out>/core_tmp")
+    a.add_argument("--exonerate_model", default=EXONERATE_MODEL, help="exonerate model (protein2dna, protein2dna:bestfit)")
     a.add_argument("--blastx"), a.add_argument("--exonerate"), a.add_argument("--cmsearch"), a.add_argument("--java")
     a.add_argument("--mitos_bin", default=None, help="MITOS2 environment bin (to find MiTFi); default from mito_env")
     a.add_argument("--log", default=None)
     args = p.parse_args(argv)
+    EXONERATE_MODEL = args.exonerate_model
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
                         handlers=[logging.StreamHandler(sys.stderr)] + ([logging.FileHandler(args.log)] if args.log else []))
     return annotate(args)

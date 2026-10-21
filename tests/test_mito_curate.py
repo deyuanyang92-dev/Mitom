@@ -754,3 +754,15 @@ def test_p3_complete_stop_up_to_30_nt_inside_next_gene_taken():
     rows = _curate_rec(rec)
     assert int(_by(rec, "CDS", "COX1").location.end) == 177, rows
     assert (int(_by(rec, "CDS", "ND3").location.start) + 1, int(_by(rec, "CDS", "ND3").location.end)) == (158, 241)
+
+
+def test_p3_end_without_stop_signal_takes_the_tail_before_a_deep_stop():
+    """Native core ends at the aligned codon; the first in-frame stop 51 nt inside the antisense tRNA must not be
+    taken (173-record truth: never deeper than 10 nt) - the T right before the tRNA is the abbreviated stop."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 40 + "TGC" + "CGC" * 16 + "TAA" + "GCC" * 20      # T at 154; TAA 205..207
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 153, 1), "ND1"),
+                       ("tRNA", FeatureLocation(154, 224, -1), "trnS", {"product": ["tRNA-Ser"]})])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.end) == 154, rows
+    assert any(r["rule"] == "P3" and "before the next feature" in r["reason"] for r in rows)
