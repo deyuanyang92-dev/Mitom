@@ -33,6 +33,7 @@ Usage: python3 mito_rescue.py -i 04.final_gb/ --genetic_code 5 [--mitos_bin DIR]
 Writes the GenBank files in place and rescue_report.tsv next to them.
 """
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import csv
 import re
 import shutil
@@ -247,13 +248,21 @@ def run_mitos(fa: Path, code: int, out: Path, linear: bool, mitos_bin: Optional[
     return out
 
 
-def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, **kw) -> List[dict]:
-    """Rescue every record of every *.gbf in final_dir (in place); returns report rows."""
+def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, jobs: int = 1, **kw) -> List[dict]:
+    """Rescue every record of every *.gbf in final_dir (in place); returns report rows. Files are processed
+    `jobs` at a time (one MITOS2 run per record that misses a gene, minutes each)."""
     if run is None:
         def run(fa, c, out, linear):
             return run_mitos(fa, c, out, linear, **kw)
-    rows = []
-    for gbf in sorted(Path(final_dir).rglob("*.gbf")):
+
+    def one_file(gbf: Path) -> List[dict]:
+        try:
+            return rescue_file(gbf)
+        except Exception as e:                         # one unreadable file must not lose the other files' rows
+            return [{"file": gbf.name, "record": "", "gene": "", "location": "", "status": f"failed: {e!r}", "hint": ""}]
+
+    def rescue_file(gbf: Path) -> List[dict]:
+        rows = []
         recs = list(SeqIO.parse(str(gbf), "genbank"))
         changed = False
         for rec in recs:
@@ -278,7 +287,11 @@ def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, **kw)
             changed = changed or bool(added)
         if changed:
             SeqIO.write(recs, str(gbf), "genbank")
-    return rows
+        return rows
+
+    files = sorted(Path(final_dir).rglob("*.gbf"))
+    with ThreadPoolExecutor(max(1, jobs)) as ex:
+        return [r for rows in ex.map(one_file, files) for r in rows]
 
 
 def main(argv=None) -> int:

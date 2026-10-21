@@ -19,12 +19,13 @@ from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+import mito_env  # noqa: E402
 DATA = HERE / "data"
 SCRIPT = HERE.parent / "mito_intron.py"
 NOTE = "exon-intron structure predicted by protein alignment (Exonerate, MFannot method)"
-BIN = os.environ.get("MITO_INTRON_BIN") or str(Path(shutil.which("exonerate") or
-                                                   "/root/miniconda3/envs/mitointron/bin/exonerate").parent)
-pytestmark = pytest.mark.skipif(not (Path(BIN) / "exonerate").exists(), reason="exonerate not available")
+BIN = os.environ.get("MITO_INTRON_BIN") or mito_env.bin_with("exonerate", "cmsearch") or ""
+pytestmark = pytest.mark.skipif(not BIN, reason="exonerate not available")
 
 
 def run(inp: Path, out: Path, code: int) -> None:

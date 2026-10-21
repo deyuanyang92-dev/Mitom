@@ -1,0 +1,358 @@
+tool	accession	phylum	error	gene	detail
+mitoz	NC_006321.1	Annelida	boundary_gt30	rrnL	11536..12830+ vs 11501..12843+
+mitos2	NC_006321.1	Annelida	boundary_gt30	nad5	6870..8593+ vs 6912..8594+
+mitos2	NC_006321.1	Annelida	boundary_gt30	nad4	9182..10523+ vs 9218..10543+
+mitos2	NC_006321.1	Annelida	boundary_gt30	nad1	13092..14022+ vs 13122..14060+
+mitofinder	NC_006321.1	Annelida	boundary_gt30	cob	3957..5091+ vs 3957..5057+
+mitofinder	NC_006321.1	Annelida	boundary_gt30	nad4	9182..10523+ vs 9146..10513+
+mitofinder	NC_006321.1	Annelida	missing_gene	rrnS	10645..11465+
+mitofinder	NC_006321.1	Annelida	missing_gene	rrnL	11536..12830+
+mitoz	NC_006379.1	Annelida	boundary_gt30	rrnS	7196..8098+ vs 7259..8097+
+mitos2	NC_006379.1	Annelida	boundary_gt30	atp6	12330..13073+ vs 12480..13073+
+mitos2	NC_006379.1	Annelida	boundary_gt30	nad5	13202..14906+ vs 13262..14935+
+mitos2	NC_006379.1	Annelida	boundary_gt30	rrnS	7196..8098+ vs 7259..8097+
+mitoz	NC_007933.1	Annelida	boundary_gt30	rrnL	11555..12888+ vs 11529..12848+
+mitos2	NC_007933.1	Annelida	boundary_gt30	nad6	3600..4058+ vs 3549..4058+
+mitos2	NC_007933.1	Annelida	boundary_gt30	rrnL	11555..12888+ vs 11545..12806+
+mitofinder	NC_007933.1	Annelida	boundary_gt30	cox1	1..1563+ vs 4..1512+
+mitofinder	NC_007933.1	Annelida	missing_gene	atp8	2404..2562+
+mitofinder	NC_007933.1	Annelida	missing_gene	nad6	3600..4058+
+mitofinder	NC_007933.1	Annelida	missing_gene	nad4l	8134..8412+
+mitofinder	NC_007933.1	Annelida	boundary_gt30	nad4	8406..9746+ vs 8499..9755+
+mitofinder	NC_007933.1	Annelida	boundary_gt30	nad1	12994..13918+ vs 12994..13884+
+mitofinder	NC_007933.1	Annelida	missing_gene	nad2	14466..15446+
+mitofinder	NC_007933.1	Annelida	missing_gene	rrnS	10656..11488+
+mitofinder	NC_007933.1	Annelida	missing_gene	rrnL	11555..12888+
+mitofinder	NC_007933.1	Annelida	internal_stop	nad4	
+mitoz	NC_011826.1	Annelida	boundary_gt30	rrnL	6443..7929+ vs 6443..7806+
+mitos2	NC_011826.1	Annelida	boundary_gt30	cox1	1..1550+ vs 34..1573+
+mitos2	NC_011826.1	Annelida	boundary_gt30	nad3	8208..8565+ vs 8259..8609+
+mitos2	NC_011826.1	Annelida	boundary_gt30	rrnL	6443..7929+ vs 6487..7746+
+mitofinder	NC_011826.1	Annelida	boundary_gt30	nad6	3633..4106+ vs 3705..4106+
+mitofinder	NC_011826.1	Annelida	boundary_gt30	nad5	12728..14425+ vs 12746..14320+
+mitofinder	NC_011826.1	Annelida	boundary_gt30	rrnS	5528..6373+ vs 5688..6372+
+mitofinder	NC_011826.1	Annelida	missing_gene	rrnL	6443..7929+
+mitom	NC_013569.1	Annelida	boundary_gt30	nad1	12006..12879+ vs 12006..12914+
+mitoz	NC_013569.1	Annelida	boundary_gt30	nad6	3492..3948+ vs 3492..4028+
+mitoz	NC_013569.1	Annelida	boundary_gt30	nad1	12006..12879+ vs 12006..12914+
+mitoz	NC_013569.1	Annelida	boundary_gt30	rrnL	10608..11745+ vs 10388..11794+
+mitos2	NC_013569.1	Annelida	boundary_gt30	cox1	1..1534+ vs 34..1569+
+mitos2	NC_013569.1	Annelida	boundary_gt30	atp8	2340..2490+ vs 2379..2531+
+mitos2	NC_013569.1	Annelida	boundary_gt30	cox3	2624..3422+ vs 2603..3389+
+mitos2	NC_013569.1	Annelida	missing_gene	nad6	3492..3948+
+mitos2	NC_013569.1	Annelida	boundary_gt30	atp6	5222..5926+ vs 5288..5926+
+mitos2	NC_013569.1	Annelida	boundary_gt30	nad1	12006..12879+ vs 12003..12914+
+mitos2	NC_013569.1	Annelida	boundary_gt30	rrnL	10608..11745+ vs 10555..11764+
+mitofinder	NC_013569.1	Annelida	boundary_gt30	atp6	5222..5926+ vs 5222..5719+
+mitofinder	NC_013569.1	Annelida	boundary_gt30	nad5	6127..7822+ vs 6130..7791+
+mitofinder	NC_013569.1	Annelida	boundary_gt30	nad2	13439..14420+ vs 13439..14362+
+mitoz	NC_026862.1	Annelida	boundary_gt30	rrnL	4777..6074+ vs 4745..6077+
+mitos2	NC_026862.1	Annelida	boundary_gt30	nad5	164..1862+ vs 191..1906+
+mitofinder	NC_026862.1	Annelida	boundary_gt30	nad2	7850..8843+ vs 7883..8842+
+mitofinder	NC_026862.1	Annelida	boundary_gt30	rrnL	4777..6074+ vs 4810..6052+
+mitoz	NC_026995.1	Annelida	boundary_gt30	rrnL	10627..11900+ vs 10595..11923+
+mitos2	NC_026995.1	Annelida	boundary_gt30	nad2	14325..15327+ vs 14292..15297+
+mitofinder	NC_026995.1	Annelida	missing_gene	atp8	2375..2533+
+mitofinder	NC_026995.1	Annelida	missing_gene	nad6	3454..3913+
+mitofinder	NC_026995.1	Annelida	boundary_gt30	nad5	5946..7653+ vs 6039..7517+
+mitofinder	NC_026995.1	Annelida	boundary_gt30	nad4	8201..9554+ vs 8369..9550+
+mitofinder	NC_026995.1	Annelida	boundary_gt30	nad1	12843..13773+ vs 12876..13745+
+mitofinder	NC_026995.1	Annelida	missing_gene	rrnS	9747..10562+
+mitofinder	NC_026995.1	Annelida	missing_gene	rrnL	10627..11900+
+mitofinder	NC_026995.1	Annelida	name_error	S	14259..14324+ vs 14257..14324+
+mitoz	NC_027257.1	Annelida	boundary_gt30	rrnL	11155..12408+ vs 11113..12417+
+mitos2	NC_027257.1	Annelida	boundary_gt30	nad4	8815..10171+ vs 8911..10224+
+mitos2	NC_027257.1	Annelida	boundary_gt30	nad2	14142..15147+ vs 14079..15093+
+mitofinder	NC_027257.1	Annelida	boundary_gt30	rrnL	11155..12408+ vs 11217..12408+
+mitom	NC_027854.1	Annelida	boundary_gt30	rrnL	4945..6311+ vs 4976..6283+
+mitos2	NC_027854.1	Annelida	boundary_gt30	nad5	340..2047+ vs 436..2091+
+mitos2	NC_027854.1	Annelida	boundary_gt30	rrnL	4945..6311+ vs 4983..6284+
+mitofinder	NC_027854.1	Annelida	boundary_gt30	rrnL	4945..6311+ vs 4976..6283+
+mitofinder	NC_027854.1	Annelida	name_error	S	7962..8029+ vs 7962..8029+
+mitoz	NC_029867.1	Annelida	boundary_gt30	rrnL	11176..12430+ vs 11134..12439+
+mitos2	NC_029867.1	Annelida	boundary_gt30	nad4	8837..10193+ vs 8915..10252+
+mitofinder	NC_029867.1	Annelida	boundary_gt30	nad5	6580..8296+ vs 6580..8262+
+mitoz	NC_034783.1	Annelida	boundary_gt30	rrnL	10893..12104+ vs 10841..12114+
+mitofinder	NC_034783.1	Annelida	missing_gene	atp8	2354..2513+
+mitofinder	NC_034783.1	Annelida	boundary_gt30	nad2	13833..14835+ vs 13833..14744+
+mitofinder	NC_034783.1	Annelida	boundary_gt30	rrnS	10050..10838+ vs 10381..10830+
+mitofinder	NC_034783.1	Annelida	missing_gene	rrnL	10893..12104+
+mitom	NC_037236.1	Annelida	name_error	S	5826..5886+ vs 5826..5886+
+mitom	NC_037236.1	Annelida	name_error	R	13035..13101+ vs 13035..13101+
+mitoz	NC_037236.1	Annelida	boundary_gt30	rrnL	10562..11782+ vs 10510..11805+
+mitoz	NC_037236.1	Annelida	name_error	S	5826..5886+ vs 5826..5886+
+mitoz	NC_037236.1	Annelida	name_error	R	13035..13101+ vs 13035..13101+
+mitos2	NC_037236.1	Annelida	boundary_gt30	nad6	3448..3919+ vs 3466..3969+
+mitos2	NC_037236.1	Annelida	name_error	S	5826..5886+ vs 5826..5886+
+mitos2	NC_037236.1	Annelida	name_error	R	13035..13101+ vs 13035..13101+
+mitofinder	NC_037236.1	Annelida	boundary_gt30	nad5	5953..7666+ vs 5953..7623+
+mitofinder	NC_037236.1	Annelida	boundary_gt30	rrnL	10562..11782+ vs 10608..11768+
+mitofinder	NC_037236.1	Annelida	name_error	S	5826..5886+ vs 5826..5886+
+mitofinder	NC_037236.1	Annelida	name_error	R	13035..13101+ vs 13035..13101+
+mitom	NC_037947.1	Annelida	boundary_gt30	nad4l	13266..13505+ vs 13215..13505+
+mitom	NC_037947.1	Annelida	boundary_gt30	rrnL	3904..5088+ vs 3840..5087+
+mitoz	NC_037947.1	Annelida	boundary_gt30	nad2	5775..6783+ vs 5784..6848+
+mitoz	NC_037947.1	Annelida	boundary_gt30	nad1	9457..10395+ vs 9457..10363+
+mitoz	NC_037947.1	Annelida	boundary_gt30	nad5	11294..13013+ vs 11327..13108+
+mitoz	NC_037947.1	Annelida	boundary_gt30	nad4l	13266..13505+ vs 13215..13505+
+mitoz	NC_037947.1	Annelida	boundary_gt30	rrnL	3904..5088+ vs 3771..5102+
+mitos2	NC_037947.1	Annelida	boundary_gt30	atp8	2497..2653+ vs 2497..2688+
+mitos2	NC_037947.1	Annelida	boundary_gt30	nad2	5775..6783+ vs 5835..6848+
+mitos2	NC_037947.1	Annelida	boundary_gt30	nad5	11294..13013+ vs 11351..13067+
+mitos2	NC_037947.1	Annelida	boundary_gt30	nad4l	13266..13505+ vs 13215..13505+
+mitos2	NC_037947.1	Annelida	boundary_gt30	rrnL	3904..5088+ vs 3809..5048+
+mitofinder	NC_037947.1	Annelida	boundary_gt30	nad3	5358..5708+ vs 5415..5708+
+mitofinder	NC_037947.1	Annelida	boundary_gt30	nad5	11294..13013+ vs 11294..12961+
+mitofinder	NC_037947.1	Annelida	boundary_gt30	nad4	13499..14851+ vs 13655..14851+
+mitofinder	NC_037947.1	Annelida	boundary_gt30	rrnS	2983..3780+ vs 3303..3773+
+mitofinder	NC_037947.1	Annelida	boundary_gt30	rrnL	3904..5088+ vs 4394..5022+
+mitoz	NC_046790.1	Annelida	boundary_gt30	rrnL	10609..11863+ vs 10578..11906+
+mitos2	NC_046790.1	Annelida	boundary_gt30	cox1	1..1555+ vs 52..1584+
+mitos2	NC_046790.1	Annelida	boundary_gt30	rrnL	10609..11863+ vs 10601..11903+
+mitofinder	NC_046790.1	Annelida	missing_gene	atp8	2370..2522+
+mitofinder	NC_046790.1	Annelida	missing_gene	nad6	3429..3914+
+mitofinder	NC_046790.1	Annelida	boundary_gt30	nad4	8199..9554+ vs 8364..9524+
+mitofinder	NC_046790.1	Annelida	boundary_gt30	nad2	14283..15288+ vs 14283..15164+
+mitofinder	NC_046790.1	Annelida	missing_gene	rrnS	9743..10546+
+mitofinder	NC_046790.1	Annelida	missing_gene	rrnL	10609..11863+
+mitofinder	NC_046790.1	Annelida	name_error	S	14216..14282+ vs 14216..14282+
+mitom	NC_049135.1	Annelida	boundary_gt30	rrnS	5822..6641+ vs 5822..6556+
+mitom	NC_049135.1	Annelida	boundary_gt30	rrnL	6629..7901+ vs 6557..7929+
+mitoz	NC_049135.1	Annelida	boundary_gt30	rrnL	6629..7901+ vs 6557..7901+
+mitoz	NC_049135.1	Annelida	duplicate_gene	atp8	
+mitos2	NC_049135.1	Annelida	boundary_gt30	cox3	3005..3808+ vs 2960..3808+
+mitos2	NC_049135.1	Annelida	boundary_gt30	nad3	8057..8420+ vs 8096..8446+
+mitos2	NC_049135.1	Annelida	internal_stop	nad5	
+mitos2	NC_049135.1	Annelida	duplicate_gene	atp8	
+mitos2	NC_049135.1	Annelida	duplicate_gene	nad5	
+mitofinder	NC_049135.1	Annelida	boundary_gt30	atp8	2708..2869+ vs 2708..2812+
+mitofinder	NC_049135.1	Annelida	boundary_gt30	nad6	3812..4285+ vs 3860..4285+
+mitofinder	NC_049135.1	Annelida	boundary_gt30	nad2	15254..16237+ vs 15254..16135+
+mitofinder	NC_049135.1	Annelida	boundary_gt30	rrnS	5822..6641+ vs 5982..6638+
+mitofinder	NC_049135.1	Annelida	missing_gene	rrnL	6629..7901+
+mitom	NC_049136.1	Annelida	boundary_gt30	cox3	3057..3884+ vs 3093..3884+
+mitom	NC_049136.1	Annelida	boundary_gt30	rrnS	5876..6696+ vs 5871..6635+
+mitom	NC_049136.1	Annelida	boundary_gt30	rrnL	6707..7981+ vs 6636..8003+
+mitoz	NC_049136.1	Annelida	boundary_gt30	cox3	3057..3884+ vs 3093..3884+
+mitoz	NC_049136.1	Annelida	boundary_gt30	rrnL	6707..7981+ vs 6636..8028+
+mitos2	NC_049136.1	Annelida	boundary_gt30	rrnL	6707..7981+ vs 6674..7981+
+mitos2	NC_049136.1	Annelida	duplicate_gene	nad5	
+mitofinder	NC_049136.1	Annelida	missing_gene	atp8	2392..2565+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	cox3	3057..3884+ vs 3114..3884+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	nad6	3897..4364+ vs 3951..4364+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	nad3	8133..8477+ vs 8181..8477+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	nad4	9900..11244+ vs 9993..11192+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	nad1	11310..12221+ vs 11307..12188+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	nad5	13113..14822+ vs 13254..14702+
+mitofinder	NC_049136.1	Annelida	boundary_gt30	nad2	14960..15916+ vs 14960..15883+
+mitofinder	NC_049136.1	Annelida	missing_gene	rrnS	5876..6696+
+mitofinder	NC_049136.1	Annelida	missing_gene	rrnL	6707..7981+
+mitofinder	NC_049136.1	Annelida	name_error	S	14821..14889+ vs 14821..14889+
+mitom	NC_052721.1	Annelida	boundary_gt30	nad5	5753..7388- vs 5753..7463-
+mitom	NC_052721.1	Annelida	boundary_gt30	rrnL	11533..12804- vs 11533..12769-
+mitoz	NC_052721.1	Annelida	boundary_gt30	nad5	5753..7388- vs 5741..7463-
+mitoz	NC_052721.1	Annelida	boundary_gt30	rrnL	11533..12804- vs 11493..12804-
+mitos2	NC_052721.1	Annelida	missing_gene	nad2	4137..5139-
+mitos2	NC_052721.1	Annelida	boundary_gt30	nad5	5753..7388- vs 5706..7397-
+mitos2	NC_052721.1	Annelida	boundary_gt30	nad4	13783..15139- vs 13718..15064-
+mitos2	NC_052721.1	Annelida	internal_stop	nad5	
+mitos2	NC_052721.1	Annelida	duplicate_gene	nad5	
+mitofinder	NC_052721.1	Annelida	failed		collect/lift: LiftError: no GenBank output (*/*_Final_Results/*_mtDNA_contig.gb)
+mitoz	NC_058285.1	Annelida	boundary_gt30	rrnL	10623..11863+ vs 10569..11875+
+mitos2	NC_058285.1	Annelida	boundary_gt30	atp8	2363..2519+ vs 2393..2554+
+mitos2	NC_058285.1	Annelida	boundary_gt30	rrnL	10623..11863+ vs 10582..11845+
+mitoz	NC_058588.1	Annelida	boundary_gt30	rrnL	5079..6269+ vs 5012..6315+
+mitos2	NC_058588.1	Annelida	boundary_gt30	nad5	520..2236+ vs 568..2262+
+mitos2	NC_058588.1	Annelida	boundary_gt30	nad2	7955..8963+ vs 8015..8986+
+mitofinder	NC_058588.1	Annelida	boundary_gt30	rrnL	5079..6269+ vs 5114..6229+
+mitofinder	NC_058588.1	Annelida	name_error	S	7887..7953+ vs 7886..7954+
+mitos2	NC_059817.1	Annelida	boundary_gt30	cox1	1..1540+ vs 34..1578+
+mitos2	NC_059817.1	Annelida	boundary_gt30	nad5	6814..8550+ vs 6859..8550+
+mitofinder	NC_059817.1	Annelida	boundary_gt30	nad4	9117..10481+ vs 9258..10481+
+mitofinder	NC_059817.1	Annelida	boundary_gt30	nad1	13190..14120+ vs 13190..14065+
+mitofinder	NC_059817.1	Annelida	boundary_gt30	rrnS	10628..11495+ vs 11011..11482+
+mitofinder	NC_059817.1	Annelida	missing_gene	rrnL	11545..12932+
+mitofinder	NC_059817.1	Annelida	name_error	S	14620..14690+ vs 14620..14690+
+mitom	NC_060759.1	Annelida	name_error	S	5827..5887+ vs 5828..5888+
+mitom	NC_060759.1	Annelida	name_error	R	13533..13603+ vs 13535..13596+
+mitoz	NC_060759.1	Annelida	boundary_gt30	rrnL	11064..12279+ vs 10987..12302+
+mitoz	NC_060759.1	Annelida	name_error	R	13533..13603+ vs 13533..13599+
+mitos2	NC_060759.1	Annelida	boundary_gt30	nad5	5956..7669+ vs 6043..7695+
+mitos2	NC_060759.1	Annelida	name_error	S	5827..5887+ vs 5828..5888+
+mitos2	NC_060759.1	Annelida	name_error	R	13533..13603+ vs 13535..13596+
+mitofinder	NC_060759.1	Annelida	boundary_gt30	nad5	5956..7669+ vs 5956..7626+
+mitofinder	NC_060759.1	Annelida	boundary_gt30	rrnL	11064..12279+ vs 11110..12263+
+mitofinder	NC_060759.1	Annelida	name_error	S	5827..5887+ vs 5828..5888+
+mitofinder	NC_060759.1	Annelida	name_error	R	13533..13603+ vs 13533..13599+
+mitom	NC_061323.1	Annelida	boundary_gt30	atp8	2342..2492+ vs 2387..2492+
+mitom	NC_061323.1	Annelida	boundary_gt30	rrnL	11337..12316+ vs 11185..12351+
+mitoz	NC_061323.1	Annelida	missing_gene	atp8	2342..2492+
+mitoz	NC_061323.1	Annelida	boundary_gt30	nad6	3461..3917+ vs 3461..3967+
+mitoz	NC_061323.1	Annelida	boundary_gt30	rrnS	10389..11133+ vs 10338..11133+
+mitoz	NC_061323.1	Annelida	boundary_gt30	rrnL	11337..12316+ vs 10999..12387+
+mitos2	NC_061323.1	Annelida	boundary_gt30	cox1	1..1534+ vs 34..1569+
+mitos2	NC_061323.1	Annelida	boundary_gt30	atp8	2342..2492+ vs 2387..2533+
+mitos2	NC_061323.1	Annelida	boundary_gt30	nad6	3461..3917+ vs 3473..3967+
+mitos2	NC_061323.1	Annelida	boundary_gt30	nad5	6650..8354+ vs 6704..8416+
+mitos2	NC_061323.1	Annelida	boundary_gt30	nad4	8910..10251+ vs 9003..10268+
+mitos2	NC_061323.1	Annelida	boundary_gt30	rrnL	11337..12316+ vs 11147..12379+
+mitofinder	NC_061323.1	Annelida	missing_gene	atp8	2342..2492+
+mitofinder	NC_061323.1	Annelida	boundary_gt30	cox3	2611..3391+ vs 2611..3315+
+mitofinder	NC_061323.1	Annelida	missing_gene	atp6	5127..5831+
+mitofinder	NC_061323.1	Annelida	boundary_gt30	nad5	6650..8354+ vs 6962..8287+
+mitofinder	NC_061323.1	Annelida	boundary_gt30	nad2	14058..15030+ vs 14058..14951+
+mitofinder	NC_061323.1	Annelida	boundary_gt30	rrnS	10389..11133+ vs 10484..11125+
+mitofinder	NC_061323.1	Annelida	boundary_gt30	rrnL	11337..12316+ vs 11287..12339+
+mitofinder	NC_061323.1	Annelida	name_error	S	14001..14057+ vs 14001..14057+
+mitoz	NC_061377.1	Annelida	boundary_gt30	atp6	8871..9680+ vs 8871..9624+
+mitoz	NC_061377.1	Annelida	boundary_gt30	rrnL	130..1340+ vs 62..1374+
+mitos2	NC_061377.1	Annelida	boundary_gt30	cox3	7986..8786+ vs 7860..8640+
+mitos2	NC_061377.1	Annelida	boundary_gt30	atp6	8871..9680+ vs 9030..9680+
+mitos2	NC_061377.1	Annelida	boundary_gt30	nad5	10183..11889+ vs 10216..11889+
+mitos2	NC_061377.1	Annelida	boundary_gt30	cox2	12313..13023+ vs 12277..12955+
+mitos2	NC_061377.1	Annelida	boundary_gt30	nad1	13307..14213+ vs 13361..14278+
+mitos2	NC_061377.1	Annelida	boundary_gt30	rrnL	130..1340+ vs 82..1352+
+mitofinder	NC_061377.1	Annelida	boundary_gt30	nad4	6514..7869+ vs 6568..7869+
+mitofinder	NC_061377.1	Annelida	boundary_gt30	cox3	7986..8786+ vs 7926..8786+
+mitofinder	NC_061377.1	Annelida	boundary_gt30	nad4l	11965..12249+ vs 11965..12204+
+mitofinder	NC_061377.1	Annelida	boundary_gt30	rrnL	130..1340+ vs 133..1308+
+mitom	NC_061743.1	Annelida	boundary_gt30	cox1	1..1698+ vs 106..1507+
+mitom	NC_061743.1	Annelida	boundary_gt30	nad5	1932..3467+ vs 2007..2967+
+mitom	NC_061743.1	Annelida	boundary_gt30	nad4	3543..4859+ vs 3681..4743+
+mitom	NC_061743.1	Annelida	missing_gene	atp6	6303..7079+
+mitom	NC_061743.1	Annelida	boundary_gt30	nad2	7362..8351+ vs 7401..8351+
+mitom	NC_061743.1	Annelida	boundary_gt30	cox2	19840..20667+ vs 19936..20667+
+mitom	NC_061743.1	Annelida	boundary_gt30	rrnL	16329..17922+ vs 16329..17620+
+mitom	NC_061743.1	Annelida	boundary_gt30	W	7250..7312+ vs 7250..7345+
+mitoz	NC_061743.1	Annelida	boundary_gt30	cox1	1..1698+ vs 106..1507+
+mitoz	NC_061743.1	Annelida	boundary_gt30	nad5	1932..3467+ vs 2031..2967+
+mitoz	NC_061743.1	Annelida	boundary_gt30	nad4	3543..4859+ vs 3681..4743+
+mitoz	NC_061743.1	Annelida	missing_gene	atp6	6303..7079+
+mitoz	NC_061743.1	Annelida	boundary_gt30	nad2	7362..8351+ vs 7401..8351+
+mitoz	NC_061743.1	Annelida	boundary_gt30	nad4l	11008..11316+ vs 11062..11316+
+mitoz	NC_061743.1	Annelida	boundary_gt30	cox3	17923..18765+ vs 17923..18701+
+mitoz	NC_061743.1	Annelida	boundary_gt30	nad1	18808..19725+ vs 18859..19725+
+mitoz	NC_061743.1	Annelida	boundary_gt30	cox2	19840..20667+ vs 19936..20667+
+mitoz	NC_061743.1	Annelida	boundary_gt30	rrnS	11434..12683+ vs 11567..12544+
+mitoz	NC_061743.1	Annelida	boundary_gt30	rrnL	16329..17922+ vs 16309..17620+
+mitos2	NC_061743.1	Annelida	boundary_gt30	cox1	1..1698+ vs 145..1698+
+mitos2	NC_061743.1	Annelida	boundary_gt30	nad4l	11008..11316+ vs 11062..11316+
+mitos2	NC_061743.1	Annelida	boundary_gt30	cox2	19840..20667+ vs 19990..20667+
+mitos2	NC_061743.1	Annelida	boundary_gt30	rrnS	11434..12683+ vs 11633..12544+
+mitos2	NC_061743.1	Annelida	boundary_gt30	rrnL	16329..17922+ vs 16391..17594+
+mitos2	NC_061743.1	Annelida	boundary_gt30	W	7250..7312+ vs 7250..7345+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	cox1	1..1698+ vs 172..1698+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	nad4	3543..4859+ vs 3543..4820+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	cob	4863..6032+ vs 4863..5996+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	atp6	6303..7079+ vs 6426..6998+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	nad3	9141..9491+ vs 9174..9491+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	nad4l	11008..11316+ vs 11047..11298+
+mitofinder	NC_061743.1	Annelida	boundary_gt30	cox2	19840..20667+ vs 19936..20631+
+mitofinder	NC_061743.1	Annelida	missing_gene	rrnS	11434..12683+
+mitofinder	NC_061743.1	Annelida	missing_gene	rrnL	16329..17922+
+mitoz	NC_063475.1	Annelida	boundary_gt30	nad5	383..2072+ vs 383..1937+
+mitoz	NC_063475.1	Annelida	boundary_gt30	rrnL	4903..6030+ vs 4699..6071+
+mitoz	NC_063475.1	Annelida	internal_stop	atp6	
+mitoz	NC_063475.1	Annelida	internal_stop	atp6	
+mitoz	NC_063475.1	Annelida	duplicate_gene	atp6	
+mitos2	NC_063475.1	Annelida	boundary_gt30	rrnL	4903..6030+ vs 4863..6050+
+mitos2	NC_063475.1	Annelida	internal_stop	atp6	
+mitos2	NC_063475.1	Annelida	internal_stop	atp6	
+mitos2	NC_063475.1	Annelida	duplicate_gene	atp6	
+mitofinder	NC_063475.1	Annelida	boundary_gt30	rrnL	4903..6030+ vs 4942..6024+
+mitofinder	NC_063475.1	Annelida	name_error	S	7697..7758+ vs 7697..7758+
+mitom	NC_064503.1	Annelida	boundary_gt30	rrnS	11155..12046+ vs 11110..12059+
+mitos2	NC_064503.1	Annelida	boundary_gt30	cox1	1..1578+ vs 34..1578+
+mitos2	NC_064503.1	Annelida	boundary_gt30	rrnL	12106..13542+ vs 12140..13542+
+mitofinder	NC_064503.1	Annelida	boundary_gt30	rrnL	12106..13542+ vs 12224..13501+
+mitoz	NC_065095.1	Annelida	boundary_gt30	rrnL	11825..13020+ vs 11757..13060+
+mitos2	NC_065095.1	Annelida	boundary_gt30	nad5	7401..9060+ vs 7356..9072+
+mitofinder	NC_065095.1	Annelida	boundary_gt30	nad2	14772..15770+ vs 14772..15722+
+mitofinder	NC_065095.1	Annelida	boundary_gt30	rrnL	11825..13020+ vs 11926..13007+
+mitofinder	NC_065095.1	Annelida	name_error	S	14704..14771+ vs 14704..14771+
+mitom	NC_065392.1	Annelida	boundary_gt30	rrnS	3926..4659+ vs 3925..4434+
+mitom	NC_065392.1	Annelida	boundary_gt30	rrnL	4756..5860+ vs 4435..5858+
+mitoz	NC_065392.1	Annelida	boundary_gt30	rrnL	4756..5860+ vs 4435..5913+
+mitos2	NC_065392.1	Annelida	boundary_gt30	nad5	173..1871+ vs 233..1915+
+mitos2	NC_065392.1	Annelida	boundary_gt30	rrnS	3926..4659+ vs 3999..4666+
+mitos2	NC_065392.1	Annelida	missing_gene	rrnL	4756..5860+
+mitofinder	NC_065392.1	Annelida	boundary_gt30	nad5	173..1871+ vs 173..1822+
+mitofinder	NC_065392.1	Annelida	boundary_gt30	rrnS	3926..4659+ vs 4068..4660+
+mitofinder	NC_065392.1	Annelida	boundary_gt30	rrnL	4756..5860+ vs 4801..5853+
+mitos2	NC_066720.1	Annelida	boundary_gt30	cox1	1..1540+ vs 34..1575+
+mitofinder	NC_066720.1	Annelida	boundary_gt30	rrnL	11014..12269+ vs 11042..12233+
+mitofinder	NC_066720.1	Annelida	name_error	S	13928..13991+ vs 13928..13991+
+mitoz	NC_069058.1	Annelida	boundary_gt30	cox2	1607..2365+ vs 1607..2294+
+mitos2	NC_069058.1	Annelida	boundary_gt30	cox2	1607..2365+ vs 1607..2285+
+mitos2	NC_069058.1	Annelida	duplicate_gene	nad5	
+mitofinder	NC_069058.1	Annelida	name_error	L	13589..13652+ vs 13589..13652+
+mitofinder	NC_069058.1	Annelida	name_error	S	14222..14289+ vs 14222..14289+
+mitoz	NC_069059.1	Annelida	boundary_gt30	cox2	1607..2365+ vs 1607..2294+
+mitos2	NC_069059.1	Annelida	boundary_gt30	cox2	1607..2365+ vs 1607..2285+
+mitos2	NC_069059.1	Annelida	duplicate_gene	nad5	
+mitofinder	NC_069059.1	Annelida	name_error	L	13590..13653+ vs 13590..13653+
+mitofinder	NC_069059.1	Annelida	name_error	S	14223..14290+ vs 14223..14290+
+mitom	NC_069203.1	Annelida	boundary_gt30	nad2	8807..9943+ vs 8807..9803+
+mitom	NC_069203.1	Annelida	boundary_gt30	cob	13717..14884+ vs 13750..14886+
+mitoz	NC_069203.1	Annelida	boundary_gt30	nad2	8807..9943+ vs 8807..9815+
+mitoz	NC_069203.1	Annelida	boundary_gt30	cob	13717..14884+ vs 13750..14886+
+mitoz	NC_069203.1	Annelida	boundary_gt30	rrnL	5216..6374+ vs 5159..6398+
+mitos2	NC_069203.1	Annelida	missing_gene	nad2	8807..9943+
+mitos2	NC_069203.1	Annelida	boundary_gt30	cob	13717..14884+ vs 13750..14886+
+mitofinder	NC_069203.1	Annelida	boundary_gt30	nad1	6628..7553+ vs 6628..7503+
+mitofinder	NC_069203.1	Annelida	boundary_gt30	nad2	8807..9943+ vs 8819..9802+
+mitofinder	NC_069203.1	Annelida	boundary_gt30	cob	13717..14884+ vs 13750..14886+
+mitofinder	NC_069203.1	Annelida	boundary_gt30	rrnL	5216..6374+ vs 5276..6367+
+mitoz	NC_069204.1	Annelida	boundary_gt30	nad4l	5002..5292+ vs 5035..5292+
+mitoz	NC_069204.1	Annelida	boundary_gt30	rrnS	6775..7503+ vs 6691..7511+
+mitoz	NC_069204.1	Annelida	boundary_gt30	rrnL	7569..8759+ vs 7489..8803+
+mitos2	NC_069204.1	Annelida	boundary_gt30	nad5	2931..4728+ vs 3048..4769+
+mitos2	NC_069204.1	Annelida	boundary_gt30	rrnL	7569..8759+ vs 7557..8796+
+mitofinder	NC_069204.1	Annelida	boundary_gt30	nad6	2364..2822+ vs 2403..2822+
+mitofinder	NC_069204.1	Annelida	boundary_gt30	nad5	2931..4728+ vs 3042..4703+
+mitofinder	NC_069204.1	Annelida	boundary_gt30	nad2	10586..11593+ vs 10676..11443+
+mitofinder	NC_069204.1	Annelida	missing_gene	atp8	13927..14085+
+mitofinder	NC_069204.1	Annelida	boundary_gt30	rrnS	6775..7503+ vs 6917..7500+
+mitofinder	NC_069204.1	Annelida	boundary_gt30	rrnL	7569..8759+ vs 8088..8719+
+mitom	NC_069297.1	Annelida	boundary_gt30	rrnS	14925..15792+ vs 14925..15849+
+mitom	NC_069297.1	Annelida	name_error	S	13661..13726+ vs 13661..13726+
+mitoz	NC_069297.1	Annelida	name_error	S	13661..13726+ vs 13661..13726+
+mitos2	NC_069297.1	Annelida	name_error	S	13661..13726+ vs 13661..13726+
+mitofinder	NC_069297.1	Annelida	boundary_gt30	nad4l	8122..8421+ vs 8173..8421+
+mitofinder	NC_069297.1	Annelida	boundary_gt30	nad4	8415..9773+ vs 8478..9773+
+mitofinder	NC_069297.1	Annelida	boundary_gt30	nad1	12224..13159+ vs 12230..13126+
+mitofinder	NC_069297.1	Annelida	boundary_gt30	nad2	13727..14734+ vs 13754..14638+
+mitofinder	NC_069297.1	Annelida	missing_gene	rrnL	10632..11994+
+mitofinder	NC_069297.1	Annelida	missing_gene	rrnS	14925..15792+
+mitoz	NC_071182.1	Annelida	boundary_gt30	rrnL	10888..12047+ vs 10694..12070+
+mitos2	NC_071182.1	Annelida	boundary_gt30	nad6	3475..3945+ vs 3427..3945+
+mitofinder	NC_071182.1	Annelida	boundary_gt30	nad5	6393..8094+ vs 6399..8057+
+mitofinder	NC_071182.1	Annelida	boundary_gt30	nad1	12295..13233+ vs 12295..13176+
+mitofinder	NC_071182.1	Annelida	boundary_gt30	rrnL	10888..12047+ vs 10925..12047+
+mitofinder	NC_071182.1	Annelida	name_error	S	13717..13784+ vs 13717..13784+
+mitom	NC_072218.1	Annelida	boundary_gt30	rrnL	5006..5979+ vs 4857..6010+
+mitoz	NC_072218.1	Annelida	boundary_gt30	rrnL	5006..5979+ vs 4815..6042+
+mitos2	NC_072218.1	Annelida	boundary_gt30	nad5	354..2055+ vs 399..2099+
+mitos2	NC_072218.1	Annelida	boundary_gt30	atp6	14268..14966+ vs 14352..14966+
+mitos2	NC_072218.1	Annelida	boundary_gt30	rrnL	5006..5979+ vs 4841..6029+
+mitofinder	NC_072218.1	Annelida	boundary_gt30	nad1	6263..7210+ vs 6269..7150+
+mitofinder	NC_072218.1	Annelida	boundary_gt30	nad2	7772..8794+ vs 7772..8755+
+mitofinder	NC_072218.1	Annelida	boundary_gt30	rrnL	5006..5979+ vs 4920..5990+
+mitofinder	NC_072218.1	Annelida	name_error	S	7691..7757+ vs 7691..7757+
+mitom	NC_072223.1	Annelida	boundary_gt30	rrnL	11351..12326+ vs 11200..12367+
+mitoz	NC_072223.1	Annelida	boundary_gt30	rrnL	11351..12326+ vs 11143..12405+
+mitos2	NC_072223.1	Annelida	boundary_gt30	rrnL	11351..12326+ vs 11150..12377+
+mitofinder	NC_072223.1	Annelida	boundary_gt30	nad6	3552..4022+ vs 3588..4022+
+mitofinder	NC_072223.1	Annelida	name_error	S	14034..14099+ vs 14034..14099+
+mitoz	NC_072606.1	Annelida	boundary_gt30	rrnL	4567..5729+ vs 4522..5752+
+mitos2	NC_072606.1	Annelida	boundary_gt30	nad5	65..1766+ vs 80..1804+
+mitos2	NC_072606.1	Annelida	boundary_gt30	cox1	8460..9996+ vs 8493..10031+
+mitofinder	NC_072606.1	Annelida	boundary_gt30	nad5	65..1766+ vs 68..1729+
+mitofinder	NC_072606.1	Annelida	boundary_gt30	nad1	5982..6923+ vs 5982..6857+
+mitofinder	NC_072606.1	Annelida	boundary_gt30	rrnL	4567..5729+ vs 4608..5729+
+mitoz	NC_082191.1	Annelida	boundary_gt30	rrnL	4973..6278+ vs 4942..6288+
+mitos2	NC_082191.1	Annelida	boundary_gt30	nad5	343..2044+ vs 433..2088+
+mitoz	NC_082300.1	Annelida	boundary_gt30	rrnL	11470..12657+ vs 11426..12707+
+mitos2	NC_082300.1	Annelida	duplicate_gene	nad5	
+mitofinder	NC_082300.1	Annelida	boundary_gt30	rrnL	11470..12657+ vs 11572..12657+
+mitofinder	NC_082300.1	Annelida	name_error	S	14323..14390+ vs 14323..14390+

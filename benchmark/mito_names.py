@@ -27,7 +27,7 @@ def gene_name(qualifiers: dict, ftype: str) -> str:
         g = m.group(1)
     prod = (qualifiers.get("product", [""])[0] or "").lower()
     if ftype == "rRNA" and g not in ("rrnS", "rrnL"):
-        g = PRODUCT.get(prod, g)
+        g = PRODUCT.get(prod) or ALIAS.get(re.sub(r"[^a-z0-9]", "", prod), g)      # MitoFinder: /product="rrnS"
     if ftype == "CDS" and g not in PCG:
         for pat, base in PCG_PRODUCT:
             m = re.search(pat, prod)
@@ -52,3 +52,11 @@ def trna_name(qualifiers: dict) -> tuple:
         ac = re.search(r"\(([acgtu]{3})\)", gene + " " + prod, re.I) or \
             re.search(r"anticodon[:= ]+([acgtu]{3})", " ".join(qualifiers.get("note", [])), re.I)
     return aa, (ac.group(1).lower().replace("u", "t") if ac else "")
+
+
+def trna_number(qualifiers: dict) -> str:
+    """'1' / '2' when the Leu / Ser gene is numbered (trnL1, trnS2, tRNA-Leu2, tRNA-Ser1 in gene / product), else ''
+    (not /note: free text such as 'similar to tRNA-Ser 2 of ...' is not the gene's number)."""
+    text = " ".join(qualifiers.get(k, [""])[0] for k in ("gene", "product"))
+    m = re.search(r"(?:trn[LS]|tRNA-(?:Leu|Ser))\s*([12])\b", text)
+    return m.group(1) if m else ""

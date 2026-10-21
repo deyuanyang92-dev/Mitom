@@ -218,7 +218,9 @@ class _LockedHandler(logging.Handler):
             self._inner.emit(record)
 
 
-def setup_root_logger(log_file: Path) -> None:
+def setup_root_logger(log_file: Path, console_level: int = logging.INFO) -> None:
+    """Everything goes to log_file; the console gets console_level and above (run: WARNING, its steps are printed
+    by Steps / say())."""
     log_file.parent.mkdir(parents=True, exist_ok=True)
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -228,9 +230,80 @@ def setup_root_logger(log_file: Path) -> None:
     fh = logging.FileHandler(str(log_file), encoding="utf-8")
     fh.setFormatter(fmt)
     sh = logging.StreamHandler()
-    sh.setFormatter(fmt)
+    sh.setFormatter(logging.Formatter("    ! %(message)s") if console_level > logging.INFO else fmt)
+    sh.setLevel(console_level)
     root.addHandler(_LockedHandler(fh))
     root.addHandler(_LockedHandler(sh))
+
+
+# ── what the user sees on the terminal during `run` (GetOrganelle style: numbered steps, counts, time, files) ──
+def say(text: str = "") -> None:
+    """One line on the terminal and in the run log."""
+    print(text, flush=True)
+    if text.strip():
+        logging.info(text.strip())
+
+
+def duration(sec: float) -> str:
+    sec = int(round(sec))
+    if sec < 60:
+        return f"{sec} s"
+    if sec < 3600:
+        return f"{sec // 60} min {sec % 60:02d} s"
+    return f"{sec // 3600} h {sec % 3600 // 60:02d} min"
+
+
+class Steps:
+    """Numbered steps: start() prints '[Step n/N] title', info() an indented line, done() the result and the time."""
+
+    def __init__(self, total: int):
+        self.total, self.n, self.t0, self.run_t0 = total, 0, time.time(), time.time()
+
+    def start(self, title: str) -> None:
+        self.n += 1
+        self.t0 = time.time()
+        say("")
+        say(f"[Step {self.n}/{self.total}] {title}")
+
+    def info(self, text: str) -> None:
+        say(f"    {text}")
+
+    def done(self, text: str = "") -> None:
+        say(f"    -> {text}  ({duration(time.time() - self.t0)})" if text else f"    -> done ({duration(time.time() - self.t0)})")
+
+
+class Progress:
+    """'    label: 120/636 (19%), 5 min 02 s so far, about 18 min left' - at most every `every` seconds, and at the end."""
+
+    def __init__(self, label: str, total: int, every: float = 30.0):
+        self.label, self.total, self.every = label, max(1, total), every
+        self.t0 = self.last = time.time()
+        self.shown = -1
+        self.lock = threading.Lock()
+
+    def update(self, done: int) -> None:
+        with self.lock:
+            now = time.time()
+            if done == self.shown or (done < self.total and now - self.last < self.every):
+                return
+            self.last, self.shown = now, done
+        el = now - self.t0
+        left = f", about {duration(el / done * (self.total - done))} left" if 0 < done < self.total else ""
+        say(f"    {self.label}: {done}/{self.total} ({100 * done // self.total}%), {duration(el)} so far{left}")
+
+
+_STAGE_PROGRESS: Optional[Progress] = None          # set by run_annotation_stage; updated per finished sample
+STAGE_LABEL = {"01.mitoz_anno1": "round-1 annotation", "03.mitoz_anno2_reoriented": "round-2 annotation"}
+
+
+def watch_files(pattern_dir: Path, pattern: str, progress: Progress, stop: threading.Event) -> threading.Thread:
+    """Background thread: progress.update(number of files matching pattern) every 10 s until stop is set."""
+    def loop() -> None:
+        while not stop.wait(10):
+            progress.update(len(list(pattern_dir.glob(pattern))))
+    t = threading.Thread(target=loop, daemon=True)
+    t.start()
+    return t
 
 
 def get_sample_logger(name: str, log_file: Path) -> logging.Logger:
@@ -632,6 +705,7 @@ def dedup_gb_records(
 
     all_metas:               List[GbRecordMeta] = []
     metadata_only_acc_to_gb: Dict[str, Path]    = {}
+    dropped: List[Tuple[GbRecordMeta, str, str]] = []     # (record, reason, accession kept instead)
 
     for gb_path in gb_files:
         try:
@@ -682,11 +756,16 @@ def dedup_gb_records(
                 kind = "dup_exact" if prev.acc_versioned == meta.acc_versioned else "dup_version"
                 stats[kind] += 1
                 stats[f"{kind}_list"].append(f"{prev.acc_versioned} superseded by {meta.acc_versioned}")
+                dropped.append((prev, "older version" if kind == "dup_version" else "same accession listed twice",
+                                meta.acc_versioned))
                 by_acc[key] = meta
             else:
+                kind = "dup_version" if meta.version_int < prev.version_int else "dup_exact"
                 stats["dup_exact"] += 1
                 stats["dup_exact_list"].append(
                     f"{meta.acc_versioned} (dup of {prev.acc_versioned})")
+                dropped.append((meta, "older version" if kind == "dup_version" else "same accession listed twice",
+                                prev.acc_versioned))
 
     # RefSeq (NC_...) records are curated copies of INSDC submissions: keep the RefSeq
     # record and drop the submission it was made from (named in its COMMENT).
@@ -699,6 +778,8 @@ def dedup_gb_records(
         stats["dup_refseq"] += 1
         stats["dup_refseq_list"].append(
             f"{by_acc[key].acc_versioned} superseded by RefSeq {superseded[key]} (derived from it)")
+        dropped.append((by_acc[key], "INSDC submission that RefSeq record was derived from (its COMMENT)",
+                        superseded[key]))
         del by_acc[key]
 
     seq_hash_to_acc: Dict[str, str] = {}
@@ -713,6 +794,7 @@ def dedup_gb_records(
             logging.warning(
                 f"[DEDUP_SEQ] '{meta.acc_versioned}' has identical sequence to "
                 f"'{seq_hash_to_acc[meta.seq_hash]}' (len={meta.seq_len}). Keeping only first (RefSeq preferred).")
+            dropped.append((meta, "identical sequence", seq_hash_to_acc[meta.seq_hash]))
         else:
             seq_hash_to_acc[meta.seq_hash] = meta.acc_versioned
             kept_records.append(meta)
@@ -720,32 +802,50 @@ def dedup_gb_records(
     stats["kept"] = len(kept_records)
 
     if dedup_report_path is not None and (kept_records or stats["total_in"] > 0):
-        dedup_report_path.parent.mkdir(parents=True, exist_ok=True)
-        lines = [
-            "# GB deduplication report\n",
-            f"# total_in={stats['total_in']}  with_seq={stats['kept']}  "
-            f"no_seq(metadata_only)={stats['no_sequence']}  "
-            f"dropped_dup={stats['dup_exact'] + stats['dup_version'] + stats['dup_seq'] + stats['dup_refseq']}  "
-            f"parse_errors={stats['parse_errors']}\n",
-            "accession\tstatus\tsource_file\tseq_len\ttopology\n",
-        ]
-        for meta in kept_records:
-            lines.append(
-                f"{meta.acc_versioned}\tkept\t{meta.source_file.name}\t"
-                f"{meta.seq_len}\t{meta.topology}\n")
-        for msg in stats["dup_refseq_list"]:
-            lines.append(f"\t\tdup_refseq: {msg}\n")
-        for msg in stats["dup_seq_list"]:
-            lines.append(f"\t\tdup_seq: {msg}\n")
-        dedup_report_path.write_text("".join(lines), encoding="utf-8")
+        write_dedup_report(dedup_report_path, kept_records, dropped, stats)
 
     return kept_records, metadata_only_acc_to_gb, stats
+
+
+def write_dedup_report(path: Path, kept: List[GbRecordMeta],
+                       dropped: List[Tuple[GbRecordMeta, str, str]], stats: Dict) -> None:
+    """dedup_report.tsv: one row per input record. status kept / dropped; reason = why a record was dropped;
+    related = the accession kept instead (dropped rows) or the accessions this record replaced (kept rows)."""
+    replaced: Dict[str, List[str]] = {}
+    for meta, _reason, by in dropped:
+        replaced.setdefault(by, []).append(meta.acc_versioned)
+
+    def organism(meta: GbRecordMeta) -> str:
+        return str(getattr(meta.record, "annotations", {}).get("organism", ""))
+
+    rows = []
+    for meta in kept:
+        rows.append((meta.acc_versioned, "kept", "", ",".join(replaced.get(meta.acc_versioned, [])),
+                     organism(meta), meta.seq_len, meta.topology, meta.source_file.name))
+    for meta, reason, by in dropped:
+        rows.append((meta.acc_versioned, "dropped", reason, by,
+                     organism(meta), meta.seq_len, meta.topology, meta.source_file.name))
+    rows.sort(key=lambda r: (r[4], r[0]))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# GB deduplication report: one row per record with a sequence (kept / dropped); records without ORIGIN\n",
+        "# and parse errors are counted in the total line only. Rules: (1) same accession -> newest version;\n",
+        "# (2) RefSeq NC_ record kept, the INSDC submission it was derived from (named in its COMMENT) dropped;\n",
+        "# (3) identical sequence -> one copy kept (RefSeq preferred). Different records of the same species\n",
+        "# are NOT merged. related = accession kept instead (dropped) / accessions it replaced (kept).\n",
+        f"# total_in={stats['total_in']}  kept={stats['kept']}  dropped={len(dropped)}  "
+        f"no_seq(metadata_only)={stats['no_sequence']}  parse_errors={stats['parse_errors']}\n",
+        "accession\tstatus\treason\trelated\torganism\tseq_len\ttopology\tsource_file\n",
+    ]
+    lines += ["\t".join(str(x) for x in r) + "\n" for r in rows]
+    path.write_text("".join(lines), encoding="utf-8")
 
 
 def convert_gb_to_fasta_for_annotation(
     gb_files: List[Path],
     out_dir: Path,
     dedup_report_path: Optional[Path] = None,
+    orig_dir: Optional[Path] = None,
 ) -> Tuple[List[Path], Dict[str, Path]]:
     if SeqIO is None:
         raise RuntimeError("Biopython not installed: pip install biopython")
@@ -790,12 +890,28 @@ def convert_gb_to_fasta_for_annotation(
     for acc_key, src_path in metadata_only_acc_to_gb.items():
         acc_to_orig_gb.setdefault(acc_key, src_path)
 
+    if orig_dir is not None:
+        # the input records unchanged, one file each, for the before / after comparison (run: original_annotation/)
+        if orig_dir.is_dir():
+            shutil.rmtree(orig_dir)                    # a previous run's records
+        orig_dir.mkdir(parents=True, exist_ok=True)
+        for meta in kept_records:
+            try:
+                SeqIO.write([meta.record], str(orig_dir / f"{safe_name(meta.acc_versioned)}.gb"), "genbank")
+            except Exception as exc:               # noqa: BLE001  (a record Biopython cannot write back: compared later as missing)
+                logging.warning(f"[ORIGINAL_GB] {meta.acc_versioned}: not written to {orig_dir.name}/: {exc!r}")
+    LAST_DEDUP_STATS.clear()
+    LAST_DEDUP_STATS.update(stats)
     return fasta_paths, acc_to_orig_gb
+
+
+LAST_DEDUP_STATS: Dict = {}        # stats of the last convert_gb_to_fasta_for_annotation (run: step 1 line)
 
 
 def iter_inputs(
     in_path: Path,
     gb_to_fasta_dir: Optional[Path] = None,
+    orig_dir: Optional[Path] = None,
 ) -> Tuple[List[Path], str, Dict[str, Path]]:
     itype = _sniff_input_type(in_path)
     logging.info(f"[INPUT] Detected input type: {itype}  ({in_path})")
@@ -824,7 +940,7 @@ def iter_inputs(
             raise RuntimeError("gb_to_fasta_dir required when input is GenBank")
         dedup_report = gb_to_fasta_dir / "dedup_report.tsv"
         fasta_paths, acc_to_orig_gb = convert_gb_to_fasta_for_annotation(
-            gb_files, gb_to_fasta_dir, dedup_report_path=dedup_report)
+            gb_files, gb_to_fasta_dir, dedup_report_path=dedup_report, orig_dir=orig_dir)
         if not fasta_paths:
             raise RuntimeError(f"No records extracted from GenBank input: {in_path}")
         logging.info(
@@ -2240,6 +2356,8 @@ def mitoz_annotate_one(
             done_counter[0] += 1
             done_n = done_counter[0]
         logging.info(f"[PROGRESS] {done_n}/{total} '{si.sample_name}' done (rc={rc}, {dt:.0f}s)")
+        if _STAGE_PROGRESS is not None:
+            _STAGE_PROGRESS.update(done_n)
 
     if rc != 0:
         lg.error(f"[FAIL] MitoZ annotate returned {rc}")
@@ -2557,20 +2675,29 @@ def run_snakemake_for_annotation_tasks(
         logging.info("[SNAKEMAKE] " + " ".join(c))
         return subprocess.run(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    p = _run(cmd)
-    if p.returncode != 0:
-        combined = (p.stdout or "") + (p.stderr or "")
-        if "LockException" in combined or "Directory cannot be locked" in combined:
-            logging.warning(f"[SNAKEMAKE_LOCK] Stale lock in {snk_work} — attempting --unlock…")
-            pu = subprocess.run(
-                [str(smk_bin), "--snakefile", str(snakefile),
-                 "--directory", str(snk_work), "--unlock"],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if pu.returncode == 0:
-                logging.warning("[SNAKEMAKE_LOCK] Unlock OK — retrying…")
-                p = _run(cmd)
-            else:
-                logging.error(f"[SNAKEMAKE_UNLOCK_FAIL] rc={pu.returncode}")
+    global _STAGE_PROGRESS
+    stop = threading.Event()
+    if _STAGE_PROGRESS is not None:
+        watch_files(snk_work, "*.result.json", _STAGE_PROGRESS, stop)
+    try:
+        p = _run(cmd)
+        if p.returncode != 0:
+            combined = (p.stdout or "") + (p.stderr or "")
+            if "LockException" in combined or "Directory cannot be locked" in combined:
+                logging.warning(f"[SNAKEMAKE_LOCK] Stale lock in {snk_work} — attempting --unlock…")
+                pu = subprocess.run(
+                    [str(smk_bin), "--snakefile", str(snakefile),
+                     "--directory", str(snk_work), "--unlock"],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                if pu.returncode == 0:
+                    logging.warning("[SNAKEMAKE_LOCK] Unlock OK — retrying…")
+                    p = _run(cmd)
+                else:
+                    logging.error(f"[SNAKEMAKE_UNLOCK_FAIL] rc={pu.returncode}")
+    finally:
+        stop.set()
+    if _STAGE_PROGRESS is not None:                            # the watcher polls every 10 s: print the final count
+        _STAGE_PROGRESS.update(sum(1 for tp in task_jsons if tp.with_suffix(".result.json").exists()))
 
     (snk_work / "snakemake.stdout.log").write_text(p.stdout or "", encoding="utf-8",
                                                     errors="ignore")
@@ -2612,6 +2739,8 @@ def run_annotation_stage(
         backend = "snakemake" if snakemake_available(getattr(args, "snakemake_bin", None)) \
                   else "threads"
     logging.info(f"[ANNOT_STAGE] phase={phase_dirname}  backend={backend}  n={len(samples)}")
+    global _STAGE_PROGRESS
+    _STAGE_PROGRESS = Progress(STAGE_LABEL.get(phase_dirname, phase_dirname), len(samples))
 
     if backend == "snakemake":
         tasks: List[AnnotTask] = []
@@ -3065,16 +3194,39 @@ def run_curate_and_submit(args: argparse.Namespace, final_dir: Path, out_root: P
     submission inputs per record in 06.ncbi_submission/: <id>.fsa + <id>.tbl (BankIt), <id>.sqn + <id>.val
     (table2asn; --sbt adds the submitter template) and submission_summary.tsv. Returns the folder of the
     final GenBank files (05.curated, or final_dir with --curate no)."""
+    cur = run_curate(args, final_dir, out_root)
+    if cur != final_dir:
+        run_submission(args, cur, out_root)
+    return cur
+
+
+def aggressive_start_genes(clade: Optional[str]) -> str:
+    """mito_curate.py --aggressive_start_genes for a MitoZ clade: nad5 / nad4L start at the most upstream in-frame
+    start codon in NCBI annelid records (7 / 7, annelid benchmark 2026-10) but not in other phyla (173 metazoa
+    records: 17 right, 52 wrong)."""
+    return "ND5,ND4L" if (clade or "").lower().startswith("annelida") else ""
+
+
+def run_curate(args: argparse.Namespace, final_dir: Path, out_root: Path) -> Path:
+    """mito_curate.py on final_dir -> 05.curated/ (returned); final_dir when --curate no or curation failed."""
     if getattr(args, "curate", "yes") == "no":
         return final_dir
     here = Path(__file__).resolve().parent
     cur = out_root / "05.curated"
     p = subprocess.run([sys.executable, "-W", "ignore", str(here / "mito_curate.py"), "-i", str(final_dir), "-o", str(cur),
-                        "--genetic_code", str(int(args.genetic_code)), "--no_validate"], capture_output=True, text=True)
+                        "--genetic_code", str(int(args.genetic_code)), "--no_validate",
+                        "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None))],
+                       capture_output=True, text=True)
     if p.returncode:
         logging.error(f"[CURATE] failed (exit {p.returncode}): {p.stderr[-300:]} - final files left uncurated")
         return final_dir
     logging.info(f"[CURATE] {(p.stdout.strip().splitlines() or [''])[-1]}  -> {cur}")
+    return cur
+
+
+def run_submission(args: argparse.Namespace, cur: Path, out_root: Path) -> None:
+    """NCBI table2asn validation of every final record and the submission files -> 06.ncbi_submission/."""
+    here = Path(__file__).resolve().parent
     if str(here) not in sys.path:
         sys.path.insert(0, str(here))
     import mito_env
@@ -3082,7 +3234,7 @@ def run_curate_and_submit(args: argparse.Namespace, final_dir: Path, out_root: P
     t2a = mito_env.find("table2asn")
     if not t2a:
         logging.info("[SUBMISSION] table2asn not found: no .sqn / validation (install.sh installs it)")
-        return cur
+        return
     sub = out_root / "06.ncbi_submission"
     sub.mkdir(parents=True, exist_ok=True)
     summary, msgs = [], []
@@ -3103,7 +3255,6 @@ def run_curate_and_submit(args: argparse.Namespace, final_dir: Path, out_root: P
     bad = [x.split("\t")[0] for x in summary if x.split("\t")[1] != "0"]
     logging.info(f"[SUBMISSION] {len(summary)} record(s) -> {sub}; NCBI ERROR in {len(bad)}: {bad[:10]}"
                  + (" - see validation_messages.tsv" if bad else ""))
-    return cur
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -3134,7 +3285,8 @@ def run_rescue(args: argparse.Namespace, final_dir: Path, out_root: Path) -> Non
         logging.error(msg) if args.rescue == "yes" else logging.info(msg)
         return
     import mito_rescue
-    rows = mito_rescue.rescue_dir(final_dir, int(args.genetic_code), mitos_bin=args.mitos_bin, refdir=args.mitos_refdir)
+    rows = mito_rescue.rescue_dir(final_dir, int(args.genetic_code), jobs=int(getattr(args, "max_tasks", 1) or 1),
+                                  mitos_bin=args.mitos_bin, refdir=args.mitos_refdir)
     write_nonempty_table(out_root / "rescue_report.tsv", "file\trecord\tgene\tlocation\tstatus\thint",
                          ["\t".join([r[k] for k in ("file", "record", "gene", "location", "status")] + [r.get("hint", "")])
                           for r in rows])
@@ -3234,7 +3386,8 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
 
     Kept: 04.final_gb/, all.final.gbf, *.tsv / *.txt reports, pipeline.log,
     run_params.json.  dedup_report.tsv is moved to out_root; MitoZ logs of
-    problem samples are copied to failed_logs/ before deletion.
+    problem samples are copied to failed_logs/ before deletion. `run` then
+    arranges what is kept into its final layout (organize_outputs).
     """
     dedup = out_root / "00.gb_converted_fasta" / "dedup_report.tsv"
     if dedup.is_file():
@@ -3317,12 +3470,172 @@ def resensitise_trnas(args: argparse.Namespace, dests: List[Path], out_root: Pat
     return done
 
 
+def count_rows(table: Path, column: Optional[str] = None, value: Any = None) -> int:
+    """Data rows of a TSV report (0 when missing); with column, rows where it equals value / startswith value /
+    value(cell) is true."""
+    if not table.is_file():
+        return 0
+    lines = [x for x in table.read_text(encoding="utf-8", errors="ignore").splitlines() if x and not x.startswith("#")]
+    if len(lines) < 2:
+        return 0
+    if column is None:
+        return len(lines) - 1
+    head = lines[0].split("\t")
+    if column not in head:
+        return 0
+    i = head.index(column)
+    cells = [r.split("\t")[i] if len(r.split("\t")) > i else "" for r in lines[1:]]
+    if callable(value):
+        return sum(bool(value(c)) for c in cells)
+    return sum(c == value or str(c).startswith(str(value)) for c in cells)
+
+
+# the output folder after `run` (organize_outputs); README.txt in the folder repeats this
+OUTPUT_LAYOUT = [
+    ("final_annotation/", "MitoM annotation, one GenBank file per record (<accession>.gb) - the result"),
+    ("final_annotation_all.gb", "the same records in one file"),
+    ("original_annotation/", "the input records unchanged (GenBank input only), same file names"),
+    ("original_vs_mitom.tsv", "original vs MitoM annotation, one row per gene"),
+    ("summary.tsv", "one row per record: gene counts, orientation, round, NCBI errors"),
+    ("ncbi_submission/", "NCBI submission files per record (.fsa .tbl .sqn) and table2asn results"),
+    ("reports/", "one report per step (deduplication, round-2 decisions, curation, ...)"),
+    ("run.log", "everything the run did, with all commands"),
+    ("work/", "intermediate files (only with --keep_intermediate yes)"),
+]
+REPORT_NOTES = {
+    "dedup_report.tsv": "deduplication: one row per input record with a sequence, kept / dropped and why",
+    "reannotation_decision.tsv": "after re-orientation: round 2 or not, and why",
+    "curation_report.tsv": "every boundary / name change: rule, old and new location, reason",
+    "validation_compare.tsv": "NCBI messages before / after curation",
+    "rescue_report.tsv": "genes added from MITOS2",
+    "rrna_hmm_report.tsv": "rRNAs searched / added by the per-phylum rRNA HMMs",
+    "intron_report.tsv": "introns found",
+    "metadata_transfer_log.tsv": "where each record's GenBank header came from",
+    "oriented_by_fallback.txt": "records oriented by another gene because cox1 was not found",
+    "all_problem_samples.txt": "records with any problem during the run",
+    "run_params.json": "all options of this run",
+}
+
+
+REPORT_FILES = tuple(REPORT_NOTES) + (
+    "trna_wrap.tsv", "intron_fix.log", "annotation_failed.txt", "final_write_failed.txt", "reorient_failed.txt",
+    "metadata_transfer_failed.txt", "metadata_key_mismatch.txt", "no_target_gene_samples.txt", "failed_samples.txt",
+    "annotation-summary.tsv", "pipeline.log",
+)                                                   # top-level files `run` writes; organize_outputs moves these to reports/
+WORK_DIRS = INTERMEDIATE_DIRS + ("04.final_gb", "05.curated", "_snakemake_01.mitoz_anno1",
+                                 "_snakemake_03.mitoz_anno2_reoriented")   # folders of the run: work/ or deleted
+
+
+def write_summary(out_root: Path) -> None:
+    """summary.tsv from annotation-summary.tsv (internal names) + NCBI error counts, with readable columns."""
+    src = out_root / "annotation-summary.tsv"
+    if not src.is_file():
+        return
+    errs: Dict[str, str] = {}
+    sub = out_root / "ncbi_submission" / "submission_summary.tsv"
+    if sub.is_file():
+        for line in sub.read_text(encoding="utf-8").splitlines()[1:]:
+            c = line.split("\t")
+            if len(c) > 1:
+                errs[c[0]] = c[1]
+    rows = ["record\tprotein_genes\ttRNAs\trRNAs\tcox1_first\tannotation_used\toriginal_header_restored\tncbi_errors"]
+    for line in src.read_text(encoding="utf-8").splitlines()[1:]:
+        c = line.split("\t") + [""] * 7
+        name, pcg, trn, rrn, ori, body, meta = c[:7]
+        used = ("round 2" if body.startswith("phase2") else
+                "round 1, shifted" if body.startswith(("shifted_round1", "phase1b")) else
+                "round 1, not re-oriented" if body.startswith("phase1_raw") else body)
+        if "partial_no_gene_merged" in body:
+            used += " + extra contigs"
+        rows.append("\t".join([name, pcg, trn, rrn, ori, used, "yes" if "transferred" in meta else "no",
+                               errs.get(name, "")]))
+    (out_root / "summary.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    src.unlink()
+
+
+def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False) -> None:
+    """Put the run's output into the layout of OUTPUT_LAYOUT (final_annotation/, reports/ ...) and write
+    README.txt. Intermediate folders go to work/ (keep) or are deleted. Only the files and folders MitoM writes
+    are touched (the output folder may hold the user's own files); the results of a previous run into the same
+    folder are replaced."""
+    def remove(p: Path) -> None:
+        if p.is_dir() and not p.is_symlink():
+            shutil.rmtree(p)
+        elif p.exists() or p.is_symlink():
+            p.unlink()
+
+    def replace(src: Path, dst: Path) -> None:                # a previous run's copy must not swallow the new one
+        remove(dst)
+        shutil.move(str(src), str(dst))
+
+    for name in ("final_annotation", "final_annotation_all.gb", "ncbi_submission", "reports", "summary.tsv"):
+        remove(out_root / name)                                # results of a previous run into the same folder
+    fin = out_root / "final_annotation"
+    fin.mkdir()
+    for f in sorted(final_gb_dir.rglob("*.gbf")):
+        shutil.move(str(f), str(fin / f"{f.stem}.gb"))
+    reports = out_root / "reports"
+    reports.mkdir()
+    kept_dedup = out_root / "00.gb_converted_fasta" / "dedup_report.tsv"     # --keep_intermediate yes
+    if kept_dedup.is_file():
+        shutil.copy2(kept_dedup, reports / "dedup_report.tsv")
+    for f in final_gb_dir.glob("*.tsv"):                      # curation_report.tsv, validation_compare.tsv
+        shutil.move(str(f), str(reports / f.name))
+    if (out_root / "all.final.gbf").exists():
+        shutil.move(str(out_root / "all.final.gbf"), str(out_root / "final_annotation_all.gb"))
+    if (out_root / "06.ncbi_submission").is_dir():
+        shutil.move(str(out_root / "06.ncbi_submission"), str(out_root / "ncbi_submission"))
+    write_summary(out_root)
+    wrap = out_root / "trna_wrap.tsv"
+    if wrap.exists() and not wrap.read_text().strip():
+        wrap.unlink()
+    for name in REPORT_FILES:                                  # MitoM's own files only: the folder may hold the user's
+        if (out_root / name).is_file():
+            replace(out_root / name, reports / name)
+    if (out_root / "failed_logs").is_dir():
+        replace(out_root / "failed_logs", reports / "failed_logs")
+    for name in WORK_DIRS:
+        d = out_root / name
+        if not d.is_dir():
+            continue
+        if keep:
+            (out_root / "work").mkdir(exist_ok=True)
+            replace(d, out_root / "work" / name)
+        else:
+            shutil.rmtree(d, ignore_errors=True)
+    lines = ["MitoM output", "=" * 60, ""]
+    lines += [f"{n:28s} {w}" for n, w in OUTPUT_LAYOUT if (out_root / n.rstrip("/")).exists()]
+    lines += ["", "reports/", "-" * 60]
+    lines += [f"  {n:28s} {w}" for n, w in REPORT_NOTES.items() if (reports / n).exists()]
+    others = sorted(f.name for f in reports.iterdir() if f.name not in REPORT_NOTES)
+    if others:
+        lines += [f"  {n}" for n in others]
+    lines += ["", "summary.tsv columns", "-" * 60,
+              "  annotation_used: round 1, shifted = round-1 annotation moved with the sequence (passed the check);",
+              "                   round 2 = annotated again after re-orientation; not re-oriented = no orientation gene",
+              "  original_header_restored: the GenBank header of the input record (organism, references) was copied back",
+              "  ncbi_errors: NCBI table2asn ERROR count (0 = ready for submission)",
+              "", "original_vs_mitom.tsv result column", "-" * 60,
+              "  same / ends_differ / name_differs / strand_differs / only_original / only_mitom / same_place",
+              "  locations are on the original record's sequence; difference_nt = larger shift of the two ends"]
+    (out_root / "README.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    setup_root_logger(out_root / "pipeline.log")
+    setup_root_logger(out_root / "run.log", console_level=logging.WARNING)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
+    steps = Steps(10)
+    say("")
+    say("MitoM - mitochondrial genome annotation")
+    say(f"    input        : {Path(args.input).resolve()}")
+    say(f"    output       : {out_root}")
+    say(f"    clade        : {args.clade}    genetic code: {args.genetic_code}")
+    say(f"    parallel     : {args.max_tasks} records at a time x {args.threads} threads")
+    say(f"    round 2      : {args.if_reannotation_2}  (auto = only records whose annotation is broken by the cox1 shift)")
+    say(f"    full log     : {out_root / 'run.log'}")
     wrap_file = out_root / "trna_wrap.tsv"         # MITOS2 tRNAs across the origin (scripts/mitoz_fast.py)
     wrap_file.write_text("")
     os.environ["YZZ_TRNA_WRAP"] = str(wrap_file)
@@ -3331,16 +3644,33 @@ def workflow_run(args: argparse.Namespace) -> int:
     split_dir   = out_root / "00.internal_fasta"
     gb_conv_dir = out_root / "00.gb_converted_fasta"
 
-    in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir)
+    steps.start("Read input and remove duplicate records")
+    in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
+                                                       orig_dir=out_root / "original_annotation")
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
         acc_to_orig_gb=acc_to_orig_gb)
     total = len(samples)
     logging.info(f"[ID_MAP] {id_map}  (total: {total})")
+    if input_type == "converted_from_gb":
+        st = LAST_DEDUP_STATS
+        steps.info(f"GenBank records read: {st.get('total_in', '?')}")
+        dropped = [(st.get(k, 0), why) for k, why in (
+            ("dup_refseq", "GenBank record that a RefSeq NC_ record was made from (NC_ kept)"),
+            ("dup_version", "older version of the same accession"), ("dup_exact", "same accession twice"),
+            ("dup_seq", "identical sequence"), ("no_sequence", "no sequence"))]
+        for n, why in dropped:
+            if n:
+                steps.info(f"removed {n}: {why}")
+        steps.info("the original annotation of every kept record is saved for comparison (original_annotation/)")
+        steps.done(f"{total} records to annotate; reasons per record: reports/dedup_report.tsv")
+    else:
+        steps.done(f"{total} FASTA sequences to annotate")
 
     summary = RunSummary()
 
+    steps.start("Round-1 annotation (MitoZ: protein genes, rRNAs; MITOS2: tRNAs)")
     results1 = run_annotation_stage(
         samples=samples, phase_dirname="01.mitoz_anno1",
         out_root=out_root, args=args,
@@ -3348,6 +3678,12 @@ def workflow_run(args: argparse.Namespace) -> int:
     for si in samples:
         if not results1.get(si.internal_id, {}).get("ok"):
             summary.annotation_failed.append(si.sample_name)
+    steps.done(f"{total - len(summary.annotation_failed)} annotated, {len(summary.annotation_failed)} failed"
+               + (f" ({', '.join(summary.annotation_failed[:5])}{' ...' if len(summary.annotation_failed) > 5 else ''})"
+                  if summary.annotation_failed else ""))
+
+    steps.start(f"Re-orient: plus strand, sequence starts with {args.which_gene_first} "
+                f"(if missing: {args.fallback_genes})")
 
     logging.info(
         f"[PHASE1b] reorient gene='{args.which_gene_first}' force_forward={args.force_forward}")
@@ -3398,21 +3734,43 @@ def workflow_run(args: argparse.Namespace) -> int:
             summary.reorient_failed.append(si.sample_name)
             no_gene_iids.add(si.internal_id)
 
+    fallback_used = sum(1 for si in samples if si.internal_id in reor_ok_ids
+                        and any(k.startswith(si.internal_id) for k in ORIENTATION_FALLBACK))
+    steps.done(f"{len(reor_ok_ids)} re-oriented"
+               + (f" ({fallback_used} by a fallback gene)" if fallback_used else "")
+               + (f", {len(no_gene_iids)} without any orientation gene (kept as annotated)" if no_gene_iids else ""))
+
+    steps.start("Check the annotation after re-orientation; annotate again where it is offset (round 2)")
     do_phase2 = args.if_reannotation_2 in ("yes", "auto")
     results2:  Dict[str, Dict] = {}
     reannotated_ids: set = set()
     if do_phase2:
         phase2_samples = [si for si in samples if si.internal_id in reor_ok_ids]
+        n_checked = len(phase2_samples)
         if args.if_reannotation_2 == "auto":
             phase2_samples = select_reannotation(phase2_samples, results1, out_root,
                                                  int(getattr(args, "genetic_code", None) or 5))
+            steps.info(f"checked {n_checked}: {len(phase2_samples)} need round 2 (gene cut at the old ends, gene "
+                       f"changed by the shift, gene across the new start, standard gene missing); "
+                       f"{n_checked - len(phase2_samples)} keep the shifted round-1 annotation")
+            steps.info("decision and reason per record: reports/reannotation_decision.tsv")
+        else:
+            steps.info(f"--if_reannotation_2 yes: all {n_checked} re-oriented records are annotated again")
         results2 = run_phase2(phase2_samples, args, out_root, reor_fasta_dir)
         reannotated_ids = {si.internal_id for si in phase2_samples}
+        n_fail2 = 0
         for si in phase2_samples:
             if not results2.get(si.internal_id, {}).get("ok"):
+                n_fail2 += 1
                 logging.warning(
                     f"[PHASE2_FAIL_FALLBACK] '{si.sample_name}': "
                     f"phase2 failed, fallback to phase1b reoriented GB")
+        steps.done(f"round 2: {len(phase2_samples) - n_fail2} annotated"
+                   + (f", {n_fail2} failed (they keep the shifted round-1 annotation)" if n_fail2 else ""))
+    else:
+        steps.done("--if_reannotation_2 no: skipped")
+
+    steps.start("Write the annotation; copy the original GenBank header (organism, references ...) back")
 
     final_dir         = out_root / "04.final_gb"
     no_gene_final_dir = final_dir / f"no_{args.which_gene_first}_gene"
@@ -3529,6 +3887,9 @@ def workflow_run(args: argparse.Namespace) -> int:
         out_root / "annotation-summary.tsv",
         "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok\tbody_source\tmetadata_mode",
         summary_rows)
+    steps.done(f"{len(summary_rows)} records written"
+               + (f", original header restored in {len(summary.metadata_transferred)}" if summary.metadata_transferred else "")
+               + (f", {len(summary.final_write_failed)} failed" if summary.final_write_failed else ""))
     write_nonempty_table(
         out_root / "metadata_transfer_log.tsv",
         "sample_name\tinternal_id\tmetadata_src\tbody_src\tdest\tmode",
@@ -3554,11 +3915,38 @@ def workflow_run(args: argparse.Namespace) -> int:
 
     # Merge all final GBs including no_{gene}_gene/ subdirectory.
     # Use final_dir.glob("*.gbf") if you want only successfully-oriented records.
+    steps.start("Add what the cores missed: genes from MITOS2, 12S/16S by rRNA HMM, introns, tRNAs across the start")
     run_rescue(args, final_dir, out_root)
+    steps.info(f"genes added from MITOS2      : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}")
     run_rrna_hmm(args, final_dir, out_root)
+    steps.info(f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'rrna_hmm_report.tsv', 'status', 'added')}")
     run_intron_fix(args, in_path, final_dir, out_root)
+    steps.info(f"intron results               : {count_rows(out_root / 'intron_report.tsv')} rows in reports/intron_report.tsv")
     add_wrapped_trnas(final_dir, out_root / "trna_wrap.tsv")
-    merge_dir = run_curate_and_submit(args, final_dir, out_root)
+    n_wrap = len([x for x in (out_root / "trna_wrap.tsv").read_text().splitlines() if x.strip()]) \
+        if (out_root / "trna_wrap.tsv").exists() else 0
+    steps.info(f"tRNAs across the sequence start: {n_wrap}")
+    steps.done()
+
+    steps.start("Boundary rules for protein genes and rRNAs, NCBI gene names")
+    merge_dir = run_curate(args, final_dir, out_root)
+    curate_skipped = ("skipped (--curate no)" if args.curate == "no" else
+                      "curation failed (see run.log): the annotation before curation is used")
+    steps.done(f"{count_rows(merge_dir / 'curation_report.tsv')} changes, each with rule and reason in "
+               f"reports/curation_report.tsv" if merge_dir != final_dir else curate_skipped)
+
+    steps.start("NCBI check (table2asn) and submission files")
+    if merge_dir != final_dir:
+        run_submission(args, merge_dir, out_root)
+        sub_sum = out_root / "06.ncbi_submission" / "submission_summary.tsv"
+        n_rec = count_rows(sub_sum)
+        n_err = count_rows(sub_sum, "ERROR", lambda v: v != "0")
+        steps.done(f"{n_rec} records checked: {n_rec - n_err} without NCBI ERROR, {n_err} with ERROR "
+                   f"(ncbi_submission/validation_messages.tsv)" if n_rec else
+                   ("validation produced no records (see run.log)" if sub_sum.parent.is_dir() else
+                    "table2asn not found: skipped"))
+    else:
+        steps.done(curate_skipped)
     refresh_summary(out_root, merge_dir)
     all_final_gbs = sorted(
         p for p in merge_dir.rglob("*.gbf")
@@ -3575,12 +3963,35 @@ def workflow_run(args: argparse.Namespace) -> int:
     logging.info(f"[OUTPUT_COUNT] {n_ok}/{total}")
     logging.info(f"[METADATA_MODE] preserve={args.preserve_phase1_metadata}")
     summary.log()
-    logging.warning("[KNOWN_LIMITATION] MitoZ cannot annotate introns (group I/II); they are added "
-                    "afterwards by mito_intron.py (MFannot method, --intron_fix) when exonerate is "
-                    "available - check intron_report.tsv.")
+    logging.info("[KNOWN_LIMITATION] MitoZ cannot annotate introns (group I/II); they are added "
+                 "afterwards by mito_intron.py (MFannot method, --intron_fix) when exonerate is "
+                 "available - check intron_report.tsv.")
     write_orientation_fallback(out_root, samples)
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
+
+    steps.start("Compare with the original annotation")
+    orig_dir = out_root / "original_annotation"
+    if input_type == "converted_from_gb" and orig_dir.is_dir():
+        try:
+            import mito_compare
+            n = mito_compare.compare_dirs(orig_dir, merge_dir, out_root / "original_vs_mitom.tsv",
+                                          int(args.genetic_code))
+            steps.done(mito_compare.summary_text(n) + "; one row per gene: original_vs_mitom.tsv")
+        except Exception as exc:                   # noqa: BLE001  (a report: must not end the run after annotation)
+            logging.error(f"[COMPARE] failed: {exc!r}")
+            steps.done("comparison failed (see run.log); the annotation itself is complete")
+    else:
+        steps.done("FASTA input has no original annotation: skipped")
+
+    steps.start("Organise the output")
+    organize_outputs(out_root, merge_dir, keep=args.keep_intermediate == "yes")
+    for name, what in OUTPUT_LAYOUT:
+        if (out_root / name).exists():
+            steps.info(f"{name:28s} {what}")
+    steps.done(f"explained in {out_root / 'README.txt'}")
+    say("")
+    say(f"MitoM finished in {duration(time.time() - steps.run_t0)}: {out_root}")
     logging.info("[DONE]")
     return 0
 
@@ -3887,9 +4298,9 @@ def build_parser() -> argparse.ArgumentParser:
                        help="GenBank file/dir of close relatives used as extra homologs for intron models "
                             "(repeatable).")
         g.add_argument("--keep_intermediate", choices=["yes", "no"], default="no",
-                       help="Keep internal-ID intermediates (00.*/01.*/03.* dirs, id_map.tsv). "
-                            "Default no: deleted after final output to save space; "
-                            "MitoZ logs of problem samples are kept in failed_logs/.")
+                       help="Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run: moved to "
+                            "work/). Default no: deleted after the final output is written; MitoZ logs of problem "
+                            "samples are always kept (run: reports/failed_logs/, annotate: failed_logs/).")
         # BUG-V0.29-E: old parser accepted zero/negative values and passed
         # invalid thread counts to MitoZ or ThreadPoolExecutor.
         # g.add_argument("--threads",      type=int, default=16,
@@ -3962,12 +4373,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Full pipeline: annotate → reorient → re-annotate → guaranteed final reorientation.")
     add_common(run_p)
     add_mitoz(run_p)
-    run_p.add_argument("--if_reannotation_2", choices=["yes", "auto", "no"], default="yes",
-                       help="Phase-2 re-annotation of the reoriented sequences. yes (default): every sample "
-                            "(round 1 uses the fast tRNA mode); auto: round 1 runs in full and only samples that "
-                            "fail the check (gene at the original sequence ends, standard gene missing, gene "
-                            "changed by the shift, gene across the new origin) are re-annotated, decisions in "
-                            "reannotation_decision.tsv; no: never.")
+    run_p.add_argument("--if_reannotation_2", choices=["yes", "auto", "no"], default="auto",
+                       help="Phase-2 re-annotation of the reoriented sequences. auto (default): round 1 runs in "
+                            "full and only samples that fail the check after the cox1 shift (gene at the original "
+                            "sequence ends, standard gene missing, gene changed by the shift, gene across the new "
+                            "origin) are re-annotated, decisions in reannotation_decision.tsv; yes: every sample "
+                            "(round 1 uses the fast tRNA mode); no: never.")
     run_p.add_argument("--preserve_phase1_metadata", choices=["yes", "no"], default="yes",
                        help="Restore original GenBank header metadata into final files "
                             "(default: yes; requires GenBank input).")

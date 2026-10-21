@@ -27,12 +27,36 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from mito_names import PCG, gene_name, trna_name  # noqa: E402
+from mito_names import PCG, gene_name, trna_name, trna_number  # noqa: E402
 
 MIN_OVERLAP = 0.5
 NEAR = 3
 OBVIOUS_NT = 30
 AMBIGUOUS_AA = {"L", "S"}              # two tRNA genes each; told apart only by anticodon
+# the two Leu / Ser genes by the codon family they read: L1 = CUN, L2 = UUR, S1 = AGN, S2 = UCN
+COMP = str.maketrans("acgtu", "tgcaa")
+
+
+def ls_class(aa: str, triplet: str, number: str, code: int) -> str:
+    """'1' / '2' for the two Leu or Ser tRNA genes, '' when unknown. The triplet from the annotation counts first,
+    read as an anticodon when its codon is Leu / Ser in `code`, else as the codon itself (NCBI records write both,
+    e.g. trnL1(cta) = codon CUA, trnL(tag) = anticodon); the gene number (trnL1, tRNA-Ser2) only when there is no
+    triplet, because submitters number the two genes differently (vertebrate records swap L1 / L2)."""
+    if aa not in AMBIGUOUS_AA:
+        return ""
+    fallback = number if number in ("1", "2") else ""
+    t = (triplet or "").lower().replace("u", "t")
+    if len(t) != 3 or not set(t) <= set("acgt"):
+        return fallback
+    table = CodonTable.unambiguous_dna_by_id[code].forward_table
+    codon = t.translate(COMP)[::-1].upper()           # anticodon -> codon
+    if table.get(codon) != aa:
+        codon = t.upper()                              # not an anticodon of this amino acid: it is the codon
+        if table.get(codon) != aa:
+            return fallback
+    if aa == "L":
+        return "1" if codon.startswith("CT") else "2"
+    return "1" if codon.startswith("AG") else "2"
 FOUND = ("exact", "le3", "gt3", "name_unverifiable")
 
 
@@ -62,7 +86,7 @@ def span(loc, n: int) -> tuple:
     return int(parts[-1].start), int(parts[0].end) + n
 
 
-def norm_features(rec: SeqRecord) -> List[Feat]:
+def norm_features(rec: SeqRecord, code: int = 5) -> List[Feat]:
     out = []
     n = len(rec)
     for f in rec.features:
@@ -75,7 +99,7 @@ def norm_features(rec: SeqRecord) -> List[Feat]:
         elif f.type == "tRNA":
             aa, ac = trna_name(f.qualifiers)
             if aa:
-                out.append(Feat("tRNA", aa, strand, s, e, ac, n))
+                out.append(Feat("tRNA", aa, strand, s, e, ls_class(aa, ac, trna_number(f.qualifiers), code), n))
         elif f.type == "intron":
             out.append(Feat("intron", "intron", strand, s, e, "", n))
     return out
@@ -100,11 +124,9 @@ def _same_name(t: Feat, p: Feat) -> str:
         return "no"
     if t.kind != "tRNA" or t.name not in AMBIGUOUS_AA:
         return "yes"
-    if not t.anticodon or not p.anticodon:
+    if not t.anticodon or not p.anticodon:            # here: the Leu / Ser gene class '1' / '2' (ls_class)
         return "unverifiable"
-    # anticodon bases 2-3 pair with codon positions 2-1: they fix the codon box (Ser AGN vs UCN, Leu CUN vs UUR);
-    # the wobble base 1 may differ between annotations of the same gene (e.g. NCBI 'act' vs 'gct')
-    return "yes" if t.anticodon[1:] == p.anticodon[1:] else "no"
+    return "yes" if t.anticodon == p.anticodon else "no"
 
 
 def match(truth: List[Feat], pred: List[Feat]) -> List[dict]:
@@ -266,14 +288,14 @@ def main(argv=None) -> int:
     for r in rows:
         acc, code = r["accession"], int(r["genetic_code"])
         ncbi = SeqIO.read(str(root / "gb" / f"{acc}.gb"), "genbank")
-        truth = norm_features(ncbi)
+        truth = norm_features(ncbi, code)
         checks += [{"tool": "ncbi", "accession": acc, **c} for c in pcg_checks(ncbi, code)]
         for t in tools:
             sp = root / "runs" / t / acc / "status.json"
             st = json.loads(sp.read_text()) if sp.exists() else {"status": "not_run", "seconds": 0, "error": ""}
             status[(t, acc)] = st
             timing.append({"tool": t, "accession": acc, "status": st["status"], "seconds": st.get("seconds", 0),
-                           "steps": json.dumps(st.get("step_seconds", {}))})
+                           "peak_rss_mb": st.get("peak_rss_mb", ""), "steps": json.dumps(st.get("step_seconds", {}))})
             if st["status"] == "not_run":
                 continue
             pc, dup, pred = [], [], None
@@ -281,7 +303,7 @@ def main(argv=None) -> int:
                 fp = root / "runs" / t / acc / "final.gbf"
                 finals[t][acc] = fp
                 pred_rec = SeqIO.read(str(fp), "genbank")
-                pred = norm_features(pred_rec)
+                pred = norm_features(pred_rec, code)
                 pc = pcg_checks(pred_rec, code)
                 dup = duplicates(pred)
             m = record_rows(truth, pred, st)

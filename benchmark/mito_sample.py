@@ -112,8 +112,8 @@ def structure_flags(rec: SeqRecord) -> List[str]:
 
 
 # ── selection ────────────────────────────────────────────────────────────────
-def pick(rows: List[dict], quota: int, seed: int) -> List[dict]:
-    """<= ORDER_CAP per order (tier A first, then random); fill to quota from the rest (tier A first)."""
+def pick(rows: List[dict], quota: int, seed: int, order_cap: int = ORDER_CAP) -> List[dict]:
+    """<= order_cap per order (tier A first, then random); fill to quota from the rest (tier A first)."""
     rng = random.Random(seed)
     pool = rows[:]
     rng.shuffle(pool)
@@ -122,7 +122,7 @@ def pick(rows: List[dict], quota: int, seed: int) -> List[dict]:
     rest: List[dict] = []
     per: Counter = Counter()
     for r in pool:
-        if len(got) < quota and per[r["order"]] < ORDER_CAP:
+        if len(got) < quota and per[r["order"]] < order_cap:
             got.append(r)
             per[r["order"]] += 1
         else:
@@ -216,6 +216,8 @@ def main(argv=None) -> int:
     p.add_argument("--seed", type=int, default=20261020)
     p.add_argument("--tsv", help="record list (default benchmark/sets/mito_bench_<YYYY-MM>.tsv)")
     p.add_argument("--phyla", help="comma-separated subset of phyla (default: all)")
+    p.add_argument("--quota", type=int, help="records per phylum (default: 12 big / 6 small phyla)")
+    p.add_argument("--order_cap", type=int, default=ORDER_CAP, help=f"max records per order (default {ORDER_CAP})")
     a = p.parse_args(argv)
     today = datetime.date.today().isoformat()
     out = Path(a.out)
@@ -225,13 +227,14 @@ def main(argv=None) -> int:
     tsv = Path(a.tsv) if a.tsv else Path(__file__).resolve().parent / "sets" / f"mito_bench_{today[:7]}.tsv"
     tsv.parent.mkdir(parents=True, exist_ok=True)
     phyla = a.phyla.split(",") if a.phyla else list(PHYLA)
+    quota = {ph: (a.quota if a.quota is not None else PHYLA[ph]) for ph in phyla}
 
     chosen = []
     for phylum in phyla:
         summ = [s for s in summaries(search_ids(phylum)) if s["accession"].startswith("NC_")]
         rng = random.Random(f"{a.seed}-{phylum}")
         rng.shuffle(summ)
-        cand = sorted(summ[:PHYLA[phylum] * POOL], key=lambda s: s["accession"])
+        cand = sorted(summ[:quota[phylum] * POOL], key=lambda s: s["accession"])
         if not cand:
             print(f"[sample] {phylum}: no NC_ records", file=sys.stderr)
             continue
@@ -257,7 +260,7 @@ def main(argv=None) -> int:
                          "annotation_method": annotation_method(r, src), "refseq_created": s["created"],
                          "structure_flags": ",".join(structure_flags(r)), "mitoz_clade": MITOZ_CLADE[phylum] or "",
                          "split": "", "retrieved": today})
-        got = pick(rows, PHYLA[phylum], a.seed)
+        got = pick(rows, quota[phylum], a.seed, a.order_cap)
         print(f"[sample] {phylum}: {len(summ)} NC_, {len(rows)} candidates, {len(got)} chosen "
               f"(tier A {sum(r['evidence_tier'] != 'B' for r in got)})", file=sys.stderr)
         chosen += got

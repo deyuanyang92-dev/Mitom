@@ -254,3 +254,108 @@ def test_mitom_auto_differs_only_in_reannotation(tmp_path):
     b = mr.build_cmd("mitom_auto", ROW, tmp_path / "bare", tmp_path / "out", 2)[0]
     assert b == a + ["--if_reannotation_2", "auto"]
     assert "mitom_auto" in mr.TOOLS
+
+
+def _gb(acc, organism, lineage):
+    r = SeqRecord(NCBI, id=acc, name=acc.split(".")[0])
+    r.annotations.update(molecule_type="DNA", organism=organism, taxonomy=lineage)
+    return r
+
+
+def test_pick_reference_closest_lineage_not_same_species():
+    lin = ["Eukaryota", "Metazoa", "Annelida", "Polychaeta", "Phyllodocida", "Nereididae", "Platynereis"]
+    target = _gb("NC_000931.1", "Platynereis dumerilii", lin)
+    pool = [{"acc": r.id, "organism": r.annotations["organism"], "lineage": r.annotations["taxonomy"], "record": r} for r in (
+        _gb("AF178678.1", "Platynereis dumerilii", lin),                                   # same species: never
+        _gb("NC_051993.1", "Alitta succinea", lin[:6] + ["Alitta"]),                       # same family
+        _gb("MW000001.1", "Platynereis massiliensis", lin),                                # same genus, INSDC
+        _gb("NC_028712.1", "Owenia fusiformis", lin[:3] + ["Polychaeta", "Sabellida", "Oweniidae", "Owenia"]),
+    )]
+    assert mr.pick_reference(target, pool)["acc"] == "MW000001.1"           # genus beats family, RefSeq or not
+    assert mr.pick_reference(target, pool[:2] + pool[3:])["acc"] == "NC_051993.1"
+    assert mr.pick_reference(target, pool[:1]) is None
+
+
+def test_build_cmd_mitofinder_writes_reference(tmp_path, monkeypatch):
+    acc = "NC_000931.1"
+    (tmp_path / "gb").mkdir()
+    lin = ["Eukaryota", "Metazoa", "Annelida", "Polychaeta", "Phyllodocida", "Nereididae", "Platynereis"]
+    from Bio import SeqIO
+    SeqIO.write(_gb(acc, "Platynereis dumerilii", lin), str(tmp_path / "gb" / f"{acc}.gb"), "genbank")
+    ref = _gb("NC_051993.1", "Alitta succinea", lin[:6] + ["Alitta"])
+    monkeypatch.setattr(mr, "REF_POOL", [{"acc": ref.id, "organism": "Alitta succinea", "lineage": ref.annotations["taxonomy"], "record": ref}])
+    monkeypatch.setattr(mr, "MITOFINDER", {"script": "/x/mitofinder", "py2": "/e/bin/python2.7"})
+    out = tmp_path / "runs" / "mitofinder" / acc
+    out.mkdir(parents=True)
+    row = dict(ROW, accession=acc, genetic_code="5")
+    (cmd,) = mr.build_cmd("mitofinder", row, tmp_path / "bare" / acc, out, 4)
+    assert cmd[:4] == ["/e/bin/python2.7", "/x/mitofinder", "-j", acc]
+    assert cmd[cmd.index("-r") + 1] == str(out / "ref.gb") and cmd[cmd.index("-o") + 1] == "5"
+    assert int(cmd[cmd.index("--max-contig-size") + 1]) == L + 1000
+    assert (out / "ref.txt").read_text().startswith("NC_051993.1\tAlitta succinea")
+    assert SeqIO.read(str(out / "ref.gb"), "genbank").id == "NC_051993.1"
+
+
+def test_pad_to_molecule_trimmed_rotated_and_rc():
+    from Bio.Seq import Seq as _Seq
+    full = NCBI
+    # rotated by 500 and the last 124 nt trimmed (MitoFinder circularisation), one gene inside
+    sub = (full[500:] + full[:500])[:-124]
+    pred = rec(sub, [feat(FeatureLocation(10, 310, 1))])
+    out = mr.pad_to_molecule(pred, full)
+    assert len(out.seq) == L and str(out.seq[:len(sub)]) == str(sub)
+    assert str(out.features[0].extract(out.seq)) == str(pred.features[0].extract(pred.seq))
+    lifted = mr.lift_to_ncbi(out, full)
+    assert str(lifted.features[0].extract(full)) == str(pred.features[0].extract(pred.seq))
+    rc = full.reverse_complement()
+    pred = rec((rc[200:] + rc[:200])[:-50], [feat(FeatureLocation(20, 320, -1))])
+    lifted = mr.lift_to_ncbi(mr.pad_to_molecule(pred, full), full)
+    assert str(lifted.features[0].extract(full)) == str(pred.features[0].extract(pred.seq))
+    with pytest.raises(mr.LiftError):
+        mr.pad_to_molecule(rec(_Seq("ACGT" * 50), []), full)
+
+
+def test_usable_reference_needs_genes():
+    from Bio import SeqIO
+    nc = SeqIO.read(str(HERE / "data" / "NC_000931.gb"), "genbank")
+    assert mr.usable_reference(nc)
+    bare = SeqRecord(nc.seq, id="X.1", annotations={"molecule_type": "DNA"})
+    assert not mr.usable_reference(bare)
+    assert mr.load_ref_pool([HERE / "data" / "NC_000931.gb"])[0]["acc"] == "NC_000931.1"
+
+
+def test_lift_moves_transl_except():
+    """The /transl_except position is inside the qualifier text: it must move with the feature, else table2asn
+    reports SEQ_FEAT.NoStop for every T / TA stop after rotation."""
+    pseq = (NCBI[500:] + NCBI[:500]).reverse_complement()
+    f = feat(FeatureLocation(200, 800, 1))
+    f.qualifiers["transl_except"] = ["(pos:800,aa:TERM)"]
+    out = mr.lift_to_ncbi(rec(pseq, [f]), NCBI)
+    g = out.features[0]
+    assert g.location.strand == -1
+    assert str(g.location) == "join{[0:300](-), [2700:3000](-)}"         # across the origin; 3' end at 2701
+    assert g.qualifiers["transl_except"] == ["(pos:complement(2701),aa:TERM)"]
+
+
+def test_lift_except_split_by_the_origin():
+    """A 2-nt stop whose lifted positions are n and 1 is a join, not the whole genome."""
+    assert mr._lift_except("(pos:2999..3000,aa:TERM)", False, 1, 3000) == "(pos:join(3000,1),aa:TERM)"
+    assert mr._lift_except("(pos:1..2,aa:TERM)", True, 1, 3000) == "(pos:complement(join(3000,1)),aa:TERM)"
+    assert mr._lift_except("(pos:12..13,aa:TERM)", False, 0, 3000) == "(pos:12..13,aa:TERM)"
+
+
+def test_reference_for_mitofinder_drops_unknown_cds_only():
+    """MitoFinder stops on a reference CDS it does not know ('hypothetical protein', cnidarian RefSeq records):
+    such CDS and their gene features are removed, every other feature stays."""
+    seq = Seq("ATG" + "GCC" * 60 + "TAA" + "GCC" * 40)
+    loc_h, loc_c, loc_t = FeatureLocation(0, 90, 1), FeatureLocation(90, 189, 1), FeatureLocation(200, 260, -1)
+    r = rec(seq, [SeqFeature(loc_h, type="gene", qualifiers={"gene": ["hypothetical protein"]}),
+                  SeqFeature(loc_h, type="CDS", qualifiers={"gene": ["hypothetical protein"], "product": ["hypothetical protein"]}),
+                  SeqFeature(loc_c, type="gene", qualifiers={"gene": ["COX1"]}),
+                  SeqFeature(loc_c, type="CDS", qualifiers={"gene": ["COX1"], "product": ["cytochrome c oxidase subunit I"]}),
+                  SeqFeature(loc_t, type="gene", qualifiers={"gene": ["trnM"]}),
+                  SeqFeature(loc_t, type="tRNA", qualifiers={"gene": ["trnM"], "product": ["tRNA-Met"]})])
+    out = mr.reference_for_mitofinder(r)
+    assert [(f.type, f.qualifiers["gene"][0]) for f in out.features] == \
+        [("gene", "COX1"), ("CDS", "COX1"), ("gene", "trnM"), ("tRNA", "trnM")]
+    assert len(r.features) == 6 and str(out.seq) == str(seq)

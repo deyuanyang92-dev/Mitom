@@ -12,7 +12,7 @@ sys.path.insert(0, str(HERE.parent))
 import batch_mitoz as bm  # noqa: E402
 import mito_env  # noqa: E402
 
-MITOZ_PY = Path(os.environ.get("MITOZ_BIN", "/root/miniconda3/envs/mitoz3.6/bin")) / "python"
+MITOZ_PY = Path(os.environ.get("MITOZ_BIN") or (str(Path(mito_env.find("mitoz")).parent) if mito_env.find("mitoz") else "/nonexistent")) / "python"
 MITOS_BIN = mito_env.mitos_bin()
 MITOS_REF = mito_env.mitos_refdir()
 
@@ -232,7 +232,7 @@ def test_core_choice_keeps_mitom_steps():
     p = bm.build_parser()
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--core", "mitoz"])
     assert bm.resolve_tools(a) == "" and (a.trna, a.rescue) == ("mitoz", "no")
-    assert (a.which_gene_first, a.if_reannotation_2, a.preserve_phase1_metadata, a.intron_fix) == ("cox1", "yes", "yes", "auto")
+    assert (a.which_gene_first, a.if_reannotation_2, a.preserve_phase1_metadata, a.intron_fix) == ("cox1", "auto", "yes", "auto")
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca"])
     assert bm.resolve_tools(a) == "" and (a.core, a.trna, a.rescue) == ("hybrid", "mitos2", "auto")
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Animal", "--genetic_code", "5", "--core", "mitoz"])

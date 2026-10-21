@@ -1,0 +1,177 @@
+tool	kind	stratum	value	n_truth	found	recall	exact	le3	gt3	strand_error	name_error	name_unverifiable	missed	fp	records	ok	failed	timeout	unsupported	with_obvious_error
+mitofinder	PCG	all	all	517	491	0.9497	250	69	172	0	0	0	26	2						
+mitofinder	PCG	annotation_method	MitoFinder	13	13	1.0	6	6	1	0	0	0	0	0						
+mitofinder	PCG	annotation_method	MitoZ	25	25	1.0	10	6	9	0	0	0	0	1						
+mitofinder	PCG	annotation_method	unknown	479	453	0.9457	234	57	162	0	0	0	26	1						
+mitofinder	PCG	common_ok	yes	504	491	0.9742	250	69	172	0	0	0	13	2						
+mitofinder	PCG	evidence_tier	A-longread	39	37	0.9487	22	4	11	0	0	0	2	0						
+mitofinder	PCG	evidence_tier	B	478	454	0.9498	228	65	161	0	0	0	24	2						
+mitofinder	PCG	phylum	Annelida	517	491	0.9497	250	69	172	0	0	0	26	2						
+mitofinder	PCG	post_cutoff	no	169	162	0.9586	78	25	59	0	0	0	7	0						
+mitofinder	PCG	post_cutoff	yes	348	329	0.9454	172	44	113	0	0	0	19	2						
+mitofinder	PCG	structure_stress	no	517	491	0.9497	250	69	172	0	0	0	26	2						
+mitofinder	rRNA	all	all	80	60	0.75	10	12	38	0	0	0	20	8						
+mitofinder	rRNA	annotation_method	MitoFinder	2	2	1.0	2	0	0	0	0	0	0	0						
+mitofinder	rRNA	annotation_method	MitoZ	4	4	1.0	0	2	2	0	0	0	0	0						
+mitofinder	rRNA	annotation_method	unknown	74	54	0.7297	8	10	36	0	0	0	20	8						
+mitofinder	rRNA	common_ok	yes	78	60	0.7692	10	12	38	0	0	0	18	8						
+mitofinder	rRNA	evidence_tier	A-longread	6	6	1.0	0	1	5	0	0	0	0	0						
+mitofinder	rRNA	evidence_tier	B	74	54	0.7297	10	11	33	0	0	0	20	8						
+mitofinder	rRNA	phylum	Annelida	80	60	0.75	10	12	38	0	0	0	20	8						
+mitofinder	rRNA	post_cutoff	no	26	18	0.6923	2	3	13	0	0	0	8	3						
+mitofinder	rRNA	post_cutoff	yes	54	42	0.7778	8	9	25	0	0	0	12	5						
+mitofinder	rRNA	structure_stress	no	80	60	0.75	10	12	38	0	0	0	20	8						
+mitofinder	record	all	all												40	39	1	0	0	36
+mitofinder	record	annotation_method	MitoFinder												1	1	0	0	0	0
+mitofinder	record	annotation_method	MitoZ												2	2	0	0	0	2
+mitofinder	record	annotation_method	unknown												37	36	1	0	0	34
+mitofinder	record	common_ok	yes												39	39	0	0	0	36
+mitofinder	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitofinder	record	evidence_tier	B												37	36	1	0	0	33
+mitofinder	record	phylum	Annelida												40	39	1	0	0	36
+mitofinder	record	post_cutoff	no												13	13	0	0	0	12
+mitofinder	record	post_cutoff	yes												27	26	1	0	0	24
+mitofinder	record	structure_stress	no												40	39	1	0	0	36
+mitofinder	tRNA	all	all	886	841	0.9492	613	100	11	0	22	117	23	14						
+mitofinder	tRNA	annotation_method	MitoFinder	22	22	1.0	14	3	2	0	0	3	0	0						
+mitofinder	tRNA	annotation_method	MitoZ	44	42	0.9545	38	0	0	0	2	4	0	0						
+mitofinder	tRNA	annotation_method	unknown	820	777	0.9476	561	97	9	0	20	110	23	14						
+mitofinder	tRNA	common_ok	yes	864	841	0.9734	613	100	11	0	22	117	1	14						
+mitofinder	tRNA	evidence_tier	A-longread	66	65	0.9848	41	13	1	0	1	10	0	0						
+mitofinder	tRNA	evidence_tier	B	820	776	0.9463	572	87	10	0	21	107	23	14						
+mitofinder	tRNA	phylum	Annelida	886	841	0.9492	613	100	11	0	22	117	23	14						
+mitofinder	tRNA	post_cutoff	no	287	282	0.9826	208	23	5	0	4	46	1	1						
+mitofinder	tRNA	post_cutoff	yes	599	559	0.9332	405	77	6	0	18	71	22	13						
+mitofinder	tRNA	structure_stress	no	886	841	0.9492	613	100	11	0	22	117	23	14						
+mitom	PCG	all	all	517	516	0.9981	414	38	64	0	0	0	1	2						
+mitom	PCG	annotation_method	MitoFinder	13	13	1.0	9	2	2	0	0	0	0	0						
+mitom	PCG	annotation_method	MitoZ	25	25	1.0	19	1	5	0	0	0	0	1						
+mitom	PCG	annotation_method	unknown	479	478	0.9979	386	35	57	0	0	0	1	1						
+mitom	PCG	common_ok	yes	504	503	0.998	404	37	62	0	0	0	1	2						
+mitom	PCG	evidence_tier	A-longread	39	39	1.0	33	3	3	0	0	0	0	0						
+mitom	PCG	evidence_tier	B	478	477	0.9979	381	35	61	0	0	0	1	2						
+mitom	PCG	phylum	Annelida	517	516	0.9981	414	38	64	0	0	0	1	2						
+mitom	PCG	post_cutoff	no	169	169	1.0	134	15	20	0	0	0	0	0						
+mitom	PCG	post_cutoff	yes	348	347	0.9971	280	23	44	0	0	0	1	2						
+mitom	PCG	structure_stress	no	517	516	0.9981	414	38	64	0	0	0	1	2						
+mitom	rRNA	all	all	80	80	1.0	24	21	35	0	0	0	0	0						
+mitom	rRNA	annotation_method	MitoFinder	2	2	1.0	1	0	1	0	0	0	0	0						
+mitom	rRNA	annotation_method	MitoZ	4	4	1.0	1	3	0	0	0	0	0	0						
+mitom	rRNA	annotation_method	unknown	74	74	1.0	22	18	34	0	0	0	0	0						
+mitom	rRNA	common_ok	yes	78	78	1.0	24	20	34	0	0	0	0	0						
+mitom	rRNA	evidence_tier	A-longread	6	6	1.0	0	2	4	0	0	0	0	0						
+mitom	rRNA	evidence_tier	B	74	74	1.0	24	19	31	0	0	0	0	0						
+mitom	rRNA	phylum	Annelida	80	80	1.0	24	21	35	0	0	0	0	0						
+mitom	rRNA	post_cutoff	no	26	26	1.0	12	5	9	0	0	0	0	0						
+mitom	rRNA	post_cutoff	yes	54	54	1.0	12	16	26	0	0	0	0	0						
+mitom	rRNA	structure_stress	no	80	80	1.0	24	21	35	0	0	0	0	0						
+mitom	record	all	all												40	40	0	0	0	16
+mitom	record	annotation_method	MitoFinder												1	1	0	0	0	0
+mitom	record	annotation_method	MitoZ												2	2	0	0	0	0
+mitom	record	annotation_method	unknown												37	37	0	0	0	16
+mitom	record	common_ok	yes												39	39	0	0	0	15
+mitom	record	evidence_tier	A-longread												3	3	0	0	0	2
+mitom	record	evidence_tier	B												37	37	0	0	0	14
+mitom	record	phylum	Annelida												40	40	0	0	0	16
+mitom	record	post_cutoff	no												13	13	0	0	0	4
+mitom	record	post_cutoff	yes												27	27	0	0	0	12
+mitom	record	structure_stress	no												40	40	0	0	0	16
+mitom	tRNA	all	all	886	880	0.9932	672	114	16	0	5	78	1	10						
+mitom	tRNA	annotation_method	MitoFinder	22	22	1.0	15	3	2	0	0	2	0	0						
+mitom	tRNA	annotation_method	MitoZ	44	44	1.0	41	3	0	0	0	0	0	0						
+mitom	tRNA	annotation_method	unknown	820	814	0.9927	616	108	14	0	5	76	1	10						
+mitom	tRNA	common_ok	yes	864	858	0.9931	654	110	16	0	5	78	1	10						
+mitom	tRNA	evidence_tier	A-longread	66	66	1.0	43	14	1	0	0	8	0	0						
+mitom	tRNA	evidence_tier	B	820	814	0.9927	629	100	15	0	5	70	1	10						
+mitom	tRNA	phylum	Annelida	886	880	0.9932	672	114	16	0	5	78	1	10						
+mitom	tRNA	post_cutoff	no	287	284	0.9895	213	23	8	0	2	40	1	0						
+mitom	tRNA	post_cutoff	yes	599	596	0.995	459	91	8	0	3	38	0	10						
+mitom	tRNA	structure_stress	no	886	880	0.9932	672	114	16	0	5	78	1	10						
+mitos2	PCG	all	all	517	514	0.9942	277	33	204	0	0	0	3	17						
+mitos2	PCG	annotation_method	MitoFinder	13	13	1.0	5	3	5	0	0	0	0	0						
+mitos2	PCG	annotation_method	MitoZ	25	25	1.0	10	1	14	0	0	0	0	1						
+mitos2	PCG	annotation_method	unknown	479	476	0.9937	262	29	185	0	0	0	3	16						
+mitos2	PCG	common_ok	yes	504	502	0.996	272	32	198	0	0	0	2	15						
+mitos2	PCG	evidence_tier	A-longread	39	39	1.0	23	0	16	0	0	0	0	0						
+mitos2	PCG	evidence_tier	B	478	475	0.9937	254	33	188	0	0	0	3	17						
+mitos2	PCG	phylum	Annelida	517	514	0.9942	277	33	204	0	0	0	3	17						
+mitos2	PCG	post_cutoff	no	169	168	0.9941	83	16	69	0	0	0	1	0						
+mitos2	PCG	post_cutoff	yes	348	346	0.9943	194	17	135	0	0	0	2	17						
+mitos2	PCG	structure_stress	no	517	514	0.9942	277	33	204	0	0	0	3	17						
+mitos2	rRNA	all	all	80	79	0.9875	16	1	62	0	0	0	1	0						
+mitos2	rRNA	annotation_method	MitoFinder	2	2	1.0	1	0	1	0	0	0	0	0						
+mitos2	rRNA	annotation_method	MitoZ	4	4	1.0	0	0	4	0	0	0	0	0						
+mitos2	rRNA	annotation_method	unknown	74	73	0.9865	15	1	57	0	0	0	1	0						
+mitos2	rRNA	common_ok	yes	78	77	0.9872	16	1	60	0	0	0	1	0						
+mitos2	rRNA	evidence_tier	A-longread	6	6	1.0	0	0	6	0	0	0	0	0						
+mitos2	rRNA	evidence_tier	B	74	73	0.9865	16	1	56	0	0	0	1	0						
+mitos2	rRNA	phylum	Annelida	80	79	0.9875	16	1	62	0	0	0	1	0						
+mitos2	rRNA	post_cutoff	no	26	26	1.0	4	0	22	0	0	0	0	0						
+mitos2	rRNA	post_cutoff	yes	54	53	0.9815	12	1	40	0	0	0	1	0						
+mitos2	rRNA	structure_stress	no	80	79	0.9875	16	1	62	0	0	0	1	0						
+mitos2	record	all	all												40	40	0	0	0	39
+mitos2	record	annotation_method	MitoFinder												1	1	0	0	0	1
+mitos2	record	annotation_method	MitoZ												2	2	0	0	0	2
+mitos2	record	annotation_method	unknown												37	37	0	0	0	36
+mitos2	record	common_ok	yes												39	39	0	0	0	38
+mitos2	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitos2	record	evidence_tier	B												37	37	0	0	0	36
+mitos2	record	phylum	Annelida												40	40	0	0	0	39
+mitos2	record	post_cutoff	no												13	13	0	0	0	12
+mitos2	record	post_cutoff	yes												27	27	0	0	0	27
+mitos2	record	structure_stress	no												40	40	0	0	0	39
+mitos2	tRNA	all	all	886	871	0.9831	664	114	16	0	5	77	10	10						
+mitos2	tRNA	annotation_method	MitoFinder	22	22	1.0	15	3	2	0	0	2	0	0						
+mitos2	tRNA	annotation_method	MitoZ	44	44	1.0	41	3	0	0	0	0	0	0						
+mitos2	tRNA	annotation_method	unknown	820	805	0.9817	608	108	14	0	5	75	10	10						
+mitos2	tRNA	common_ok	yes	864	850	0.9838	647	110	16	0	5	77	9	10						
+mitos2	tRNA	evidence_tier	A-longread	66	65	0.9848	42	14	1	0	0	8	1	0						
+mitos2	tRNA	evidence_tier	B	820	806	0.9829	622	100	15	0	5	69	9	10						
+mitos2	tRNA	phylum	Annelida	886	871	0.9831	664	114	16	0	5	77	10	10						
+mitos2	tRNA	post_cutoff	no	287	278	0.9686	208	23	8	0	2	39	7	0						
+mitos2	tRNA	post_cutoff	yes	599	593	0.99	456	91	8	0	3	38	3	10						
+mitos2	tRNA	structure_stress	no	886	871	0.9831	664	114	16	0	5	77	10	10						
+mitoz	PCG	all	all	517	515	0.9961	327	38	150	0	0	0	2	5						
+mitoz	PCG	annotation_method	MitoFinder	13	13	1.0	5	3	5	0	0	0	0	0						
+mitoz	PCG	annotation_method	MitoZ	25	25	1.0	16	0	9	0	0	0	0	1						
+mitoz	PCG	annotation_method	unknown	479	477	0.9958	306	35	136	0	0	0	2	4						
+mitoz	PCG	common_ok	yes	504	502	0.996	322	37	143	0	0	0	2	5						
+mitoz	PCG	evidence_tier	A-longread	39	38	0.9744	25	4	9	0	0	0	1	0						
+mitoz	PCG	evidence_tier	B	478	477	0.9979	302	34	141	0	0	0	1	5						
+mitoz	PCG	phylum	Annelida	517	515	0.9961	327	38	150	0	0	0	2	5						
+mitoz	PCG	post_cutoff	no	169	169	1.0	117	18	34	0	0	0	0	0						
+mitoz	PCG	post_cutoff	yes	348	346	0.9943	210	20	116	0	0	0	2	5						
+mitoz	PCG	structure_stress	no	517	515	0.9961	327	38	150	0	0	0	2	5						
+mitoz	rRNA	all	all	80	80	1.0	14	1	65	0	0	0	0	0						
+mitoz	rRNA	annotation_method	MitoFinder	2	2	1.0	1	0	1	0	0	0	0	0						
+mitoz	rRNA	annotation_method	MitoZ	4	4	1.0	0	0	4	0	0	0	0	0						
+mitoz	rRNA	annotation_method	unknown	74	74	1.0	13	1	60	0	0	0	0	0						
+mitoz	rRNA	common_ok	yes	78	78	1.0	14	1	63	0	0	0	0	0						
+mitoz	rRNA	evidence_tier	A-longread	6	6	1.0	0	0	6	0	0	0	0	0						
+mitoz	rRNA	evidence_tier	B	74	74	1.0	14	1	59	0	0	0	0	0						
+mitoz	rRNA	phylum	Annelida	80	80	1.0	14	1	65	0	0	0	0	0						
+mitoz	rRNA	post_cutoff	no	26	26	1.0	4	0	22	0	0	0	0	0						
+mitoz	rRNA	post_cutoff	yes	54	54	1.0	10	1	43	0	0	0	0	0						
+mitoz	rRNA	structure_stress	no	80	80	1.0	14	1	65	0	0	0	0	0						
+mitoz	record	all	all												40	40	0	0	0	36
+mitoz	record	annotation_method	MitoFinder												1	1	0	0	0	1
+mitoz	record	annotation_method	MitoZ												2	2	0	0	0	1
+mitoz	record	annotation_method	unknown												37	37	0	0	0	34
+mitoz	record	common_ok	yes												39	39	0	0	0	35
+mitoz	record	evidence_tier	A-longread												3	3	0	0	0	2
+mitoz	record	evidence_tier	B												37	37	0	0	0	34
+mitoz	record	phylum	Annelida												40	40	0	0	0	36
+mitoz	record	post_cutoff	no												13	13	0	0	0	12
+mitoz	record	post_cutoff	yes												27	27	0	0	0	24
+mitoz	record	structure_stress	no												40	40	0	0	0	36
+mitoz	tRNA	all	all	886	873	0.9853	684	103	10	0	4	76	9	13						
+mitoz	tRNA	annotation_method	MitoFinder	22	22	1.0	15	3	2	0	0	2	0	0						
+mitoz	tRNA	annotation_method	MitoZ	44	44	1.0	44	0	0	0	0	0	0	0						
+mitoz	tRNA	annotation_method	unknown	820	807	0.9841	625	100	8	0	4	74	9	13						
+mitoz	tRNA	common_ok	yes	864	851	0.985	662	103	10	0	4	76	9	13						
+mitoz	tRNA	evidence_tier	A-longread	66	64	0.9697	43	13	1	0	0	7	2	0						
+mitoz	tRNA	evidence_tier	B	820	809	0.9866	641	90	9	0	4	69	7	13						
+mitoz	tRNA	phylum	Annelida	886	873	0.9853	684	103	10	0	4	76	9	13						
+mitoz	tRNA	post_cutoff	no	287	281	0.9791	214	24	4	0	2	39	4	0						
+mitoz	tRNA	post_cutoff	yes	599	592	0.9883	470	79	6	0	2	37	5	13						
+mitoz	tRNA	structure_stress	no	886	873	0.9853	684	103	10	0	4	76	9	13						

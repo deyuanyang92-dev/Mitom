@@ -9,11 +9,28 @@ to automatic annotation (e.g. MitoZ / MITOS output):
       nearest the preceding gene WITHOUT overlapping it (criterion i). Only applied when the
       annotated start overlaps the preceding same-strand feature (move downstream), or when an
       in-frame start lies upstream before the preceding feature and the open frame reaches it
-      (move upstream, at most --max_start_shift codons).
+      (move upstream, at most --max_start_shift codons; only when the annotated start codon is
+      not a valid start, or for --aggressive_start_genes; annelids: nad5 and nad4L). A start that
+      overlaps the preceding gene is moved downstream only when a start codon lies within 15 nt.
   P2  Two PCGs on the same strand and in the same frame cannot overlap (criterion ii) - reported.
+  D1  A protein gene annotated twice at different places (e.g. MitoZ on a duplicated region): only one
+      copy is kept - the complete one (start + stop, no internal stop), the longer, then the first in
+      the record; the other CDS and its gene feature are removed (NCBI records annotate one copy).
+      An overlapping copy on the other strand that is incomplete or has internal stops is removed as well.
   P3  PCG end: the first in-frame complete stop codon, or an abbreviated stop (T / TA) ending
       immediately before the downstream same-strand tRNA, completed by polyadenylation
       (criterion iii; tRNA punctuation model, Ojala et al. 1981). /transl_except + note added.
+      When no tRNA follows and the first complete stop lies > 30 nt inside the next same-strand
+      protein gene (not the bicistronic pairs atp8-atp6, nad4L-nad4; rRNA ends are trimmed by R1
+      instead; > 10 nt for any other feature), the gene is not
+      extended into it: the annotated end is kept when it is an abbreviated T / TA stop (the end of
+      the protein homology, e.g. cox1 before cox2), else the T / TA right before the next gene
+      (e.g. nad6 before cob) is used. An end that stops short of the first complete stop with
+      nothing annotated in between (core homology lost at the C-terminus, 100-500 nt in divergent
+      phyla) is extended to that stop (at most 600 nt).
+  P7  start and end in different frames (internal stops): replaced by the longer ORF - annotated start
+      to its first stop, or annotated stop with the in-frame start nearest the annotated start - when
+      it keeps >= half the length (metazoa benchmark 2026-10: 14 CDS with internal stops, NCBI 0).
   O1  circular record: a CDS that ends <= 2 nt before the transcript end without a stop is continued
       across the origin to its first in-frame stop (join; genes cut by the cox1-first rotation); at most 60 nt
       where another feature starts at the origin (genuine overlaps are <= ~50 nt), else 300 nt.
@@ -80,6 +97,18 @@ MAX_ORIGIN_EXT = 300        # O1: nt searched past the origin for the stop of a 
 MAX_INSIDE_TRIM = 250       # R1: an rRNA end may be cut back this far for a gene lying inside it (NC_023929.1: trnV 199 nt
                             # inside MitoZ's l-rRNA overhang); larger losses are logged (R3), not trimmed
 MAX_ORIGIN_OVERLAP = 60     # O1: ... when another feature starts there (cox1-first rotation): genuine overlaps are <= ~50 nt
+MAX_START_MOVE = 15         # P1: a start overlapping the preceding gene is moved downstream only when a start codon lies
+                            # within this distance (173-record metazoa benchmark 2026-10: moves <= 15 nt right 31 / wrong 12,
+                            # longer moves right 14 / wrong 28 - NCBI keeps the overlap when the next start is far)
+MAX_END_EXTENSION = 600     # P3: longest extension of an end that stopped short of the first complete stop (metazoa
+                            # benchmark 2026-10: the 50 confirmed cases were 100-512 nt)
+MAX_FEATURE_OVERLAP = 10    # P3: a complete stop may reach this far into the next feature that is not a same-strand
+                            # protein gene (173-record truth: into an antisense tRNA 1-10 nt 41 times, deeper 0; into a
+                            # same-strand rRNA at most 2 nt)
+MAX_PCG_OVERLAP = 30        # P3: a complete stop may reach this far into the next same-strand protein gene (173-record
+                            # truth: 11-30 nt inside, complete stop 17 vs T/TA 6; 31-50 nt 6 vs 6; deeper T/TA) (NCBI annelid
+                            # records: cox1-cox2, nad6-cob end with T/TA instead; atp8-atp6 / nad4L-nad4 overlap by design)
+BICISTRONIC = {("ATP8", "ATP6"), ("ND4L", "ND4")}
 POLYA_NOTE = "TAA stop codon is completed by the addition of 3' A residues to the mRNA"
 
 
@@ -130,6 +159,8 @@ class Curator:
         self.starts, self.stops = set(t.start_codons), set(t.stop_codons)
         self.rows: List[Dict[str, str]] = []
         self.noted: set = set()
+        genes = getattr(a, "aggressive_start_genes", None)
+        self.aggressive_genes = {PCG_SYN.get(key(x), x.upper()) for x in genes.split(",") if x} if genes else set()
 
     # ── helpers in transcript orientation ──
     def log(self, f: SeqFeature, rule: str, old: Tuple[int, int], new: Tuple[int, int], why: str) -> None:
@@ -165,11 +196,40 @@ class Curator:
                     best = max(best, self.L + 1 - gs)      # in reverse coordinates
         return best
 
+    def downstream_gene_start(self, f: SeqFeature) -> Optional[int]:
+        """Transcript position where the next same-strand protein gene begins, ignoring the bicistronic
+        partner (atp8-atp6, nad4L-nad4) whose overlap is genuine."""
+        s, e = span(f)
+        me = PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "")
+        cand = []
+        for g in self.others(f, types=("CDS",), same_strand=True):
+            other = PCG_SYN.get(key(g.qualifiers.get("gene", [""])[0]), "")
+            if (me, other) in BICISTRONIC:
+                continue
+            for gs, ge in spans(g):
+                if f.location.strand == 1 and gs > s:
+                    cand.append(gs)
+                if f.location.strand == -1 and ge < e:
+                    cand.append(self.L + 1 - ge)
+        return min(cand) if cand else None
+
     def downstream_trna_start(self, f: SeqFeature) -> Optional[int]:
         """Transcript position (reverse coordinates on -) where the next same-strand tRNA begins."""
         s, e = span(f)
         cand = []
         for g in self.others(f, types=("tRNA",), same_strand=True):
+            for gs, ge in spans(g):
+                if f.location.strand == 1 and gs > s:
+                    cand.append(gs)
+                if f.location.strand == -1 and ge < e:
+                    cand.append(self.L + 1 - ge)
+        return min(cand) if cand else None
+
+    def next_feature_start(self, f: SeqFeature) -> Optional[int]:
+        """Transcript position where the nearest downstream feature (tRNA, rRNA, CDS, either strand) begins."""
+        s, e = span(f)
+        cand = []
+        for g in self.others(f):
             for gs, ge in spans(g):
                 if f.location.strand == 1 and gs > s:
                     cand.append(gs)
@@ -198,14 +258,18 @@ class Curator:
         # P1: start nearest the preceding gene without overlapping it
         up = self.upstream_end(f)
         new_a = a
-        if a <= up:                                    # start overlaps preceding feature -> move downstream
-            for c in range(a, min(b - 30, up + 3 * 30) + 1, 3):
+        if a <= up:                                    # start overlaps preceding feature -> move downstream (if near)
+            for c in range(a, min(b - 30, a + MAX_START_MOVE) + 1, 3):
                 if c > up and s[c - 1:c + 2] in self.starts:
                     new_a = c
                     break
-        elif self.a.aggressive_start or s[a - 1:a + 2] not in self.starts:
+        elif self.a.aggressive_start or s[a - 1:a + 2] not in self.starts or \
+                PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "") in self.aggressive_genes:
             # look upstream, in frame, until stop / preceding gene (criterion i). Without homolog
-            # evidence only done when the annotated first codon is not a valid start codon.
+            # evidence only done when the annotated first codon is not a valid start codon, or for the
+            # genes of --aggressive_start_genes (nad5, nad4L in annelids: NCBI annelid records start them at the
+            # most upstream in-frame start, 7 / 7 in the annelid benchmark 2026-10; other phyla do not: wrong 52,
+            # right 17 on 173 metazoa records, so `mitom run` sets it for the Annelida clade only)
             c = a - 3
             limit = max(up + 1, a - 3 * self.a.max_start_shift)
             while c >= limit and s[c - 1:c + 2] not in self.stops:
@@ -220,8 +284,38 @@ class Curator:
                 break
         new_b = b
         trna = self.downstream_trna_start(f)
+        down = self.downstream_gene_start(f)
+        nfs = self.next_feature_start(f)               # nearest feature downstream, either strand
+        reach = None                                   # furthest position a complete stop may reach (None: no limit)
+        if nfs is not None:
+            reach = nfs - 1 + (MAX_PCG_OVERLAP if down is not None and nfs == down else MAX_FEATURE_OVERLAP)
+        tail_b = (b - new_a + 1) % 3
+        has_tail = tail_b in (1, 2) and s[b - tail_b:b] == ("T", "TA")[tail_b - 1]   # annotated end is an abbreviated stop
         why_end = ""
-        if trna and new_a <= trna - 1 and (first_stop is None or first_stop - 2 >= trna):
+        if down and (trna is None or down < trna) and (nfs is None or nfs >= down) and b < down \
+                and first_stop is not None and new_a < down and first_stop - 2 > down - 1 + MAX_PCG_OVERLAP:
+            # no feature before the next gene, the annotated end lies before it and the first complete stop
+            # lies well inside it: do not extend (an annotated complete stop that already overlaps the next
+            # gene is kept: NCBI records show both patterns, 24 complete-stop overlaps > 10 nt and 28 T/TA
+            # ends whose complete stop lies > 10 nt inside the next gene, metazoa benchmark 2026-10)
+            tail_b = (b - new_a + 1) % 3
+            if b <= down - 1 and tail_b in (1, 2) and s[b - tail_b:b] == ("T", "TA")[tail_b - 1]:
+                new_b, why_end = b, "abbreviated stop T/TA kept: the first complete stop lies inside the downstream gene"
+            else:
+                for gap in SPACERS:
+                    end = down - 1 - gap
+                    tail = (end - new_a + 1) % 3
+                    if tail in (1, 2) and s[end - tail:end] == ("T", "TA")[tail - 1]:
+                        new_b, why_end = end, "abbreviated stop T/TA immediately before downstream gene" + \
+                            (f" ({gap:+d} nt spacer)" if gap else "")
+                        break
+                    if tail == 0 and s[end - 3:end] in self.stops:
+                        new_b, why_end = end, "complete stop codon immediately before downstream gene" + \
+                            (f" ({gap:+d} nt spacer)" if gap else "")
+                        break
+                else:
+                    self.log(f, "P4", old, old, "complete stop inside the downstream gene, no abbreviated stop before it - check manually")
+        elif trna and new_a <= trna - 1 and (first_stop is None or first_stop - 2 >= trna):
             # the first complete stop lies inside/after the downstream tRNA: the mRNA is cut at the
             # tRNA, so the gene ends with T / TA right before it (criterion iii)
             # NCBI places such ends 0 (143x), -1 (9x) and 1-3 nt (10x) before the tRNA (2026-10-20 dev set,
@@ -240,9 +334,18 @@ class Curator:
                     break
             else:
                 self.log(f, "P4", old, old, "no complete or abbreviated stop before the downstream tRNA - check manually")
-        elif first_stop is not None and first_stop != b and abs(first_stop - b) <= 3 * self.a.max_start_shift:
-            # complete stop overlapping the tRNA by 1-2 nt is within tRNA boundary uncertainty: kept
+        elif first_stop is not None and first_stop != b and abs(first_stop - b) <= 3 * self.a.max_start_shift \
+                and (reach is None or first_stop <= reach or not has_tail):
+            # complete stop overlapping the tRNA by 1-2 nt is within tRNA boundary uncertainty: kept; an end that
+            # already is an abbreviated stop is not moved deeper than `reach` into the next feature (NC_067900.1 nad1:
+            # 50 nt into the antisense tRNA / rRNA); an end without any stop signal is completed regardless
             new_b, why_end = first_stop, "first in-frame complete stop codon"
+        elif first_stop is not None and first_stop > b and first_stop - b <= MAX_END_EXTENSION and \
+                (reach is None or first_stop <= reach):
+            # the core's end stops short (C-terminal homology lost: nad5 / nad4 / nad2 / cox1 in divergent phyla,
+            # 100-500 nt) and nothing is annotated up to the first complete stop: extend to it
+            # (metazoa benchmark 2026-10, 173 RefSeq records: 50 of 52 ends > 100 nt short match NCBI exactly)
+            new_b, why_end = first_stop, "first in-frame complete stop codon (annotated end stopped short, no feature in between)"
         if (new_a, new_b) != (a, b) and new_b - new_a + 1 >= 60:
             gs, ge = self.from_tx(f, new_a, new_b)
             set_span(f, gs, ge)
@@ -253,6 +356,8 @@ class Curator:
                 self.log(f, "P1", old, (gs, ge), "start codon nearest the preceding gene without overlap")
             if new_b != b:
                 self.log(f, "P3", old, (gs, ge), why_end)
+        else:
+            new_a, new_b = a, b                        # a rejected move must not drive the stop qualifiers
         # stop qualifiers
         nt = s[new_a - 1:new_b]
         tail = len(nt) % 3
@@ -295,6 +400,46 @@ class Curator:
             g.location = f.location
         f.qualifiers.pop("translation", None)
         self.log(f, "O1", old, old, f"continued {k} nt across the origin to the first in-frame stop codon")
+
+    def frame_repair(self, f: SeqFeature) -> None:
+        """P7: a CDS whose start and end are in different frames (internal stops) is replaced by the longer of two
+        open reading frames: the annotated start to its first in-frame stop, or the annotated end (a complete stop)
+        with the in-frame start codon nearest the annotated start. Only when that ORF keeps >= half the length."""
+        if not simple(f):
+            return
+        s = self.tseq(f)
+        a, b = self.tx(f)
+        nt = s[a - 1:b]
+        if len(nt) % 3 == 0:                           # start and end in frame: an internal stop is reported by P4
+            return
+        if not any(nt[i:i + 3] in self.stops for i in range(0, len(nt) - len(nt) % 3, 3)):
+            return
+        c = a
+        while c + 2 <= len(s) and s[c - 1:c + 2] not in self.stops:
+            c += 3
+        orfs = [(a, c + 2)] if c + 2 <= len(s) else []
+        if s[b - 3:b] in self.stops:
+            best, c = None, b - 5
+            limit = max(self.upstream_end(f) + 1, a - 3 * self.a.max_start_shift)   # as P1: not into the preceding gene
+            while c >= limit and s[c - 1:c + 2] not in self.stops:
+                if s[c - 1:c + 2] in self.starts and (best is None or abs(c - a) < abs(best - a)):
+                    best = c
+                c -= 3
+            if best is not None:
+                orfs.append((best, b))
+        if not orfs:
+            return
+        na, nb = max(orfs, key=lambda x: x[1] - x[0])
+        if nb - na + 1 < (b - a + 1) / 2:
+            return
+        old = span(f)
+        gs, ge = self.from_tx(f, na, nb)
+        set_span(f, gs, ge)
+        g = gene_feature(self.rec, f)
+        if g is not None and simple(g):
+            set_span(g, gs, ge)
+        self.log(f, "P7", old, (gs, ge), "start and end in different frames (internal stops): "
+                 + ("start kept, first in-frame stop" if na == a else "stop kept, in-frame start nearest the old start"))
 
     def pcg_check(self, f: SeqFeature) -> None:
         """P4: report problems that rules cannot fix (no change is made)."""
@@ -362,6 +507,46 @@ class Curator:
                 if fs <= ge and gs <= fe and not self.frame_differs(f, (gs, ge)):
                     self.log(f, "P2", (fs, fe), (gs, ge),
                              f"same-strand same-frame overlap with {g.qualifiers.get('gene', ['?'])[0]} - check manually")
+
+    def duplicates(self) -> None:
+        """D1: keep one copy of a protein gene annotated at several non-overlapping places."""
+        by: Dict[str, List[SeqFeature]] = {}
+        for f in self.rec.features:
+            if f.type == "CDS" and simple(f):
+                name = PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "")
+                if name:
+                    by.setdefault(name, []).append(f)
+        for name, fs in by.items():
+            if len(fs) < 2:
+                continue
+
+            def quality(f: SeqFeature) -> tuple:
+                nt = self.tseq(f)[self.tx(f)[0] - 1:self.tx(f)[1]]
+                tail = len(nt) % 3
+                codons = [nt[i:i + 3] for i in range(0, len(nt) - tail, 3)]
+                complete = codons and codons[0] in self.starts and \
+                    (nt[-tail:] in ("T", "TA") if tail else codons[-1] in self.stops)
+                internal = any(c in self.stops for c in (codons if tail else codons[:-1]))
+                return (bool(complete) and not internal, len(nt), -int(f.location.start))
+
+            keep = max(fs, key=quality)
+            for f in fs:
+                if f is keep or any(a <= d and c <= b for a, b in spans(f) for c, d in spans(keep)):
+                    continue                            # overlapping copies are the P2 case, not duplicates
+                self.log(f, "D1", span(f), span(keep), f"duplicate {name}: second copy removed, {span(keep)[0]}..{span(keep)[1]} kept")
+                g = gene_feature(self.rec, f)
+                self.rec.features = [x for x in self.rec.features if x is not f and x is not g]
+            # an overlapping copy on the other strand, incomplete or with internal stops, next to a complete copy: spurious
+            # (MITOS2 / MitoZ hit on the antisense of the real gene: NC_009082.1 nad3, NC_014848.1 nad1)
+            if quality(keep)[0]:
+                for f in fs:
+                    if f is keep or f not in self.rec.features or f.location.strand == keep.location.strand \
+                            or quality(f)[0]:
+                        continue
+                    self.log(f, "D1", span(f), span(keep), f"antisense copy of {name} (incomplete / internal stops) removed, "
+                             f"{span(keep)[0]}..{span(keep)[1]} kept")
+                    g = gene_feature(self.rec, f)
+                    self.rec.features = [x for x in self.rec.features if x is not f and x is not g]
 
     # ── rRNA rules ──
     def rrna(self, f: SeqFeature) -> None:
@@ -465,8 +650,10 @@ class Curator:
         for f in list(self.rec.features):              # R1 first: a raw rRNA overhang must not push a CDS start (P1)
             if f.type == "rRNA":
                 self.rrna(f)
+        self.duplicates()                              # D1 before the boundary rules: a copy must not act as neighbour
         for f in list(self.rec.features):
             if f.type == "CDS":
+                self.frame_repair(f)
                 self.pcg(f)
                 self.across_origin(f)
                 self.pcg_check(f)
@@ -535,6 +722,11 @@ def main(argv=None) -> int:
     p.add_argument("--aggressive_start", action="store_true",
                    help="Always move PCG starts to the in-frame start codon nearest the preceding gene "
                         "(criterion i literally); default only when the annotated start codon is invalid")
+    p.add_argument("--aggressive_start_genes", default="",
+                   help="Genes whose start is always moved to the in-frame start codon nearest the preceding gene "
+                        "(default none; `mitom run` passes ND5,ND4L for the Annelida clade). Benchmark 2026-10: right "
+                        "for nad5 / nad4L in every differing annelid record (40), wrong in most other phyla (173 "
+                        "metazoa records: 17 right, 52 wrong).")
     p.add_argument("--table2asn", default=None,
                    help="NCBI table2asn for validation before/after curation (default: found by mito_env.py)")
     p.add_argument("--no_validate", action="store_true", help="Skip the NCBI validation before/after curation")

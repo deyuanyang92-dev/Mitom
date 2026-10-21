@@ -114,6 +114,8 @@ def find(name: str, explicit: Optional[str] = None, *config_keys: str) -> Option
     cfg = config()
     dirs = [explicit] if explicit else \
         [cfg.get(k, "") for k in (*config_keys, "tools_bin", "intron_bin", "trna_bin", "mitos_bin")]
+    if not explicit and name == "mitoz" and cfg.get("conda_env_mitoz"):      # the configured MitoZ environment first
+        dirs = [str(b) for b in env_bins() if b.parent.name == cfg["conda_env_mitoz"]] + dirs
     for d in dirs:
         if not d:
             continue

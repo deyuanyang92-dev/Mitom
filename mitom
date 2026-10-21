@@ -14,6 +14,9 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
   rescue             add genes MitoZ missed from MITOS2                                = mito_rescue.py
   rrna-hmm           per-phylum 12S/16S HMMs: build / search                           = mito_rrna_hmm.py
   validate           NCBI table2asn validation and submission files                   = ncbi_validate.py
+  fetch              download complete mitogenomes from NCBI by taxon / query          = mito_fetch.py
+  check              audit existing GenBank annotation; lists records to re-annotate   = mito_check.py
+  compare            original annotation vs MitoM, gene by gene                       = mito_compare.py
 
 Typical:  mitom doctor
           mitom run -i my_genomes.gb -o out          (clade and genetic code from the GenBank taxonomy)
@@ -35,6 +38,9 @@ COMMANDS = {
     "rescue": ("mito_rescue.py", []),
     "rrna-hmm": ("mito_rrna_hmm.py", []),
     "validate": ("ncbi_validate.py", []),
+    "fetch": ("mito_fetch.py", []),
+    "check": ("mito_check.py", []),
+    "compare": ("mito_compare.py", []),
 }
 
 

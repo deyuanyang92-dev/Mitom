@@ -73,8 +73,9 @@ def test_internal_stops_reported_not_changed(tmp_path):
 def test_ncbi_validation_before_after(tmp_path):
     """Built-in NCBI table2asn check before vs after curation: errors fixed, none introduced."""
     import shutil
-    t2a = shutil.which("table2asn") or "/root/miniconda3/envs/mitointron/bin/table2asn"
-    if not Path(t2a).exists():
+    import mito_env
+    t2a = mito_env.find("table2asn")
+    if not t2a:
         import pytest
         pytest.skip("table2asn not available")
     curate(tmp_path, "KY753833_mitoz.gbf", "--table2asn", t2a)
@@ -312,7 +313,8 @@ def _mc():
 
 def _args(**kw):
     import argparse
-    d = dict(genetic_code=5, rrna_bounds="fill", max_fill=300, max_start_shift=30, aggressive_start=False)
+    d = dict(genetic_code=5, rrna_bounds="fill", max_fill=300, max_start_shift=30, aggressive_start=False,
+             aggressive_start_genes="")
     d.update(kw)
     return argparse.Namespace(**d)
 
@@ -582,3 +584,173 @@ def test_minus_strand_frame_anchored_at_the_genome_end():
     assert int(_by(rec, "CDS", "ND4").location.end) == g_nad4_e, rows
     assert not any(r["rule"] in ("P1", "P2") for r in rows), rows
     assert L > 0
+
+
+def test_duplicate_pcg_copy_removed():
+    """D1: MitoZ annotated atp8 twice on a repeated region (NC_049135.1); one CDS + gene stays."""
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    atp8 = next(f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == "ATP8")
+    s, e = int(atp8.location.start), int(atp8.location.end)
+    seq = str(rec.seq)
+    rec.seq = type(rec.seq)(seq[:len(seq) - (e - s)] + seq[s:e])          # copy of atp8 at the record end
+    copy_loc = FeatureLocation(len(rec.seq) - (e - s), len(rec.seq), 1)
+    rec.features = [f for f in rec.features if int(f.location.end) <= copy_loc.start or f.type == "source"]
+    rec.features.append(SeqFeature(copy_loc, type="gene", qualifiers={"gene": ["ATP8"]}))
+    rec.features.append(SeqFeature(copy_loc, type="CDS", qualifiers=dict(atp8.qualifiers)))
+    rows = _curate_rec(rec)
+    cds = [f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == "ATP8"]
+    genes = [f for f in rec.features if f.type == "gene" and f.qualifiers["gene"][0].upper() == "ATP8"]
+    assert len(cds) == 1 and len(genes) == 1 and int(cds[0].location.start) == s
+    assert any(r["rule"] == "D1" for r in rows)
+
+
+def test_aggressive_start_genes_only_for_listed_genes():
+    """P1 upstream search for nad5 (listed, as `mitom run` sets for annelids) but not cob: both start with a valid
+    ATT 9 codons downstream of an in-frame ATG that follows the preceding tRNA. Without the list nothing moves."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 8 + "ATT" + "GCC" * 100 + "TAA"
+    seq = "C" * 1000 + body + "C" * 1000
+    for gene, moved, genes in (("ND5", True, "ND5,ND4L"), ("CYTB", False, "ND5,ND4L"), ("ND5", False, "")):
+        rec = _mkrec(seq, [("tRNA", FeatureLocation(900, 965, 1), "trnF", {"product": ["tRNA-Phe"]}),
+                           ("CDS", FeatureLocation(1027, 1000 + len(body), 1), gene)])
+        _curate_rec(rec, aggressive_start_genes=genes)
+        cds = _by(rec, "CDS", gene)
+        assert (int(cds.location.start) == 1000) == moved, (gene, cds.location)
+
+
+def test_p3_short_end_extended_to_first_stop_across_empty_gap():
+    """Metazoa benchmark 2026-10: the cores end nad5 / nad4 / nad2 / cox1 100-500 nt early in divergent phyla (a T
+    inside the gene taken as an abbreviated stop); NCBI ends them at the first complete stop. Nothing annotated in
+    between -> extended; a tRNA in between -> not."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "ATG" + "GCC" * 49 + "T" + "GC" + "GCC" * 49 + "TAA" + "GCC" * 100      # T at 151, TAA ends at 303
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, 151, 1), "ND5")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND5").location.end) == 303, rows
+    assert any(r["rule"] == "P3" and "stopped short" in r["reason"] for r in rows)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, 151, 1), "ND5"),
+                       ("tRNA", FeatureLocation(200, 260, -1), "trnF", {"product": ["tRNA-Phe"]})])
+    _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND5").location.end) == 151
+
+
+def test_p7_frame_repair_keeps_stop_and_moves_start_into_its_frame():
+    """Metazoa benchmark 2026-10 (NC_010432.1 cox3, NC_013831.1 nad4): the start is 1-2 nt off the frame of the
+    stop -> internal stops (NCBI ERROR). The stop is kept and the in-frame start nearest the old start is used."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "CTAAGC" * 30 + "TAA" + "GCC" * 20             # ATG 31..33, TAA ends at 216;
+    # read from 32 the body gives TAA (internal stops)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(31, 216, 1), "COX3")])          # starts at 32: wrong frame
+    rows = _curate_rec(rec)
+    f = _by(rec, "CDS", "COX3")
+    assert (int(f.location.start) + 1, int(f.location.end)) == (31, 216), rows
+    assert any(r["rule"] == "P7" for r in rows)
+
+
+def test_d1_antisense_copy_with_internal_stops_removed():
+    from Bio.SeqFeature import FeatureLocation
+    gene = "ATG" + "GCC" * 60 + "TAA"
+    seq = "GCC" * 10 + gene + "GCC" * 20
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 216, 1), "ND3"), ("CDS", FeatureLocation(60, 180, -1), "ND3")])
+    rows = _curate_rec(rec)
+    cds = [f for f in rec.features if f.type == "CDS"]
+    assert len(cds) == 1 and cds[0].location.strand == 1, rows
+    assert any(r["rule"] == "D1" and "antisense" in r["reason"] for r in rows)
+
+
+def test_p7_in_frame_internal_stop_left_to_p4():
+    """Review 2026-10: P7 must not cut a CDS whose start and end are in frame (a nonsense codon or frameshift the
+    user has to look at); only ends in different frames are repaired."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 30 + "TAA" + "GCC" * 40 + "TAA" + "GCC" * 20   # internal stop 123 nt before the end
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 249, 1), "ND2")])
+    rows = _curate_rec(rec)
+    f = _by(rec, "CDS", "ND2")
+    assert (int(f.location.start) + 1, int(f.location.end)) == (31, 249), rows
+    assert not any(r["rule"] == "P7" for r in rows)
+    assert any(r["rule"] == "P4" and "internal stop" in r["reason"] for r in rows), rows
+
+
+def test_p7_start_search_stops_at_the_preceding_gene():
+    """The stop-kept ORF may not reach into the preceding tRNA for its start (P1's bound)."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 20 + "TTG" + "GCC" * 60 + "CTAAGC" * 40 + "TAA" + "GCC" * 10
+    rec = _mkrec(seq, [("tRNA", FeatureLocation(0, 150, 1), "trnF", {"product": ["tRNA-Phe"]}),
+                       ("CDS", FeatureLocation(244, 486, 1), "ND1")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.start) + 1 == 245, rows     # the only start (TTG at 61) is in the tRNA
+    assert not any(r["rule"] == "P7" for r in rows)
+
+
+def test_p3_extension_capped():
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 100 + "TA" + "CGG" * 220 + "C" + "TAA" + "GCC" * 20
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 335, 1), "COX1")])
+    _curate_rec(rec)
+    assert int(_by(rec, "CDS", "COX1").location.end) == 335          # the first stop lies 664 nt further: TA stop kept
+
+
+def test_p3_annotated_complete_stop_overlapping_next_gene_kept():
+    """NCBI records hold both patterns (complete stops overlapping the next gene, T/TA ends before it); a complete
+    stop the core annotated inside the next gene is kept, not retracted to a chance T."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = ("GCC" * 10 + "ATG" + "GCC" * 40 + "TCC" + "G" + "ATG" + "GCC" + "GCC" + "GCT" + "AAG" + "GCC" * 20 + "TAA"
+           + "GCC" * 10)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 171, 1), "COX3"), ("CDS", FeatureLocation(157, 235, 1), "ND3")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "COX3").location.end) == 171, rows       # TAA 169..171, 14 nt inside ND3
+    assert int(_by(rec, "CDS", "ND3").location.start) + 1 == 158
+
+
+def test_p3_gene_branch_respects_antisense_trna_between():
+    """A tRNA on the other strand between two genes bounds the end like a same-strand one (no extension across it)."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = ("GCC" * 10 + "ATG" + "GCC" * 41 + "GCC" * 23 + "T" + "ATG" + "GCC" * 5 + "GCT" + "AAG" + "GCC" * 13 + "TAA"
+           + "GCC" * 10)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 156, 1), "COX1"),
+                       ("tRNA", FeatureLocation(156, 225, -1), "trnK", {"product": ["tRNA-Lys"]}),
+                       ("CDS", FeatureLocation(226, 292, 1), "COX2")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "COX1").location.end) == 156, rows       # not moved to the chance T at 226
+
+
+def test_p1_overlapping_start_kept_when_next_start_codon_is_far():
+    """173-record benchmark: NCBI keeps a start overlapping the preceding tRNA when the next in-frame start codon
+    is far (moves > 15 nt wrong 28 / right 14); a near one (<= 15 nt) is taken (right 31 / wrong 12)."""
+    from Bio.SeqFeature import FeatureLocation
+    far = "GCC" * 20 + "ATG" + "GCC" * 19 + "ATG" + "GCC" * 40 + "TAA" + "GCC" * 10   # tRNA 1..62 overlaps ATG 61..63 by 2
+    rec = _mkrec(far, [("tRNA", FeatureLocation(0, 62, 1), "trnF", {"product": ["tRNA-Phe"]}),
+                       ("CDS", FeatureLocation(60, 246, 1), "ND1")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.start) + 1 == 61, rows          # next ATG is 60 nt away: kept
+    near = "GCC" * 20 + "ATG" + "GCC" * 2 + "ATG" + "GCC" * 57 + "TAA" + "GCC" * 10   # next ATG 9 nt away
+    rec = _mkrec(near, [("tRNA", FeatureLocation(0, 62, 1), "trnF", {"product": ["tRNA-Phe"]}),
+                        ("CDS", FeatureLocation(60, 246, 1), "ND1")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.start) + 1 == 70, rows
+    assert any(r["rule"] == "P1" for r in rows)
+
+
+def test_p3_first_stop_deep_inside_following_rrna_not_taken():
+    """173-record truth: a complete stop never reaches more than 2 nt into a following same-strand rRNA; the 'first
+    complete stop within 90 nt' rule must not extend a T/TA end 50 nt into the rRNA (NC_067900.1 nad1)."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 50 + "TA" + "C" + "GCC" * 16 + "TAA" + "GCC" * 100   # TAA 235..237, in frame
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 185, 1), "ND1"),
+                       ("rRNA", FeatureLocation(185, 537, 1), "rrnL", {"product": ["16S ribosomal RNA"]})])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.end) == 185, rows
+    assert int(_by(rec, "rRNA", "rrnL").location.start) + 1 == 186
+
+
+def test_p3_complete_stop_up_to_30_nt_inside_next_gene_taken():
+    """173-record truth: a complete stop 11-30 nt inside the next same-strand protein gene is what NCBI annotates
+    (17 vs 6 T/TA ends); deeper than 30 nt the T/TA end wins."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = ("GCC" * 10 + "ATG" + "GCC" * 40 + "TAC" + "G" + "ATG" + "GCC" * 4 + "GCT" + "AAG" + "GCC" * 20 + "TAA"
+           + "GCC" * 10)                                          # COX1-frame TAA at 175..177, 20 nt inside ND3 (158..241)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 155, 1), "COX1"), ("CDS", FeatureLocation(157, 241, 1), "ND3")])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "COX1").location.end) == 177, rows
+    assert (int(_by(rec, "CDS", "ND3").location.start) + 1, int(_by(rec, "CDS", "ND3").location.end)) == (158, 241)

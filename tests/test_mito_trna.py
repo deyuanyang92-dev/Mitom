@@ -15,11 +15,12 @@ from Bio import SeqIO
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+import mito_env  # noqa: E402
 import mito_trna as mt  # noqa: E402
 
-TRNA_BIN = Path(os.environ.get("MITO_TRNA_BIN", "/root/miniconda3/envs/mitotrna/bin"))
-MITOS_BIN = Path(os.environ.get("MITOS_BIN", "/root/miniconda3/envs/mitos/bin"))
-MITOS_REF = os.environ.get("MITOS_REFDIR", "")
+TRNA_BIN = Path(os.environ.get("MITO_TRNA_BIN") or mito_env.bin_with("arwen", "aragorn") or "/nonexistent")
+MITOS_BIN = Path(os.environ.get("MITOS_BIN") or mito_env.mitos_bin() or "/nonexistent")
+MITOS_REF = os.environ.get("MITOS_REFDIR") or mito_env.mitos_refdir() or ""
 
 
 def test_laslett_origin_spanning_unwrapped():

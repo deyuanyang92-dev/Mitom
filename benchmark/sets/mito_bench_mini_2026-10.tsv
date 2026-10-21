@@ -1,0 +1,25 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+NC_069205.1	OM117614	Annelida	Clitellata	Acanthobdellida		Paracanthobdella	Paracanthobdella livanowi	5		circular	15500	B	unknown	2023-01-10		Annelida-segmented-worms	test	2026-10-20
+NC_007933.1	AY961084	Annelida	Polychaeta	?Polychaeta	Orbiniidae	Orbinia	Orbinia latreillii	5		circular	15558	B	unknown	2006-04-06		Annelida-segmented-worms	test	2026-10-20
+NC_065213.1	OK513070	Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia fetida	5		circular	16560	B	unknown	2022-08-03		Annelida-segmented-worms	test	2026-10-20
+NC_067900.1	ON800830	Arthropoda	Arachnida	Ixodida	Argasidae	Argas	Argas ricei	5		circular	14450	A-longread	unknown	2022-11-12		Arthropoda	dev	2026-10-20
+NC_045231.1	MK088052	Arthropoda	Insecta	Blattodea	Rhinotermitidae	Reticulitermes	Reticulitermes tibialis	5		circular	14990	A-transcriptome	unknown	2019-12-12		Arthropoda	dev	2026-10-20
+NC_067930.1	ON800896	Arthropoda	Arachnida	Ixodida	Ixodidae	Rhipicephalus	Rhipicephalus zambeziensis	5		circular	14739	A-longread	unknown	2022-11-12		Arthropoda	test	2026-10-20
+NC_009732.1	AM493869	Chordata		Crocodylia	Alligatoridae	Paleosuchus	Paleosuchus trigonatus	2		circular	15948	B	unknown	2007-08-08		Chordata	dev	2026-10-20
+NC_083035.1	OR546189	Chordata	Actinopteri	Argentiniformes	Argentinidae	Argentina	Argentina striata	2		circular	16631	B	unknown	2023-10-04		Chordata	test	2026-10-20
+NC_053107.1	MN356372	Chordata	Aves	Passeriformes	Tyrannidae	Sapayoa	Sapayoa aenigma	2		circular	16945	B	unknown	2021-03-08		Chordata	test	2026-10-20
+NC_027103.1	KP938438	Cnidaria	Anthozoa	Corallimorpharia	Discosomidae	Rhodactis	Rhodactis indosinensis	4		circular	20100	B	unknown	2015-05-14			test	2026-10-20
+NC_031213.1	KT020766	Cnidaria	Hydrozoa	Anthoathecata	Oceaniidae	Turritopsis	Turritopsis dohrnii	4		linear	15425	B	unknown	2016-09-23	linear		dev	2026-10-20
+NC_046775.1	MN448506	Cnidaria	Scyphozoa	Semaeostomeae	Pelagiidae	Chrysaora	Chrysaora pacifica	4		circular	16964	B	unknown	2020-04-10			dev	2026-10-20
+NC_063787.1	OM272844	Echinodermata	Asteroidea	Forcipulatida	Asteriidae	Coscinasterias	Coscinasterias acutispina	9		circular	16186	B	unknown	2022-06-03		Echinodermata	test	2026-10-20
+NC_068797.1	OM964491	Echinodermata	Crinoidea	Isocrinida	Isocrinidae	Metacrinus	Metacrinus rotundus	9		circular	15830	B	MitoZ	2022-12-05		Echinodermata	test	2026-10-20
+NC_023772.1	KC490912	Echinodermata	Echinoidea	Camarodonta	Strongylocentrotidae	Strongylocentrotus	Strongylocentrotus intermedius	9		circular	15700	B	unknown	2014-03-13		Echinodermata	test	2026-10-20
+NC_083122.1	OR455957	Mollusca	Bivalvia	Limoida	Limidae	Lima	Lima vulgaris	5		circular	19014	B	unknown	2023-10-11		Mollusca	test	2026-10-20
+NC_065650.1	MW478843	Mollusca	Cephalopoda	Sepiida	Sepiolidae	Sepiola	Sepiola robusta	5		circular	14912	B	unknown	2022-08-25		Mollusca	dev	2026-10-20
+NC_086642.1	PP100270	Mollusca	Gastropoda	?Gastropoda	Lymnaeidae	Austropeplea	Austropeplea brazieri	5		circular	13757	A-longread	unknown	2024-03-05		Mollusca	dev	2026-10-20
+NC_001861.1	AF015193	Nematoda	Chromadorea	Rhabditida	Onchocercidae	Onchocerca	Onchocerca volvulus	5		circular	13747	B	unknown	1999-08-25		Nematoda	test	2026-10-20
+NC_005928.1	AY382608	Nematoda	Enoplea	Dorylaimida	Longidoridae	Xiphinema	Xiphinema americanum	5		circular	12626	B	unknown	2004-06-23		Nematoda	test	2026-10-20
+NC_013831.1	GQ888721	Nematoda	Chromadorea	Rhabditida	Strongylidae	Chabertia	Chabertia ovina	5		circular	13682	B	unknown	2010-02-16		Nematoda	dev	2026-10-20
+NC_035255.1	MF078637	Platyhelminthes		?	Macrostomidae	Macrostomum	Macrostomum lignano	9		circular	14193	B	unknown	2017-07-14			test	2026-10-20
+NC_034715.1	KX434430	Platyhelminthes	Cestoda	Bothriocephalidea	Bothriocephalidae	Senga	Senga ophiocephalina	9		circular	13816	B	unknown	2017-05-24			test	2026-10-20
+NC_062047.1	MW646298	Platyhelminthes	Monogenea	Mazocraeidea	Diplozoidae	Paradiplozoon	Paradiplozoon yunnanensis	9		circular	14829	B	unknown	2022-04-04			dev	2026-10-20

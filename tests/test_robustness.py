@@ -3,7 +3,6 @@
 Run: python3 -m pytest -q tests/test_robustness.py
 """
 import csv
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -14,10 +13,12 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+import mito_env  # noqa: E402
 DATA = HERE / "data"
 SCRIPT = HERE.parent / "mito_intron.py"
-BIN = str(Path(shutil.which("exonerate") or "/root/miniconda3/envs/mitointron/bin/exonerate").parent)
-pytestmark = pytest.mark.skipif(not (Path(BIN) / "exonerate").exists(), reason="exonerate not available")
+BIN = mito_env.bin_with("exonerate", "cmsearch") or ""
+pytestmark = pytest.mark.skipif(not BIN, reason="exonerate not available")
 
 
 def rec(rid, seq):

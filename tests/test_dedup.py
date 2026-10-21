@@ -44,7 +44,11 @@ def test_refseq_kept_source_dropped_both_orders(tmp_path):
         ids = sorted(m.acc_versioned for m in kept)
         assert ids == ["NC_000933.1", "ZZ999999.1"], ids
         assert stats["dup_refseq"] == 1
-        assert "AF000023.1 superseded by RefSeq NC_000933.1" in (tmp_path / "rep.tsv").read_text()
+        rows = {r.split("\t")[0]: r.split("\t") for r in (tmp_path / "rep.tsv").read_text().splitlines()
+                if r and not r.startswith("#")}
+        assert rows["AF000023.1"][1:4] == ["dropped", "INSDC submission that RefSeq record was derived from (its COMMENT)", "NC_000933.1"]
+        assert rows["NC_000933.1"][1:4] == ["kept", "", "AF000023.1"]
+        assert rows["ZZ999999.1"][1:4] == ["kept", "", ""]
 
 
 def test_identical_sequence_prefers_refseq_without_comment(tmp_path):

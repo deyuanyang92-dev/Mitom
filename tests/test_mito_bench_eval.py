@@ -34,7 +34,7 @@ def test_norm_names():
                                f("rRNA", 400, 999, product="16S ribosomal RNA"),
                                f("tRNA", 1000, 1066, product="tRNA-Leu", anticodon="(pos:1030..1032,aa:Leu,seq:tag)")]))
     assert [(x.kind, x.name, x.anticodon) for x in fs] == [("PCG", "cox1", ""), ("PCG", "cob", ""),
-                                                           ("rRNA", "rrnL", ""), ("tRNA", "L", "tag")]
+                                                           ("rRNA", "rrnL", ""), ("tRNA", "L", "1")]
 
 
 def test_exact_and_le3():
@@ -153,3 +153,26 @@ def test_table2asn_no_output_raises(tmp_path, monkeypatch):
     p.write_text("x")
     with pytest.raises(RuntimeError):
         me.table2asn_errors({"NC_1.1": p}, tmp_path / "w")
+
+
+def test_ls_class_codon_or_anticodon_or_number():
+    assert me.ls_class("L", "tag", "", 5) == "1" and me.ls_class("L", "taa", "", 5) == "2"       # anticodons
+    assert me.ls_class("L", "cta", "", 5) == "1" and me.ls_class("L", "tta", "", 5) == "2"       # NCBI trnL1(cta) = codon
+    assert me.ls_class("S", "tct", "", 5) == "1" and me.ls_class("S", "gct", "", 5) == "1"       # AGN anticodons
+    assert me.ls_class("S", "tga", "", 5) == "2" and me.ls_class("S", "tca", "", 5) == "2"       # anticodon / codon UCN
+    assert me.ls_class("L", "xyz", "", 5) == "" and me.ls_class("L", "", "2", 5) == "2" and me.ls_class("F", "gaa", "", 5) == ""
+    t = [f("tRNA", 1000, 1066, gene="trnL1(cta)", product="tRNA-Leu")]
+    p = [f("tRNA", 1000, 1066, gene="trnL1", product="tRNA-Leu", note="anticodon: UAG")]
+    assert classes(t, p) == [("L", "exact")]
+    t = [f("tRNA", 1000, 1066, gene="trnS(tca)", product="tRNA-Ser")]
+    p = [f("tRNA", 1000, 1066, gene="trnS2", product="tRNA-Ser", note="anticodon: UGA")]
+    assert classes(t, p) == [("S", "exact")]
+
+
+def test_ls_class_triplet_before_number():
+    """The anticodon / codon decides L1 / L2, S1 / S2; the submitter's number only when there is no triplet
+    (vertebrate records number L1 / L2 the other way round)."""
+    assert me.ls_class("L", "taa", "1", 5) == "2"          # anticodon UAA = codon UUA (UUR) -> L2 despite 'trnL1'
+    assert me.ls_class("L", "", "1", 5) == "1"
+    assert me.ls_class("S", "xyz", "2", 5) == "2"
+    assert me.ls_class("L", "", "", 5) == ""
