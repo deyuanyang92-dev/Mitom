@@ -1,0 +1,384 @@
+tool	kind	stratum	value	n_truth	found	recall	exact	le3	gt3	strand_error	name_error	name_unverifiable	missed	fp	records	ok	failed	timeout	unsupported	with_obvious_error
+mitofinder	PCG	all	all	306	271	0.8856	175	29	67	0	0	0	35	2						
+mitofinder	PCG	annotation_method	MitoZ	13	12	0.9231	7	0	5	0	0	0	1	0						
+mitofinder	PCG	annotation_method	unknown	293	259	0.884	168	29	62	0	0	0	34	2						
+mitofinder	PCG	common_ok	yes	218	213	0.9771	129	28	56	0	0	0	5	0						
+mitofinder	PCG	evidence_tier	A-longread	39	39	1.0	20	3	16	0	0	0	0	0						
+mitofinder	PCG	evidence_tier	A-transcriptome	13	13	1.0	11	2	0	0	0	0	0	0						
+mitofinder	PCG	evidence_tier	B	254	219	0.8622	144	24	51	0	0	0	35	2						
+mitofinder	PCG	phylum	Annelida	39	35	0.8974	13	12	10	0	0	0	4	0						
+mitofinder	PCG	phylum	Arthropoda	39	39	1.0	27	5	7	0	0	0	0	0						
+mitofinder	PCG	phylum	Chordata	39	39	1.0	27	4	8	0	0	0	0	0						
+mitofinder	PCG	phylum	Cnidaria	39	37	0.9487	34	0	3	0	0	0	2	2						
+mitofinder	PCG	phylum	Echinodermata	39	38	0.9744	29	2	7	0	0	0	1	0						
+mitofinder	PCG	phylum	Mollusca	38	26	0.6842	15	1	10	0	0	0	12	0						
+mitofinder	PCG	phylum	Nematoda	36	36	1.0	18	4	14	0	0	0	0	0						
+mitofinder	PCG	phylum	Platyhelminthes	37	21	0.5676	12	1	8	0	0	0	16	0						
+mitofinder	PCG	post_cutoff	no	126	107	0.8492	75	7	25	0	0	0	19	2						
+mitofinder	PCG	post_cutoff	yes	180	164	0.9111	100	22	42	0	0	0	16	0						
+mitofinder	PCG	structure_stress	no	293	258	0.8805	163	29	66	0	0	0	35	2						
+mitofinder	PCG	structure_stress	yes	13	13	1.0	12	0	1	0	0	0	0	0						
+mitofinder	rRNA	all	all	46	39	0.8478	3	8	28	0	0	0	7	3						
+mitofinder	rRNA	annotation_method	MitoZ	2	1	0.5	0	0	1	0	0	0	1	1						
+mitofinder	rRNA	annotation_method	unknown	44	38	0.8636	3	8	27	0	0	0	6	2						
+mitofinder	rRNA	common_ok	yes	32	29	0.9062	3	6	20	0	0	0	3	3						
+mitofinder	rRNA	evidence_tier	A-longread	6	6	1.0	0	1	5	0	0	0	0	0						
+mitofinder	rRNA	evidence_tier	A-transcriptome	0	0		0	0	0	0	0	0	0	2						
+mitofinder	rRNA	evidence_tier	B	40	33	0.825	3	7	23	0	0	0	7	1						
+mitofinder	rRNA	phylum	Annelida	6	4	0.6667	1	1	2	0	0	0	2	0						
+mitofinder	rRNA	phylum	Arthropoda	4	4	1.0	0	1	3	0	0	0	0	2						
+mitofinder	rRNA	phylum	Chordata	6	6	1.0	0	3	3	0	0	0	0	0						
+mitofinder	rRNA	phylum	Cnidaria	6	6	1.0	0	2	4	0	0	0	0	0						
+mitofinder	rRNA	phylum	Echinodermata	6	5	0.8333	1	0	4	0	0	0	1	1						
+mitofinder	rRNA	phylum	Mollusca	6	4	0.6667	0	0	4	0	0	0	2	0						
+mitofinder	rRNA	phylum	Nematoda	6	6	1.0	1	1	4	0	0	0	0	0						
+mitofinder	rRNA	phylum	Platyhelminthes	6	4	0.6667	0	0	4	0	0	0	2	0						
+mitofinder	rRNA	post_cutoff	no	20	16	0.8	1	4	11	0	0	0	4	0						
+mitofinder	rRNA	post_cutoff	yes	26	23	0.8846	2	4	17	0	0	0	3	3						
+mitofinder	rRNA	structure_stress	no	44	37	0.8409	3	7	27	0	0	0	7	3						
+mitofinder	rRNA	structure_stress	yes	2	2	1.0	0	1	1	0	0	0	0	0						
+mitofinder	record	all	all												24	22	2	0	0	22
+mitofinder	record	annotation_method	MitoZ												1	1	0	0	0	1
+mitofinder	record	annotation_method	unknown												23	21	2	0	0	21
+mitofinder	record	common_ok	yes												17	17	0	0	0	17
+mitofinder	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitofinder	record	evidence_tier	A-transcriptome												1	1	0	0	0	1
+mitofinder	record	evidence_tier	B												20	18	2	0	0	18
+mitofinder	record	phylum	Annelida												3	3	0	0	0	3
+mitofinder	record	phylum	Arthropoda												3	3	0	0	0	3
+mitofinder	record	phylum	Chordata												3	3	0	0	0	3
+mitofinder	record	phylum	Cnidaria												3	3	0	0	0	3
+mitofinder	record	phylum	Echinodermata												3	3	0	0	0	3
+mitofinder	record	phylum	Mollusca												3	2	1	0	0	2
+mitofinder	record	phylum	Nematoda												3	3	0	0	0	3
+mitofinder	record	phylum	Platyhelminthes												3	2	1	0	0	2
+mitofinder	record	post_cutoff	no												10	9	1	0	0	9
+mitofinder	record	post_cutoff	yes												14	13	1	0	0	13
+mitofinder	record	structure_stress	no												23	21	2	0	0	21
+mitofinder	record	structure_stress	yes												1	1	0	0	0	1
+mitofinder	tRNA	all	all	464	406	0.875	282	50	10	0	7	64	51	35						
+mitofinder	tRNA	annotation_method	MitoZ	22	22	1.0	20	0	0	0	0	2	0	0						
+mitofinder	tRNA	annotation_method	unknown	442	384	0.8688	262	50	10	0	7	62	51	35						
+mitofinder	tRNA	common_ok	yes	371	358	0.965	249	44	9	0	7	56	6	6						
+mitofinder	tRNA	evidence_tier	A-longread	66	65	0.9848	43	6	5	0	0	11	1	1						
+mitofinder	tRNA	evidence_tier	A-transcriptome	22	22	1.0	17	1	0	0	0	4	0	0						
+mitofinder	tRNA	evidence_tier	B	376	319	0.8484	222	43	5	0	7	49	50	34						
+mitofinder	tRNA	phylum	Annelida	66	66	1.0	43	11	0	0	0	12	0	0						
+mitofinder	tRNA	phylum	Arthropoda	66	66	1.0	53	1	0	0	0	12	0	0						
+mitofinder	tRNA	phylum	Chordata	66	60	0.9091	53	1	0	0	6	6	0	0						
+mitofinder	tRNA	phylum	Cnidaria	6	5	0.8333	5	0	0	0	0	0	1	29						
+mitofinder	tRNA	phylum	Echinodermata	66	66	1.0	56	0	0	0	0	10	0	0						
+mitofinder	tRNA	phylum	Mollusca	66	43	0.6515	25	6	5	0	0	7	23	1						
+mitofinder	tRNA	phylum	Nematoda	63	57	0.9048	19	25	4	0	1	9	5	5						
+mitofinder	tRNA	phylum	Platyhelminthes	65	43	0.6615	28	6	1	0	0	8	22	0						
+mitofinder	tRNA	post_cutoff	no	176	147	0.8352	85	34	5	0	3	23	26	20						
+mitofinder	tRNA	post_cutoff	yes	288	259	0.8993	197	16	5	0	4	41	25	15						
+mitofinder	tRNA	structure_stress	no	462	404	0.8745	280	50	10	0	7	64	51	25						
+mitofinder	tRNA	structure_stress	yes	2	2	1.0	2	0	0	0	0	0	0	10						
+mitom_lo	PCG	all	all	306	304	0.9935	244	18	42	0	0	0	2	1						
+mitom_lo	PCG	annotation_method	MitoZ	13	13	1.0	11	0	2	0	0	0	0	0						
+mitom_lo	PCG	annotation_method	unknown	293	291	0.9932	233	18	40	0	0	0	2	1						
+mitom_lo	PCG	common_ok	yes	218	218	1.0	178	16	24	0	0	0	0	0						
+mitom_lo	PCG	evidence_tier	A-longread	39	39	1.0	28	2	9	0	0	0	0	0						
+mitom_lo	PCG	evidence_tier	A-transcriptome	13	13	1.0	13	0	0	0	0	0	0	0						
+mitom_lo	PCG	evidence_tier	B	254	252	0.9921	203	16	33	0	0	0	2	1						
+mitom_lo	PCG	phylum	Annelida	39	39	1.0	29	6	4	0	0	0	0	0						
+mitom_lo	PCG	phylum	Arthropoda	39	39	1.0	37	1	1	0	0	0	0	0						
+mitom_lo	PCG	phylum	Chordata	39	39	1.0	34	3	2	0	0	0	0	0						
+mitom_lo	PCG	phylum	Cnidaria	39	38	0.9744	36	0	2	0	0	0	1	1						
+mitom_lo	PCG	phylum	Echinodermata	39	39	1.0	35	1	3	0	0	0	0	0						
+mitom_lo	PCG	phylum	Mollusca	38	38	1.0	23	2	13	0	0	0	0	0						
+mitom_lo	PCG	phylum	Nematoda	36	36	1.0	27	3	6	0	0	0	0	0						
+mitom_lo	PCG	phylum	Platyhelminthes	37	36	0.973	23	2	11	0	0	0	1	0						
+mitom_lo	PCG	post_cutoff	no	126	124	0.9841	97	7	20	0	0	0	2	1						
+mitom_lo	PCG	post_cutoff	yes	180	180	1.0	147	11	22	0	0	0	0	0						
+mitom_lo	PCG	structure_stress	no	293	291	0.9932	232	18	41	0	0	0	2	1						
+mitom_lo	PCG	structure_stress	yes	13	13	1.0	12	0	1	0	0	0	0	0						
+mitom_lo	intron	all	all	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	intron	annotation_method	unknown	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	intron	evidence_tier	B	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	intron	phylum	Cnidaria	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	intron	post_cutoff	no	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	intron	structure_stress	no	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	rRNA	all	all	46	46	1.0	10	12	24	0	0	0	0	2						
+mitom_lo	rRNA	annotation_method	MitoZ	2	2	1.0	0	1	1	0	0	0	0	0						
+mitom_lo	rRNA	annotation_method	unknown	44	44	1.0	10	11	23	0	0	0	0	2						
+mitom_lo	rRNA	common_ok	yes	32	32	1.0	8	11	13	0	0	0	0	2						
+mitom_lo	rRNA	evidence_tier	A-longread	6	6	1.0	2	0	4	0	0	0	0	0						
+mitom_lo	rRNA	evidence_tier	A-transcriptome	0	0		0	0	0	0	0	0	0	2						
+mitom_lo	rRNA	evidence_tier	B	40	40	1.0	8	12	20	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Annelida	6	6	1.0	2	4	0	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Arthropoda	4	4	1.0	2	0	2	0	0	0	0	2						
+mitom_lo	rRNA	phylum	Chordata	6	6	1.0	3	2	1	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Cnidaria	6	6	1.0	0	0	6	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Echinodermata	6	6	1.0	1	2	3	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Mollusca	6	6	1.0	0	2	4	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Nematoda	6	6	1.0	0	1	5	0	0	0	0	0						
+mitom_lo	rRNA	phylum	Platyhelminthes	6	6	1.0	2	1	3	0	0	0	0	0						
+mitom_lo	rRNA	post_cutoff	no	20	20	1.0	5	1	14	0	0	0	0	0						
+mitom_lo	rRNA	post_cutoff	yes	26	26	1.0	5	11	10	0	0	0	0	2						
+mitom_lo	rRNA	structure_stress	no	44	44	1.0	10	12	22	0	0	0	0	2						
+mitom_lo	rRNA	structure_stress	yes	2	2	1.0	0	0	2	0	0	0	0	0						
+mitom_lo	record	all	all												24	24	0	0	0	14
+mitom_lo	record	annotation_method	MitoZ												1	1	0	0	0	1
+mitom_lo	record	annotation_method	unknown												23	23	0	0	0	13
+mitom_lo	record	common_ok	yes												17	17	0	0	0	7
+mitom_lo	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitom_lo	record	evidence_tier	A-transcriptome												1	1	0	0	0	0
+mitom_lo	record	evidence_tier	B												20	20	0	0	0	11
+mitom_lo	record	phylum	Annelida												3	3	0	0	0	1
+mitom_lo	record	phylum	Arthropoda												3	3	0	0	0	2
+mitom_lo	record	phylum	Chordata												3	3	0	0	0	0
+mitom_lo	record	phylum	Cnidaria												3	3	0	0	0	3
+mitom_lo	record	phylum	Echinodermata												3	3	0	0	0	1
+mitom_lo	record	phylum	Mollusca												3	3	0	0	0	2
+mitom_lo	record	phylum	Nematoda												3	3	0	0	0	2
+mitom_lo	record	phylum	Platyhelminthes												3	3	0	0	0	3
+mitom_lo	record	post_cutoff	no												10	10	0	0	0	7
+mitom_lo	record	post_cutoff	yes												14	14	0	0	0	7
+mitom_lo	record	structure_stress	no												23	23	0	0	0	13
+mitom_lo	record	structure_stress	yes												1	1	0	0	0	1
+mitom_lo	tRNA	all	all	464	447	0.9634	316	58	15	0	0	58	17	4						
+mitom_lo	tRNA	annotation_method	MitoZ	22	22	1.0	22	0	0	0	0	0	0	0						
+mitom_lo	tRNA	annotation_method	unknown	442	425	0.9615	294	58	15	0	0	58	17	4						
+mitom_lo	tRNA	common_ok	yes	371	359	0.9677	257	47	10	0	0	45	12	3						
+mitom_lo	tRNA	evidence_tier	A-longread	66	63	0.9545	38	9	6	0	0	10	3	1						
+mitom_lo	tRNA	evidence_tier	A-transcriptome	22	22	1.0	17	1	0	0	0	4	0	0						
+mitom_lo	tRNA	evidence_tier	B	376	362	0.9628	261	48	9	0	0	44	14	3						
+mitom_lo	tRNA	phylum	Annelida	66	66	1.0	43	11	0	0	0	12	0	0						
+mitom_lo	tRNA	phylum	Arthropoda	66	66	1.0	50	3	1	0	0	12	0	0						
+mitom_lo	tRNA	phylum	Chordata	66	66	1.0	64	2	0	0	0	0	0	0						
+mitom_lo	tRNA	phylum	Cnidaria	6	5	0.8333	5	0	0	0	0	0	1	1						
+mitom_lo	tRNA	phylum	Echinodermata	66	66	1.0	58	0	0	0	0	8	0	0						
+mitom_lo	tRNA	phylum	Mollusca	66	62	0.9394	37	7	9	0	0	9	4	1						
+mitom_lo	tRNA	phylum	Nematoda	63	54	0.8571	20	24	3	0	0	7	9	2						
+mitom_lo	tRNA	phylum	Platyhelminthes	65	62	0.9538	39	11	2	0	0	10	3	0						
+mitom_lo	tRNA	post_cutoff	no	176	166	0.9432	102	37	5	0	0	22	10	2						
+mitom_lo	tRNA	post_cutoff	yes	288	281	0.9757	214	21	10	0	0	36	7	2						
+mitom_lo	tRNA	structure_stress	no	462	445	0.9632	314	58	15	0	0	58	17	4						
+mitom_lo	tRNA	structure_stress	yes	2	2	1.0	2	0	0	0	0	0	0	0						
+mitom_native	PCG	all	all	306	305	0.9967	253	19	33	0	0	0	1	1						
+mitom_native	PCG	annotation_method	MitoZ	13	13	1.0	11	0	2	0	0	0	0	0						
+mitom_native	PCG	annotation_method	unknown	293	292	0.9966	242	19	31	0	0	0	1	1						
+mitom_native	PCG	common_ok	yes	218	218	1.0	183	16	19	0	0	0	0	0						
+mitom_native	PCG	evidence_tier	A-longread	39	39	1.0	28	2	9	0	0	0	0	0						
+mitom_native	PCG	evidence_tier	A-transcriptome	13	13	1.0	13	0	0	0	0	0	0	0						
+mitom_native	PCG	evidence_tier	B	254	253	0.9961	212	17	24	0	0	0	1	1						
+mitom_native	PCG	phylum	Annelida	39	39	1.0	30	6	3	0	0	0	0	0						
+mitom_native	PCG	phylum	Arthropoda	39	39	1.0	37	1	1	0	0	0	0	0						
+mitom_native	PCG	phylum	Chordata	39	39	1.0	34	3	2	0	0	0	0	0						
+mitom_native	PCG	phylum	Cnidaria	39	38	0.9744	37	0	1	0	0	0	1	1						
+mitom_native	PCG	phylum	Echinodermata	39	39	1.0	35	1	3	0	0	0	0	0						
+mitom_native	PCG	phylum	Mollusca	38	38	1.0	23	2	13	0	0	0	0	0						
+mitom_native	PCG	phylum	Nematoda	36	36	1.0	31	3	2	0	0	0	0	0						
+mitom_native	PCG	phylum	Platyhelminthes	37	37	1.0	26	3	8	0	0	0	0	0						
+mitom_native	PCG	post_cutoff	no	126	125	0.9921	106	8	11	0	0	0	1	1						
+mitom_native	PCG	post_cutoff	yes	180	180	1.0	147	11	22	0	0	0	0	0						
+mitom_native	PCG	structure_stress	no	293	292	0.9966	240	19	33	0	0	0	1	1						
+mitom_native	PCG	structure_stress	yes	13	13	1.0	13	0	0	0	0	0	0	0						
+mitom_native	intron	all	all	0	0		0	0	0	0	0	0	0	2						
+mitom_native	intron	annotation_method	unknown	0	0		0	0	0	0	0	0	0	2						
+mitom_native	intron	evidence_tier	B	0	0		0	0	0	0	0	0	0	2						
+mitom_native	intron	phylum	Cnidaria	0	0		0	0	0	0	0	0	0	2						
+mitom_native	intron	post_cutoff	no	0	0		0	0	0	0	0	0	0	2						
+mitom_native	intron	structure_stress	no	0	0		0	0	0	0	0	0	0	2						
+mitom_native	rRNA	all	all	46	46	1.0	10	12	24	0	0	0	0	2						
+mitom_native	rRNA	annotation_method	MitoZ	2	2	1.0	0	1	1	0	0	0	0	0						
+mitom_native	rRNA	annotation_method	unknown	44	44	1.0	10	11	23	0	0	0	0	2						
+mitom_native	rRNA	common_ok	yes	32	32	1.0	8	11	13	0	0	0	0	2						
+mitom_native	rRNA	evidence_tier	A-longread	6	6	1.0	2	0	4	0	0	0	0	0						
+mitom_native	rRNA	evidence_tier	A-transcriptome	0	0		0	0	0	0	0	0	0	2						
+mitom_native	rRNA	evidence_tier	B	40	40	1.0	8	12	20	0	0	0	0	0						
+mitom_native	rRNA	phylum	Annelida	6	6	1.0	2	4	0	0	0	0	0	0						
+mitom_native	rRNA	phylum	Arthropoda	4	4	1.0	2	0	2	0	0	0	0	2						
+mitom_native	rRNA	phylum	Chordata	6	6	1.0	3	2	1	0	0	0	0	0						
+mitom_native	rRNA	phylum	Cnidaria	6	6	1.0	0	0	6	0	0	0	0	0						
+mitom_native	rRNA	phylum	Echinodermata	6	6	1.0	1	2	3	0	0	0	0	0						
+mitom_native	rRNA	phylum	Mollusca	6	6	1.0	0	2	4	0	0	0	0	0						
+mitom_native	rRNA	phylum	Nematoda	6	6	1.0	0	1	5	0	0	0	0	0						
+mitom_native	rRNA	phylum	Platyhelminthes	6	6	1.0	2	1	3	0	0	0	0	0						
+mitom_native	rRNA	post_cutoff	no	20	20	1.0	5	1	14	0	0	0	0	0						
+mitom_native	rRNA	post_cutoff	yes	26	26	1.0	5	11	10	0	0	0	0	2						
+mitom_native	rRNA	structure_stress	no	44	44	1.0	10	12	22	0	0	0	0	2						
+mitom_native	rRNA	structure_stress	yes	2	2	1.0	0	0	2	0	0	0	0	0						
+mitom_native	record	all	all												24	24	0	0	0	14
+mitom_native	record	annotation_method	MitoZ												1	1	0	0	0	1
+mitom_native	record	annotation_method	unknown												23	23	0	0	0	13
+mitom_native	record	common_ok	yes												17	17	0	0	0	7
+mitom_native	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitom_native	record	evidence_tier	A-transcriptome												1	1	0	0	0	0
+mitom_native	record	evidence_tier	B												20	20	0	0	0	11
+mitom_native	record	phylum	Annelida												3	3	0	0	0	1
+mitom_native	record	phylum	Arthropoda												3	3	0	0	0	2
+mitom_native	record	phylum	Chordata												3	3	0	0	0	0
+mitom_native	record	phylum	Cnidaria												3	3	0	0	0	3
+mitom_native	record	phylum	Echinodermata												3	3	0	0	0	1
+mitom_native	record	phylum	Mollusca												3	3	0	0	0	2
+mitom_native	record	phylum	Nematoda												3	3	0	0	0	2
+mitom_native	record	phylum	Platyhelminthes												3	3	0	0	0	3
+mitom_native	record	post_cutoff	no												10	10	0	0	0	7
+mitom_native	record	post_cutoff	yes												14	14	0	0	0	7
+mitom_native	record	structure_stress	no												23	23	0	0	0	13
+mitom_native	record	structure_stress	yes												1	1	0	0	0	1
+mitom_native	tRNA	all	all	464	447	0.9634	316	58	15	0	0	58	17	4						
+mitom_native	tRNA	annotation_method	MitoZ	22	22	1.0	22	0	0	0	0	0	0	0						
+mitom_native	tRNA	annotation_method	unknown	442	425	0.9615	294	58	15	0	0	58	17	4						
+mitom_native	tRNA	common_ok	yes	371	359	0.9677	257	47	10	0	0	45	12	3						
+mitom_native	tRNA	evidence_tier	A-longread	66	63	0.9545	38	9	6	0	0	10	3	1						
+mitom_native	tRNA	evidence_tier	A-transcriptome	22	22	1.0	17	1	0	0	0	4	0	0						
+mitom_native	tRNA	evidence_tier	B	376	362	0.9628	261	48	9	0	0	44	14	3						
+mitom_native	tRNA	phylum	Annelida	66	66	1.0	43	11	0	0	0	12	0	0						
+mitom_native	tRNA	phylum	Arthropoda	66	66	1.0	50	3	1	0	0	12	0	0						
+mitom_native	tRNA	phylum	Chordata	66	66	1.0	64	2	0	0	0	0	0	0						
+mitom_native	tRNA	phylum	Cnidaria	6	5	0.8333	5	0	0	0	0	0	1	1						
+mitom_native	tRNA	phylum	Echinodermata	66	66	1.0	58	0	0	0	0	8	0	0						
+mitom_native	tRNA	phylum	Mollusca	66	62	0.9394	37	7	9	0	0	9	4	1						
+mitom_native	tRNA	phylum	Nematoda	63	54	0.8571	20	24	3	0	0	7	9	2						
+mitom_native	tRNA	phylum	Platyhelminthes	65	62	0.9538	39	11	2	0	0	10	3	0						
+mitom_native	tRNA	post_cutoff	no	176	166	0.9432	102	37	5	0	0	22	10	2						
+mitom_native	tRNA	post_cutoff	yes	288	281	0.9757	214	21	10	0	0	36	7	2						
+mitom_native	tRNA	structure_stress	no	462	445	0.9632	314	58	15	0	0	58	17	4						
+mitom_native	tRNA	structure_stress	yes	2	2	1.0	2	0	0	0	0	0	0	0						
+mitos2	PCG	all	all	306	301	0.9837	163	16	122	0	0	0	5	5						
+mitos2	PCG	annotation_method	MitoZ	13	13	1.0	8	0	5	0	0	0	0	0						
+mitos2	PCG	annotation_method	unknown	293	288	0.9829	155	16	117	0	0	0	5	5						
+mitos2	PCG	common_ok	yes	218	216	0.9908	110	16	90	0	0	0	2	2						
+mitos2	PCG	evidence_tier	A-longread	39	38	0.9744	15	0	23	0	0	0	1	0						
+mitos2	PCG	evidence_tier	A-transcriptome	13	13	1.0	8	2	3	0	0	0	0	0						
+mitos2	PCG	evidence_tier	B	254	250	0.9843	140	14	96	0	0	0	4	5						
+mitos2	PCG	phylum	Annelida	39	39	1.0	17	6	16	0	0	0	0	0						
+mitos2	PCG	phylum	Arthropoda	39	39	1.0	21	2	16	0	0	0	0	0						
+mitos2	PCG	phylum	Chordata	39	39	1.0	31	2	6	0	0	0	0	1						
+mitos2	PCG	phylum	Cnidaria	39	37	0.9487	27	0	10	0	0	0	2	3						
+mitos2	PCG	phylum	Echinodermata	39	39	1.0	19	1	19	0	0	0	0	1						
+mitos2	PCG	phylum	Mollusca	38	37	0.9737	16	1	20	0	0	0	1	0						
+mitos2	PCG	phylum	Nematoda	36	35	0.9722	10	4	21	0	0	0	1	0						
+mitos2	PCG	phylum	Platyhelminthes	37	36	0.973	22	0	14	0	0	0	1	0						
+mitos2	PCG	post_cutoff	no	126	122	0.9683	64	6	52	0	0	0	4	5						
+mitos2	PCG	post_cutoff	yes	180	179	0.9944	99	10	70	0	0	0	1	0						
+mitos2	PCG	structure_stress	no	293	288	0.9829	153	16	119	0	0	0	5	5						
+mitos2	PCG	structure_stress	yes	13	13	1.0	10	0	3	0	0	0	0	0						
+mitos2	rRNA	all	all	46	45	0.9783	8	3	34	0	0	0	1	6						
+mitos2	rRNA	annotation_method	MitoZ	2	2	1.0	1	0	1	0	0	0	0	0						
+mitos2	rRNA	annotation_method	unknown	44	43	0.9773	7	3	33	0	0	0	1	6						
+mitos2	rRNA	common_ok	yes	32	31	0.9688	5	3	23	0	0	0	1	5						
+mitos2	rRNA	evidence_tier	A-longread	6	6	1.0	0	1	5	0	0	0	0	0						
+mitos2	rRNA	evidence_tier	A-transcriptome	0	0		0	0	0	0	0	0	0	2						
+mitos2	rRNA	evidence_tier	B	40	39	0.975	8	2	29	0	0	0	1	4						
+mitos2	rRNA	phylum	Annelida	6	6	1.0	0	0	6	0	0	0	0	0						
+mitos2	rRNA	phylum	Arthropoda	4	4	1.0	0	0	4	0	0	0	0	2						
+mitos2	rRNA	phylum	Chordata	6	6	1.0	2	1	3	0	0	0	0	0						
+mitos2	rRNA	phylum	Cnidaria	6	6	1.0	2	0	4	0	0	0	0	0						
+mitos2	rRNA	phylum	Echinodermata	6	6	1.0	2	1	3	0	0	0	0	0						
+mitos2	rRNA	phylum	Mollusca	6	6	1.0	1	1	4	0	0	0	0	0						
+mitos2	rRNA	phylum	Nematoda	6	5	0.8333	0	0	5	0	0	0	1	3						
+mitos2	rRNA	phylum	Platyhelminthes	6	6	1.0	1	0	5	0	0	0	0	1						
+mitos2	rRNA	post_cutoff	no	20	19	0.95	0	2	17	0	0	0	1	3						
+mitos2	rRNA	post_cutoff	yes	26	26	1.0	8	1	17	0	0	0	0	3						
+mitos2	rRNA	structure_stress	no	44	43	0.9773	8	3	32	0	0	0	1	6						
+mitos2	rRNA	structure_stress	yes	2	2	1.0	0	0	2	0	0	0	0	0						
+mitos2	record	all	all												24	24	0	0	0	24
+mitos2	record	annotation_method	MitoZ												1	1	0	0	0	1
+mitos2	record	annotation_method	unknown												23	23	0	0	0	23
+mitos2	record	common_ok	yes												17	17	0	0	0	17
+mitos2	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitos2	record	evidence_tier	A-transcriptome												1	1	0	0	0	1
+mitos2	record	evidence_tier	B												20	20	0	0	0	20
+mitos2	record	phylum	Annelida												3	3	0	0	0	3
+mitos2	record	phylum	Arthropoda												3	3	0	0	0	3
+mitos2	record	phylum	Chordata												3	3	0	0	0	3
+mitos2	record	phylum	Cnidaria												3	3	0	0	0	3
+mitos2	record	phylum	Echinodermata												3	3	0	0	0	3
+mitos2	record	phylum	Mollusca												3	3	0	0	0	3
+mitos2	record	phylum	Nematoda												3	3	0	0	0	3
+mitos2	record	phylum	Platyhelminthes												3	3	0	0	0	3
+mitos2	record	post_cutoff	no												10	10	0	0	0	10
+mitos2	record	post_cutoff	yes												14	14	0	0	0	14
+mitos2	record	structure_stress	no												23	23	0	0	0	23
+mitos2	record	structure_stress	yes												1	1	0	0	0	1
+mitos2	tRNA	all	all	464	445	0.9591	313	58	16	0	0	58	19	4						
+mitos2	tRNA	annotation_method	MitoZ	22	22	1.0	22	0	0	0	0	0	0	0						
+mitos2	tRNA	annotation_method	unknown	442	423	0.957	291	58	16	0	0	58	19	4						
+mitos2	tRNA	common_ok	yes	371	356	0.9596	253	47	11	0	0	45	15	2						
+mitos2	tRNA	evidence_tier	A-longread	66	61	0.9242	35	9	6	0	0	11	5	0						
+mitos2	tRNA	evidence_tier	A-transcriptome	22	22	1.0	17	1	0	0	0	4	0	0						
+mitos2	tRNA	evidence_tier	B	376	362	0.9628	261	48	10	0	0	43	14	4						
+mitos2	tRNA	phylum	Annelida	66	65	0.9848	42	11	0	0	0	12	1	0						
+mitos2	tRNA	phylum	Arthropoda	66	62	0.9394	47	3	1	0	0	11	4	0						
+mitos2	tRNA	phylum	Chordata	66	66	1.0	64	2	0	0	0	0	0	0						
+mitos2	tRNA	phylum	Cnidaria	6	6	1.0	6	0	0	0	0	0	0	2						
+mitos2	tRNA	phylum	Echinodermata	66	66	1.0	58	0	0	0	0	8	0	0						
+mitos2	tRNA	phylum	Mollusca	66	64	0.9697	37	7	9	0	0	11	2	0						
+mitos2	tRNA	phylum	Nematoda	63	54	0.8571	20	24	4	0	0	6	9	2						
+mitos2	tRNA	phylum	Platyhelminthes	65	62	0.9538	39	11	2	0	0	10	3	0						
+mitos2	tRNA	post_cutoff	no	176	165	0.9375	101	37	6	0	0	21	11	2						
+mitos2	tRNA	post_cutoff	yes	288	280	0.9722	212	21	10	0	0	37	8	2						
+mitos2	tRNA	structure_stress	no	462	443	0.9589	311	58	16	0	0	58	19	4						
+mitos2	tRNA	structure_stress	yes	2	2	1.0	2	0	0	0	0	0	0	0						
+mitoz	PCG	all	all	230	230	1.0	174	17	39	0	0	0	0	1						
+mitoz	PCG	annotation_method	MitoZ	13	13	1.0	11	0	2	0	0	0	0	0						
+mitoz	PCG	annotation_method	unknown	217	217	1.0	163	17	37	0	0	0	0	1						
+mitoz	PCG	common_ok	yes	218	218	1.0	171	17	30	0	0	0	0	1						
+mitoz	PCG	evidence_tier	A-longread	39	39	1.0	27	2	10	0	0	0	0	0						
+mitoz	PCG	evidence_tier	A-transcriptome	13	13	1.0	12	1	0	0	0	0	0	0						
+mitoz	PCG	evidence_tier	B	178	178	1.0	135	14	29	0	0	0	0	1						
+mitoz	PCG	phylum	Annelida	39	39	1.0	24	6	9	0	0	0	0	0						
+mitoz	PCG	phylum	Arthropoda	39	39	1.0	35	3	1	0	0	0	0	0						
+mitoz	PCG	phylum	Chordata	39	39	1.0	32	2	5	0	0	0	0	0						
+mitoz	PCG	phylum	Echinodermata	39	39	1.0	36	0	3	0	0	0	0	0						
+mitoz	PCG	phylum	Mollusca	38	38	1.0	18	2	18	0	0	0	0	1						
+mitoz	PCG	phylum	Nematoda	36	36	1.0	29	4	3	0	0	0	0	0						
+mitoz	PCG	post_cutoff	no	75	75	1.0	62	4	9	0	0	0	0	0						
+mitoz	PCG	post_cutoff	yes	155	155	1.0	112	13	30	0	0	0	0	1						
+mitoz	PCG	structure_stress	no	230	230	1.0	174	17	39	0	0	0	0	1						
+mitoz	rRNA	all	all	34	30	0.8824	8	1	21	0	0	0	4	2						
+mitoz	rRNA	annotation_method	MitoZ	2	2	1.0	1	0	1	0	0	0	0	0						
+mitoz	rRNA	annotation_method	unknown	32	28	0.875	7	1	20	0	0	0	4	2						
+mitoz	rRNA	common_ok	yes	32	28	0.875	8	1	19	0	0	0	4	2						
+mitoz	rRNA	evidence_tier	A-longread	6	6	1.0	0	0	6	0	0	0	0	0						
+mitoz	rRNA	evidence_tier	A-transcriptome	0	0		0	0	0	0	0	0	0	2						
+mitoz	rRNA	evidence_tier	B	28	24	0.8571	8	1	15	0	0	0	4	0						
+mitoz	rRNA	phylum	Annelida	6	6	1.0	0	0	6	0	0	0	0	0						
+mitoz	rRNA	phylum	Arthropoda	4	4	1.0	0	0	4	0	0	0	0	2						
+mitoz	rRNA	phylum	Chordata	6	6	1.0	5	0	1	0	0	0	0	0						
+mitoz	rRNA	phylum	Echinodermata	6	6	1.0	2	1	3	0	0	0	0	0						
+mitoz	rRNA	phylum	Mollusca	6	6	1.0	1	0	5	0	0	0	0	0						
+mitoz	rRNA	phylum	Nematoda	6	2	0.3333	0	0	2	0	0	0	4	0						
+mitoz	rRNA	post_cutoff	no	12	8	0.6667	1	1	6	0	0	0	4	0						
+mitoz	rRNA	post_cutoff	yes	22	22	1.0	7	0	15	0	0	0	0	2						
+mitoz	rRNA	structure_stress	no	34	30	0.8824	8	1	21	0	0	0	4	2						
+mitoz	record	all	all												24	18	0	0	6	17
+mitoz	record	annotation_method	MitoZ												1	1	0	0	0	1
+mitoz	record	annotation_method	unknown												23	17	0	0	6	16
+mitoz	record	common_ok	yes												17	17	0	0	0	16
+mitoz	record	evidence_tier	A-longread												3	3	0	0	0	3
+mitoz	record	evidence_tier	A-transcriptome												1	1	0	0	0	1
+mitoz	record	evidence_tier	B												20	14	0	0	6	13
+mitoz	record	phylum	Annelida												3	3	0	0	0	3
+mitoz	record	phylum	Arthropoda												3	3	0	0	0	3
+mitoz	record	phylum	Chordata												3	3	0	0	0	2
+mitoz	record	phylum	Cnidaria												3	0	0	0	3	0
+mitoz	record	phylum	Echinodermata												3	3	0	0	0	3
+mitoz	record	phylum	Mollusca												3	3	0	0	0	3
+mitoz	record	phylum	Nematoda												3	3	0	0	0	3
+mitoz	record	phylum	Platyhelminthes												3	0	0	0	3	0
+mitoz	record	post_cutoff	no												10	6	0	0	4	6
+mitoz	record	post_cutoff	yes												14	12	0	0	2	11
+mitoz	record	structure_stress	no												23	18	0	0	5	17
+mitoz	record	structure_stress	yes												1	0	0	0	1	0
+mitoz	tRNA	all	all	393	365	0.9288	272	40	6	0	0	47	28	0						
+mitoz	tRNA	annotation_method	MitoZ	22	22	1.0	22	0	0	0	0	0	0	0						
+mitoz	tRNA	annotation_method	unknown	371	343	0.9245	250	40	6	0	0	47	28	0						
+mitoz	tRNA	common_ok	yes	371	343	0.9245	254	40	6	0	0	43	28	0						
+mitoz	tRNA	evidence_tier	A-longread	66	64	0.9697	43	6	4	0	0	11	2	0						
+mitoz	tRNA	evidence_tier	A-transcriptome	22	22	1.0	17	1	0	0	0	4	0	0						
+mitoz	tRNA	evidence_tier	B	305	279	0.9148	212	33	2	0	0	32	26	0						
+mitoz	tRNA	phylum	Annelida	66	66	1.0	43	11	0	0	0	12	0	0						
+mitoz	tRNA	phylum	Arthropoda	66	66	1.0	53	1	0	0	0	12	0	0						
+mitoz	tRNA	phylum	Chordata	66	66	1.0	65	1	0	0	0	0	0	0						
+mitoz	tRNA	phylum	Echinodermata	66	66	1.0	58	0	0	0	0	8	0	0						
+mitoz	tRNA	phylum	Mollusca	66	64	0.9697	43	6	4	0	0	11	2	0						
+mitoz	tRNA	phylum	Nematoda	63	37	0.5873	10	21	2	0	0	4	26	0						
+mitoz	tRNA	post_cutoff	no	129	103	0.7984	65	24	2	0	0	12	26	0						
+mitoz	tRNA	post_cutoff	yes	264	262	0.9924	207	16	4	0	0	35	2	0						
+mitoz	tRNA	structure_stress	no	393	365	0.9288	272	40	6	0	0	47	28	0						
