@@ -76,6 +76,7 @@ WINDOW = 300               # nt of genome on each side of a locus given to exone
 START_UP_EXTRA = 10        # start codon search: upstream codons beyond the residues missing from the alignment
 START_DOWN = 10            # ... and downstream codons when none upstream
 BLASTX_PLACE_COVER = 0.5   # a blastx hit covering this fraction of its reference places a gene exonerate cannot align
+BLASTX_PLACE_REFS = 10     # ... or when this many references support the locus (covering 80 % of the best one)
 BLASTX_PLACE_BITS = 50     # ... when it scores at least this (a 40-bit atp8 hit in a flatworm, which has no atp8, does not)
 MAX_LOCI = 4               # loci tried per gene when the best one is a paralog hit on another gene
 N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
@@ -387,7 +388,11 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             # exonerate aligns only a fragment of a divergent gene that blastx covers end to end (flatworm atp6 of
             # NC_062047.1: residues 4-188 of 189 by blastx, 17 by exonerate): the best blastx hit places it, as in MITOS2
             h = max(locus, key=lambda x: x.bits)
-            if (h.send - h.sstart + 1) < BLASTX_PLACE_COVER * h.slen or h.bits < BLASTX_PLACE_BITS:
+            cover = (h.send - h.sstart + 1) / h.slen
+            # ... or a weaker locus that many references support (NC_045937.1 atp8: 47 bits, full length, 50 hits; a
+            # false 40-bit atp8 in a flatworm, which has no atp8, had 1 reference)
+            supported = cover >= 0.8 and len({x.ref for x in locus}) >= BLASTX_PLACE_REFS
+            if not (cover >= BLASTX_PLACE_COVER and h.bits >= BLASTX_PLACE_BITS or supported):
                 log.info(f"[core] {gene}: {why}: skipped")
                 return None
             tab, tae = (h.start - ws, h.end - ws) if strand == 1 else (we - h.end, we - h.start)
@@ -412,6 +417,15 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             continue
         all_loci[gene] = loci(hits)
         f = place(gene, all_loci[gene][0])
+        if f is None and gene not in missing and not any(h.bits > BLASTX_PLACE_BITS for h in hits):
+            # weak standard hits that exonerate cannot align (NC_045937.1 atp8: one 35-bit hit, one reference): the
+            # sensitive search brings the gene's other references (50 hits)
+            log.info(f"[core] {gene}: sensitive blastx (weak hits, not placed)")
+            hits = [h for h in blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{gene}.fas", code, gene,
+                                           2 if threads >= 2 else 1, log, sensitive=True) if h.start < n]
+            if hits:
+                all_loci[gene] = loci(hits)
+                f = place(gene, all_loci[gene][0])
         if f is not None:
             feats.append(f)
     kept = drop_paralogs(feats, n, log)
