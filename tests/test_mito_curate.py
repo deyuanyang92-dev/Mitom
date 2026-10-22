@@ -920,3 +920,15 @@ def test_o1_stop_completed_one_nt_past_the_origin_is_an_abbreviated_stop():
     cob = _by(rec, "CDS", "CYTB")
     assert len(cob.location.parts) == 1 and int(cob.location.end) == L, rows
     assert cob.qualifiers.get("transl_except") == [f"(pos:{L - 1}..{L},aa:TERM)"]
+
+
+def test_p3_core_complete_stop_a_few_nt_into_the_trna_kept():
+    """NC_023772.1 nad4: the core's alignment reaches a complete TAG that runs 10 nt into the predicted tRNA-His;
+    NCBI keeps it (P3 used to cut back to a T / TA before the tRNA)."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 40 + "GCT" + "TAG" + "GCC" * 30
+    # CDS 31..159 with TAG 157..159; tRNA predicted from 150 (TAG 10 nt inside); a T ends at 148 (GCT)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 159, 1), "ND4"),
+                       ("tRNA", FeatureLocation(149, 215, 1), "trnH", {"product": ["tRNA-His"]})])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND4").location.end) == 159, rows

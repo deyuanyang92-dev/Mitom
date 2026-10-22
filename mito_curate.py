@@ -346,7 +346,10 @@ class Curator:
                         self.log(f, "P4", old, old, "complete stop inside the downstream gene, no abbreviated stop before it - check manually")
                     else:
                         new_b, why_end = first_stop, f"first complete stop, {first_stop - down + 1} nt into the downstream gene (no abbreviated stop before it)"
-        elif trna and new_a <= trna - 1 and (first_stop is None or first_stop - 2 >= trna):
+        elif trna and new_a <= trna - 1 and (first_stop is None or first_stop - 2 >= trna) \
+                and not (first_stop == b and first_stop - trna + 1 <= OVERLAP_FALLBACK):
+            # (a complete stop the core's alignment reached, running <= OVERLAP_FALLBACK nt into the predicted tRNA, is
+            # kept: NC_023772.1 nad4 TAG 10 nt into tRNA-His; leave-out, 255 records: +10 exact ends)
             # the first complete stop lies inside/after the downstream tRNA: the mRNA is cut at the
             # tRNA, so the gene ends with T / TA right before it (criterion iii)
             # NCBI places such ends 0 (143x), -1 (9x) and 1-3 nt (10x) before the tRNA (2026-10-20 dev set,
