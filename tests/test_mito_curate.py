@@ -894,3 +894,15 @@ def test_upstream_atg_for_non_atg_start():
                            ("CDS", FeatureLocation(1027, 1000 + len(body), 1), "CYTB")])
         _curate_rec(rec, no_upstream_atg=flag)
         assert (int(_by(rec, "CDS", "CYTB").location.start) == 1000) == moved, (first, flag)
+
+
+def test_p3_complete_stop_a_few_nt_into_the_trna_when_no_abbreviated_stop():
+    """No T / TA ends right before the downstream tRNA (its predicted start is approximate): the first complete stop is
+    taken when it runs <= OVERLAP_FALLBACK nt into the tRNA, instead of a 3'-partial gene."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 40 + "GCC" + "TAA" + "GCC" * 30
+    # CDS 31..153 (no stop), GCC 154..156, TAA 157..159; tRNA predicted from 155: no T / TA before it, TAA 5 nt inside
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 153, 1), "COX2"),
+                       ("tRNA", FeatureLocation(154, 220, 1), "trnK", {"product": ["tRNA-Lys"]})])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "COX2").location.end) == 159, rows

@@ -104,6 +104,9 @@ MAX_ORIGIN_OVERLAP = 60     # O1: ... when another feature starts there (cox1-fi
 MAX_START_MOVE = 15         # P1: a start overlapping the preceding gene is moved downstream only when a start codon lies
                             # within this distance (173-record metazoa benchmark 2026-10: moves <= 15 nt right 31 / wrong 12,
                             # longer moves right 14 / wrong 28 - NCBI keeps the overlap when the next start is far)
+OVERLAP_FALLBACK = 20      # P3: no T / TA right before the next feature -> the first complete stop is taken when it runs at
+                           # most this far into it (predicted tRNA ends are approximate; leave-out, 255 records: +14 exact
+                           # ends, was marked 3'-partial; 40 nt: +3 more, kept small for the NCBI overlap checks)
 MAX_END_EXTENSION = 600     # P3: longest extension of an end that stopped short of the first complete stop (metazoa
                             # benchmark 2026-10: the 50 confirmed cases were 100-512 nt)
 MAX_FEATURE_OVERLAP = 10    # P3: a complete stop may reach this far into the next feature that is not a same-strand
@@ -257,6 +260,9 @@ class Curator:
         return s
 
     # ── PCG rules ──
+    def overlap_fallback(self, first_stop, nxt) -> bool:
+        return first_stop is not None and nxt is not None and first_stop - (nxt - 1) <= OVERLAP_FALLBACK
+
     def pcg(self, f: SeqFeature) -> None:
         if not simple(f):
             return
@@ -336,7 +342,10 @@ class Curator:
                             (f" ({gap:+d} nt spacer)" if gap else "")
                         break
                 else:
-                    self.log(f, "P4", old, old, "complete stop inside the downstream gene, no abbreviated stop before it - check manually")
+                    if not self.overlap_fallback(first_stop, down):
+                        self.log(f, "P4", old, old, "complete stop inside the downstream gene, no abbreviated stop before it - check manually")
+                    else:
+                        new_b, why_end = first_stop, f"first complete stop, {first_stop - down + 1} nt into the downstream gene (no abbreviated stop before it)"
         elif trna and new_a <= trna - 1 and (first_stop is None or first_stop - 2 >= trna):
             # the first complete stop lies inside/after the downstream tRNA: the mRNA is cut at the
             # tRNA, so the gene ends with T / TA right before it (criterion iii)
@@ -355,7 +364,10 @@ class Curator:
                         (f" ({gap:+d} nt spacer)" if gap else "")
                     break
             else:
-                self.log(f, "P4", old, old, "no complete or abbreviated stop before the downstream tRNA - check manually")
+                if not self.overlap_fallback(first_stop, trna):
+                    self.log(f, "P4", old, old, "no complete or abbreviated stop before the downstream tRNA - check manually")
+                else:
+                    new_b, why_end = first_stop, f"first complete stop, {first_stop - trna + 1} nt into the downstream tRNA (no abbreviated stop before it)"
         elif first_stop is not None and first_stop != b and abs(first_stop - b) <= 3 * self.a.max_start_shift:
             if reach is None or first_stop <= reach:
                 # complete stop overlapping the tRNA by 1-2 nt is within tRNA boundary uncertainty: kept
@@ -379,8 +391,11 @@ class Curator:
                             (f" ({gap:+d} nt spacer)" if gap else "")
                         break
                 else:
-                    self.log(f, "P4", old, old, "first complete stop lies inside the next feature, no abbreviated stop "
-                             "before it - check manually")
+                    if not self.overlap_fallback(first_stop, nfs):
+                        self.log(f, "P4", old, old, "first complete stop lies inside the next feature, no abbreviated stop "
+                                 "before it - check manually")
+                    else:
+                        new_b, why_end = first_stop, f"first complete stop, {first_stop - nfs + 1} nt into the next feature (no abbreviated stop before it)"
             # else: the annotated end already is an abbreviated stop before that feature: kept
         elif first_stop is not None and first_stop > b and first_stop - b <= MAX_END_EXTENSION and \
                 (reach_hard is None or first_stop <= reach_hard):
