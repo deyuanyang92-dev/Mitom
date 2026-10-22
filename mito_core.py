@@ -82,6 +82,10 @@ MAX_LOCI = 4               # loci tried per gene when the best one is a paralog 
 N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
 START_EXPECTED_MIN = 2     # residues missing from the alignment from which the start is sought at the expected position
 CM_EVALUE = 0.01           # cmsearch fast pass and MiTFi threshold of that pass (MITOS2 runmitos default --ncev)
+NO_SENSITIVE_TRNA = {"cnidaria"}   # phyla whose missing tRNA models are not searched again with cmsearch --max:
+                           # cnidarian mitogenomes encode 1-6 tRNAs, the ~20-model --max pass found junk (18 records,
+                           # leave-out: 13 of 17 extra tRNAs, 2 real ones; 344 -> 50 s median; a false trnE inside nad5
+                           # was an NCBI error in the stress test)
 CM_EVALUE_SENSITIVE = 0.1  # cmsearch --max pass for models without a hit (MITOS2 sensitive pass)
 EXONERATE_MODEL = "protein2dna"   # protein2dna:bestfit = whole reference protein aligned (set by --exonerate_model)
 EXONERATE_CODES = {1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23}   # built into exonerate 2.4.0; others
@@ -536,7 +540,7 @@ def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, p
 
 
 def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, threads: int, tools: dict, tmp: Path, log,
-                   n: Optional[int] = None) -> List[Feature]:
+                   n: Optional[int] = None, phylum: Optional[str] = None) -> List[Feature]:
     """MITOS2's tRNA step: cmsearch per MiTFi model (fast pass, then --max for the tRNA names without a hit), MiTFi
     for selection, structure and anticodon. genome / genome_fa = the searched sequence, n = record length (circular
     records carry ORIGIN_EXT appended nt; positions are mapped back modulo n)."""
@@ -563,6 +567,9 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
     feats = mitfi(outs, CM_EVALUE)
     accepted = {f.name for f in feats}          # MITOS2 re-runs the models whose NAME is missing (MiTFi names by anticodon:
     missing = [m for m in models if m.stem not in accepted]   # an L1 gene is often found by trnL2.cm)
+    if (phylum or "").lower() in NO_SENSITIVE_TRNA:
+        log.info(f"[core] tRNA sensitive pass skipped for {phylum}")
+        missing = []
     if missing:
         log.info(f"[core] tRNA sensitive pass for {len(missing)} model(s): " + " ".join(m.stem for m in missing))
         with ThreadPoolExecutor(max(1, threads)) as ex:
@@ -722,7 +729,7 @@ def annotate(args) -> int:
             feats += annotate_rrnas(gfa, refdir, tools, tmp, log, args.phylum,
                                     Path(args.rrna_lib) if args.rrna_lib else None, n if topology == "circular" else None)
             if not args.no_trna:
-                feats += annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n)
+                feats += annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
             if args.keep_tmp:
                 shutil.copytree(tmp, out / "core_tmp" / rid, dirs_exist_ok=True)
         recs.append(genbank_record(genome, feats, code, rid, topology))
