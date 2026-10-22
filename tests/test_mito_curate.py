@@ -605,6 +605,27 @@ def test_duplicate_pcg_copy_removed():
     assert any(r["rule"] == "D1" for r in rows)
 
 
+def test_duplicated_block_copies_kept():
+    """D1: a block of two genes repeated (NC_009093.1 mite: 9 genes twice, both copies in NCBI) keeps both copies."""
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    cds = {f.qualifiers["gene"][0].upper(): f for f in rec.features if f.type == "CDS"}
+    a8, a6 = cds["ATP8"], cds["ATP6"]
+    s, e = int(a8.location.start), int(a6.location.end)
+    seq = str(rec.seq)
+    rec.seq = type(rec.seq)(seq[:len(seq) - (e - s)] + seq[s:e])          # copy of atp8-atp6 at the record end
+    off = len(rec.seq) - (e - s) - s
+    rec.features = [f for f in rec.features if int(f.location.end) <= len(rec.seq) - (e - s) or f.type == "source"]
+    for f in (a8, a6):
+        loc = FeatureLocation(int(f.location.start) + off, int(f.location.end) + off, 1)
+        rec.features.append(SeqFeature(loc, type="gene", qualifiers={"gene": f.qualifiers["gene"]}))
+        rec.features.append(SeqFeature(loc, type="CDS", qualifiers=dict(f.qualifiers)))
+    rows = _curate_rec(rec)
+    for name in ("ATP8", "ATP6"):
+        assert len([f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == name]) == 2
+    assert not any(r["rule"] == "D1" for r in rows)
+
+
 def test_aggressive_start_genes_only_for_listed_genes():
     """P1 upstream search for nad5 (listed, as `mitom run` sets for annelids) but not cob: both start with a valid
     ATT 9 codons downstream of an in-frame ATA that follows the preceding tRNA. Without the list nothing moves (an

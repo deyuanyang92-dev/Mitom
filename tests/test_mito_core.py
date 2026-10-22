@@ -198,3 +198,21 @@ def test_read_fasta_matches_seqio(tmp_path):
     got = [(r.id, r.description, str(r.seq)) for r in mc.read_fasta(fa)]
     assert got == [(r.id, r.description, str(r.seq)) for r in SeqIO.parse(str(fa), "fasta")]
     assert got[0] == ("NC_1.1", "NC_1.1 Foo bar topology=linear", "ACGTACGT")
+
+
+def test_orf_before_neighbour_both_strands():
+    """ADJACENT: atp8 = the ORF ending in the start of atp6 (stop 7 nt into atp6), start codon nearest the typical length"""
+    from Bio.Data import CodonTable
+    from Bio.Seq import Seq
+    table = CodonTable.unambiguous_dna_by_id[5]
+    atp8 = "ATG" + "GCT" * 50 + "TAA"                           # 156 nt
+    genome = "TAG" * 10 + atp8[:-7] + atp8[-7:] + "GCT" * 60 + "TAA" * 5
+    a6 = 30 + len(atp8) - 7                                     # atp6 starts 7 nt before the atp8 stop ends
+    nb = mc.Feature("CDS", "atp6", a6, a6 + 180, 1)
+    rc = str(Seq(genome).reverse_complement())
+    f = mc.orf_before(genome, rc, nb, "atp8", table, 162, 90, 240)
+    assert (f.start, f.end, f.strand) == (30, 30 + len(atp8), 1)
+    N = len(genome)                                             # the same on the minus strand
+    nb_m = mc.Feature("CDS", "atp6", N - nb.end, N - nb.start, -1)
+    g = mc.orf_before(rc, genome, nb_m, "atp8", table, 162, 90, 240)
+    assert (g.start, g.end, g.strand) == (N - f.end, N - f.start, -1)

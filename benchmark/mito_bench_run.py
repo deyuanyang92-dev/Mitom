@@ -166,6 +166,8 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
                  "--clade", clade, "--genetic_code", code, "--threads", str(threads), "--max_tasks", "1",
                  *(["--if_reannotation_2", "auto"] if tool == "mitom_auto" else []),
                  *(["--core", "native"] if tool in ("mitom_native", "mitom_lo") else []),
+                 # the phylum `--clade auto` reads from the taxonomy (an explicit --clade Animal has none): rRNA HMM
+                 *(["--phylum", row["phylum"]] if row.get("phylum") else []),
                  *(["--keep_intermediate", "yes"] if tool == "mitom_lo" else []),   # pre-curation files: rule A/B tests
                  *(["--rrna_hmm_lib", os.environ["MITOM_RRNA_LIB"]] if os.environ.get("MITOM_RRNA_LIB") else [])]]
     if tool == "ours":

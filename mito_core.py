@@ -78,6 +78,14 @@ BLASTX_PLACE_COVER = 0.5   # a blastx hit covering this fraction of its referenc
 BLASTX_PLACE_REFS = 10     # ... or when this many references support the locus (covering 80 % of the best one)
 BLASTX_PLACE_BITS = 50     # ... when it scores at least this (a 40-bit atp8 hit in a flatworm, which has no atp8, does not)
 MAX_LOCI = 4               # loci tried per gene when the best one is a paralog hit on another gene
+# a short gene no search places, ending where its neighbour starts in >= 90 % of the RefSeq records of these phyla (1,050
+# records, 2026-10-23): the ORF whose stop codon lies 25 nt before to 10 nt after the neighbour's start, start codon
+# chosen for the typical length (in RefSeq: 66 % of atp8, 81 % of nad4l exact, nearly all others overlapping)
+ADJACENT = {"atp8": ("atp6", {"arthropoda", "echinodermata"}, 162, 90, 240),
+            "nad4l": ("nad4", {"arthropoda", "annelida", "chordata", "nemertea"}, 297, 240, 330)}
+COPY_FRAC = 0.9            # a second locus of a gene scoring this fraction of the placed copy (blastx and exonerate) and
+                           # aligned complete is a second copy - kept when >= 2 genes have one (a duplicated block, both
+                           # copies in NCBI: NC_009093.1 mite, 9 genes; one repeated atp8 is not: NC_049135.1)
 N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
 NO_START_DOWN = {"echinodermata": {"nad4l"}}   # phylum -> genes left 5'-partial at the alignment start instead of
                            # moved to a downstream start codon: echinoderm nad4l starts right after the preceding tRNA with
@@ -473,7 +481,57 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
                 log.info(f"[core] {gene}: next locus {f.start + 1}..{f.end} taken")
                 kept.append(f)
                 break
+    single, copies = kept, 0
+    for f in [k for k in kept]:
+        if f not in kept:                                  # dropped by a second copy placed before it
+            continue
+        pf = positions(f, n)
+        on = [h.bits for loc in all_loci.get(f.name, []) for h in loc if {i % n for i in range(h.start, h.end)} & pf]
+        for locus in all_loci.get(f.name, []):
+            span = {i % n for h in locus for i in range(h.start, h.end)}
+            if not on or span & pf or max(h.bits for h in locus) < COPY_FRAC * max(on):
+                continue
+            g = place(f.name, locus)
+            if g is None or g.partial5 or g.score < COPY_FRAC * f.score or positions(g, n) & pf:
+                continue
+            new = drop_paralogs(kept + [g], n, log)
+            if g in new:
+                log.info(f"[core] {f.name}: second copy {g.start + 1}..{g.end} (score {g.score:.0f})")
+                kept, copies = new, copies + 1
+    if copies == 1:
+        log.info("[core] one gene with a second copy: not a duplicated block, copy dropped")
+        kept = single
+    for gene, (nb, phyla, typical, shortest, longest) in ADJACENT.items():
+        nbf = next((f for f in kept if f.name == nb), None)
+        if (phylum or "").lower() not in phyla or nbf is None or any(f.name == gene for f in kept):
+            continue
+        f = orf_before(genome, rc, nbf, gene, table, typical, shortest, longest)
+        if f is not None and f in drop_paralogs(kept + [f], n, log):
+            log.info(f"[core] {gene}: {f.start + 1}..{f.end} ({'+' if f.strand == 1 else '-'}) {f.note}")
+            kept.append(f)
     return sorted(kept, key=lambda f: f.start)
+
+
+def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.CodonTable, typical: int,
+               shortest: int, longest: int) -> Optional[Feature]:
+    """ADJACENT: the open reading frame ending with a stop codon 25 nt before to 10 nt after the start of `nb`, same
+    strand, start codon giving the length nearest `typical` (shortest..longest nt)."""
+    N = len(genome)
+    seq, bs = (genome, nb.start) if nb.strand == 1 else (rc, N - nb.end)
+    starts, stops = set(table.start_codons), set(table.stop_codons)
+    best = None
+    for e in range(max(3, bs - 25), min(N, bs + 11)):
+        if seq[e - 3:e] not in stops:
+            continue
+        i = e - 6
+        while i >= 0 and e - i <= longest and seq[i:i + 3] not in stops:
+            if seq[i:i + 3] in starts and e - i >= shortest and (best is None or abs(e - i - typical) < best[0]):
+                best = (abs(e - i - typical), i, e)
+            i -= 3
+    if best is None:
+        return None
+    s, e = (best[1], best[2]) if nb.strand == 1 else (N - best[2], N - best[1])
+    return Feature("CDS", gene, s, e, nb.strand, f"open reading frame before {nb.name} (gene order)", score=1.0)
 
 
 # ── RNAs ─────────────────────────────────────────────────────────────────────

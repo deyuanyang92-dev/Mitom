@@ -1,0 +1,670 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+AY741661.1		Annelida	Polychaeta		Maldanidae	Clymenella	Clymenella torquata	5		circular	15538	B	unknown	26-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+AY961084.1		Annelida	Polychaeta		Orbiniidae	Orbinia	Orbinia latreillii	5		circular	15558	B	unknown	26-JUL-2016		Annelida-segmented-worms	test	2026-10-22
+DQ517436.1		Annelida	Polychaeta		Orbiniidae	Scoloplos	Scoloplos cf. armiger CB-2006	5		linear	12042	B	unknown	23-MAY-2016	linear	Annelida-segmented-worms	test	2026-10-22
+FJ612452.1		Annelida	Polychaeta		Questidae	Questa	Questa ersei	5		linear	11909	B	unknown	24-JUL-2016	linear	Annelida-segmented-worms	test	2026-10-22
+KT726961.1		Annelida	Polychaeta		Chaetopteridae	Phyllochaetopterus	Phyllochaetopterus sp. AW-2015	5		circular	16087	B	unknown	25-NOV-2015		Annelida-segmented-worms	dev	2026-10-22
+LC661358.1		Annelida	Polychaeta		Capitellidae	Notomastus	Notomastus sp. GK-2021	5		circular	15776	B	unknown	31-MAY-2022		Annelida-segmented-worms	dev	2026-10-22
+LC661359.1		Annelida	Polychaeta		Opheliidae	Armandia	Armandia sp. GK-2021	5		circular	18538	B	unknown	31-MAY-2022		Annelida-segmented-worms	test	2026-10-22
+LC677172.1		Annelida	Polychaeta		Opheliidae	Travisia	Travisia sanrikuensis	5		circular	15854	B	unknown	18-MAR-2022		Annelida-segmented-worms	test	2026-10-22
+LC707921.1		Annelida	Polychaeta		Arenicolidae	Abarenicola	Abarenicola claparedi oceanica	5		circular	15524	B	unknown	28-FEB-2023		Annelida-segmented-worms	dev	2026-10-22
+MG428625.1		Annelida	Polychaeta		Dinophilidae	Dinophilus	Dinophilus gyrociliatus	5		linear	14678	B	unknown	05-FEB-2018	linear	Annelida-segmented-worms	test	2026-10-22
+MN539268.1		Annelida	Polychaeta		Opheliidae	Thoracophelia	Thoracophelia dillonensis	5		circular	16262	B	unknown	07-MAR-2026		Annelida-segmented-worms	dev	2026-10-22
+NC_006321.1		Annelida	Polychaeta		Maldanidae	Clymenella	Clymenella torquata	5		circular	15538	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_007933.1		Annelida	Polychaeta		Orbiniidae	Orbinia	Orbinia latreillii	5		circular	15558	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_028710.1		Annelida	Polychaeta		Chaetopteridae	Chaetopterus	Chaetopterus variopedatus	5		circular	16143	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_052721.1		Annelida	Polychaeta		Saccocirridae	Pharyngocirrus	Pharyngocirrus uchidai	5		circular	15415	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_069297.1		Annelida	Polychaeta		Maldanidae	Asychis	Asychis amphiglyptus	5		circular	15918	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+OL804287.1		Annelida	Polychaeta		Maldanidae	Praxillella	Praxillella affinis	5		circular	15524	B	unknown	31-JAN-2025		Annelida-segmented-worms	dev	2026-10-22
+OM047258.1		Annelida	Polychaeta		Maldanidae	Sabaco	Sabaco sinicus	5		circular	15678	B	unknown	31-JAN-2025		Annelida-segmented-worms	dev	2026-10-22
+OM237314.1		Annelida	Polychaeta		Maldanidae	Maldane	Maldane sarsi antarctica	5		circular	17230	B	unknown	31-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+OM273170.1		Annelida	Polychaeta		Maldanidae	Euclymene	Euclymene annandalei	5		circular	15552	B	unknown	31-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+OP531856.1		Annelida	Polychaeta		Maldanidae	Praxillella	Praxillella affinis pacifica	5		circular	15301	B	MitoFinder	31-JAN-2026		Annelida-segmented-worms	dev	2026-10-22
+OP531857.1		Annelida	Polychaeta		Maldanidae	Nicomache	Nicomache lumbricalis	5		circular	15667	B	unknown	31-JAN-2026		Annelida-segmented-worms	test	2026-10-22
+OP537514.1		Annelida	Polychaeta		Maldanidae	Lumbriclymenella	Lumbriclymenella robusta	5		circular	15218	B	MitoFinder	31-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OP605751.1		Annelida	Polychaeta		Maldanidae	Metasychis	Metasychis gotoi	5		circular	15819	B	MitoFinder	31-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+OP605752.1		Annelida	Polychaeta		Maldanidae	Clymenella	Clymenella sp.	5		circular	16080	B	MitoFinder	31-JAN-2025		Annelida-segmented-worms	dev	2026-10-22
+OP605753.1		Annelida	Polychaeta		Maldanidae	Praxillella	Praxillella praetermissa	5		circular	17115	B	MitoFinder	31-JAN-2025		Annelida-segmented-worms	dev	2026-10-22
+OP605754.1		Annelida	Polychaeta		Maldanidae	Nicomache	Nicomache sp.	5		circular	15443	B	MitoFinder	31-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+OP627014.1		Annelida	Polychaeta		Maldanidae	Euclymene	Euclymene sp.	5		circular	16624	B	MitoFinder	31-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+OP694172.1		Annelida	Polychaeta		Maldanidae	Maldane	Maldane sarsi	5		circular	15958	B	MitoZ	31-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+OP787079.1		Annelida	Polychaeta		Maldanidae	Lumbriclymenella	Lumbriclymenella robusta	5		circular	15436	B	MitoFinder	31-JAN-2025		Annelida-segmented-worms	dev	2026-10-22
+OR637230.1		Annelida	Polychaeta		Chaetopteridae	Chaetopterus	Chaetopterus qiani	5		linear	15903	B	unknown	30-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PP440187.1		Annelida	Polychaeta		Chaetopteridae	Spiochaetopterus	Spiochaetopterus sp.	5		circular	15510	B	unknown	01-SEP-2025		Annelida-segmented-worms	dev	2026-10-22
+PP990759.1		Annelida	Polychaeta			Polychaeta	Polychaeta sp.	5		circular	16265	B	unknown	14-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+PQ593498.1		Annelida	Polychaeta		Maldanidae	Clymenella	Clymenella koellikeri	5		circular	15453	B	MitoZ	20-MAY-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ593499.1		Annelida	Polychaeta		Maldanidae	Nicomache	Nicomache sp. t YW-2023	5		circular	15472	B	MitoZ	20-MAY-2025		Annelida-segmented-worms	test	2026-10-22
+PQ593500.1		Annelida	Polychaeta		Maldanidae	Praxillella	Praxillella affinis	5		circular	15537	B	MitoZ	20-MAY-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ593501.1		Annelida	Polychaeta		Maldanidae	Petaloproctus	Petaloproctus sp.	5		circular	15462	B	MitoZ	20-MAY-2025		Annelida-segmented-worms	test	2026-10-22
+PQ741859.1		Annelida	Polychaeta		Maldanidae	Sabaco	Sabaco sinicus	5		circular	15794	B	unknown	19-JUN-2025		Annelida-segmented-worms	dev	2026-10-22
+PV151471.1		Annelida	Polychaeta		Cossuridae	Cossura	Cossura aciculata	5		circular	18410	B	MitoFinder	26-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PV243576.1		Annelida	Polychaeta		Maldanidae	Praxillella	Praxillella sp.	5		circular	15539	B	unknown	12-MAR-2025		Annelida-segmented-worms	dev	2026-10-22
+PX601447.1		Annelida	Polychaeta		Scalibregmatidae	Axiokebuita	Axiokebuita oculata	5		circular	15676	B	MitoFinder	30-NOV-2025		Annelida-segmented-worms	dev	2026-10-22
+PX614612.1		Annelida	Polychaeta		Capitellidae	Leiochrides	Leiochrides yokjidoensis	5		circular	17933	B	MitoZ	08-JAN-2026		Annelida-segmented-worms	test	2026-10-22
+PX718958.1		Annelida	Polychaeta		Cossuridae	Cossura	Cossura pygodactylata	5		circular	20713	B	unknown	13-MAR-2026		Annelida-segmented-worms	dev	2026-10-22
+NC_063475.1		Annelida	Clitellata	Acanthobdellida		Acanthobdella	Acanthobdella peledina	5		circular	18528	B	unknown	12-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_069205.1		Annelida	Clitellata	Acanthobdellida		Paracanthobdella	Paracanthobdella livanowi	5		circular	15500	B	unknown	04-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+OM117615.1		Annelida	Clitellata	Acanthobdellida		Paracanthobdella	Paracanthobdella livanowi	5		circular	15411	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OM117616.1		Annelida	Clitellata	Acanthobdellida		Acanthobdella	Acanthobdella peledina	5		circular	17499	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OM203184.1		Annelida	Clitellata	Acanthobdellida		Acanthobdella	Acanthobdella peledina	5		circular	16708	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OM203185.1		Annelida	Clitellata	Acanthobdellida		Acanthobdella	Acanthobdella peledina	5		circular	18183	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OM203186.1		Annelida	Clitellata	Acanthobdellida		Acanthobdella	Acanthobdella peledina	5		circular	18905	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OM214536.1		Annelida	Clitellata	Acanthobdellida		Acanthobdella	Acanthobdella peledina	5		circular	16669	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+EF494507.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Perionyx	Perionyx excavatus	5		circular	15083	B	unknown	23-JUL-2016		Annelida-segmented-worms	test	2026-10-22
+KT429007.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. 2 JS-2012	5		circular	15159	B	unknown	31-MAR-2016		Annelida-segmented-worms	test	2026-10-22
+KT429010.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. 1 LZ-2016	5		circular	15131	B	unknown	31-MAR-2016		Annelida-segmented-worms	test	2026-10-22
+KT429013.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. 3 LZ-2016	5		circular	15152	B	unknown	31-MAR-2016		Annelida-segmented-worms	test	2026-10-22
+KT429014.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. 2 LZ-2016	5		circular	15086	B	unknown	31-MAR-2016		Annelida-segmented-worms	test	2026-10-22
+LC573968.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire hilgendorfi	5		circular	15186	B	unknown	06-AUG-2020		Annelida-segmented-worms	test	2026-10-22
+LC573969.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas yunoshimensis	5		circular	15109	B	unknown	06-AUG-2020		Annelida-segmented-worms	test	2026-10-22
+LC582823.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas corticis	5		circular	15102	B	unknown	12-APR-2025		Annelida-segmented-worms	test	2026-10-22
+LC582824.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire megascolidioides	5		circular	15150	B	unknown	12-APR-2025		Annelida-segmented-worms	test	2026-10-22
+LC726496.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire sieboldi	5		circular	15145	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726497.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire sieboldi	5		circular	15143	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726498.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas tappensis	5		circular	15010	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726499.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire californica	5		circular	15144	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726500.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. CS029	5		circular	15142	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726501.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas gracilis	5		circular	15126	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726502.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas quintanus	5		circular	15116	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726503.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima mutabilis	5		circular	14785	B	unknown	23-AUG-2023		Annelida-segmented-worms	dev	2026-10-22
+LC726504.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima rufidula	5		circular	14785	B	unknown	23-AUG-2023		Annelida-segmented-worms	dev	2026-10-22
+LC726505.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pithemera	Pithemera bicincta	5		circular	16208	B	unknown	23-AUG-2023		Annelida-segmented-worms	dev	2026-10-22
+LC726506.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas masatakae	5		circular	15025	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726507.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas divergens	5		circular	15029	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726508.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas surcatus	5		circular	15089	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726509.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas micronarius	5		circular	15049	B	unknown	23-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+LC726510.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire tosaensis	5		linear	14581	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726511.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Duplodicodrilus	Duplodicodrilus schmardae	5		linear	14561	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726512.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire tosaensis	5		linear	14578	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726513.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas hupeiensis	5		linear	14592	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726514.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas hupeiensis	5		linear	14596	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726515.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Duplodicodrilus	Duplodicodrilus acinctus	5		linear	14572	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726516.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire communissima	5		linear	14534	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726517.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Duplodicodrilus	Duplodicodrilus acinctus	5		linear	14568	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726518.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. CS029	5		linear	14583	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726519.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire megascolidioides	5		linear	14577	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726520.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire communissima	5		linear	14538	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726521.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas tappensis	5		linear	14540	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726522.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas micronarius	5		linear	14569	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726523.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Duplodicodrilus	Duplodicodrilus schmardae	5		linear	14562	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726524.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas carnosus	5		linear	14559	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726525.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire agrestis	5		linear	14535	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726526.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas tokioensis	5		linear	14525	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726527.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas yunoshimensis	5		linear	14529	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726528.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire sieboldi	5		linear	14585	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726529.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire megascolidioides	5		linear	14577	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726530.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pithemera	Pithemera bicincta	5		linear	14586	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726531.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire hilgendorfi	5		linear	14538	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726532.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima iizukai	5		linear	14588	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726533.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima okutamaensis	5		linear	14536	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726534.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas conformis	5		linear	14575	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726535.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas surcatus	5		linear	14541	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726536.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas purpuratus	5		linear	14467	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726537.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas conformis	5		linear	14576	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726538.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas bimaculatus	5		linear	14531	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726539.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima silvatica	5		linear	14538	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726540.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima lactea	5		linear	14578	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726541.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas yunoshimensis	5		linear	14529	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726542.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas divergens	5		linear	14575	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726543.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima confusa	5		linear	14575	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726544.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima confusa	5		linear	14575	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726545.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas distichus	5		linear	14573	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726546.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas tamaensis	5		linear	14580	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726547.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire soulensis	5		linear	14539	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726548.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas corticis	5		linear	14554	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726549.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas micronarius	5		linear	14569	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726550.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire riukiuensis	5		linear	14594	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726551.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Polypheretima	Polypheretima elongata	5		linear	14583	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726552.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima kunigamiensis	5		linear	14573	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726553.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas glaucus	5		linear	14563	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726554.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas yamade	5		linear	14576	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726555.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas yambaruensis	5		linear	14546	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726556.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas robustus	5		linear	14584	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726557.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire communissima	5		linear	14536	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726558.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima iizukai	5		linear	14579	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726559.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas phaselus	5		linear	14585	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726560.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas yunoshimensis	5		linear	14529	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726561.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire agrestis	5		linear	14534	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726562.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas vittatus	5		linear	14528	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726563.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas tokioensis	5		linear	14525	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726564.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas gracilis	5		linear	14580	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726565.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas habereri	5		linear	14574	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726566.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire soulensis	5		linear	14539	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726567.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas tokioensis	5		linear	14525	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726568.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas corticis	5		linear	14549	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726569.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima okutamaensis	5		linear	14532	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+LC726570.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire hilgendorfi	5		linear	14537	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726571.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas phaselus	5		linear	14581	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	test	2026-10-22
+LC726572.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Manus	Manus koellikeri	5		linear	14536	B	unknown	23-AUG-2023	linear	Annelida-segmented-worms	dev	2026-10-22
+MK618509.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi nordenskioldi	5		linear	14572	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK618510.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi nordenskioldi	5		linear	14592	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK618511.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nana	5		linear	14599	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK618512.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi pallida	5		linear	14567	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK618513.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi nordenskioldi	5		linear	14567	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK642867.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi nordenskioldi	5		linear	14576	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK642868.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi nordenskioldi	5		linear	14556	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK642869.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi pallida	5		linear	14553	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK642870.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia spelaea	5		linear	14738	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK642871.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia tracta	5		linear	14589	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MK642872.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia balatonica	5		linear	14589	B	unknown	25-DEC-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MN102127.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Lumbricus	Lumbricus rubellus	5		circular	15464	B	unknown	23-DEC-2019		Annelida-segmented-worms	dev	2026-10-22
+MW222472.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire posthuma	5		circular	14970	B	unknown	14-SEP-2021		Annelida-segmented-worms	test	2026-10-22
+NC_001673.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Lumbricus	Lumbricus terrestris	5		circular	14998	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_009631.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Perionyx	Perionyx excavatus	5		circular	15083	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_023836.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire vulgaris	5		circular	15061	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_025292.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas aspergillum	5		circular	15115	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027257.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire californica	5		circular	15147	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027258.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas gracilis	5		circular	15161	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027831.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas longisiphonus	5		circular	15176	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027832.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas corticis	5		circular	15126	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029863.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas carnosus	5		circular	15160	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029864.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas hupeiensis	5		circular	15069	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029865.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas morrisi	5		circular	15026	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029866.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas cucullatus	5		circular	15122	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029867.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Duplodicodrilus	Duplodicodrilus schmardae	5		circular	15156	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029868.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas triastriatus	5		circular	15160	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029869.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire guillelmi	5		circular	15174	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029870.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas pectiniferus	5		circular	15188	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029871.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas robustus	5		circular	15013	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029872.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas moniliatus	5		circular	15133	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_029879.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas jiriensis	5		circular	15151	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_034783.1		Annelida	Clitellata	Crassiclitellata	Glossoscolecidae	Pontoscolex	Pontoscolex corethrurus	5		circular	14835	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_046733.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea rosea	5		circular	15086	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_060488.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Tonoscolex	Tonoscolex birmanicus	5		circular	15170	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_063588.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas seungpanensis	5		circular	15085	B	unknown	18-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_065012.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas deogyusanensis	5		circular	15257	B	unknown	18-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_065212.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia andrei	5		circular	15714	B	unknown	13-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_065213.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia fetida	5		circular	16560	B	unknown	11-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_066399.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	15290	B	MitoZ	14-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_066400.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea caliginosa	5		circular	15089	B	MitoZ	14-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_066720.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea trapezoides	5		circular	14998	B	MitoZ	14-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_066721.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea tuberculata	5		circular	15125	B	MitoZ	14-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_079968.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena veneta	5		circular	15475	B	unknown	15-JUN-2023		Annelida-segmented-worms	dev	2026-10-22
+OL840315.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	15296	B	MitoZ	07-SEP-2022		Annelida-segmented-worms	dev	2026-10-22
+OL840317.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea tuberculata	5		circular	15058	B	MitoZ	06-NOV-2023		Annelida-segmented-worms	test	2026-10-22
+OM213998.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi pallida	5		circular	15824	B	unknown	15-FEB-2023		Annelida-segmented-worms	dev	2026-10-22
+OM213999.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi pallida	5		circular	15177	B	unknown	15-FEB-2023		Annelida-segmented-worms	dev	2026-10-22
+OM687884.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea tuberculata	5		circular	15126	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	test	2026-10-22
+OM687885.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea tuberculata	5		circular	15129	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	test	2026-10-22
+OM687886.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea tuberculata	5		circular	15116	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	test	2026-10-22
+OM687887.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	16114	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	dev	2026-10-22
+OM687888.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	16123	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	dev	2026-10-22
+OM687889.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	16119	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	dev	2026-10-22
+OM687890.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	16119	B	MitoZ	17-SEP-2022		Annelida-segmented-worms	dev	2026-10-22
+ON553959.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Megascolecidae	Megascolecidae sp. BS2	5		circular	15151	B	unknown	18-DEC-2022		Annelida-segmented-worms	test	2026-10-22
+ON553960.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Megascolecidae	Megascolecidae sp. BS7	5		circular	15158	B	unknown	18-DEC-2022		Annelida-segmented-worms	test	2026-10-22
+ON960857.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena tellermanica	5		circular	15398	B	unknown	25-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+OQ111865.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	14908	B	MitoZ	18-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OQ111866.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	14976	B	MitoZ	18-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OQ111867.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia nordenskioldi	5		circular	14924	B	MitoZ	18-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OR161103.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas aspergillum	5		circular	15081	B	unknown	24-JUL-2023		Annelida-segmented-worms	test	2026-10-22
+OR489164.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia altaica	5		linear	15248	B	unknown	16-APR-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+OR496151.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea jassyensis	5		circular	15099	B	unknown	15-MAY-2025		Annelida-segmented-worms	test	2026-10-22
+PP033590.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas heteropodus	5		circular	15119	B	unknown	06-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PP266604.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire bahli	5		circular	15082	B	MitoZ	22-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+PP266605.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima elnorroae	5		circular	15048	B	MitoZ	22-MAR-2025		Annelida-segmented-worms	dev	2026-10-22
+PP266606.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Polypheretima	Polypheretima andresi	5		circular	15065	B	MitoZ	22-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+PP266607.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Pheretima	Pheretima naawanensis	5		circular	15099	B	MitoZ	22-MAR-2025		Annelida-segmented-worms	dev	2026-10-22
+PP438738.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia andrei	5		circular	15715	B	unknown	23-MAY-2025		Annelida-segmented-worms	dev	2026-10-22
+PP571884.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Eisenia	Eisenia lagodechiensis	5		circular	16136	B	unknown	08-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PP595922.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena byblica	5		linear	15074	B	unknown	03-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP625722.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena byblica	5		linear	15080	B	unknown	03-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP855995.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Imetescolex	Imetescolex patriarchalis	5		linear	15028	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	test	2026-10-22
+PP868406.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Rhiphaeodrilus	Rhiphaeodrilus diplotetrathecus	5		linear	14721	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	test	2026-10-22
+PP873346.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena nassonovi nassonovi	5		linear	15312	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP873347.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena attemsi	5		linear	15189	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP904446.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena sp.	5		linear	15252	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP922152.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena alpina	5		linear	15471	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP922153.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena byblica	5		linear	15000	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP922154.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena schmidti	5		circular	15539	B	unknown	08-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PP922155.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena succinta	5		linear	17322	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP922156.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena schmidti	5		linear	15440	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP922157.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena hortensis	5		linear	15477	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP949297.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena schmidti	5		linear	15236	B	unknown	03-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PP949969.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas bubonis	5		circular	15095	B	unknown	30-JUN-2024		Annelida-segmented-worms	test	2026-10-22
+PP965186.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena schmidti surbiensis	5		circular	15320	B	unknown	03-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PP988498.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Perelia	Perelia kaznakovi	5		linear	15221	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PQ015122.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena hortensis	5		circular	15706	B	unknown	08-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ131216.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Perelia	Perelia kaznakovi	5		linear	15200	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PQ164793.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire guillelmi	5		circular	15179	B	MitoZ	01-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PQ164794.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Metaphire	Metaphire guillelmi	5		circular	15153	B	MitoZ	01-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PQ214935.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea jassyensis	5		linear	15269	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	test	2026-10-22
+PQ214936.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena veneta	5		linear	15287	B	unknown	08-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PQ279307.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena hortensis	5		linear	20817	B	unknown	03-FEB-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+PQ279308.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena alpina	5		circular	15199	B	unknown	03-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ279309.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrobaena	Dendrobaena sp.	5		circular	15407	B	unknown	03-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ279310.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea jassyensis	5		linear	14956	B	unknown	03-FEB-2025	linear	Annelida-segmented-worms	test	2026-10-22
+PQ279311.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Perelia	Perelia kaznakovi	5		circular	15056	B	unknown	03-FEB-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ279312.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea jassyensis	5		circular	15007	B	unknown	03-FEB-2025		Annelida-segmented-worms	test	2026-10-22
+PQ279313.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Dendrodriloides	Dendrodriloides grandis	5		linear	15471	B	unknown	03-FEB-2025	linear	Annelida-segmented-worms	test	2026-10-22
+PQ572750.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea caliginosa	5		circular	15090	B	unknown	13-NOV-2024		Annelida-segmented-worms	test	2026-10-22
+PQ572751.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea caliginosa	5		circular	15111	B	unknown	13-NOV-2024		Annelida-segmented-worms	test	2026-10-22
+PQ572752.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea caliginosa	5		circular	15123	B	unknown	13-NOV-2024		Annelida-segmented-worms	test	2026-10-22
+PQ572753.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Aporrectodea	Aporrectodea trapezoides	5		circular	15014	B	unknown	13-NOV-2024		Annelida-segmented-worms	test	2026-10-22
+PV588238.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas sp. YZ-2016	5		circular	15124	B	MitoZ	14-JAN-2026		Annelida-segmented-worms	test	2026-10-22
+PV631717.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas susakii	5		circular	15115	B	unknown	17-MAY-2025		Annelida-segmented-worms	test	2026-10-22
+PX275613.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas righii	5		circular	15142	B	unknown	16-SEP-2025		Annelida-segmented-worms	test	2026-10-22
+PX896337.1		Annelida	Clitellata	Crassiclitellata	Megascolecidae	Amynthas	Amynthas gucheonensis	5		circular	15144	B	unknown	25-JAN-2026		Annelida-segmented-worms	test	2026-10-22
+U24570.1		Annelida	Clitellata	Crassiclitellata	Lumbricidae	Lumbricus	Lumbricus terrestris	5		circular	14998	B	unknown	26-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+NC_070077.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Enchytraeus	Enchytraeus irregularis	5		circular	15228	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+PV591000.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus gigachaetus	5		circular	15014	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591001.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus spermatoglomeratus	5		circular	15002	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591002.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus sp. sg JC-2023	5		circular	15050	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591003.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus sp. d JC-2023	5		circular	14981	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591004.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus sp. d JC-2023	5		circular	15008	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591005.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus fokulen	5		circular	15003	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591006.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus digitalisdiverticulus	5		circular	15035	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591007.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus ngulen	5		circular	14987	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591008.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus monodiverticulus	5		circular	15069	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591009.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus sp. p JC-2023	5		circular	14988	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591010.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus zhenggulen	5		circular	15077	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591011.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus sp.	5		circular	14909	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591012.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus sp. i JC-2023	5		circular	15012	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+PV591013.1		Annelida	Clitellata	Enchytraeida	Enchytraeidae	Mesenchytraeus	Mesenchytraeus anisodiverticulus	5		circular	14842	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	test	2026-10-22
+KC790350.1		Annelida	Polychaeta	Eunicida	Diurodrilidae	Diurodrilus	Diurodrilus subterraneus	5		linear	13025	B	unknown	22-MAY-2013	linear	Annelida-segmented-worms	dev	2026-10-22
+KT726962.1		Annelida	Polychaeta	Eunicida	Amphinomidae	Eurythoe	Eurythoe complanata	5		circular	15829	B	unknown	10-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+LC874204.1		Annelida	Polychaeta	Eunicida	Dorvilleidae	Iphitime	Iphitime doederleini	5		circular	15980	B	unknown	13-NOV-2025		Annelida-segmented-worms	dev	2026-10-22
+LC874205.1		Annelida	Polychaeta	Eunicida	Dorvilleidae	Iphitime	Iphitime nubila	5		circular	15081	B	unknown	18-NOV-2025		Annelida-segmented-worms	dev	2026-10-22
+MT822294.1		Annelida	Polychaeta	Eunicida	Amphinomidae	Chloeia	Chloeia pocicola	5		circular	16297	B	unknown	06-JUL-2021		Annelida-segmented-worms	dev	2026-10-22
+NC_023124.1		Annelida	Polychaeta	Eunicida	Eunicidae	Marphysa	Marphysa sanguinea	5		circular	15159	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_037236.1		Annelida	Polychaeta	Eunicida	Eunicidae	Marphysa	Marphysa tamurai	5		circular	15163	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_037947.1		Annelida	Polychaeta	Eunicida	Amphinomidae	Cryptonome	Cryptonome barbada	5		circular	15013	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_058588.1		Annelida	Polychaeta	Eunicida	Onuphidae	Diopatra	Diopatra cuprea	5		circular	15050	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_060759.1		Annelida	Polychaeta	Eunicida	Eunicidae	Marphysa	Marphysa victori	5		circular	15891	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+OM144973.1		Annelida	Polychaeta	Eunicida	Amphinomidae	Chloeia	Chloeia sp. r EEE-2022	5		linear	16395	B	unknown	24-OCT-2022	linear	Annelida-segmented-worms	dev	2026-10-22
+OR449961.1		Annelida	Polychaeta	Eunicida	Dorvilleidae	Veneriserva	Veneriserva pygoclava	5		circular	15709	B	unknown	01-MAY-2024		Annelida-segmented-worms	dev	2026-10-22
+PP790749.1		Annelida	Polychaeta	Eunicida	Onuphidae	Hyalinoecia	Hyalinoecia robusta	5		circular	15029	B	unknown	19-MAY-2024		Annelida-segmented-worms	dev	2026-10-22
+PP999651.1		Annelida	Polychaeta	Eunicida	Amphinomidae	Notopygos	Notopygos ornata	5		circular	15729	B	MitoZ	15-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+PV831793.1		Annelida	Polychaeta	Eunicida	Dorvilleidae	Ophryotrocha	Ophryotrocha xiamen	5		circular	16111	B	unknown	23-JUL-2025		Annelida-segmented-worms	test	2026-10-22
+PX116062.1		Annelida	Polychaeta	Eunicida	Onuphidae	Diopatra	Diopatra sp.	5		circular	14985	B	unknown	03-SEP-2025		Annelida-segmented-worms	dev	2026-10-22
+FJ422961.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Sipunculus	Sipunculus nudus	5		circular	15502	B	unknown	26-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+KJ754934.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Sipunculus	Sipunculus nudus	5		circular	15376	B	unknown	08-JUL-2014		Annelida-segmented-worms	dev	2026-10-22
+KP751904.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Sipunculus	Sipunculus nudus	5		circular	15303	B	unknown	01-MAR-2016		Annelida-segmented-worms	dev	2026-10-22
+MG873457.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Sipunculus	Sipunculus nudus	5		circular	15375	B	unknown	22-MAY-2018		Annelida-segmented-worms	dev	2026-10-22
+NC_011826.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Sipunculus	Sipunculus nudus	5		circular	15502	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_049136.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Siphonosoma	Siphonosoma cumanense	5		circular	15917	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+PX119664.1		Annelida	Sipuncula	Golfingiida	Sipunculidae	Sipunculus	Sipunculus angasoides	5		circular	15446	B	unknown	18-NOV-2025		Annelida-segmented-worms	dev	2026-10-22
+BK059172.1		Annelida	Clitellata	Hirudinida	Piscicolidae	Piscicola	Piscicola geometra	5		circular	14788	B	unknown	31-DEC-2021		Annelida-segmented-worms	dev	2026-10-22
+KM655838.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania acranulata	5		linear	13494	B	unknown	01-DEC-2015	linear	Annelida-segmented-worms	test	2026-10-22
+KM655839.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania laevis	5		circular	14442	B	unknown	01-DEC-2015		Annelida-segmented-worms	test	2026-10-22
+KU672396.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudo	Hirudo medicinalis	5		linear	14729	B	unknown	10-MAY-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+KU672397.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudo	Hirudo verbana	5		linear	14604	B	unknown	10-MAY-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+MK347500.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania acranulata	5		circular	14468	B	unknown	24-FEB-2020		Annelida-segmented-worms	test	2026-10-22
+MT410851.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Erpobdella	Erpobdella octoculata	5		linear	13035	B	unknown	03-AUG-2020	linear	Annelida-segmented-worms	dev	2026-10-22
+MT584166.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Erpobdella	Erpobdella testacea	5		linear	14495	B	unknown	02-AUG-2020	linear	Annelida-segmented-worms	dev	2026-10-22
+MT862376.1		Annelida	Clitellata	Hirudinida	Haemopidae	Haemopis	Haemopis sanguisuga	5		linear	11058	B	unknown	27-SEP-2020	linear	Annelida-segmented-worms	dev	2026-10-22
+MW435182.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Erpobdella	Erpobdella sp. JP-2021	5		circular	15469	B	unknown	21-JUN-2021		Annelida-segmented-worms	dev	2026-10-22
+MZ189977.1		Annelida	Clitellata	Hirudinida	Haemadipsidae	Haemadipsa	Haemadipsa tianmushana	5		circular	14625	B	unknown	10-AUG-2021		Annelida-segmented-worms	dev	2026-10-22
+MZ202177.1		Annelida	Clitellata	Hirudinida	Piscicolidae	Codonobdella	Codonobdella sp. IK-2021	5		linear	14486	B	unknown	12-NOV-2021	linear	Annelida-segmented-worms	dev	2026-10-22
+MZ507570.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudo	Hirudo nipponia	5		circular	14940	B	unknown	30-JUL-2022		Annelida-segmented-worms	dev	2026-10-22
+NC_013569.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania pigra	5		circular	14426	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_023776.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudo	Hirudo nipponia	5		circular	14414	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_023925.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudinaria	Hirudinaria manillensis	5		circular	14470	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_023926.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania laevis	5		circular	14433	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_023927.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Erpobdella	Erpobdella octoculata	5		circular	14407	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_023928.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania acranulata	5		circular	14462	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_034807.1		Annelida	Clitellata	Hirudinida	Ozobranchidae	Ozobranchus	Ozobranchus jantseanus	5		circular	14864	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_035308.1		Annelida	Clitellata	Hirudinida	Piscicolidae	Pterobdella	Pterobdella arugamensis	5		circular	16161	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_036150.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Erpobdella	Erpobdella japonica	5		circular	14725	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_058234.1		Annelida	Clitellata	Hirudinida	Haemadipsidae	Haemadipsa	Haemadipsa crenata	5		circular	14725	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_061323.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Poecilobdella	Poecilobdella javanica	5		circular	15030	A-longread	unknown	16-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_064338.1		Annelida	Clitellata	Hirudinida	Piscicolidae	Calliobdella	Calliobdella nodulifera	5		circular	16972	B	unknown	20-SEP-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_065392.1		Annelida	Clitellata	Hirudinida	Piscicolidae	Codonobdella	Codonobdella sp. B45A	5		circular	14486	B	unknown	18-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_072217.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Dinobdella	Dinobdella ferox	5		circular	14538	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_072219.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Mooreobdella	Mooreobdella quaternaria	5		circular	14964	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_072221.1		Annelida	Clitellata	Hirudinida	Haemadipsidae	Haemadipsa	Haemadipsa yanyuanensis	5		circular	14527	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_072222.1		Annelida	Clitellata	Hirudinida	Salifidae	Barbronia	Barbronia weberi	5		circular	14888	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_072223.1		Annelida	Clitellata	Hirudinida	Salifidae	Barbronia	Barbronia yunnanensis	5		circular	15092	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_087824.1		Annelida	Clitellata	Hirudinida	Haemadipsidae	Haemadipsa	Haemadipsa hainana	5		circular	15800	B	unknown	10-APR-2024		Annelida-segmented-worms	dev	2026-10-22
+OM257408.1		Annelida	Clitellata	Hirudinida	Erpobdellidae	Erpobdella	Erpobdella octoculata	5		circular	15580	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OQ076763.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudo	Hirudo nipponia	5		circular	14990	B	unknown	19-FEB-2023		Annelida-segmented-worms	dev	2026-10-22
+OQ076767.1		Annelida	Clitellata	Hirudinida	Hirudinidae	Hirudinaria	Hirudinaria manillensis	5		circular	14439	B	unknown	16-MAR-2026		Annelida-segmented-worms	test	2026-10-22
+OQ076768.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania pigra	5		circular	15589	B	unknown	16-MAR-2026		Annelida-segmented-worms	test	2026-10-22
+OQ076773.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania acranulata	5		circular	15201	B	unknown	16-MAR-2026		Annelida-segmented-worms	test	2026-10-22
+OQ339201.1		Annelida	Clitellata	Hirudinida	Salifidae	Barbronia	Barbronia cf. gwalagwalensis LYKG002	5		circular	14847	B	unknown	08-OCT-2023		Annelida-segmented-worms	test	2026-10-22
+OR551454.1		Annelida	Clitellata	Hirudinida	Ozobranchidae	Ozobranchus	Ozobranchus jantseanus	5		circular	15377	B	unknown	18-OCT-2023		Annelida-segmented-worms	dev	2026-10-22
+PV245939.1		Annelida	Clitellata	Hirudinida	Salifidae	Salifidae	Salifidae gen. n. sp. g ZL-2025	5		circular	15732	B	unknown	12-MAR-2025		Annelida-segmented-worms	dev	2026-10-22
+PV440316.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania laevis	5		circular	14576	B	unknown	29-APR-2025		Annelida-segmented-worms	test	2026-10-22
+PV440317.1		Annelida	Clitellata	Hirudinida	Haemopidae	Whitmania	Whitmania pigra	5		circular	14802	B	unknown	29-APR-2025		Annelida-segmented-worms	test	2026-10-22
+PX994373.1		Annelida	Clitellata	Hirudinida	Haemadipsidae	Haemadipsa	Haemadipsa sp. T77260-1	5		circular	17521	B	unknown	04-MAR-2026		Annelida-segmented-worms	dev	2026-10-22
+MT628551.1		Annelida	Clitellata	Lumbriculida	Lumbriculidae	Lumbriculus	Lumbriculus variegatus	5		linear	14109	B	unknown	02-AUG-2020	linear	Annelida-segmented-worms	test	2026-10-22
+NC_069204.1		Annelida	Clitellata	Lumbriculida	Lumbriculidae	Lumbriculus	Lumbriculus variegatus	5		circular	15883	B	unknown	04-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_028050.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida japonica	5		circular	14648	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_058285.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida gisti	5		circular	14648	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_066398.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida ghilarovi	5		circular	15080	B	MitoZ	15-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+OL840313.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida ghilarovi	5		circular	15061	B	MitoZ	07-SEP-2022		Annelida-segmented-worms	dev	2026-10-22
+PQ278996.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida cf. japonica	5		circular	14637	B	MitoZ	31-DEC-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ278997.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida cf. japonica	5		circular	14631	B	MitoZ	31-DEC-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ278998.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida cf. japonica	5		circular	14622	B	MitoZ	31-DEC-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ278999.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida cf. japonica	5		circular	14607	B	MitoZ	31-DEC-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ279000.1		Annelida	Clitellata	Moniligastrida	Moniligastridae	Drawida	Drawida cf. japonica	5		circular	14622	B	MitoZ	31-DEC-2025		Annelida-segmented-worms	dev	2026-10-22
+EF506562.1		Annelida		Myzostomida	Myzostomatidae	Myzostoma	Myzostoma seymourcollegiorum	5		linear	11505	B	unknown	23-JUL-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+FJ975144.1		Annelida		Myzostomida	Endomyzostomatidae	Endomyzostoma	Endomyzostoma sp. MZ-2009	5		linear	13190	B	unknown	24-JUL-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+PX601449.1		Annelida		Myzostomida	Myzostomatidae	Myzostoma	Myzostoma seymourcollegiorum	5		circular	14952	B	MitoFinder	30-NOV-2025		Annelida-segmented-worms	dev	2026-10-22
+EF583817.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma esculenta	5		circular	15494	B	unknown	26-JUL-2016		Annelida-segmented-worms	test	2026-10-22
+KX814447.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma sp. MZK-2017	5		linear	16571	B	unknown	22-APR-2017	linear	Annelida-segmented-worms	test	2026-10-22
+MG873458.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma esculenta	5		circular	15494	B	unknown	22-MAY-2018		Annelida-segmented-worms	test	2026-10-22
+MT239480.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma scolops	5		circular	15515	B	unknown	02-JUN-2021		Annelida-segmented-worms	test	2026-10-22
+NC_012618.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma esculenta	5		circular	15494	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_031412.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma pacificum	5		circular	16039	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_049135.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma similis	5		circular	16237	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+OR601003.1		Annelida	Sipuncula	Phascolosomatiformes	Phascolosomatidae	Phascolosoma	Phascolosoma sp. f LL-2023	5		circular	16498	B	unknown	23-OCT-2023		Annelida-segmented-worms	test	2026-10-22
+AF178678.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis dumerilii	5		circular	15619	B	unknown	26-JUL-2016		Annelida-segmented-worms	test	2026-10-22
+EU293739.1		Annelida	Polychaeta	Phyllodocida	Nephtyidae	Nephtys	Nephtys sp. 'San Juan Island' YV-2008	5		linear	17217	B	unknown	26-JUL-2016	linear	Annelida-segmented-worms	test	2026-10-22
+KR534503.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Trypanobia	Trypanobia cryptica	5		circular	16630	B	unknown	25-FEB-2021		Annelida-segmented-worms	test	2026-10-22
+KT989318.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera dibranchiata	5		circular	16085	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989319.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera capitata	5		circular	15182	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989320.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera capitata	5		circular	15178	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989321.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera americana	5		linear	15571	B	MITOS	19-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KT989322.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Hemipodia	Hemipodia simplex	5		circular	15401	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989323.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera fallax	5		linear	20896	B	MITOS	19-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KT989324.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera unicornis	5		linear	20366	B	MITOS	19-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KT989325.1		Annelida	Polychaeta	Phyllodocida	Goniadidae	Glycinde	Glycinde armigera	5		linear	15077	B	MITOS	19-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KT989326.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera tesselata	5		circular	15591	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989327.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera cf. tridactyla FS19	5		circular	15373	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989328.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera cf. tridactyla FS20	5		circular	15510	B	MITOS	08-DEC-2015		Annelida-segmented-worms	dev	2026-10-22
+KT989329.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera cf. oxycephala FS21	5		linear	15852	B	MITOS	19-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KT989330.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera americana	5		linear	15271	B	MITOS	19-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KT989331.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera tridactyla	5		linear	15361	B	MITOS	08-DEC-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KU992689.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Laeonereis	Laeonereis culveri	5		circular	14918	B	unknown	10-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+KX752422.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Streptosyllis	Streptosyllis sp. THS1	5		linear	14972	B	unknown	01-OCT-2016	linear	Annelida-segmented-worms	test	2026-10-22
+KX752425.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Typosyllis	Typosyllis sp. patternB	5		linear	16241	B	unknown	01-OCT-2016	linear	Annelida-segmented-worms	test	2026-10-22
+KY753824.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchinotogluma	Branchinotogluma japonicus	5		linear	15513	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753825.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe pettiboneae	5		linear	15202	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753826.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe sp. YZ-2018	5		linear	15968	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753827.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Levensteiniella	Levensteiniella iris	5		linear	16036	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753828.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Lepidonotopodium	Lepidonotopodium sp. YZ-2018	5		linear	16373	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753829.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Melaenis	Melaenis sp. YZ-2018	5		linear	15164	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753830.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Halosydna	Halosydna sp. YZ-2018	5		linear	15124	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753831.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Lepidonotus	Lepidonotus sp. YZ-2018	5		linear	15134	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753832.1		Annelida	Polychaeta	Phyllodocida	Acoetidae	Panthalis	Panthalis oerstedi	5		linear	15261	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753833.1		Annelida	Polychaeta	Phyllodocida	Aphroditidae	Laetmonice	Laetmonice producta	5		linear	15677	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753834.1		Annelida	Polychaeta	Phyllodocida	Eulepethidae	Eulepethus	Eulepethus nanhaiensis	5		linear	15351	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753835.1		Annelida	Polychaeta	Phyllodocida	Iphionidae	Iphione	Iphione sp. YZ-2018	5		linear	15385	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753836.1		Annelida	Polychaeta	Phyllodocida	Pisionidae	Pisione	Pisione sp. YZ-2018	5		linear	15394	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+KY753837.1		Annelida	Polychaeta	Phyllodocida	Sigalionidae	Euthalenessa	Euthalenessa festiva	5		linear	15023	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	test	2026-10-22
+KY753838.1		Annelida	Polychaeta	Phyllodocida	Pholoidae	Pholoe	Pholoe pallida	5		linear	15473	B	unknown	15-APR-2018	linear	Annelida-segmented-worms	dev	2026-10-22
+MF538532.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Cheilonereis	Cheilonereis cyclurus	5		circular	14971	B	unknown	08-AUG-2018		Annelida-segmented-worms	test	2026-10-22
+MF960765.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nereis	Nereis sp.	5		circular	15667	B	unknown	08-AUG-2018		Annelida-segmented-worms	test	2026-10-22
+MN812982.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Alitta	Alitta succinea	5		circular	16023	B	unknown	29-AUG-2020		Annelida-segmented-worms	dev	2026-10-22
+MN830365.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis sp. 1 PA-2020	5		circular	15593	B	unknown	08-SEP-2020		Annelida-segmented-worms	test	2026-10-22
+MN830366.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis sp. 2 PA-2020	5		circular	15633	B	unknown	08-SEP-2020		Annelida-segmented-worms	test	2026-10-22
+MN830368.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis cf. australis PA-2020	5		circular	16309	B	unknown	08-SEP-2020		Annelida-segmented-worms	test	2026-10-22
+MN830369.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis cf. australis PA-2020	5		circular	15955	B	unknown	08-SEP-2020		Annelida-segmented-worms	test	2026-10-22
+MW532084.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Dendronereis	Dendronereis chipolini	5		circular	15763	B	unknown	27-JUL-2021		Annelida-segmented-worms	test	2026-10-22
+MW783685.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Bathykurila	Bathykurila sp.	5		linear	15884	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783686.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchinotogluma	Branchinotogluma hessleri	5		linear	15420	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783687.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe cf. marianus	5		linear	16714	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783688.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Cladopolynoe	Cladopolynoe sandersi	5		linear	15746	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783689.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Stratigos	Stratigos sp. n. 1 ASH-2024	5		linear	10572	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783691.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Photinopolynoe	Photinopolynoe margaretleinenae	5		linear	17828	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783692.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Photinopolynoe	Photinopolynoe jorgecortesi	5		linear	17521	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783693.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Cladopolynoe	Cladopolynoe sp. n. 4 ASH-2024	5		linear	16958	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783694.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Photinopolynoe	Photinopolynoe iskrae	5		linear	16889	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783695.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Photinopolynoe	Photinopolynoe lunae	5		linear	18636	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783698.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Cladopolynoe	Cladopolynoe tunnicliffeae	5		linear	16319	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783699.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchiplicatus	Branchiplicatus cupreus	5		linear	15821	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783700.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Levensteiniella	Levensteiniella cf. riftense	5		linear	16198	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	test	2026-10-22
+MW783701.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Lepidonotopodium	Lepidonotopodium fimbriatum	5		linear	16107	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	test	2026-10-22
+MW783702.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Mamiwata	Mamiwata piscesae	5		linear	15568	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783703.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Levensteiniella	Levensteiniella kincaidi	5		linear	15341	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	test	2026-10-22
+MW783704.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Mamiwata	Mamiwata williamsae	5		linear	15184	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783705.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Themis	Themis intermedia	5		linear	18482	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW783706.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Peinaleopolynoe	Peinaleopolynoe orphanae	5		linear	17026	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	test	2026-10-22
+MW783707.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Thermopolynoe	Thermopolynoe branchiata	5		linear	15047	B	MitoFinder	10-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+MW794259.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Drieschia	Drieschia cf. elegans BG-2021	5		circular	15385	B	unknown	01-JUN-2021		Annelida-segmented-worms	dev	2026-10-22
+MW794260.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Gesiella	Gesiella jameensis	5		circular	15962	B	unknown	01-JUN-2021		Annelida-segmented-worms	dev	2026-10-22
+MW794261.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Pelagomacellicephala	Pelagomacellicephala iliffei	5		circular	15887	B	unknown	01-JUN-2021		Annelida-segmented-worms	test	2026-10-22
+MW816923.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Macellicephalinae	Macellicephalinae sp.	5		circular	16776	B	MitoFinder	06-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+MZ131647.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Arctonoe	Arctonoe vittata	5		circular	15125	B	unknown	22-JUN-2021		Annelida-segmented-worms	test	2026-10-22
+MZ506667.1		Annelida	Polychaeta	Phyllodocida	Chrysopetalidae	Boudemos	Boudemos sp. DBUA0002419.01	5		circular	17281	B	unknown	02-FEB-2022		Annelida-segmented-worms	test	2026-10-22
+NC_000931.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis dumerilii	5		circular	15619	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_020609.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis nuntia	5		circular	15824	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_023943.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis aibuhitensis	5		circular	15852	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_025561.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Tylorrhynchus	Tylorrhynchus heterochetus	5		circular	16106	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_026995.1		Annelida	Polychaeta	Phyllodocida	Goniadidae	Goniada	Goniada japonica	5		circular	15327	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027699.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Ramisyllis	Ramisyllis multicaudata	5		circular	15748	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_030040.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Namalycastis	Namalycastis abiuma	5		circular	15265	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_031402.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Eusyllis	Eusyllis blomstrandi	5		circular	14712	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_031403.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Myrianida	Myrianida brachycephala	5		circular	15032	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_031404.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Typosyllis	Typosyllis antoni	5		circular	16897	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_032361.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Paraleonnates	Paraleonnates uschakovi	5		circular	15540	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_035507.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Hediste	Hediste diadroma	5		circular	15765	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_035893.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Neanthes	Neanthes glandicincta	5		circular	16126	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_046790.1		Annelida	Polychaeta	Phyllodocida	Aphroditidae	Aphrodita	Aphrodita australis	5		circular	15288	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_050679.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Hediste	Hediste japonica	5		circular	15783	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_051993.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Alitta	Alitta succinea	5		circular	15409	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_051994.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis cultrifera	5		circular	17056	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_051995.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis bicanaliculata	5		circular	15868	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_051996.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis massiliensis	5		circular	17502	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_052845.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Platynereis	Platynereis cf. australis PA-2020	5		circular	16037	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_053360.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nereis	Nereis zonata	5		circular	15757	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_057074.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Hediste	Hediste diversicolor	5		circular	15904	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_060302.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Eunoe	Eunoe nodosa	5		circular	15366	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_060814.1		Annelida	Polychaeta	Phyllodocida	Nautiliniellidae	Iheyomytilidicola	Iheyomytilidicola lauensis	5		circular	15783	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_060815.1		Annelida	Polychaeta	Phyllodocida	Chrysopetalidae	Craseoschema	Craseoschema thyasiricola	5		circular	15301	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_060816.1		Annelida	Polychaeta	Phyllodocida	Chrysopetalidae	Chrysopetalum	Chrysopetalum debile	5		circular	16295	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_062818.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe segonzaci	5		circular	15755	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_063122.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Hyperhalosydna	Hyperhalosydna striata	5		circular	15226	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_063944.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis linea	5		circular	15853	B	MitoZ	17-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_064058.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Sirsoe	Sirsoe methanicola	5		circular	17403	B	unknown	14-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_064376.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe onnuriensis	5		circular	16272	B	MitoZ	18-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_065094.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis camiguinoides	5		circular	15819	B	MitoZ	16-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_065095.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis vancaurica	5		circular	15832	B	MitoZ	11-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_065765.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Ramisyllis	Ramisyllis kingghidorahi	5		circular	16517	B	unknown	17-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_066969.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Leocrates	Leocrates chinensis	5		circular	15601	B	unknown	14-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_077651.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Clavisyllis	Clavisyllis tenjini	5		circular	15065	B	unknown	22-JUN-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_081955.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Harmothoe	Harmothoe imbricata	5		circular	15694	B	unknown	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082300.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nectoneanthes	Nectoneanthes uchiwa	5		circular	15447	B	unknown	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082301.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nectoneanthes	Nectoneanthes multignatha	5		circular	15446	B	unknown	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_085286.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis wilsoni	5		circular	15817	B	unknown	01-FEB-2024		Annelida-segmented-worms	test	2026-10-22
+NC_086457.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nereis	Nereis pelagica	5		circular	15764	B	MitoFinder	05-MAR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_086458.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nectoneanthes	Nectoneanthes oxypoda	5		circular	15668	B	MitoFinder	05-MAR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_087805.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Pilargis	Pilargis verrucosa	5		circular	15131	B	MITOS	10-APR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_087806.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Synelmis	Synelmis amoureuxi	5		circular	18460	B	MITOS	10-APR-2024		Annelida-segmented-worms	dev	2026-10-22
+NC_087807.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Glyphohesione	Glyphohesione klatti	5		circular	15490	B	MITOS	10-APR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_087808.1		Annelida	Polychaeta	Phyllodocida	Antonbruunidae	Antonbruunia	Antonbruunia milenae	5		circular	17540	B	MITOS	10-APR-2024		Annelida-segmented-worms	dev	2026-10-22
+NC_087809.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Pilargis	Pilargis wolfi	5		circular	15506	B	MITOS	10-APR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_087810.1		Annelida	Polychaeta	Phyllodocida	Nephtyidae	Micronephthys	Micronephthys minuta	5		circular	16335	B	MITOS	10-APR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_087881.1		Annelida	Polychaeta	Phyllodocida	Phyllodocidae	Phyllodoce	Phyllodoce medipapillata	5		circular	15741	B	MITOS	10-APR-2024		Annelida-segmented-worms	dev	2026-10-22
+NC_087882.1		Annelida	Polychaeta	Phyllodocida	Microphthalmidae	Struwela	Struwela camposi	5		circular	15488	B	MITOS	10-APR-2024		Annelida-segmented-worms	test	2026-10-22
+OK012096.1		Annelida	Polychaeta	Phyllodocida	Glyceridae	Glycera	Glycera sp. i ZZ-2021	5		circular	15375	B	MITOS	12-APR-2022		Annelida-segmented-worms	dev	2026-10-22
+OL782600.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Nereididae	Nereididae sp. SIO BIC A9836	5		circular	15814	B	MitoFinder	16-JAN-2024		Annelida-segmented-worms	test	2026-10-22
+ON312495.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Syllis	Syllis sp. JYC-2022	5		circular	17092	B	unknown	27-SEP-2022		Annelida-segmented-worms	test	2026-10-22
+OP648299.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Themis	Themis agapi	5		linear	14053	B	MitoFinder	16-DEC-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+OP648300.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe segonzaci	5		circular	15842	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OP648301.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Eulagisca	Eulagisca gigantea	5		circular	15064	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OP648302.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Lepidonotopodium	Lepidonotopodium plicata	5		circular	15255	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	test	2026-10-22
+OP648303.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Macellicephala	Macellicephala sp. 1 AH-2024	5		circular	16056	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OP648304.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Macellicephala	Macellicephala sp. 2 AH-2024	5		circular	16038	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OP648305.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Macellicephala	Macellicephala sp. 3 AH-2024	5		circular	15464	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OP648306.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Macellicephala	Macellicephala sp. 4 AH-2024	5		circular	16765	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OP648307.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Macellicephaloides	Macellicephaloides alvini	5		circular	14877	B	MitoFinder	10-DEC-2024		Annelida-segmented-worms	dev	2026-10-22
+OR123440.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Sigambra	Sigambra sp. 1 SH-2024	5		circular	15680	B	MITOS	04-MAR-2024		Annelida-segmented-worms	test	2026-10-22
+OR123441.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Otopsis	Otopsis sp.	5		circular	15694	B	MITOS	04-MAR-2024		Annelida-segmented-worms	dev	2026-10-22
+OR123444.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Sigambra	Sigambra sp. 2 SH-2024	5		circular	15304	B	MITOS	04-MAR-2024		Annelida-segmented-worms	test	2026-10-22
+OR123445.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Ancistrosyllis	Ancistrosyllis sp.	5		circular	15392	B	MITOS	04-MAR-2024		Annelida-segmented-worms	dev	2026-10-22
+OR124844.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Hermundura	Hermundura fauveli	5		linear	14695	B	MITOS	05-MAY-2025	linear	Annelida-segmented-worms	dev	2026-10-22
+OR804091.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis wilsoni	5		circular	15817	B	unknown	01-DEC-2024		Annelida-segmented-worms	test	2026-10-22
+OR804092.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis aibuhitensis	5		circular	15839	B	unknown	01-DEC-2024		Annelida-segmented-worms	test	2026-10-22
+PP003976.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Micropodarke	Micropodarke fujianensis	5		circular	15566	B	unknown	23-JAN-2024		Annelida-segmented-worms	dev	2026-10-22
+PP035855.1		Annelida	Polychaeta	Phyllodocida	Pilargidae	Sigambra	Sigambra sp. 3 SH-2024	5		circular	15304	B	MITOS	18-MAR-2024		Annelida-segmented-worms	test	2026-10-22
+PP035856.1		Annelida	Polychaeta	Phyllodocida	Phyllodocidae	Lacydonia	Lacydonia sp.	5		linear	14704	B	MITOS	18-MAR-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PP079027.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Branchipolynoe	Branchipolynoe marianus	5		linear	14100	B	unknown	05-JAN-2026	linear	Annelida-segmented-worms	dev	2026-10-22
+PP228859.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Ophiodromus	Ophiodromus sp.	5		circular	15166	B	unknown	26-FEB-2025		Annelida-segmented-worms	test	2026-10-22
+PP228860.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Ophiodromus	Ophiodromus sp.	5		circular	15166	B	unknown	26-FEB-2025		Annelida-segmented-worms	test	2026-10-22
+PP228861.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Ophiodromus	Ophiodromus sp.	5		circular	15138	B	unknown	26-FEB-2025		Annelida-segmented-worms	test	2026-10-22
+PP228862.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Ophiodromus	Ophiodromus sp.	5		circular	15098	B	unknown	26-FEB-2025		Annelida-segmented-worms	test	2026-10-22
+PP944313.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Leocrates	Leocrates sp.	5		circular	16468	B	unknown	02-JUL-2025		Annelida-segmented-worms	test	2026-10-22
+PP998669.1		Annelida	Polychaeta	Phyllodocida	Syllidae	Odontosyllis	Odontosyllis enopla	5		linear	10172	B	unknown	16-SEP-2025	linear	Annelida-segmented-worms	test	2026-10-22
+PQ221478.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Admetella	Admetella multiseta	5		linear	16665	B	unknown	01-NOV-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PQ221479.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Admetella	Admetella sp.	5		linear	16699	B	unknown	01-NOV-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PQ221480.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Admetella	Admetella levensteini	5		linear	15356	B	unknown	01-NOV-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PQ221481.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Admetella	Admetella sp.	5		linear	16501	B	unknown	01-NOV-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PQ221482.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Admetella	Admetella undulata	5		linear	15638	B	unknown	01-NOV-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PQ221483.1		Annelida	Polychaeta	Phyllodocida	Polynoidae	Admetella	Admetella nanhaiensis	5		linear	16523	B	unknown	01-NOV-2024	linear	Annelida-segmented-worms	test	2026-10-22
+PQ510072.1		Annelida	Polychaeta	Phyllodocida	Phyllodocidae	Phyllodoce	Phyllodoce koreana	5		circular	15559	B	MitoZ	17-JUN-2025		Annelida-segmented-worms	dev	2026-10-22
+PQ821863.1		Annelida	Polychaeta	Phyllodocida	Hesionidae	Parahesione	Parahesione sp.	5		circular	17771	B	unknown	01-MAR-2026		Annelida-segmented-worms	test	2026-10-22
+PV424659.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Dendronereis	Dendronereis javaensis	5		circular	15919	B	unknown	17-FEB-2026		Annelida-segmented-worms	test	2026-10-22
+PV424660.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Dendronereides	Dendronereides cilacapensis	5		circular	15438	B	unknown	17-FEB-2026		Annelida-segmented-worms	test	2026-10-22
+PV573995.1		Annelida	Polychaeta	Phyllodocida	Nereididae	Perinereis	Perinereis linea	5		circular	15854	B	unknown	14-MAY-2025		Annelida-segmented-worms	test	2026-10-22
+LT159848.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Haementeria	Haementeria officinalis	5		linear	14849	B	unknown	16-MAY-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+LT159850.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Placobdella	Placobdella parasitica	5		linear	14909	B	unknown	16-MAY-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+MN106285.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Hemiclepsis	Hemiclepsis yangtzenensis	5		circular	14984	B	unknown	29-SEP-2021		Annelida-segmented-worms	test	2026-10-22
+MT628565.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Glossiphonia	Glossiphonia concolor	5		linear	14548	B	unknown	02-AUG-2020	linear	Annelida-segmented-worms	test	2026-10-22
+MT683771.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Haementeria	Haementeria acuecueyetzin	5		linear	14985	B	unknown	12-NOV-2020	linear	Annelida-segmented-worms	dev	2026-10-22
+MT872697.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Glossiphonia	Glossiphonia complanata	5		linear	14864	B	unknown	04-MAY-2022	linear	Annelida-segmented-worms	test	2026-10-22
+NC_030269.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Placobdella	Placobdella lamothei	5		circular	15190	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_069202.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Glossiphonia	Glossiphonia complanata	5		circular	15468	B	unknown	04-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_069203.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Theromyzon	Theromyzon tessulatum	5		circular	15913	B	unknown	04-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_069206.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Baicaloclepsis	Baicaloclepsis echinulata	5		circular	15120	B	unknown	04-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_069207.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Baicaloclepsis	Baicaloclepsis grubei	5		circular	14751	B	unknown	04-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_071182.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Torix	Torix tukubana	5		circular	14814	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_072218.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Alboglossiphonia	Alboglossiphonia lata	5		circular	15227	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_072220.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Batracobdella	Batracobdella cancricola	5		circular	15309	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_072606.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Helobdella	Helobdella europaea	5		circular	18661	A-longread	unknown	13-APR-2023		Annelida-segmented-worms	test	2026-10-22
+OZ076472.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Haementeria	Haementeria sp. COZEM-ANN-HIR-001/002	5		linear	14892	B	unknown	20-JUN-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+PP165800.1		Annelida	Clitellata	Rhynchobdellida	Glossiphoniidae	Alboglossiphonia	Alboglossiphonia lata	5		circular	15236	B	unknown	06-MAR-2024		Annelida-segmented-worms	dev	2026-10-22
+AY741662.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Riftia	Riftia pachyptila	5		linear	12016	B	unknown	26-JUL-2016	linear	Annelida-segmented-worms	test	2026-10-22
+KJ789165.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Ridgeia	Ridgeia piscesae	5		linear	14146	B	unknown	10-APR-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KJ789169.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Siboglinum	Siboglinum ekmani	5		linear	14838	B	unknown	10-APR-2015	linear	Annelida-segmented-worms	dev	2026-10-22
+KJ789171.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Spirobrachia	Spirobrachia sp. YL-2014	5		circular	15581	B	unknown	10-APR-2015		Annelida-segmented-worms	dev	2026-10-22
+LC757642.1		Annelida	Polychaeta	Sabellida	Serpulidae	Ficopomatus	Ficopomatus enigmaticus	5		circular	15853	B	unknown	23-JAN-2024		Annelida-segmented-worms	test	2026-10-22
+MT108936.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Osedax	Osedax rubiplumus	5		circular	15591	B	unknown	10-MAY-2020		Annelida-segmented-worms	test	2026-10-22
+MT108937.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Osedax	Osedax rubiplumus	5		circular	15972	B	unknown	10-MAY-2020		Annelida-segmented-worms	test	2026-10-22
+MT919975.1		Annelida	Polychaeta	Sabellida	Serpulidae	Hydroides	Hydroides norvegica	5		circular	17604	B	unknown	01-MAY-2021		Annelida-segmented-worms	test	2026-10-22
+MW727509.1		Annelida	Polychaeta	Sabellida	Sabellidae	Sabella	Sabella spallanzanii	5		circular	15582	B	MitoZ	29-JAN-2022		Annelida-segmented-worms	dev	2026-10-22
+MZ435261.1		Annelida	Polychaeta	Sabellida	Sabellidae	Sabella	Sabella spallanzanii	5		circular	15580	B	MitoZ	30-OCT-2022		Annelida-segmented-worms	dev	2026-10-22
+NC_024653.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Ridgeia	Ridgeia piscesae	5		circular	15002	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_026833.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Siboglinum	Siboglinum fiordicum	5		circular	19502	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_026855.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Sclerolinum	Sclerolinum brattstromi	5		circular	15383	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026856.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Escarpia	Escarpia spicata	5		circular	15445	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026857.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Galathealinum	Galathealinum brachiosum	5		circular	14779	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_026858.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Lamellibrachia	Lamellibrachia luymesi	5		circular	14991	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026859.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Oasisia	Oasisia alvinae	5		circular	14849	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026860.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Riftia	Riftia pachyptila	5		circular	14987	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026861.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Seepiophila	Seepiophila jonesi	5		circular	15092	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026862.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Tevnia	Tevnia jerichonana	5		circular	14891	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027854.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Lamellibrachia	Lamellibrachia satsuma	5		circular	15037	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_032055.1		Annelida	Polychaeta	Sabellida	Serpulidae	Spirobranchus	Spirobranchus giganteus	5		circular	22058	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_037085.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Paraescarpia	Paraescarpia echinospica	5		circular	15280	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_050262.1		Annelida	Polychaeta	Sabellida	Fabriciidae	Manayunkia	Manayunkia occidentalis	5		circular	15103	B	MitoFinder	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_056279.1		Annelida	Polychaeta	Sabellida	Sabellidae	Sabella	Sabella spallanzanii	5		circular	15581	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_061743.1		Annelida	Polychaeta	Sabellida	Serpulidae	Hydroides	Hydroides elegans	5		circular	22046	B	unknown	13-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_061913.1		Annelida	Polychaeta	Sabellida	Sabellidae	Pseudopotamilla	Pseudopotamilla reniformis	5		circular	16452	B	unknown	13-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082189.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Lamellibrachia	Lamellibrachia donwalshi	5		circular	14982	B	MitoFinder	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082190.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Lamellibrachia	Lamellibrachia columna	5		circular	15115	B	MitoFinder	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082191.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Lamellibrachia	Lamellibrachia barhami	5		circular	15019	B	MitoFinder	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082192.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Alaysia	Alaysia spiralis	5		circular	15040	B	MitoFinder	16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082193.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Arcovestia	Arcovestia ivanovi	5		circular	14953	B	MitoFinder	16-SEP-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_085348.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Oligobrachia	Oligobrachia dogieli	5		circular	16236	B	unknown	01-FEB-2024		Annelida-segmented-worms	test	2026-10-22
+OK040144.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Riftia	Riftia pachyptila	5		circular	15406	A-longread	unknown	07-DEC-2022		Annelida-segmented-worms	test	2026-10-22
+OL681896.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Sclerolinum	Sclerolinum annulatum	5		linear	15553	B	unknown	15-NOV-2022	linear	Annelida-segmented-worms	test	2026-10-22
+OL681897.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Sclerolinum	Sclerolinum annulatum	5		linear	15553	B	unknown	15-NOV-2022	linear	Annelida-segmented-worms	test	2026-10-22
+OL681898.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Sclerolinum	Sclerolinum annulatum	5		linear	15553	B	unknown	15-NOV-2022	linear	Annelida-segmented-worms	test	2026-10-22
+ON929992.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Riftia	Riftia pachyptila	5		circular	16566	B	MitoFinder	07-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+ON929993.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Oasisia	Oasisia sp. n. MM-2023	5		circular	15356	B	MitoFinder	07-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+ON929994.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Escarpia	Escarpia spicata	5		circular	15150	B	MitoFinder	07-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+ON929996.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Escarpia	Escarpia spicata	5		circular	15168	B	MitoFinder	07-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+ON929999.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Alaysia	Alaysia sp. n. 2 MM-2023	5		circular	14981	B	MitoFinder	07-AUG-2023		Annelida-segmented-worms	test	2026-10-22
+PP975882.1		Annelida	Polychaeta	Sabellida	Sabellidae	Amphiglena	Amphiglena cf. mediterranea IV MP-2024a	5		circular	16401	B	unknown	01-APR-2025		Annelida-segmented-worms	test	2026-10-22
+PQ468431.1		Annelida	Polychaeta	Sabellida	Siboglinidae	Riftia	Riftia pachyptila	5		circular	15406	A-longread	unknown	21-OCT-2024		Annelida-segmented-worms	test	2026-10-22
+PV535851.1		Annelida	Polychaeta	Sabellida	Sabellidae	Sabella	Sabella spallanzanii	5		circular	15581	B	MitoZ	31-OCT-2025		Annelida-segmented-worms	dev	2026-10-22
+PX168857.1		Annelida	Polychaeta	Sabellida	Serpulidae	Salmacina	Salmacina cf. setosa	5		circular	16114	B	MitoZ	23-FEB-2026		Annelida-segmented-worms	test	2026-10-22
+PX970953.1		Annelida	Polychaeta	Sabellida	Serpulidae	Ficopomatus	Ficopomatus sp.	5		circular	15775	B	MitoFinder	12-MAR-2026		Annelida-segmented-worms	test	2026-10-22
+PX970954.1		Annelida	Polychaeta	Sabellida	Serpulidae	Spirobranchus	Spirobranchus sp.	5		circular	17455	B	MitoFinder	12-MAR-2026		Annelida-segmented-worms	test	2026-10-22
+MK120303.1		Annelida	Polychaeta	Spionida	Spionidae	Marenzelleria	Marenzelleria neglecta	5		linear	15339	B	unknown	12-NOV-2019	linear	Annelida-segmented-worms	dev	2026-10-22
+MW528029.1		Annelida	Polychaeta	Spionida	Spionidae	Boccardiella	Boccardiella hamata	5		circular	17561	B	unknown	09-MAY-2021		Annelida-segmented-worms	test	2026-10-22
+NC_061377.1		Annelida	Polychaeta	Spionida	Spionidae	Polydora	Polydora hoplura	5		circular	17707	B	unknown	16-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_071875.1		Annelida	Polychaeta	Spionida	Spionidae	Rhynchospio	Rhynchospio aff. asiatica ZW-2021	5		circular	17435	B	MitoZ	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+OK032597.1		Annelida	Polychaeta	Spionida	Spionidae	Lindaspio	Lindaspio sp. i ZZ-2021	5		circular	15248	B	MITOS	08-FEB-2022		Annelida-segmented-worms	test	2026-10-22
+OQ078742.1		Annelida	Polychaeta	Spionida	Spionidae	Polydora	Polydora cf. ciliata DS-2023	5		circular	17645	B	unknown	20-OCT-2023		Annelida-segmented-worms	dev	2026-10-22
+OR935903.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 1 MH-2023	5		circular	16189	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935904.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio cirrifera	5		circular	17253	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935905.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 1 MH-2023	5		circular	15576	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935906.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 1 MH-2023	5		linear	16903	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+OR935907.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 7 MH-2023	5		linear	16444	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+OR935908.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 3 MH-2023	5		circular	16260	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935909.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio cirrifera	5		circular	16012	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935910.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 3 MH-2023	5		circular	15477	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935911.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 3 MH-2023	5		linear	16659	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+OR935912.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 3 MH-2023	5		linear	16529	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+OR935913.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio multibranchiata	5		circular	16468	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935914.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sanmartini	5		circular	15479	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935915.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sanmartini	5		circular	15479	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935916.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio multibranchiata	5		circular	16598	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935917.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 4 MH-2023	5		circular	15007	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935918.1		Annelida	Polychaeta	Spionida	Spionidae	Aurospio	Aurospio banyulensis	5		circular	15435	B	unknown	11-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OR935919.1		Annelida	Polychaeta	Spionida	Spionidae	Aurospio	Aurospio banyulensis	5		circular	16153	B	unknown	11-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OR935920.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio plumosa	5		circular	16358	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935921.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio fallax	5		circular	15965	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935922.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio fallax	5		circular	16641	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935923.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio plumosa	5		linear	16647	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+OR935924.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio plumosa	5		linear	16164	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	test	2026-10-22
+OR935925.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio dubia	5		circular	15646	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935926.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio dubia	5		circular	15845	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935927.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio dubia	5		circular	15830	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935928.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio dubia	5		circular	15854	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935929.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio fallax	5		circular	15966	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935930.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 6 MH-2023	5		circular	16847	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935931.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 7 MH-2023	5		circular	16221	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935932.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio dubia	5		circular	15273	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935933.1		Annelida	Polychaeta	Spionida	Spionidae	Aurospio	Aurospio banyulensis	5		circular	15810	B	unknown	11-JUL-2024		Annelida-segmented-worms	dev	2026-10-22
+OR935934.1		Annelida	Polychaeta	Spionida	Spionidae	Aurospio	Aurospio banyulensis	5		linear	19439	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+OR935935.1		Annelida	Polychaeta	Spionida	Spionidae	Aurospio	Aurospio banyulensis	5		linear	18356	B	unknown	11-JUL-2024	linear	Annelida-segmented-worms	dev	2026-10-22
+OR935936.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio cirrifera	5		circular	17322	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935937.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio cirrifera	5		circular	17264	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935938.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 2 MH-2023	5		circular	17060	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935939.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio sp. 5 MH-2023	5		circular	16370	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+OR935940.1		Annelida	Polychaeta	Spionida	Spionidae	Prionospio	Prionospio dubia	5		circular	15619	B	unknown	11-JUL-2024		Annelida-segmented-worms	test	2026-10-22
+EU236701.1		Annelida	Polychaeta	Terebellida	Trichobranchidae	Terebellides	Terebellides stroemii	5		circular	15755	B	unknown	26-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+EU239687.1		Annelida	Polychaeta	Terebellida	Ampharetidae	Eclysippe	Eclysippe vanelli	5		linear	13749	B	unknown	16-JUN-2008	linear	Annelida-segmented-worms	test	2026-10-22
+EU239688.1		Annelida	Polychaeta	Terebellida	Terebellidae	Pista	Pista cristata	5		circular	15894	B	unknown	26-JUL-2016		Annelida-segmented-worms	test	2026-10-22
+FJ976040.1		Annelida	Polychaeta	Terebellida	Pectinariidae	Pectinaria	Pectinaria gouldii	5		linear	13438	B	unknown	24-JUL-2016	linear	Annelida-segmented-worms	test	2026-10-22
+FJ976041.1		Annelida	Polychaeta	Terebellida	Ampharetidae	Auchenoplax	Auchenoplax crinita	5		linear	13759	B	unknown	24-JUL-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+FJ976042.1		Annelida	Polychaeta	Terebellida	Alvinellidae	Paralvinella	Paralvinella sulfincola	5		linear	13640	B	unknown	24-JUL-2016	linear	Annelida-segmented-worms	dev	2026-10-22
+KY742027.1		Annelida	Polychaeta	Terebellida	Ampharetidae	Decemunciger	Decemunciger sp. AB-2017	5		circular	19274	B	unknown	03-JUL-2017		Annelida-segmented-worms	dev	2026-10-22
+KY774370.1		Annelida	Polychaeta	Terebellida	Ampharetidae	Decemunciger	Decemunciger sp. AB-2017	5		circular	19096	B	unknown	12-JUL-2017		Annelida-segmented-worms	dev	2026-10-22
+KY774371.1		Annelida	Polychaeta	Terebellida	Ampharetidae	Decemunciger	Decemunciger sp. AB-2017	5		circular	19003	B	unknown	12-JUL-2017		Annelida-segmented-worms	dev	2026-10-22
+MK192098.1		Annelida	Polychaeta	Terebellida	Alvinellidae	Paralvinella	Paralvinella hessleri	5		linear	16978	B	unknown	08-APR-2020	linear	Annelida-segmented-worms	dev	2026-10-22
+MK548645.1		Annelida	Polychaeta	Terebellida	Sternaspidae	Sternaspis	Sternaspis scutata	5		linear	15300	B	unknown	23-FEB-2020	linear	Annelida-segmented-worms	dev	2026-10-22
+MZ326700.1		Annelida	Polychaeta	Terebellida	Terebellidae	Neoamphitrite	Neoamphitrite affinis	5		circular	15823	B	unknown	10-AUG-2021		Annelida-segmented-worms	test	2026-10-22
+MZ557347.1		Annelida	Polychaeta	Terebellida	Flabelligeridae	Pherusa	Pherusa bengalensis	5		circular	15639	B	unknown	31-AUG-2021		Annelida-segmented-worms	test	2026-10-22
+NC_011014.1		Annelida	Polychaeta	Terebellida	Trichobranchidae	Terebellides	Terebellides stroemii	5		circular	15755	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_037390.1		Annelida	Polychaeta	Terebellida	Cirratulidae	Cirriformia	Cirriformia cf. tentaculata HK-2018	5		circular	15495	B	unknown	03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_044092.1		Annelida	Polychaeta	Terebellida	Cirratulidae	Timarete	Timarete posteria	5		circular	15497	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_059817.1		Annelida	Polychaeta	Terebellida	Melinnidae	Melinna	Melinna cristata	5		circular	15696	B	unknown	13-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_060301.1		Annelida	Polychaeta	Terebellida	Terebellidae	Thelepus	Thelepus plagiostoma	5		circular	15628	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_064503.1		Annelida	Polychaeta	Terebellida	Alvinellidae	Paralvinella	Paralvinella palmiformis	5		circular	16386	A-longread	unknown	12-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_068907.1		Annelida	Polychaeta	Terebellida	Sternaspidae	Sternaspis	Sternaspis sendalli	5		circular	15287	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_069058.1		Annelida	Polychaeta	Terebellida	Sternaspidae	Sternaspis	Sternaspis chinensis	5		circular	15298	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_069059.1		Annelida	Polychaeta	Terebellida	Sternaspidae	Sternaspis	Sternaspis liui	5		circular	15299	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_088773.1		Annelida	Polychaeta	Terebellida	Terebellidae	Loimia	Loimia medusa	5		circular	16023	B	unknown	13-MAY-2024		Annelida-segmented-worms	dev	2026-10-22
+ON155433.1		Annelida	Polychaeta	Terebellida	Sternaspidae	Sternaspis	Sternaspis buzhinskajae	5		circular	17728	B	unknown	27-NOV-2022		Annelida-segmented-worms	dev	2026-10-22
+OQ807196.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Macrochaeta	Macrochaeta cf. westheidei	5		circular	15917	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807197.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Acrocirrus	Acrocirrus validus	5		circular	15544	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807198.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Flabelligena	Flabelligena sp.	5		circular	16268	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	dev	2026-10-22
+OQ807199.1		Annelida	Polychaeta	Terebellida	Flabelligeridae	Poeobius	Poeobius meseres	5		circular	17500	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807200.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Macrochaeta	Macrochaeta pege	5		circular	15743	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807201.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Swima	Swima fulgida	5		circular	15986	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807202.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Swima	Swima bombiviridis	5		circular	16267	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807203.1		Annelida	Polychaeta	Terebellida	Fauveliopsidae	Flota	Flota sp.	5		circular	16793	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	dev	2026-10-22
+OQ807204.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Teuthidodrilus	Teuthidodrilus samae	5		circular	16071	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807205.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Teuthidodrilus	Teuthidodrilus sp. n PPP-2023	5		circular	15350	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OQ807206.1		Annelida	Polychaeta	Terebellida	Acrocirridae	Swima	Swima tawitawiensis	5		circular	16402	B	MitoFinder	07-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+OR854549.1		Annelida	Polychaeta	Terebellida	Cirratulidae	Cirriformia	Cirriformia tentaculata	5		circular	15516	B	unknown	12-MAR-2024		Annelida-segmented-worms	test	2026-10-22
+PQ774336.1		Annelida	Polychaeta	Terebellida	Terebellidae	Loimia	Loimia borealis	5		circular	15884	B	unknown	03-FEB-2026		Annelida-segmented-worms	dev	2026-10-22
+PQ824720.1		Annelida	Polychaeta	Terebellida	Terebellidae	Pista	Pista sp.	5		circular	16005	B	MitoFinder	07-JAN-2025		Annelida-segmented-worms	test	2026-10-22
+PV083664.1		Annelida	Polychaeta	Terebellida	Alvinellidae	Paralvinella	Paralvinella sulfincola	5		circular	16425	B	MITOS	08-FEB-2026		Annelida-segmented-worms	dev	2026-10-22
+PV263602.1		Annelida	Polychaeta	Terebellida	Terebellidae	Amaeana	Amaeana sp.	5		circular	16002	B	MitoFinder	18-MAR-2025		Annelida-segmented-worms	test	2026-10-22
+PV460758.1		Annelida	Polychaeta	Terebellida	Terebellidae	Terebellidae	Terebellidae sp.	5		circular	15894	B	unknown	13-APR-2025		Annelida-segmented-worms	test	2026-10-22
+PV460759.1		Annelida	Polychaeta	Terebellida	Trichobranchidae	Terebellides	Terebellides sp.	5		circular	15734	B	unknown	13-APR-2025		Annelida-segmented-worms	dev	2026-10-22
+PV480557.1		Annelida	Polychaeta	Terebellida	Trichobranchidae	Terebellides	Terebellides sp.	5		circular	15581	B	unknown	16-APR-2025		Annelida-segmented-worms	dev	2026-10-22
+MW690579.1		Annelida	Clitellata	Tubificida	Naididae	Tubifex	Tubifex tubifex	5		circular	15972	B	unknown	03-MAY-2021		Annelida-segmented-worms	test	2026-10-22
+MW732144.1		Annelida	Clitellata	Tubificida	Naididae	Limnodrilus	Limnodrilus hoffmeisteri	5		circular	14960	B	unknown	22-JUN-2021		Annelida-segmented-worms	dev	2026-10-22
+MW770354.1		Annelida	Clitellata	Tubificida	Naididae	Nais	Nais communis	5		circular	15685	B	unknown	11-MAY-2021		Annelida-segmented-worms	test	2026-10-22
+PP893275.1		Annelida	Clitellata	Tubificida	Naididae	Slavina	Slavina appendiculata	5		linear	14516	B	unknown	15-JUN-2024	linear	Annelida-segmented-worms	test	2026-10-22
+AY619711.1		Annelida	Polychaeta	Xenopneusta	Urechidae	Urechis	Urechis caupo	5		circular	15113	B	unknown	26-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+EF656365.1		Annelida	Polychaeta	Xenopneusta	Urechidae	Urechis	Urechis unicinctus	5		circular	15761	B	unknown	23-JUL-2016		Annelida-segmented-worms	dev	2026-10-22
+NC_006379.1		Annelida	Polychaeta	Xenopneusta	Urechidae	Urechis	Urechis caupo	5		circular	15113	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22
+NC_012768.1		Annelida	Polychaeta	Xenopneusta	Urechidae	Urechis	Urechis unicinctus	5		circular	15761	B	unknown	03-APR-2023		Annelida-segmented-worms	dev	2026-10-22

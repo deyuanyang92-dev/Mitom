@@ -16,7 +16,10 @@ to automatic annotation (e.g. MitoZ / MITOS output):
   P2  Two PCGs on the same strand and in the same frame cannot overlap (criterion ii) - reported.
   D1  A protein gene annotated twice at different places (e.g. MitoZ on a duplicated region): only one
       copy is kept - the complete one (start + stop, no internal stop), the longer, then the first in
-      the record; the other CDS and its gene feature are removed (NCBI records annotate one copy).
+      the record; the other CDS and its gene feature are removed (NCBI records annotate one copy), unless
+      the other copy is complete too and its sequence is >= 95 % identical with the same length +-3 nt, for
+      >= 2 genes (a duplicated block, annotated twice by NCBI: NC_009093.1 mite, 9 genes; one repeated
+      atp8 is annotated once: NC_049135.1).
       An overlapping copy on the other strand that is incomplete or has internal stops is removed as well.
   P3  PCG end: the first in-frame complete stop codon, or an abbreviated stop (T / TA) ending
       immediately before the downstream same-strand tRNA, completed by polyadenylation
@@ -620,23 +623,31 @@ class Curator:
                 name = PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "")
                 if name:
                     by.setdefault(name, []).append(f)
+        def quality(f: SeqFeature) -> tuple:
+            nt = self.tseq(f)[self.tx(f)[0] - 1:self.tx(f)[1]]
+            tail = len(nt) % 3
+            codons = [nt[i:i + 3] for i in range(0, len(nt) - tail, 3)]
+            complete = codons and codons[0] in self.starts and \
+                (nt[-tail:] in ("T", "TA") if tail else codons[-1] in self.stops)
+            internal = any(c in self.stops for c in (codons if tail else codons[:-1]))
+            return (bool(complete) and not internal, len(nt), -int(f.location.start))
+
+        def true_copy(f: SeqFeature, keep: SeqFeature) -> bool:
+            fn, kn = (self.tseq(x)[self.tx(x)[0] - 1:self.tx(x)[1]] for x in (f, keep))
+            return quality(keep)[0] and quality(f)[0] and abs(len(fn) - len(kn)) <= 3 and \
+                sum(x == y for x, y in zip(fn, kn)) >= 0.95 * max(len(fn), len(kn))
+
+        keeps = {name: max(fs, key=quality) for name, fs in by.items() if len(fs) >= 2}
+        block = sum(any(f is not k and true_copy(f, k) for f in by[name]) for name, k in keeps.items()) >= 2
         for name, fs in by.items():
             if len(fs) < 2:
                 continue
-
-            def quality(f: SeqFeature) -> tuple:
-                nt = self.tseq(f)[self.tx(f)[0] - 1:self.tx(f)[1]]
-                tail = len(nt) % 3
-                codons = [nt[i:i + 3] for i in range(0, len(nt) - tail, 3)]
-                complete = codons and codons[0] in self.starts and \
-                    (nt[-tail:] in ("T", "TA") if tail else codons[-1] in self.stops)
-                internal = any(c in self.stops for c in (codons if tail else codons[:-1]))
-                return (bool(complete) and not internal, len(nt), -int(f.location.start))
-
-            keep = max(fs, key=quality)
+            keep = keeps[name]
             for f in fs:
                 if f is keep or any(a <= d and c <= b for a, b in spans(f) for c, d in spans(keep)):
                     continue                            # overlapping copies are the P2 case, not duplicates
+                if block and true_copy(f, keep):
+                    continue                            # a second copy in a duplicated block
                 self.log(f, "D1", span(f), span(keep), f"duplicate {name}: second copy removed, {span(keep)[0]}..{span(keep)[1]} kept")
                 g = gene_feature(self.rec, f)
                 self.rec.features = [x for x in self.rec.features if x is not f and x is not g]
