@@ -125,7 +125,6 @@ class Model:
 
 
 TIMEOUT = 900                          # seconds per external program call (--timeout)
-CM_CPU = 1                             # cmsearch threads (--threads)
 
 
 def run_tool(cmd: List[str], what: str) -> str:
@@ -413,7 +412,8 @@ def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: f
         tbl.unlink(missing_ok=True)
         # --mxsize 128 MB: a long group I subtype model hit took 266 MB (NC_027103.1 nad5 intron); same models and
         # E-values within 10 % at 128 (whole run: 293 -> 183 MB fast pass, 977 -> 237 MB full pass); 64 loses hits
-        run_tool([cmsearch, "--noali", "--toponly", *(["--rfam"] if fast else []), "--cpu", str(CM_CPU), "--mxsize", "128",
+        # --cpu 0 (no worker threads, each holds its own DP matrices): same hits and time, 187 -> 165 MB on NC_027103.1
+        run_tool([cmsearch, "--noali", "--toponly", *(["--rfam"] if fast else []), "--cpu", "0", "--mxsize", "128",
                   "--tblout", str(tbl), str(cm), str(fna)], "cmsearch")
         for line in tbl.read_text().splitlines() if tbl.exists() else []:
             if line.startswith("#"):
@@ -1123,7 +1123,7 @@ def main(argv=None) -> int:
     p.add_argument("--no_subtype_cms", action="store_true",
                    help="Do not use the group I subtype models of Selles Vidal et al. 2025 (Rfam only)")
     p.add_argument("--bin", default=None, help="Directory with exonerate, blastp, makeblastdb, cmsearch")
-    p.add_argument("--threads", type=int, default=1, help="Threads for blastp and cmsearch")
+    p.add_argument("--threads", type=int, default=1, help="Threads for blastp")
     p.add_argument("--jobs", type=int, default=1, help="GenBank files processed in parallel")
     p.add_argument("--timeout", type=int, default=900, help="Seconds allowed per external program call")
     p.add_argument("--stop_rule", choices=["homolog", "first"], default="first",
@@ -1151,8 +1151,8 @@ def main(argv=None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     rows: List[dict] = []
-    global TIMEOUT, CM_CPU
-    TIMEOUT, CM_CPU = a.timeout, max(1, a.threads)
+    global TIMEOUT
+    TIMEOUT = a.timeout
     with tempfile.TemporaryDirectory() as td:
         lib_faa = Path(td) / "lib.faa"
         lib_faa.write_text("".join(f">{k}\n{v.seq}\n" for k, v in lib.items()))

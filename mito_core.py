@@ -39,9 +39,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
-from Bio import SeqIO
 from Bio.Data import CodonTable
 from Bio.Seq import Seq
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, FeatureLocation, SeqFeature
@@ -200,10 +199,26 @@ def clean_protein(seq: str) -> str:
     return re.sub(r"[^ACDEFGHIKLMNPQRSTVWY]", "X", seq.upper().rstrip("*"))
 
 
+def read_fasta(path: Path) -> Iterator[SeqRecord]:
+    """FASTA records (id = first word, description = whole header), streamed, without Bio.SeqIO: it imports numpy
+    (~27 MB), resident in this process while nhmmer / blastx / cmsearch run (peak memory); SeqIO only writes GenBank"""
+    head, parts = None, []
+    with open(path) as fh:
+        for line in fh:
+            if line.startswith(">"):
+                if head is not None:
+                    yield SeqRecord(Seq("".join(parts)), id=(head.split() or [""])[0], description=head)
+                head, parts = line[1:].strip(), []
+            elif head is not None:
+                parts.append("".join(line.split()))
+    if head is not None:
+        yield SeqRecord(Seq("".join(parts)), id=(head.split() or [""])[0], description=head)
+
+
 def reference_proteins(db_fasta: Path, ids: List[str]) -> Dict[str, str]:
     want = set(ids)
     out = {}
-    for r in SeqIO.parse(str(db_fasta), "fasta"):
+    for r in read_fasta(db_fasta):
         if r.id in want:
             out[r.id] = clean_protein(str(r.seq))
             if len(out) == len(want):
@@ -345,9 +360,10 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
     N = len(genome)
     n = n or N
     rc = str(Seq(genome).reverse_complement())
-    # blastx processes run 2 threads each, half as many at once: the same CPU, one 80-MB process less (peak memory)
-    bt = 2 if threads >= 2 else 1
-    with ThreadPoolExecutor(max(1, threads // bt)) as ex:
+    # one blastx process at a time with all threads: as fast as 2 x 2 threads (13 genes ~15 s), one ~80-MB process
+    # instead of two (peak memory)
+    bt = max(1, threads)
+    with ThreadPoolExecutor(1) as ex:
         all_hits = dict(zip(PCG, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
                                                                  code, g, bt, log), PCG)))
         missing = [g for g in PCG if not all_hits[g]]
@@ -662,6 +678,7 @@ def location(f: Feature, n: int):
 
 
 def write_genbank(genome: str, feats: List[Feature], code: int, prefix: str, topology: str, out: Path) -> Path:
+    from Bio import SeqIO
     SeqIO.write(genbank_record(genome, feats, code, prefix, topology), str(out), "genbank")
     return out
 
@@ -703,7 +720,7 @@ def annotate(args) -> int:
     fa = Path(args.input).resolve()
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
-    seqs = list(SeqIO.parse(str(fa), "fasta"))
+    seqs = list(read_fasta(fa))
     if not seqs:
         raise SystemExit(f"[core] no sequence in {fa}")
     prefix = args.prefix or re.sub(r"[^A-Za-z0-9_.-]", "_", seqs[0].id)[:16]
@@ -746,6 +763,7 @@ def annotate(args) -> int:
         for kind in n_all:
             n_all[kind] += sum(1 for f in feats if f.kind == kind)
     gb = out / f"{prefix}.gbf"
+    from Bio import SeqIO
     SeqIO.write(recs, str(gb), "genbank")
     with (out / f"{prefix}.core.tsv").open("w") as fh:
         fh.write("record\tkind\tname\tstart\tend\tstrand\tscore\tanticodon\tnote\n")

@@ -64,7 +64,6 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Data import CodonTable
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, ExactPosition, FeatureLocation, SeqFeature
@@ -814,6 +813,7 @@ def compare_validation(before: List[Dict[str, str]], after: List[Dict[str, str]]
 
 
 def main(argv=None) -> int:
+    from Bio import SeqIO
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-i", "--input", required=True)
     p.add_argument("-o", "--out", required=True)

@@ -58,7 +58,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
@@ -353,6 +352,7 @@ def find(name: str, bin_dir: Optional[str], mitos_bin: Optional[str]) -> Optiona
 
 
 def main(argv=None) -> int:
+    from Bio import SeqIO
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-i", "--input", required=True, help="GenBank or FASTA file / directory")
     p.add_argument("-o", "--out", required=True)

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import Bio.SeqIO
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, FeatureLocation, SeqFeature
@@ -462,7 +463,7 @@ def test_gbf_written_atomically(tmp_path, monkeypatch):
     d = tmp_path / "final"
     _gbf(d / "a.gbf", rec(rand(5000), [("CDS", 0, 1500, 1, "COX1"), ("rRNA", 4000, 4600, 1, "s-rRNA")]))
     before = (d / "a.gbf").read_bytes()
-    real = SeqIO.write
+    real = Bio.SeqIO.write
 
     def broken(recs, dest, fmt):
         if hasattr(dest, "write"):
@@ -471,9 +472,9 @@ def test_gbf_written_atomically(tmp_path, monkeypatch):
             Path(dest).write_text("LOCUS partial")
         raise ValueError("cannot serialise")
 
-    monkeypatch.setattr(rh.SeqIO, "write", broken)
+    monkeypatch.setattr(Bio.SeqIO, "write", broken)
     rows = rh.search_dir(d, lib, run=lambda hmm, fa: [hit(2000, 2880, 1, 880)])
-    monkeypatch.setattr(rh.SeqIO, "write", real)
+    monkeypatch.setattr(Bio.SeqIO, "write", real)
     assert (d / "a.gbf").read_bytes() == before
     assert sorted(p.name for p in d.iterdir()) == ["a.gbf"]
     assert rows and rows[0]["status"].startswith("failed: ")

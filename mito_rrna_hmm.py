@@ -60,7 +60,6 @@ import tempfile
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
-from Bio import SeqIO
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, ExactPosition, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
@@ -345,6 +344,7 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
 
 def _write_gb(recs: List[SeqRecord], path: Path) -> None:
     """Write a GenBank file atomically: temp file in the same directory, then os.replace()."""
+    from Bio import SeqIO
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w") as h:
@@ -360,6 +360,7 @@ def search_dir(final_dir: Path, lib: Path = LIB, phylum: Optional[str] = None,
                run: Optional[Callable[[Path, Path], List[Hit]]] = None) -> List[dict]:
     """All *.gbf / *.gb under final_dir (subdirectories too, e.g. no_cox1_gene/), rewritten in place when an
     rRNA was added. Never raises for one bad record or file: that is a "failed: ..." row."""
+    from Bio import SeqIO
     rows = []
     for f in sorted(set(final_dir.rglob("*.gbf")) | set(final_dir.rglob("*.gb"))):
         name, none = f.relative_to(final_dir).as_posix(), {"record": "", "phylum": "", "gene": "", "location": ""}
@@ -387,6 +388,7 @@ def search_dir(final_dir: Path, lib: Path = LIB, phylum: Optional[str] = None,
 
 
 def _ref_rrnas(gb: Path, exclude: Set[str]) -> Dict[str, List[str]]:
+    from Bio import SeqIO
     out: Dict[str, List[str]] = {g: [] for g in GENES}
     for r in SeqIO.parse(str(gb), "genbank"):
         if r.id.split(".")[0] in exclude:

@@ -188,3 +188,13 @@ def test_place_cds_without_downstream_fallback():
     s2, _, partial2 = mc.place_cds(window, 60, 150, 0, T5)
     assert (s2, partial2) == (90, False)
     assert "nad4l" in mc.NO_START_DOWN["echinodermata"]
+
+
+def test_read_fasta_matches_seqio(tmp_path):
+    """read_fasta (no Bio.SeqIO, peak memory) gives SeqIO's ids, descriptions and wrapped sequences"""
+    from Bio import SeqIO
+    fa = tmp_path / "x.fa"
+    fa.write_text(">NC_1.1 Foo bar topology=linear\nACGT\nAC GT\n\n>NC_2.1\nTTTT\n")
+    got = [(r.id, r.description, str(r.seq)) for r in mc.read_fasta(fa)]
+    assert got == [(r.id, r.description, str(r.seq)) for r in SeqIO.parse(str(fa), "fasta")]
+    assert got[0] == ("NC_1.1", "NC_1.1 Foo bar topology=linear", "ACGTACGT")
