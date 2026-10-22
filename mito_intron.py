@@ -411,7 +411,9 @@ def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: f
         fna, tbl = tmp / "introns.fna", tmp / "introns.tbl"
         fna.write_text("".join(f">{k}\n{v}\n" for k, v in todo.items()))
         tbl.unlink(missing_ok=True)
-        run_tool([cmsearch, "--noali", "--toponly", *(["--rfam"] if fast else []), "--cpu", str(CM_CPU),
+        # --mxsize 128 MB: a long group I subtype model hit took 266 MB (NC_027103.1 nad5 intron); same models and
+        # E-values within 10 % at 128 (whole run: 293 -> 183 MB fast pass, 977 -> 237 MB full pass); 64 loses hits
+        run_tool([cmsearch, "--noali", "--toponly", *(["--rfam"] if fast else []), "--cpu", str(CM_CPU), "--mxsize", "128",
                   "--tblout", str(tbl), str(cm), str(fna)], "cmsearch")
         for line in tbl.read_text().splitlines() if tbl.exists() else []:
             if line.startswith("#"):

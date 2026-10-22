@@ -460,6 +460,8 @@ def cmsearch(cm: str, model: Path, genome_fa: Path, out: Path, sensitive: bool, 
     """cmsearch as MITOS2 runs it (local mode, --cpu 1 --notextw --smxsize 80000); fast pass --noF4b -E 0.01,
     sensitive pass --max -E 0.1 (rRNA: --nohmm). Local mode finds the truncated tRNAs of nematodes."""
     cmd = [cm, "--cpu", "1", "--notextw", "--smxsize", "80000", "--tblout", str(out.with_suffix(".tbl"))]
+    if rrna:                                   # same rrnL hit, 536 -> 463 MB, 3.8 -> 2.7 s (alignment matrix cap)
+        cmd += ["--mxsize", "128"]
     if sensitive:
         cmd += ["--nohmm" if rrna else "--max", "-E", str(CM_EVALUE_SENSITIVE)]
     else:
