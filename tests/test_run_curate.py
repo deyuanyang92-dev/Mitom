@@ -40,3 +40,13 @@ def test_native_core_is_the_default():
     assert "--core {native,hybrid,mitoz}" in out.replace("\n", "").replace(" ", "") or "{native,hybrid,mitoz}" in out
     import mito_env
     assert "mitoz" not in mito_env.REQUIRED and "blastx" in mito_env.REQUIRED and "java" in mito_env.REQUIRED
+
+
+def test_abbreviated_overlap_only_for_chordata():
+    assert bm.abbreviated_overlap("Chordata") == ["--abbreviated_overlap"]
+    assert bm.abbreviated_overlap("Annelida-segmented-worms") == [] and bm.abbreviated_overlap(None) == []
+
+
+def test_no_upstream_atg_for_nematodes_and_arthropods():
+    assert bm.no_upstream_atg("Nematoda") == ["--no_upstream_atg"] == bm.no_upstream_atg("Arthropoda")
+    assert bm.no_upstream_atg("Mollusca") == [] and bm.no_upstream_atg(None) == []

@@ -5,6 +5,8 @@ Tools:
   mitom   mitom run (one command: cores, MitoM steps, curation; final_annotation/)
   mitoz   MitoZ `annotate` unchanged (no post-processing)
   mitos2  MITOS2 runmitos, full mode (proteins, rRNA, tRNA), refseq89m
+  mitos1  MITOS 1 (bioconda mitos 1.1.7, Infernal 1.0, MITOS1 reference data refseq39 of Zenodo 2683856):
+          runmitos.py of $MITOS1_BIN (default ~/miniforge3/envs/mitos1/bin), -r $MITOS1_REFDIR
   mitofinder  MitoFinder -a (annotation of an assembly) with MiTFi tRNAs; the reference (-r) is the closest
           record of --ref_pool (longest shared NCBI lineage, same genus allowed, same species excluded):
           --mitofinder <MitoFinder script> [--py2 python2.7]
@@ -46,7 +48,7 @@ from mito_names import PCG, gene_name  # noqa: E402
 
 MIN_REF_PCG = 12                          # a MitoFinder reference must carry (nearly) all genes with standard names
 
-TOOLS = ("ours", "mitoz", "mitos2", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder")
+TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder")
 # mitom_lo = mitom_native without the record's own proteins among the core's references (refseq89m holds the proteins of
 # 8,012 RefSeq records, MITOS2 uses the same set): the leave-out accuracy a new genome can expect
 MITOFINDER: Dict[str, str] = {}          # {"script": ..., "py2": ...} from the command line
@@ -193,6 +195,11 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
         cmd = [exe, "-i", fa, "-c", code, "-o", str(out / "mitos"), "-r", "refseq89m",
                "--refdir", str(mito_env.mitos_refdir(None, "refseq89m") or ""), "--noplots"]
         return [cmd + (["--linear"] if row.get("topology") == "linear" else [])]
+    if tool == "mitos1":                                      # no --linear / --noplots in MITOS 1
+        (out / "mitos").mkdir(parents=True, exist_ok=True)
+        b = Path(os.environ.get("MITOS1_BIN", Path.home() / "miniforge3/envs/mitos1/bin"))
+        return [[str(b / "python"), str(b / "runmitos.py"), "-i", fa, "-c", code, "-o", str(out / "mitos"),
+                 "-r", os.environ.get("MITOS1_REFDIR", str(Path.home() / "mitos_refs1/mitos1-refdata"))]]
     raise ValueError(tool)
 
 
@@ -354,7 +361,7 @@ def write_status(out: Path, st: dict) -> None:
 
 def collect(tool: str, out: Path, ncbi: SeqRecord) -> SeqRecord:
     """The tool's annotation of this record, before lift-over."""
-    if tool == "mitos2":
+    if tool in ("mitos2", "mitos1"):
         return mitos_to_record(out / "mitos", Seq(str(ncbi.seq)), str(ncbi.id))
     pattern = {"ours": "curated/*.gbf", "mitom": "raw/final_annotation/*.gb",
                "mitom_auto": "raw/final_annotation/*.gb", "mitom_native": "raw/final_annotation/*.gb",

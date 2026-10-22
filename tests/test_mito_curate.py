@@ -607,9 +607,10 @@ def test_duplicate_pcg_copy_removed():
 
 def test_aggressive_start_genes_only_for_listed_genes():
     """P1 upstream search for nad5 (listed, as `mitom run` sets for annelids) but not cob: both start with a valid
-    ATT 9 codons downstream of an in-frame ATG that follows the preceding tRNA. Without the list nothing moves."""
+    ATT 9 codons downstream of an in-frame ATA that follows the preceding tRNA. Without the list nothing moves (an
+    upstream ATG would be taken for any gene: test_upstream_atg_for_non_atg_start)."""
     from Bio.SeqFeature import FeatureLocation
-    body = "ATG" + "GCC" * 8 + "ATT" + "GCC" * 100 + "TAA"
+    body = "ATA" + "GCC" * 8 + "ATT" + "GCC" * 100 + "TAA"
     seq = "C" * 1000 + body + "C" * 1000
     for gene, moved, genes in (("ND5", True, "ND5,ND4L"), ("CYTB", False, "ND5,ND4L"), ("ND5", False, "")):
         rec = _mkrec(seq, [("tRNA", FeatureLocation(900, 965, 1), "trnF", {"product": ["tRNA-Phe"]}),
@@ -867,3 +868,29 @@ def test_trna_number_kept_when_the_anticodon_is_unknown():
     names = [(f.qualifiers["gene"][0], int(f.location.start)) for f in rec.features if f.type == "tRNA"]
     assert names == [("trnL1", 10), ("trnS2", 100), ("trnL2", 200)]       # a known anticodon still decides
     assert _by(rec, "gene", "trnS2").qualifiers["gene"] == ["trnS2"]
+
+
+def test_abbreviated_overlap_vertebrate_convention():
+    """--abbreviated_overlap (Chordata): a complete stop running 1-2 nt into the next same-strand tRNA becomes the
+    T / TA before it; without the option the complete stop is kept (other phyla annotate it so)."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "GCC" * 10 + "ATG" + "GCC" * 40 + "TAA" + "GCCGCC" + "G" * 59 + "GCC" * 10
+    # CDS 31..156 (ATG .. TAA at 154..156); tRNA starts at 156: the TAA overlaps it by 1 nt, TA ends at 155
+    for flag, end in ((True, 155), (False, 156)):
+        rec = _mkrec(seq, [("CDS", FeatureLocation(30, 156, 1), "COX3"),
+                           ("tRNA", FeatureLocation(155, 220, 1), "trnG", {"product": ["tRNA-Gly"]})])
+        _curate_rec(rec, abbreviated_overlap=flag)
+        assert int(_by(rec, "CDS", "COX3").location.end) == end, flag
+
+
+def test_upstream_atg_for_non_atg_start():
+    """P1: a non-ATG start (ATT) with an in-frame ATG upstream, open frame, after the preceding tRNA -> the ATG (leave-out
+    benchmark +37 starts); --no_upstream_atg (nematodes, arthropods) keeps ATT; an ATG start is never moved."""
+    from Bio.SeqFeature import FeatureLocation
+    for first, flag, moved in (("ATG", False, True), ("ATG", True, False), ("ATA", False, False)):
+        body = first + "GCC" * 8 + "ATT" + "GCC" * 100 + "TAA"
+        seq = "C" * 1000 + body + "C" * 1000
+        rec = _mkrec(seq, [("tRNA", FeatureLocation(900, 965, 1), "trnF", {"product": ["tRNA-Phe"]}),
+                           ("CDS", FeatureLocation(1027, 1000 + len(body), 1), "CYTB")])
+        _curate_rec(rec, no_upstream_atg=flag)
+        assert (int(_by(rec, "CDS", "CYTB").location.start) == 1000) == moved, (first, flag)

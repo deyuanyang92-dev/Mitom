@@ -10,7 +10,8 @@ to automatic annotation (e.g. MitoZ / MITOS output):
       annotated start overlaps the preceding same-strand feature (move downstream), or when an
       in-frame start lies upstream before the preceding feature and the open frame reaches it
       (move upstream, at most --max_start_shift codons; only when the annotated start codon is
-      not a valid start, or for --aggressive_start_genes; annelids: nad5 and nad4L). A start that
+      not a valid start, or for --aggressive_start_genes; annelids: nad5 and nad4L; or, unless
+      --no_upstream_atg, to the most upstream in-frame ATG when the start codon is not ATG). A start that
       overlaps the preceding gene is moved downstream only when a start codon lies within 15 nt.
   P2  Two PCGs on the same strand and in the same frame cannot overlap (criterion ii) - reported.
   D1  A protein gene annotated twice at different places (e.g. MitoZ on a duplicated region): only one
@@ -283,6 +284,15 @@ class Curator:
                 if s[c - 1:c + 2] in self.starts:
                     new_a = c                          # keep the most upstream (nearest the preceding gene)
                 c -= 3
+        elif s[a - 1:a + 2] != "ATG" and not getattr(self.a, "no_upstream_atg", False):
+            # a start codon other than ATG (homology alone cannot place a divergent N-terminus): the most upstream
+            # in-frame ATG before the preceding gene, open frame in between (leave-out core, 255 records: +37 exact
+            # starts; not for nematodes / arthropods, whose genes often start with TTG / ATT / ATA: 6 right, 14 wrong)
+            c, limit = a - 3, max(up + 1, a - 3 * self.a.max_start_shift)
+            while c >= limit and s[c - 1:c + 2] not in self.stops:
+                if s[c - 1:c + 2] == "ATG":
+                    new_a = c
+                c -= 3
         # P3: first complete stop, or T / TA ending right before the downstream tRNA
         first_stop = None
         for c in range(new_a, len(s) - 1, 3):
@@ -378,6 +388,16 @@ class Curator:
             # 100-500 nt) and nothing is annotated up to the first complete stop: extend to it
             # (metazoa benchmark 2026-10, 173 RefSeq records: 50 of 52 ends > 100 nt short match NCBI exactly)
             new_b, why_end = first_stop, "first in-frame complete stop codon (annotated end stopped short, no feature in between)"
+        nxt = min((x for x in (trna, down) if x is not None), default=None)
+        if getattr(self.a, "abbreviated_overlap", False) and nxt is not None and 1 <= new_b - nxt + 1 <= 2 \
+                and (new_b - new_a + 1) % 3 == 0 and s[new_b - 3:new_b] in self.stops:
+            # vertebrate RefSeq convention: a complete stop running 1-2 nt into the next same-strand tRNA / gene is
+            # annotated as the abbreviated stop T / TA ending right before it (leave-out core, 255 records: Chordata
+            # +14 exact ends, 1 lost; other phyla keep the complete stop: 82 records, 63 lost)
+            tail = (nxt - 1 - new_a + 1) % 3
+            if tail in (1, 2) and s[nxt - 1 - tail:nxt - 1] == ("T", "TA")[tail - 1]:
+                new_b, why_end = nxt - 1, "abbreviated stop T/TA immediately before the next gene " \
+                    "(the complete stop would overlap it)"
         if (new_a, new_b) != (a, b) and new_b - new_a + 1 >= 60:
             gs, ge = self.from_tx(f, new_a, new_b)
             set_span(f, gs, ge)
@@ -789,6 +809,12 @@ def main(argv=None) -> int:
     p.add_argument("--aggressive_start", action="store_true",
                    help="Always move PCG starts to the in-frame start codon nearest the preceding gene "
                         "(criterion i literally); default only when the annotated start codon is invalid")
+    p.add_argument("--no_upstream_atg", action="store_true",
+                   help="P1: keep a non-ATG start codon instead of moving to the most upstream in-frame ATG (mitom run "
+                        "sets it for nematodes and arthropods)")
+    p.add_argument("--abbreviated_overlap", action="store_true",
+                   help="P3: a complete stop overlapping the next same-strand tRNA / gene by 1-2 nt becomes the T / TA "
+                        "before it (vertebrate RefSeq convention; mitom run sets it for the Chordata clade)")
     p.add_argument("--aggressive_start_genes", default="",
                    help="Genes whose start is always moved to the in-frame start codon nearest the preceding gene "
                         "(default none; `mitom run` passes ND5,ND4L for the Annelida clade). Benchmark 2026-10: right "

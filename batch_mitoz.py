@@ -3325,6 +3325,19 @@ def aggressive_start_genes(clade: Optional[str]) -> str:
     return "ND5,ND4L" if (clade or "").lower().startswith("annelida") else ""
 
 
+def abbreviated_overlap(clade: Optional[str]) -> List[str]:
+    """mito_curate.py --abbreviated_overlap for the Chordata clade: vertebrate RefSeq records end a gene whose complete
+    stop would run 1-2 nt into the next tRNA / gene with T / TA (leave-out benchmark: +14 exact ends in Chordata;
+    other phyla keep the complete stop)."""
+    return ["--abbreviated_overlap"] if (clade or "").lower().startswith("chordata") else []
+
+
+def no_upstream_atg(clade: Optional[str]) -> List[str]:
+    """mito_curate.py --no_upstream_atg for nematodes and arthropods, whose genes often start with TTG / ATT / ATA
+    (moving such starts to an upstream ATG: 6 right, 14 wrong in the leave-out benchmark; other phyla +37)."""
+    return ["--no_upstream_atg"] if (clade or "").lower().startswith(("nematoda", "arthropoda")) else []
+
+
 def run_curate(args: argparse.Namespace, final_dir: Path, out_root: Path) -> Path:
     """mito_curate.py on final_dir -> 05.curated/ (returned); final_dir when --curate no or curation failed."""
     if getattr(args, "curate", "yes") == "no":
@@ -3333,7 +3346,9 @@ def run_curate(args: argparse.Namespace, final_dir: Path, out_root: Path) -> Pat
     cur = out_root / "05.curated"
     p = subprocess.run([sys.executable, "-W", "ignore", str(here / "mito_curate.py"), "-i", str(final_dir), "-o", str(cur),
                         "--genetic_code", str(int(args.genetic_code)), "--no_validate",
-                        "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None))],
+                        "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None)),
+                        *abbreviated_overlap(getattr(args, "clade", None)),
+                        *no_upstream_atg(getattr(args, "clade", None))],
                        capture_output=True, text=True)
     if p.returncode:
         logging.error(f"[CURATE] failed (exit {p.returncode}): {p.stderr[-300:]} - final files left uncurated")

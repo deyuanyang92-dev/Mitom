@@ -75,6 +75,7 @@ MIN_REF_COVER = 0.25       # the best alignment must cover this fraction of its 
 WINDOW = 300               # nt of genome on each side of a locus given to exonerate
 START_UP_EXTRA = 10        # start codon search: upstream codons beyond the residues missing from the alignment
 START_DOWN = 10            # ... and downstream codons when none upstream
+N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
 START_EXPECTED_MIN = 2     # residues missing from the alignment from which the start is sought at the expected position
 CM_EVALUE = 0.01           # cmsearch fast pass and MiTFi threshold of that pass (MITOS2 runmitos default --ncev)
 CM_EVALUE_SENSITIVE = 0.1  # cmsearch --max pass for models without a hit (MITOS2 sensitive pass)
@@ -353,26 +354,37 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
         for h in top:
             if h.ref not in refs:
                 refs.append(h.ref)
-            if len(refs) == 3:
+            if len(refs) == 2 * N_REFS:
                 break
-        prots = reference_proteins(refdir / "featureProt" / f"{gene}.fas", refs)
         # window on the gene's own strand: plus interval [ws, we) of the genome, reverse-complemented for minus genes;
         # wide enough for a whole reference protein on either side of the blastx locus (blastx may find only the
         # conserved half of a divergent gene: NC_083122.1 nad4 was placed 552 nt late with a fixed 300-nt margin)
         margin = 3 * max(h.slen for h in locus) + WINDOW
         ws, we = max(0, ls - margin), min(N, le + margin)
         window = genome[ws:we] if strand == 1 else rc[N - we:N - ws]
-        best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
-        if best is None:
-            log.info(f"[core] {gene}: exonerate found no alignment")
+        placed, why = None, "exonerate found no alignment"
+        for batch in (refs[:N_REFS], refs[N_REFS:]):
+            # the next N_REFS references only when the best ones gave no complete gene (82 records, leave-out:
+            # 3 more genes found and 4 more exact starts with 6 references; always 6 doubled the time)
+            if not batch or placed is not None and not placed[-1]:
+                break
+            prots = reference_proteins(refdir / "featureProt" / f"{gene}.fas", batch)
+            best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
+            if best is None:
+                continue
+            ref, qab, qae, tab, tae, score = best
+            reflen = len(prots[ref])
+            if (qae - qab) < MIN_REF_COVER * reflen:
+                why = f"alignment covers {qae - qab} of {reflen} residues"
+                continue
+            tab = coding_frame(window, tab, tae, table)    # a frameshift near the start can put the alignment off frame
+            s, e, partial = place_cds(window, tab, tae, qab, table)
+            if placed is None or placed[-1] and (not partial or score > placed[5]):
+                placed = (ref, qab, qae, reflen, s, e, score, partial)
+        if placed is None:
+            log.info(f"[core] {gene}: {why}: skipped")
             continue
-        ref, qab, qae, tab, tae, score = best
-        reflen = len(prots[ref])
-        if (qae - qab) < MIN_REF_COVER * reflen:
-            log.info(f"[core] {gene}: alignment covers {qae - qab} of {reflen} residues: skipped")
-            continue
-        tab = coding_frame(window, tab, tae, table)        # a frameshift near the start can put the alignment off frame
-        s, e, partial = place_cds(window, tab, tae, qab, table)
+        ref, qab, qae, reflen, s, e, score, partial = placed
         gs, ge = window_to_genome(ws, we, strand, s, e)
         if gs >= n:                                        # placed in the appended copy of the first ORIGIN_EXT nt
             gs, ge = gs - n, ge - n
