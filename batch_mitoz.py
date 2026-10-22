@@ -3413,6 +3413,11 @@ def run_rescue(args: argparse.Namespace, final_dir: Path, out_root: Path) -> Non
     """Add genes MitoZ missed from MITOS2 (mito_rescue.py), in place; report rescue_report.tsv."""
     if getattr(args, "rescue", "no") == "no":
         return
+    if args.rescue == "auto" and getattr(args, "core", "native") == "native":
+        # the native core retries other loci / blastx placement itself; MITOS2 took 5-7 min and ~1 GB per record
+        # lacking a gene (mostly atp8 of nematodes / flatworms, which have none) for 2 genes in 24 records
+        logging.info("[RESCUE] skipped: native core (--rescue yes runs MITOS2 for records missing a gene)")
+        return
     if not (args.mitos_bin and args.mitos_refdir):
         msg = "[RESCUE] skipped: MITOS2 not found (--mitos_bin / --mitos_refdir)"
         logging.error(msg) if args.rescue == "yes" else logging.info(msg)
@@ -4434,8 +4439,9 @@ def build_parser() -> argparse.ArgumentParser:
                        help="NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template) "
                             "for the .sqn files")
         g.add_argument("--rescue", choices=["auto", "yes", "no"], default="auto",
-                       help="Add protein genes / rRNAs MitoZ missed from a MITOS2 annotation (mito_rescue.py; "
-                            "nothing MitoZ annotated is changed). auto = run when MITOS2 is found (default).")
+                       help="Add protein genes / rRNAs the core missed from a MITOS2 annotation (mito_rescue.py; "
+                            "nothing annotated is changed). auto (default) = run when MITOS2 is found and the core is "
+                            "mitoz / hybrid; yes = also with the native core.")
         g.add_argument("--rrna_hmm", choices=["auto", "yes", "no"], default="auto",
                        help="Last-resort 12S/16S search for rRNAs still missing after the cores and the rescue, "
                             "with per-phylum profile HMMs built from NCBI rRNAs (mito_rrna_hmm.py; only missing "

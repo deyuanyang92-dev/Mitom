@@ -211,3 +211,19 @@ def test_env_config_path_is_used_before_the_file_exists(tmp_path, monkeypatch):
     assert mito_env.config_path() == new
     monkeypatch.delenv("YZZ_MITO_CONFIG")
     assert mito_env.config_path() != new
+
+
+def test_rescue_auto_skipped_for_native_core(tmp_path, monkeypatch):
+    """--rescue auto runs MITOS2 only for the mitoz / hybrid cores: under the native core it cost 5-7 min and ~1 GB per
+    record lacking a gene (mostly atp8 of taxa without atp8) for 2 genes in 24 records."""
+    import argparse
+    import batch_mitoz as bm
+    import mito_rescue
+    called = []
+    monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: called.append(1) or [])
+    a = argparse.Namespace(rescue="auto", core="native", mitos_bin="x", mitos_refdir="y", genetic_code=5, max_tasks=1)
+    bm.run_rescue(a, tmp_path, tmp_path)
+    assert not called
+    a.rescue = "yes"
+    bm.run_rescue(a, tmp_path, tmp_path)
+    assert called

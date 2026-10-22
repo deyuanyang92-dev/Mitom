@@ -75,6 +75,9 @@ MIN_REF_COVER = 0.25       # the best alignment must cover this fraction of its 
 WINDOW = 300               # nt of genome on each side of a locus given to exonerate
 START_UP_EXTRA = 10        # start codon search: upstream codons beyond the residues missing from the alignment
 START_DOWN = 10            # ... and downstream codons when none upstream
+BLASTX_PLACE_COVER = 0.5   # a blastx hit covering this fraction of its reference places a gene exonerate cannot align
+BLASTX_PLACE_BITS = 50     # ... when it scores at least this (a 40-bit atp8 hit in a flatworm, which has no atp8, does not)
+MAX_LOCI = 4               # loci tried per gene when the best one is a paralog hit on another gene
 N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
 START_EXPECTED_MIN = 2     # residues missing from the alignment from which the start is sought at the expected position
 CM_EVALUE = 0.01           # cmsearch fast pass and MiTFi threshold of that pass (MITOS2 runmitos default --ncev)
@@ -332,7 +335,6 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
     N = len(genome)
     n = n or N
     rc = str(Seq(genome).reverse_complement())
-    feats: List[Feature] = []
     with ThreadPoolExecutor(max(1, threads)) as ex:
         all_hits = dict(zip(PCG, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
                                                                  code, g, 1, log), PCG)))
@@ -341,12 +343,8 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             log.info(f"[core] sensitive blastx for {len(missing)} gene(s) without a hit: " + " ".join(missing))
             all_hits.update(zip(missing, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
                                                                         code, g, 1, log, sensitive=True), missing)))
-    for gene in PCG:
-        hits = [h for h in all_hits[gene] if h.start < n]
-        if not hits:
-            log.info(f"[core] {gene}: no blastx hit")
-            continue
-        locus = loci(hits)[0]
+    def place(gene: str, locus: List[Hit], mask: frozenset = frozenset()) -> Optional[Feature]:
+        """The gene at one blastx locus; mask = genome positions (of genes already placed) hidden from exonerate."""
         strand = locus[0].strand
         ls, le = min(h.start for h in locus), max(h.end for h in locus)
         top = sorted(locus, key=lambda h: -h.bits)
@@ -361,7 +359,9 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
         # conserved half of a divergent gene: NC_083122.1 nad4 was placed 552 nt late with a fixed 300-nt margin)
         margin = 3 * max(h.slen for h in locus) + WINDOW
         ws, we = max(0, ls - margin), min(N, le + margin)
-        window = genome[ws:we] if strand == 1 else rc[N - we:N - ws]
+        window = "".join("N" if i % n in mask else genome[i] for i in range(ws, we)) if mask else genome[ws:we]
+        if strand == -1:
+            window = str(Seq(window).reverse_complement()) if mask else rc[N - we:N - ws]
         placed, why = None, "exonerate found no alignment"
         for batch in (refs[:N_REFS], refs[N_REFS:]):
             # the next N_REFS references only when the best ones gave no complete gene (82 records, leave-out:
@@ -382,17 +382,57 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             if placed is None or placed[-1] and (not partial or score > placed[5]):
                 placed = (ref, qab, qae, reflen, s, e, score, partial)
         if placed is None:
-            log.info(f"[core] {gene}: {why}: skipped")
-            continue
+            # exonerate aligns only a fragment of a divergent gene that blastx covers end to end (flatworm atp6 of
+            # NC_062047.1: residues 4-188 of 189 by blastx, 17 by exonerate): the best blastx hit places it, as in MITOS2
+            h = max(locus, key=lambda x: x.bits)
+            if (h.send - h.sstart + 1) < BLASTX_PLACE_COVER * h.slen or h.bits < BLASTX_PLACE_BITS:
+                log.info(f"[core] {gene}: {why}: skipped")
+                return None
+            tab, tae = (h.start - ws, h.end - ws) if strand == 1 else (we - h.end, we - h.start)
+            s, e, partial = place_cds(window, tab, tae, h.sstart - 1, table)
+            placed = (f"{h.ref} (blastx)", h.sstart - 1, h.send, h.slen, s, e, h.bits, partial)
         ref, qab, qae, reflen, s, e, score, partial = placed
         gs, ge = window_to_genome(ws, we, strand, s, e)
         if gs >= n:                                        # placed in the appended copy of the first ORIGIN_EXT nt
             gs, ge = gs - n, ge - n
-        feats.append(Feature("CDS", gene, gs, ge, strand, f"ref {ref} score {score:.0f} residues {qab + 1}-{qae}/{reflen}",
-                             partial5=partial, score=score))
+        f = Feature("CDS", gene, gs, ge, strand, f"ref {ref} score {score:.0f} residues {qab + 1}-{qae}/{reflen}",
+                    partial5=partial, score=score)
         log.info(f"[core] {gene}: {gs + 1}..{ge} ({'+' if strand == 1 else '-'}) ref {ref} score {score:.0f}"
                  + (" start not found" if partial else ""))
-    return drop_paralogs(feats, n, log)
+        return f
+
+    feats: List[Feature] = []
+    all_loci: Dict[str, List[List[Hit]]] = {}
+    for gene in PCG:
+        hits = [h for h in all_hits[gene] if h.start < n]
+        if not hits:
+            log.info(f"[core] {gene}: no blastx hit")
+            continue
+        all_loci[gene] = loci(hits)
+        f = place(gene, all_loci[gene][0])
+        if f is not None:
+            feats.append(f)
+    kept = drop_paralogs(feats, n, log)
+    # a gene whose best locus lay on another gene (atp8 hit inside atp6 of NC_086642.1, the real atp8 at a weaker locus):
+    # its next loci that are not on an annotated gene
+    for gene in sorted({f.name for f in feats} - {f.name for f in kept}):
+        taken = set().union(*(positions(k, n) for k in kept))
+        # hits lying mostly on the placed genes are dropped (one locus may join the real gene and a hit inside its
+        # neighbour); the placed genes are masked for exonerate
+        off = [h for h in all_hits[gene] if h.start < n
+               and len({i % n for i in range(h.start, h.end)} & taken) <= 0.5 * (h.end - h.start)]
+        if not off:                                        # the sensitive search, as for a gene without any hit
+            log.info(f"[core] {gene}: sensitive blastx for loci off the other genes")
+            off = [h for h in blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{gene}.fas", code, gene,
+                                          1, log, sensitive=True) if h.start < n
+                   and len({i % n for i in range(h.start, h.end)} & taken) <= 0.5 * (h.end - h.start)]
+        for locus in loci(off)[:MAX_LOCI]:
+            f = place(gene, locus, frozenset(taken))
+            if f is not None and f in drop_paralogs(kept + [f], n, log):
+                log.info(f"[core] {gene}: next locus {f.start + 1}..{f.end} taken")
+                kept.append(f)
+                break
+    return sorted(kept, key=lambda f: f.start)
 
 
 # ── RNAs ─────────────────────────────────────────────────────────────────────
