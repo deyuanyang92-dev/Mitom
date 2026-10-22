@@ -118,6 +118,17 @@ def _delta(a: Feat, b: Feat) -> int:
     return min(max(abs(b.start + k - a.start), abs(b.end + k - a.end)) for k in _shifts(a))
 
 
+def _origin_stop(t: Feat, p: Feat) -> bool:
+    """The same stop codon written two ways at the record's origin: the truth ends with T / TA at the last base (or, on
+    the minus strand, the first base) plus /transl_except, the prediction completes the stop 1-2 nt across the origin
+    (a tool that rotated the sequence sees the whole TAA). Same protein, same gene end; only the start is compared."""
+    if t.kind != "PCG" or not t.n or (t.end - t.start) % 3 == 0:
+        return False
+    if t.strand > 0:
+        return t.end == t.n and any(p.end + k - t.n in (1, 2) for k in _shifts(t))
+    return t.start == 0 and any(p.start + k in (-1, -2) for k in _shifts(t))
+
+
 def _same_name(t: Feat, p: Feat) -> str:
     """'yes', 'no' or 'unverifiable' (tRNA of an ambiguous amino acid without anticodon on one side)."""
     if t.name != p.name:
@@ -144,6 +155,9 @@ def match(truth: List[Feat], pred: List[Feat]) -> List[dict]:
             used.add(i)
             same = _same_name(t, p)
             delta = _delta(t, p)
+            if delta and _origin_stop(t, p):                   # only the 5' end can differ
+                k = min(_shifts(t), key=lambda k: abs(p.start + k - t.start) + abs(p.end + k - t.end))
+                delta = abs(p.start + k - t.start) if t.strand > 0 else abs(p.end + k - t.end)
             row.update(pred=f"{p.start + 1}..{p.end}{'+' if p.strand > 0 else '-'}", delta=delta)
             if same == "no":
                 row["class"] = "name_error"

@@ -4,8 +4,8 @@
 
 | tool | records | ok | failed | timeout | unsupported | with obvious error | median s/record | median peak RAM (MB) | max peak RAM (MB) |
 |---|---|---|---|---|---|---|---|---|---|
-| mitom_native | 24 | 24 | 0 | 0 | 0 | 14 | 83 | 184 | 283 |
-| mitom_lo | 24 | 24 | 0 | 0 | 0 | 14 | 83 | 182 | 283 |
+| mitom_native | 24 | 24 | 0 | 0 | 0 | 14 | 81 | 184 | 283 |
+| mitom_lo | 24 | 24 | 0 | 0 | 0 | 14 | 81 | 182 | 283 |
 | mitoz | 24 | 18 | 0 | 0 | 6 | 17 | 249 | 492 | 719 |
 | mitos2 | 24 | 24 | 0 | 0 | 0 | 24 | 385 | 953 | 1929 |
 | mitofinder | 24 | 22 | 2 | 0 | 0 | 22 | 204 | 238 | 283 |
@@ -14,10 +14,10 @@
 
 | tool | truth | found | recall | both ends exact | within 3 nt | >3 nt | strand err | name err | missed | extra |
 |---|---|---|---|---|---|---|---|---|---|---|
-| mitom_native | 306 | 305 | 99.7% | 253 (82.7%) | 19 (88.9% cum.) | 33 | 0 | 0 | 1 | 1 |
-| mitom_lo | 306 | 304 | 99.3% | 244 (79.7%) | 18 (85.6% cum.) | 42 | 0 | 0 | 2 | 1 |
+| mitom_native | 306 | 305 | 99.7% | 255 (83.3%) | 18 (89.2% cum.) | 32 | 0 | 0 | 1 | 1 |
+| mitom_lo | 306 | 304 | 99.3% | 246 (80.4%) | 17 (85.9% cum.) | 41 | 0 | 0 | 2 | 1 |
 | mitoz | 230 | 230 | 100.0% | 174 (75.7%) | 17 (83.0% cum.) | 39 | 0 | 0 | 0 | 1 |
-| mitos2 | 306 | 301 | 98.4% | 163 (53.3%) | 16 (58.5% cum.) | 122 | 0 | 0 | 5 | 5 |
+| mitos2 | 306 | 301 | 98.4% | 164 (53.6%) | 15 (58.5% cum.) | 122 | 0 | 0 | 5 | 5 |
 | mitofinder | 306 | 271 | 88.6% | 175 (57.2%) | 29 (66.7% cum.) | 67 | 0 | 0 | 35 | 2 |
 
 ## rRNA (records where every tool finished: stratum `common_ok` below; this table: all)
@@ -44,10 +44,10 @@
 
 | tool | kind | truth | recall | both ends exact | within 3 nt |
 |---|---|---|---|---|---|
-| mitom_native | PCG | 218 | 100.0% | 83.9% | 91.3% |
-| mitom_lo | PCG | 218 | 100.0% | 81.7% | 89.0% |
+| mitom_native | PCG | 218 | 100.0% | 84.9% | 91.7% |
+| mitom_lo | PCG | 218 | 100.0% | 82.6% | 89.4% |
 | mitoz | PCG | 218 | 100.0% | 78.4% | 86.2% |
-| mitos2 | PCG | 218 | 99.1% | 50.5% | 57.8% |
+| mitos2 | PCG | 218 | 99.1% | 50.9% | 57.8% |
 | mitofinder | PCG | 218 | 97.7% | 59.2% | 72.0% |
 | mitom_native | rRNA | 32 | 100.0% | 25.0% | 59.4% |
 | mitom_lo | rRNA | 32 | 100.0% | 25.0% | 59.4% |
@@ -68,7 +68,7 @@
 | Arthropoda | 3 | 94.9% | 94.9% | 89.7% | 53.8% | 69.2% |
 | Chordata | 3 | 87.2% | 87.2% | 82.1% | 79.5% | 69.2% |
 | Cnidaria | 3 | 94.9% | 92.3% | - | 69.2% | 87.2% |
-| Echinodermata | 3 | 89.7% | 89.7% | 92.3% | 48.7% | 74.4% |
+| Echinodermata | 3 | 94.9% | 94.9% | 92.3% | 51.3% | 74.4% |
 | Mollusca | 3 | 60.5% | 60.5% | 47.4% | 42.1% | 39.5% |
 | Nematoda | 3 | 86.1% | 75.0% | 80.6% | 27.8% | 50.0% |
 | Platyhelminthes | 3 | 70.3% | 62.2% | - | 59.5% | 32.4% |

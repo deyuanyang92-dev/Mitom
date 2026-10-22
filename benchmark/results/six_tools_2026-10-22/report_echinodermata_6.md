@@ -4,8 +4,8 @@
 
 | tool | records | ok | failed | timeout | unsupported | with obvious error | median s/record | median peak RAM (MB) | max peak RAM (MB) |
 |---|---|---|---|---|---|---|---|---|---|
-| mitom_native | 6 | 6 | 0 | 0 | 0 | 0 | 93 | 194 | 236 |
-| mitom_lo | 6 | 6 | 0 | 0 | 0 | 0 | 93 | 193 | 237 |
+| mitom_native | 6 | 6 | 0 | 0 | 0 | 0 | 61 | 183 | 237 |
+| mitom_lo | 6 | 6 | 0 | 0 | 0 | 0 | 61 | 192 | 218 |
 | mitoz | 6 | 6 | 0 | 0 | 0 | 5 | 261 | 556 | 720 |
 | mitos2 | 6 | 6 | 0 | 0 | 0 | 6 | 455 | 1029 | 2091 |
 | mitofinder | 6 | 6 | 0 | 0 | 0 | 6 | 261 | 250 | 262 |

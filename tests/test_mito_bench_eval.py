@@ -176,3 +176,26 @@ def test_ls_class_triplet_before_number():
     assert me.ls_class("L", "", "1", 5) == "1"
     assert me.ls_class("S", "xyz", "2", 5) == "2"
     assert me.ls_class("L", "", "", 5) == ""
+
+
+def test_stop_completed_across_the_origin_is_the_same_end():
+    """NC_023772.1 cob: RefSeq ends it with TA at the record's last base (+ /transl_except); a tool that rotated the
+    sequence annotates the whole TAA, 1 nt across the origin. Same stop codon: only the 5' end is compared."""
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+
+    def one(loc):
+        r = SeqRecord(Seq("A" * 1000), id="x", annotations={"molecule_type": "DNA", "topology": "circular"})
+        r.features = [SeqFeature(loc, type="CDS", qualifiers={"gene": ["COB"]})]
+        return me.norm_features(r, 5)
+    plus_t = one(FeatureLocation(699, 1000, 1))                                          # 301 nt: TA tail
+    plus_p = one(CompoundLocation([FeatureLocation(699, 1000, 1), FeatureLocation(0, 2, 1)]))
+    assert me.match(plus_t, plus_p)[0]["class"] == "exact"
+    late = one(CompoundLocation([FeatureLocation(702, 1000, 1), FeatureLocation(0, 2, 1)]))
+    assert me.match(plus_t, late)[0]["class"] == "le3"                                     # the start still counts
+    minus_t = one(FeatureLocation(0, 301, -1))
+    minus_p = one(CompoundLocation([FeatureLocation(0, 301, -1), FeatureLocation(998, 1000, -1)]))
+    assert me.match(minus_t, minus_p)[0]["class"] == "exact"
+    whole = one(FeatureLocation(699, 999, 1))                                             # a 300-nt truth: no tail
+    assert me.match(whole, plus_p)[0]["class"] != "exact"

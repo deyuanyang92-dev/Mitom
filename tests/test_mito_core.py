@@ -177,3 +177,14 @@ def test_tbl_hits_model_columns(tmp_path):
     h = mc.tbl_hits(tbl)
     assert (h[0].start, h[0].end, h[0].strand, h[0].hmm_from, h[0].hmm_to, h[0].score) == (15963, 17183, 1, 52, 1230, 908.0)
     assert (h[1].start, h[1].end, h[1].strand) == (860, 900, -1)
+
+
+def test_place_cds_without_downstream_fallback():
+    """Echinoderm nad4l (NO_START_DOWN): no start codon at / before the alignment start -> 5'-partial there, not the ATG
+    downstream (NC_023772.1: NCBI starts it right after the preceding tRNA)."""
+    window = "GCC" * 30 + "ATG" + "GCC" * 20 + "TAA"
+    s, e, partial = mc.place_cds(window, 60, 150, 0, T5, downstream=False)
+    assert (s, partial) == (60, True)
+    s2, _, partial2 = mc.place_cds(window, 60, 150, 0, T5)
+    assert (s2, partial2) == (90, False)
+    assert "nad4l" in mc.NO_START_DOWN["echinodermata"]

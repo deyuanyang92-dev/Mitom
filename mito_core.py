@@ -80,6 +80,10 @@ BLASTX_PLACE_REFS = 10     # ... or when this many references support the locus 
 BLASTX_PLACE_BITS = 50     # ... when it scores at least this (a 40-bit atp8 hit in a flatworm, which has no atp8, does not)
 MAX_LOCI = 4               # loci tried per gene when the best one is a paralog hit on another gene
 N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
+NO_START_DOWN = {"echinodermata": {"nad4l"}}   # phylum -> genes left 5'-partial at the alignment start instead of
+                           # moved to a downstream start codon: echinoderm nad4l starts right after the preceding tRNA with
+                           # no start codon (NCBI marks it 5'-partial; 5 of 5 echinoderm records, 2 of them were moved
+                           # 27 nt downstream; for all genes of all phyla the fallback is right more often)
 START_EXPECTED_MIN = 2     # residues missing from the alignment from which the start is sought at the expected position
 CM_EVALUE = 0.01           # cmsearch fast pass and MiTFi threshold of that pass (MITOS2 runmitos default --ncev)
 NO_SENSITIVE_TRNA = {"cnidaria"}   # phyla whose missing tRNA models are not searched again with cmsearch --max:
@@ -255,8 +259,8 @@ def coding_frame(window: str, tab: int, tae: int, table: CodonTable.CodonTable) 
     return tab + min(range(3), key=lambda d: n[d])
 
 
-def place_cds(window: str, tab: int, tae: int, missing_n: int, table: CodonTable.CodonTable) \
-        -> Tuple[int, int, bool]:
+def place_cds(window: str, tab: int, tae: int, missing_n: int, table: CodonTable.CodonTable,
+              downstream: bool = True) -> Tuple[int, int, bool]:
     """Start and end (0-based half-open) of the CDS on the plus-strand window from the alignment [tab, tae):
     the start codon nearest the expected position when >= START_EXPECTED_MIN residues are missing, else MitoZ's rule
     (nearest start codon upstream within missing_n + 10 codons, else downstream within 10, else 5'-partial); the end is the last complete aligned codon - the stop codon (complete, or T / TA before
@@ -291,7 +295,7 @@ def place_cds(window: str, tab: int, tae: int, missing_n: int, table: CodonTable
         if codon in starts:
             start, partial = c, False
             break
-    if partial:
+    if partial and downstream:
         for j in range(1, START_DOWN + 1):
             c = a + 3 * j
             if c + 3 > tae or window[c:c + 3] in stops:
@@ -332,11 +336,12 @@ def drop_paralogs(feats: List[Feature], n: int, log) -> List[Feature]:
 
 
 def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads: int, tools: dict, tmp: Path, log,
-                  n: Optional[int] = None) -> List[Feature]:
+                  n: Optional[int] = None, phylum: Optional[str] = None) -> List[Feature]:
     """genome = the searched sequence (a circular record with ORIGIN_EXT nt appended), n = the record's length:
     loci starting in the appended part repeat the first ORIGIN_EXT nt and are skipped; a gene across the origin ends
     beyond n (written as a join)."""
     table = CodonTable.unambiguous_dna_by_id[code]
+    no_down = NO_START_DOWN.get((phylum or "").lower(), set())
     N = len(genome)
     n = n or N
     rc = str(Seq(genome).reverse_complement())
@@ -385,7 +390,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
                 why = f"alignment covers {qae - qab} of {reflen} residues"
                 continue
             tab = coding_frame(window, tab, tae, table)    # a frameshift near the start can put the alignment off frame
-            s, e, partial = place_cds(window, tab, tae, qab, table)
+            s, e, partial = place_cds(window, tab, tae, qab, table, gene not in no_down)
             if placed is None or placed[-1] and (not partial or score > placed[5]):
                 placed = (ref, qab, qae, reflen, s, e, score, partial)
         if placed is None:
@@ -400,7 +405,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
                 log.info(f"[core] {gene}: {why}: skipped")
                 return None
             tab, tae = (h.start - ws, h.end - ws) if strand == 1 else (we - h.end, we - h.start)
-            s, e, partial = place_cds(window, tab, tae, h.sstart - 1, table)
+            s, e, partial = place_cds(window, tab, tae, h.sstart - 1, table, gene not in no_down)
             placed = (f"{h.ref} (blastx)", h.sstart - 1, h.send, h.slen, s, e, h.bits, partial)
         ref, qab, qae, reflen, s, e, score, partial = placed
         gs, ge = window_to_genome(ws, we, strand, s, e)
@@ -727,7 +732,7 @@ def annotate(args) -> int:
             tmp = Path(td)
             gfa = tmp / f"{rid}.fa"
             gfa.write_text(f">{rid}\n{searched}\n")
-            feats = annotate_pcgs(searched, gfa, refdir, code, args.threads, tools, tmp, log, n)
+            feats = annotate_pcgs(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
             feats += annotate_rrnas(gfa, refdir, tools, tmp, log, args.phylum,
                                     Path(args.rrna_lib) if args.rrna_lib else None, n if topology == "circular" else None)
             if not args.no_trna:
