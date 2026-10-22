@@ -335,14 +335,16 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
     N = len(genome)
     n = n or N
     rc = str(Seq(genome).reverse_complement())
-    with ThreadPoolExecutor(max(1, threads)) as ex:
+    # blastx processes run 2 threads each, half as many at once: the same CPU, one 80-MB process less (peak memory)
+    bt = 2 if threads >= 2 else 1
+    with ThreadPoolExecutor(max(1, threads // bt)) as ex:
         all_hits = dict(zip(PCG, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
-                                                                 code, g, 1, log), PCG)))
+                                                                 code, g, bt, log), PCG)))
         missing = [g for g in PCG if not all_hits[g]]
         if missing:
             log.info(f"[core] sensitive blastx for {len(missing)} gene(s) without a hit: " + " ".join(missing))
             all_hits.update(zip(missing, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
-                                                                        code, g, 1, log, sensitive=True), missing)))
+                                                                        code, g, bt, log, sensitive=True), missing)))
     def place(gene: str, locus: List[Hit], mask: frozenset = frozenset()) -> Optional[Feature]:
         """The gene at one blastx locus; mask = genome positions (of genes already placed) hidden from exonerate."""
         strand = locus[0].strand

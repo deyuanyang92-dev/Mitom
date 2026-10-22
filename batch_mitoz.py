@@ -2833,8 +2833,10 @@ def run_annotation_stage(
     suffix1, suffix2 = parse_suffix_fq(args.suffix_fq)
     backend = getattr(args, "scheduler_backend", "threads")
     if backend == "auto":
+        # Snakemake schedules nothing when every sample runs at once, and its process costs ~120 MB (a third of the
+        # peak memory of a one-record run): threads then
         backend = "snakemake" if snakemake_available(getattr(args, "snakemake_bin", None)) \
-                  else "threads"
+                  and len(samples) > int(getattr(args, "max_tasks", 1) or 1) else "threads"
     logging.info(f"[ANNOT_STAGE] phase={phase_dirname}  backend={backend}  n={len(samples)}")
     global _STAGE_PROGRESS
     _STAGE_PROGRESS = Progress(STAGE_LABEL.get(phase_dirname, phase_dirname), len(samples))

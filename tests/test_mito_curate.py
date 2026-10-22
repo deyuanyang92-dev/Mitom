@@ -906,3 +906,17 @@ def test_p3_complete_stop_a_few_nt_into_the_trna_when_no_abbreviated_stop():
                        ("tRNA", FeatureLocation(154, 220, 1), "trnK", {"product": ["tRNA-Lys"]})])
     rows = _curate_rec(rec)
     assert int(_by(rec, "CDS", "COX2").location.end) == 159, rows
+
+
+def test_o1_stop_completed_one_nt_past_the_origin_is_an_abbreviated_stop():
+    """NC_023772.1 cob ends TA at the sequence end, the A at position 1 completes TAA: NCBI writes TA + transl_except
+    (11 of 12 such genes in 255 RefSeq records), not join(...,1..1)."""
+    from Bio.SeqFeature import FeatureLocation
+    cds = "ATG" + "GCC" * 30 + "TA"
+    seq = "A" + "GCC" * 30 + cds
+    L = len(seq)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(L - len(cds), L - 2, 1), "CYTB")], "circular")
+    rows = _curate_rec(rec)
+    cob = _by(rec, "CDS", "CYTB")
+    assert len(cob.location.parts) == 1 and int(cob.location.end) == L, rows
+    assert cob.qualifiers.get("transl_except") == [f"(pos:{L - 1}..{L},aa:TERM)"]

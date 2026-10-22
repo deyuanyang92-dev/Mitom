@@ -462,7 +462,9 @@ class Curator:
         end = next((c + 3 for c in range(b - (b - a + 1) % 3, len(ss) - 2, 3) if ss[c:c + 3] in self.stops), None)
         if end is None or end <= self.L:
             return
-        if covered and end - self.L > MAX_FEATURE_OVERLAP:
+        if covered and end - self.L > MAX_FEATURE_OVERLAP or end - self.L <= 2:
+            # (a stop completed by only 1-2 nt past the origin: NCBI ends such genes with T / TA at the sequence end,
+            # 11 of 12 cases in 255 RefSeq records; NC_023772.1 cob)
             # the stop lies well inside the feature at the origin: an in-frame T / TA ending at the sequence end is the
             # abbreviated stop NCBI annotates (NC_065213.1, NC_065650.1 nad2 before cox1: 23 / 29 nt continuations)
             for tail in (2, 1):
