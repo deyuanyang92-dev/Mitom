@@ -52,9 +52,10 @@ REQUIRED = ("blastx", "exonerate", "cmsearch", "nhmmer", "java", "blastp", "tabl
 def config_path() -> Path:
     env = os.environ.get("YZZ_MITO_CONFIG")
     yzz = HERE.parents[1] / "config" / "mitoz.json" if (HERE.parents[1] / "yzz.py").exists() else None
-    cands = [Path(env)] if env else []
-    cands += [c for c in (yzz, HERE / "mito_config.json", Path.home() / ".config" / "yzz" / "mito.json") if c]
-    return next((c for c in cands if c.exists()), cands[0])   # new file: $YZZ_MITO_CONFIG, yzz config, or here
+    if env:
+        return Path(env)                                       # explicit: used (and written) even before it exists
+    cands = [c for c in (yzz, HERE / "mito_config.json", Path.home() / ".config" / "yzz" / "mito.json") if c]
+    return next((c for c in cands if c.exists()), cands[0])   # new file: yzz config, or here
 
 
 @lru_cache(maxsize=None)

@@ -42,7 +42,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
     GenBank records read: 802
     removed 166: GenBank record that a RefSeq NC_ record was made from (NC_ kept)
     -> 636 records to annotate; reasons per record: reports/dedup_report.tsv  (5 s)
-[Step 2/10] Round-1 annotation (MitoZ: protein genes, rRNAs; MITOS2: tRNAs)
+[Step 2/10] Round-1 annotation (core: native; protein genes, rRNAs, tRNAs)
     round-1 annotation: 120/636 (18%), 6 min 02 s so far, about 26 min left
 ...
 [Step 4/10] Check the annotation after re-orientation; annotate again where it is offset (round 2)
@@ -75,12 +75,12 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。`
 去重报告 `dedup_report.tsv` 每条一行，
 `reason` 列给出丢弃依据（同 accession 取新版本 / RefSeq 记录 COMMENT 注明由该 GenBank 记录生成 / 序列完全相同），`related` 列给出保留的记录。
 
-**默认流程 / Default workflow**：（`fetch` 下载 →）GenBank 去重 → MitoZ 注释（蛋白基因、rRNA）+ MITOS2 tRNA → cox1 定向 → 定向后检查，有问题的第二轮注释 →
-元数据迁回 → MITOS2 补回漏注基因 → 仍缺的 12S/16S 用按门 HMM 补搜 → 内含子 → 端点校正与 NCBI 命名 → NCBI 校验与提交文件。
+**默认流程 / Default workflow**：（`fetch` 下载 →）GenBank 去重 → 原生核心注释（`mito_core.py`：蛋白基因、rRNA、tRNA；`--core mitoz|hybrid` 时改用 MitoZ / MITOS2）→ cox1 定向 → 定向后检查，有问题的第二轮注释 →
+元数据迁回 →（装有 MITOS2 时）补回漏注基因 → 仍缺的 12S/16S 用按门 HMM 补搜 → 内含子 → 端点校正与 NCBI 命名 → NCBI 校验与提交文件。
 
 ## MitoM：声明、致谢与引用 / Statement, acknowledgements and citation
 
-**MitoM**（命令名 `mitom`；M = Merge / Metazoa）是一条动物线粒体基因组注释流程。流程本身（下表"MitoM 自有步骤"）是作者多年研究中逐步优化形成的；基因识别调用 MitoZ、MITOS2 等软件作为"注释核心"，每个环节用哪个核心，以 benchmark 结果为依据（`benchmark/`）。
+**MitoM**（命令名 `mitom`；M = Merge / Metazoa）是一条动物线粒体基因组注释流程。流程本身（下表"MitoM 自有步骤"）是作者多年研究中逐步优化形成的；基因识别由"注释核心"完成：默认是 MitoM 自己的 `mito_core.py`（`--core native`），也可改用 MitoZ、MITOS2（`--core mitoz|hybrid`），每个环节用哪个核心，以 benchmark 结果为依据（`benchmark/`）。
 
 | 环节 | 来源 |
 |---|---|
@@ -89,12 +89,13 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。`
 | 方向调整后第二轮注释 | MitoM 自有步骤 |
 | 元数据迁回（原 GenBank header）、`/organism` 修复 | MitoM 自有步骤 |
 | 内含子（`mito_intron.py`，按 MFannot 方法实现） | MitoM 自有步骤（方法来自 MFannot） |
-| 跨序列起点 tRNA 修复、漏注基因从 MITOS2 救回（`mito_rescue.py`） | MitoM 自有步骤 |
+| 跨序列起点 tRNA 修复、漏注基因从 MITOS2 救回（`mito_rescue.py`，可选：装有 MITOS2 时） | MitoM 自有步骤 |
 | 仍缺的 12S/16S 用按门建立的 rRNA HMM 补搜（`mito_rrna_hmm.py`，库 `models/rrna_hmm/`，nhmmer；只在常规方法找不到时启用） | MitoM 自有步骤（思路参考 EMMA 的 nhmmer rRNA 模型） |
 | 蛋白基因与 rRNA 端点校正（`mito_curate.py`）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
 | 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
-| 蛋白基因、rRNA 识别 | 注释核心：MitoZ（含 MitoZ 自带但未开放的刺胞、扁形、毛颚、全动物蛋白库） |
-| tRNA 识别 | 注释核心：MITOS2（灵敏补搜，并行运行） |
+| 蛋白基因、rRNA、tRNA 识别 | 注释核心：默认 `mito_core.py`（`--core native`：blastx + exonerate 蛋白基因，按门 rRNA profile HMM，cmsearch + MiTFi tRNA） |
+| 蛋白基因、rRNA 识别（可选 `--core mitoz\|hybrid`） | 注释核心：MitoZ（含 MitoZ 自带但未开放的刺胞、扁形、毛颚、全动物蛋白库） |
+| tRNA 识别（可选 `--core hybrid`） | 注释核心：MITOS2（灵敏补搜，并行运行） |
 
 `--core native`（默认）= MitoM 自己的核心（`mito_core.py`：blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m；rRNA 用按门的 profile HMM；tRNA 用 MiTFi 协方差模型 + MiTFi），只需一个 conda 环境，每条记录约 1–2 分钟；`--core hybrid` = MitoZ 蛋白基因/rRNA + MITOS2 tRNA + MITOS2 漏注救回（需另装 mitoz、mitos 环境）；`--core mitoz` = 只用 MitoZ 作为核心。三者都运行全部 MitoM 自有步骤。
 
@@ -103,7 +104,7 @@ On 17 records all four tools finished (8 phyla), protein genes with both ends ex
 
 **Benchmark（环节动物，2026-10）/ Annelida benchmark**：40 条 RefSeq 环节动物线粒体基因组，裸序列输入，与 NCBI 注释比较（`docs/benchmark_annelida_2026-10.md`，数据 `benchmark/results/annelida_2026-10/`）。蛋白基因两端完全一致：MitoM 80%、MitoZ 63%、MITOS2 54%、MitoFinder 48%；有明显错误（缺基因、内部终止、重复、边界差 >30 nt）的记录：MitoM 16/40、MitoZ 36/40、MITOS2 39/40、MitoFinder 34/39；每条用时中位数 MitoM 100 s、MitoZ 244 s、MITOS2 353 s、MitoFinder 206 s。
 
-**MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, origin-spanning tRNA fix, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation) was developed by the author over years of research. Gene finding calls MitoZ and MITOS2 as "annotation cores", chosen per step by benchmark results (`benchmark/`). `--core hybrid` (default) = MitoZ protein genes / rRNAs + MITOS2 tRNAs + MITOS2 rescue; `--core mitoz` = MitoZ alone. Both run every MitoM step.
+**MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, origin-spanning tRNA fix, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation) was developed by the author over years of research. Gene finding is done by an "annotation core", chosen by benchmark results (`benchmark/`): `--core native` (default) = MitoM's own `mito_core.py` (blastx + exonerate protein genes, per-phylum rRNA profile HMMs, cmsearch + MiTFi tRNAs; one conda environment); `--core hybrid` = MitoZ protein genes / rRNAs + MITOS2 tRNAs + MITOS2 rescue; `--core mitoz` = MitoZ alone. All three run every MitoM step.
 
 **声明 / Statement**
 
@@ -146,20 +147,20 @@ We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, G
 
 ## 脚本定位 / What The Script Does
 
-`batch_mitoz.py` 是 MitoM 流程的主程序：批量线粒体注释（MitoZ / MITOS2 作为注释核心）及作者设计的方向调整、元数据迁回、内含子等步骤。
+`batch_mitoz.py` 是 MitoM 流程的主程序：批量线粒体注释（默认用原生核心 `mito_core.py`，`--core mitoz|hybrid` 时用 MitoZ / MITOS2）及作者设计的方向调整、元数据迁回、内含子等步骤。
 
-`batch_mitoz.py` is the main program of the MitoM workflow: batch mitochondrial annotation (MitoZ / MITOS2 as annotation cores) plus the author's own steps - reorientation, metadata transfer, introns and more.
+`batch_mitoz.py` is the main program of the MitoM workflow: batch mitochondrial annotation (the native core `mito_core.py` by default; MitoZ / MITOS2 with `--core mitoz|hybrid`) plus the author's own steps - reorientation, metadata transfer, introns and more.
 
 它主要完成：
 
 - 识别 FASTA 或 GenBank 输入。
 - 把 GenBank 输入去重并转换为内部 FASTA。
-- 为每条记录生成短内部 ID，例如 `S00001`，避免 MitoZ 或 GenBank LOCUS 名称过长。
-- 批量调用 MitoZ 注释。
+- 为每条记录生成短内部 ID，例如 `S00001`，避免注释核心或 GenBank LOCUS 名称过长。
+- 批量调用注释核心（默认 `mito_core.py`；可选 MitoZ）。
 - 按目标基因重定向序列，默认 `cox1`。
-- 可选对重定向后的序列做第二轮 MitoZ 注释。
+- 可选对重定向后的序列做第二轮注释。
 - 把原始 GenBank header metadata 转移回最终结果。
-- 修复 MitoZ 输出中 `FEATURES source` 的 `/organism=`。
+- 修复核心输出中 `FEATURES source` 的 `/organism=`。
 - 输出最终 `.gbf`、统计表、日志、失败列表和合并文件。
 
 It can:
@@ -167,9 +168,9 @@ It can:
 - Detect FASTA or GenBank input.
 - Deduplicate GenBank records and convert them to internal FASTA.
 - Generate short internal IDs such as `S00001`.
-- Run MitoZ annotation in batch.
+- Run the annotation core in batch (native `mito_core.py` by default; MitoZ optional).
 - Reorient records by a target gene, defaulting to `cox1`.
-- Optionally run a second MitoZ annotation pass after reorientation.
+- Optionally run a second annotation pass after reorientation.
 - Restore original GenBank header metadata.
 - Restore `/organism=` inside `FEATURES source`.
 - Write final `.gbf` files, summary tables, logs, failure lists, and merged GenBank archives.
@@ -178,13 +179,14 @@ It can:
 
 一条命令安装全部依赖：`bash install.sh`（见"快速上手"）；`mitom doctor` 检查。下面是各组件：
 
-- MITOS2 2.1.10 + refseq89m（tRNA、补漏）；exonerate、BLAST、Infernal、table2asn、HMMER、MAFFT（env/mitotools.yml）
+- 默认核心（`--core native`）：exonerate、BLAST、Infernal、HMMER、Java、table2asn、MAFFT（env/mitotools.yml）+ MITOS2 参考数据 refseq89m
+- 可选：MitoZ（`--core mitoz|hybrid`）、MITOS2 2.1.10（`--core hybrid` 的 tRNA、漏注救回）
 
 基础依赖：
 
 - Python 3.8+
 - Biopython
-- MitoZ，真实运行 `annotate` 或 `run` 必需
+- MitoZ，可选，只在 `--core mitoz|hybrid` 时需要
 - Snakemake，可选，用于调度多任务
 - Conda，可选，用于 `--conda_env_mitoz`
 
@@ -192,7 +194,7 @@ Basic requirements:
 
 - Python 3.8+
 - Biopython
-- MitoZ, required for real `annotate` or `run` jobs
+- MitoZ, optional: only for `--core mitoz|hybrid`
 - Snakemake, optional scheduler
 - Conda, optional when using `--conda_env_mitoz`
 
@@ -308,7 +310,7 @@ In `sample_dir` mode, exact filenames are preferred. If exact names are absent, 
 | 子命令 | 用途 | English |
 |---|---|---|
 | `run` | 完整流程：注释、重定向、可选二轮注释、最终 GenBank 生成 | Full pipeline |
-| `annotate` | 只做批量 MitoZ 注释和最终整理 | Annotation only |
+| `annotate` | 只做一轮批量注释和最终整理 | Annotation only |
 | `reorient` | 只对已有 GenBank 按目标基因重定向 | Reorient existing GenBank |
 | `transfer_metadata` | 单独转移 GenBank header metadata | Standalone metadata transfer |
 | `replace_organism` | 单独修复 `/organism=` 和 SOURCE | Standalone organism/source restoration |
@@ -324,9 +326,9 @@ In `sample_dir` mode, exact filenames are preferred. If exact names are absent, 
 ```text
 输入 FASTA / GenBank
 → 内部 FASTA 和 id_map.tsv
-→ 第一轮 MitoZ 注释
+→ 第一轮注释（注释核心；默认 mito_core.py）
 → 按 cox1 或指定基因重定向
-→ 可选第二轮 MitoZ 注释
+→ 可选第二轮注释
 → 最终 ID 重写
 → metadata 恢复
 → /organism= 同步
@@ -435,9 +437,9 @@ python3 batch_mitoz.py run \
 
 ## 一轮注释：annotate / Annotation Only
 
-`annotate` 只运行第一轮 MitoZ 注释，并把 MitoZ 结果整理为最终 `.gbf`。
+`annotate` 只运行第一轮注释（`--core` 选定的核心，默认原生核心），并把结果整理为最终 `.gbf`。
 
-`annotate` runs one MitoZ annotation pass and finalizes the `.gbf` output.
+`annotate` runs one annotation pass (the core chosen by `--core`, native by default) and finalizes the `.gbf` output.
 
 注意：`annotate` 不做第二轮注释，但最终 `.gbf` 写出前仍会执行 ID 重写，并按 `--which_gene_first` 做一次保证性重定向；默认目标基因为 `cox1`，负链目标基因默认会反向互补。`--preserve_phase1_metadata` 在 `annotate` 中默认是 `no`，只有 GenBank 输入且显式设为 `yes` 时才恢复原始 header metadata。
 

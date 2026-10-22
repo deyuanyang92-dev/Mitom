@@ -475,7 +475,7 @@ def test_origin_extension_capped_by_feature_at_position_1():
     rec, rows = _cut_cds_record(149)                              # stop 152 nt into the first feature: not O1
     assert not any(r["rule"] == "O1" for r in rows), rows
     nd4l = _by(rec, "CDS", "ND4L")
-    assert len(nd4l.location.parts) == 1 and str(nd4l.location).endswith(">703](+)")
+    assert len(nd4l.location.parts) == 1 and str(nd4l.location).endswith(">704](+)")   # P6: cut codon's nt included
     assert any(r["rule"] == "P6" for r in rows)
     rec, rows = _cut_cds_record(149, first_feature=False)         # nothing at position 1: the 300 nt limit applies
     assert any(r["rule"] == "O1" for r in rows)
@@ -782,3 +782,88 @@ def test_o1_abbreviated_stop_at_the_sequence_end_beats_a_deep_continuation():
     nd2 = _by(rec, "CDS", "ND2")
     assert len(nd2.location.parts) == 1 and int(nd2.location.end) == L, rows
     assert nd2.qualifiers.get("transl_except") == [f"(pos:{L},aa:TERM)"]
+
+
+# ── native core review 2026-10 (stop-less CDS: every path must end in P3 / O1 / P6 with a stop or a sequence-end partial) ──
+def test_partial_marked_single_interval_cds_is_curated():
+    """Review record A: the core writes a CDS cut at a sequence end 5'-partial (`<100..700`, TAA right after); simple()
+    refused fuzzy ends, so only P4 'not curated' was logged and the stop was never added (table2asn NoStop)."""
+    from Bio.SeqFeature import BeforePosition, FeatureLocation
+    seq = "C" * 100 + "GCT" * 200 + "TAA" + "C" * 497
+    rec = _mkrec(seq, [("CDS", FeatureLocation(BeforePosition(100), 700, 1), "COX2")], "circular")
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "COX2")
+    assert int(cds.location.end) == 703 and str(cds.location).startswith("[<100:")
+    assert {r["rule"] for r in rows if r["gene"] == "COX2"} == {"P3", "P5"}, rows
+    assert "stop codon not determined" not in cds.qualifiers.get("note", [])
+
+
+def test_p3_short_end_extended_past_an_rrna_filled_to_it():
+    """Review record B: core end 150 nt short, rRNA 200 nt downstream. R1 (fill) first moves the rRNA start to the
+    CDS end, so the branch-4 bound (rRNA start + 10) blocked the extension and P6 marked the gene 3'-partial. The
+    rRNA start is soft (R1 trims it back afterwards), as in the branch-3 rRNA exception."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "C" * 100 + "ATG" + "GCT" * 300 + "C" * 150 + "TAA" + "C" * 47 + "G" * 1000 + "C" * 397
+    assert seq[1153:1156] == "TAA" and len(seq) == 2600
+    rec = _mkrec(seq, [("CDS", FeatureLocation(100, 1003, 1), "ND1"),
+                       ("rRNA", FeatureLocation(1203, 2203, 1), "l-rRNA", {"product": ["16S ribosomal RNA"]})], "circular")
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.end) == 1156, rows
+    assert int(_by(rec, "rRNA", "rrnL").location.start) + 1 == 1157
+    assert not any(r["rule"] == "P6" for r in rows)
+    # a tRNA in between still bounds the extension (review record C: designed conservative behaviour)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(100, 1003, 1), "ND1"),
+                       ("tRNA", FeatureLocation(1050, 1115, -1), "trnL1", {"product": ["tRNA-Leu"]})], "circular")
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.end) == 1003 and any(r["rule"] == "P6" for r in rows)
+
+
+def test_o1_continues_a_cds_ending_further_from_the_sequence_end():
+    """Review record F: the core ends nad2 at its last aligned codon 12 nt before the end of the rotated circular
+    record, the stop lies 6 nt past the origin; O1 required an end <= 2 nt before L, so P6 marked it 3'-partial."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "C" * 6 + "TAA" + "ATG" + "GCT" * 199 + "C" * 491 + "ATG" + "GCT" * 295 + "C" * 12
+    assert len(seq) == 2000
+    rec = _mkrec(seq, [("CDS", FeatureLocation(9, 609, 1), "COX1"), ("CDS", FeatureLocation(1100, 1988, 1), "ND2")], "circular")
+    rows = _curate_rec(rec)
+    nd2 = _by(rec, "CDS", "ND2")
+    assert [(int(p.start) + 1, int(p.end)) for p in nd2.location.parts] == [(1101, 2000), (1, 9)], rows
+    assert any(r["rule"] == "O1" and r["gene"] == "ND2" for r in rows)
+    # an in-frame stop before the sequence end (P3's business), or a feature in between: not continued
+    seq2 = seq[:1991] + "TAA" + seq[1994:]                                  # in frame: (1991 - 1100) % 3 == 0
+    rec = _mkrec(seq2, [("CDS", FeatureLocation(9, 609, 1), "COX1"), ("CDS", FeatureLocation(1100, 1988, 1), "ND2")], "circular")
+    rows = _curate_rec(rec)
+    assert len(_by(rec, "CDS", "ND2").location.parts) == 1 and int(_by(rec, "CDS", "ND2").location.end) == 1994
+
+
+def test_p6_cds_cut_at_the_sequence_end_extended_to_it():
+    """Stress case 4b (linear NC_065213.1): nad2 15558..>16559 on a 16560-nt record left the T at 16560 out; a 3'-partial
+    end short of the sequence end is table2asn WARNING SEQ_FEAT.PartialProblemNotSpliceConsensus3Prime."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "C" * 60 + "ATG" + "GCT" * 40 + "T"                               # 184 nt; CDS 61..183, cut codon's T at 184
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 183, 1), "ND2")], "linear")
+    rows = _curate_rec(rec)
+    nd2 = _by(rec, "CDS", "ND2")
+    assert str(nd2.location) == "[60:>184](+)" and str(_by(rec, "gene", "ND2").location) == "[60:>184](+)"
+    assert any(r["rule"] == "P6" and "extended 1 nt to the sequence end" in r["reason"] for r in rows), rows
+    assert nd2.qualifiers["translation"] == ["M" + "A" * 40]
+    # minus strand: cut at position 1
+    from Bio.Seq import Seq
+    rc = str(Seq(seq).reverse_complement())
+    rec = _mkrec(rc, [("CDS", FeatureLocation(1, 124, -1), "ND2")], "linear")
+    _curate_rec(rec)
+    assert str(_by(rec, "CDS", "ND2").location) == "[<0:124](-)"
+
+
+def test_trna_number_kept_when_the_anticodon_is_unknown():
+    """The core numbers trnL1/L2, trnS1/S2 from the MiTFi model even when MiTFi finds no anticodon; names() recomputed
+    the name from the (empty) anticodon and wrote trnL."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "C" * 300
+    rec = _mkrec(seq, [("tRNA", FeatureLocation(10, 75, 1), "trnL1", {"product": ["tRNA-Leu"]}),
+                       ("tRNA", FeatureLocation(100, 165, 1), "trnS2", {"product": ["tRNA-Ser"]}),
+                       ("tRNA", FeatureLocation(200, 265, 1), "trnL1", {"product": ["tRNA-Leu"], "note": ["anticodon: UAA"]})])
+    _curate_rec(rec)
+    names = [(f.qualifiers["gene"][0], int(f.location.start)) for f in rec.features if f.type == "tRNA"]
+    assert names == [("trnL1", 10), ("trnS2", 100), ("trnL2", 200)]       # a known anticodon still decides
+    assert _by(rec, "gene", "trnS2").qualifiers["gene"] == ["trnS2"]

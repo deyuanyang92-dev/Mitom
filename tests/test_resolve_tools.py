@@ -75,7 +75,7 @@ def test_clade_decision_is_printed(tmp_path, capsys):
 
 @pytest.mark.skipif(not (mito_env.mitoz_env() or mito_env.find("mitoz")), reason="MitoZ not installed here")
 def test_env_decision_is_printed(tmp_path, capsys):
-    bm.resolve_tools(parse(tmp_path, "--clade", "Mollusca"))
+    bm.resolve_tools(parse(tmp_path, "--clade", "Mollusca", "--core", "hybrid"))
     assert "[ENV] MitoZ found automatically" in capsys.readouterr().err
 
 

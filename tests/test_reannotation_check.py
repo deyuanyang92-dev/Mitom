@@ -207,3 +207,47 @@ def test_gene_across_new_origin_is_caught(tmp_path):
                                  qualifiers={"gene": ["trnX"]}))
     SeqIO.write(r, str(p2), "genbank")
     assert any("origin" in p for p in bm.reorient_check(p1, p2))
+
+
+def test_stop_codon_just_behind_a_stop_less_cds_at_the_edge_counts_as_complete(tmp_path):
+    """The native core annotates a CDS up to its last aligned codon (the stop is added by the curation): a stop
+    in frame within REANNOT_EDGE nt behind the 3' end is no reason for round 2; none within reach is."""
+    r = genome()
+    L = len(r)
+    with_edge_feature(r, "CDS", "NDY", L - 330, L - 30, seq="ATG" + rand_nt(297))          # stop-less 3' end
+    r.seq = Seq(str(r.seq)[:L - 30] + "GCATAA" + str(r.seq)[L - 24:])                     # TAA 2 codons behind
+    assert edge_probs(tmp_path, r) == []
+    r = genome()
+    tail = "".join(rnd.choice(["GCA", "CCA", "GGA"]) for _ in range(10))                   # 30 nt, no stop
+    with_edge_feature(r, "CDS", "NDY", L - 330, L - 30, seq="ATG" + rand_nt(297))
+    r.seq = Seq(str(r.seq)[:L - 30] + tail)
+    assert any("NDY" in x for x in edge_probs(tmp_path, r))
+    # minus strand at the left end: the stop lies before the feature, on the other strand
+    r = genome()
+    with_edge_feature(r, "CDS", "NDM", 30, 330, strand=-1, seq=str(Seq("ATG" + rand_nt(297)).reverse_complement()))
+    r.seq = Seq(str(r.seq)[:24] + str(Seq("GCATAG").reverse_complement()) + str(r.seq)[30:])
+    assert edge_probs(tmp_path, r) == []
+
+
+def test_t_tail_ending_exactly_at_the_sequence_end_counts_as_complete(tmp_path):
+    r = genome()
+    L = len(r)
+    with_edge_feature(r, "CDS", "NDY", L - 301, L - 1, seq="ATG" + rand_nt(297))          # stop-less, 1 nt left
+    r.seq = Seq(str(r.seq)[:L - 1] + "T")
+    assert edge_probs(tmp_path, r) == []
+
+
+def test_join_across_the_origin_is_an_interior_feature():
+    """A feature the core wrote as join(…n, 1…) spans the origin by annotation: judged like an interior one,
+    not as 'spans the whole sequence'."""
+    L = 2000
+    body = "ATG" + "GCA" * 98 + "TAA"                                                      # 300 nt complete CDS
+    seq = Seq(body[200:] + rand_nt(L - 300) + body[:200])                              # 200 nt at the end, 100 at the start
+    loc = FeatureLocation(L - 200, L, 1) + FeatureLocation(0, 100, 1)
+    f = SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"]})
+    assert str(f.extract(seq)) == body
+    assert bm.edge_gene_truncated(f, seq, L, 5) is False
+    cut = SeqFeature(FeatureLocation(L - 200, L, 1) + FeatureLocation(0, 96, 1), type="CDS", qualifiers={"gene": ["COX1"]})
+    assert bm.edge_gene_truncated(cut, seq, L, 5) is True                                 # 296 nt: not a codon multiple
+    t = SeqFeature(FeatureLocation(L - 30, L, 1) + FeatureLocation(0, 40, 1), type="tRNA", qualifiers={"gene": ["trnX"]})
+    assert bm.edge_gene_truncated(t, seq, L, 5) is False                                  # 70 nt tRNA

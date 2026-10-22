@@ -1,0 +1,59 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+NC_081037.1	OP882677	Chordata	Craniata	Perciformes		Pseudaphritis	Pseudaphritis urvillii	2		circular	17413			29-JUL-2023		Chordata	test	2026-10-22
+NC_009833.1	AM292320	Chordata	Tunicata		Ascidiidae	Phallusia	Phallusia mammillata	13		circular	14579			03-APR-2023		Chordata	test	2026-10-22
+NC_009774.1	AP009352	Chordata	Cephalochordata	Amphioxiformes	Branchiostomatidae	Asymmetron	Asymmetron inferum	5		circular	15084			03-APR-2023		Chordata	test	2026-10-22
+NC_013584.1	FN313538	Chordata	Tunicata		Polyclinidae	Aplidium	Aplidium conicum	13		circular	15183			03-APR-2023		Chordata	test	2026-10-22
+NC_006465.1	AB110093	Chordata	Cephalochordata	Amphioxiformes	Branchiostomatidae	Epigonichthys	Epigonichthys maldivensis	5		circular	14975			03-APR-2023		Chordata	test	2026-10-22
+NC_024104.1	HF548554	Chordata	Tunicata		Styelidae	Botrylloides	Botrylloides giganteus	13		circular	14323			03-APR-2023		Chordata	test	2026-10-22
+NC_082483.1	OQ736957	Arthropoda	Altocrustacea	Allotriocarida	Blaberidae	Pycnoscelus	Pycnoscelus nigra	5		circular	15358			01-OCT-2023		Arthropoda	test	2026-10-22
+NC_068615.1	OK649920	Arthropoda	Chelicerata	Pycnogonida	Pycnogonidae	Pentapycnon	Pentapycnon charcoti	5		circular	16557			03-APR-2023		Arthropoda	test	2026-10-22
+NC_024637.1	KF499016	Arthropoda	Chelicerata	Arachnida	Acaridae	Sancassania	Sancassania berlesei	5		circular	14273			03-APR-2023		Arthropoda	test	2026-10-22
+NC_024287.1	KJ598073	Arthropoda	Chelicerata	Arachnida	Salticidae	Telamonia	Telamonia vlijmi	5		circular	14601			03-APR-2023		Arthropoda	test	2026-10-22
+NC_033971.1	KX290739	Arthropoda	Chelicerata	Arachnida	Agelenidae	Agelena	Agelena silvatica	5		circular	14776			03-APR-2023		Arthropoda	test	2026-10-22
+NC_020322.1	JQ407802	Arthropoda	Chelicerata	Arachnida	Euagridae	Phyxioschema	Phyxioschema suthepium	5		circular	13931			03-APR-2023		Arthropoda	test	2026-10-22
+NC_026997.1	KP892752	Mollusca	Cephalopoda	Nautiloidea	Nautilidae	Allonautilus	Allonautilus scrobiculatus	5		circular	16132			03-APR-2023		Mollusca	test	2026-10-22
+NC_046935.1	MT070411	Mollusca	Polyplacophora	Chitonida	Ischnochitonidae	Lepidozona	Lepidozona coreanica	5		circular	16572			03-APR-2023		Mollusca	test	2026-10-22
+NC_035007.1	KY609509	Mollusca	Gastropoda	Conoidea	Conidae	Conus	Conus quercinus	5		circular	16430			03-APR-2023		Mollusca	test	2026-10-22
+NC_039120.1	MH198157	Mollusca	Gastropoda	Buccinoidea	Buccinidae	Aeneator	Aeneator elegans	5		circular	15254			03-APR-2023		Mollusca	test	2026-10-22
+NC_077598.1	OQ679994	Mollusca	Bivalvia	Solenoidea	Pharidae	Novaculina	Novaculina chinensis	5		circular	16262			22-JUN-2023		Mollusca	test	2026-10-22
+NC_068738.1	ON128252	Mollusca	Bivalvia	Mytilida	Modiolidae	Bathymodiolus	Bathymodiolus puteoserpentis	5		circular	20482			03-APR-2023		Mollusca	test	2026-10-22
+NC_028050.1	KM199288	Annelida	Clitellata	Annelida	Moniligastridae	Drawida	Drawida japonica	5		circular	14648			03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_082190.1	ON929995	Annelida	Polychaeta	Annelida	Siboglinidae	Lamellibrachia	Lamellibrachia columna	5		circular	15115			16-SEP-2023		Annelida-segmented-worms	test	2026-10-22
+NC_027699.1	KR534502	Annelida	Polychaeta	Annelida	Syllidae	Ramisyllis	Ramisyllis multicaudata	5		circular	15748			03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_087806.1	OR123442	Annelida	Polychaeta	Annelida	Pilargidae	Synelmis	Synelmis amoureuxi	5		circular	18460			10-APR-2024		Annelida-segmented-worms	test	2026-10-22
+NC_031402.1	KX752423	Annelida	Polychaeta	Annelida	Syllidae	Eusyllis	Eusyllis blomstrandi	5		circular	14712			03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_026860.1	KJ789166	Annelida	Polychaeta	Annelida	Siboglinidae	Riftia	Riftia pachyptila	5		circular	14987			03-APR-2023		Annelida-segmented-worms	test	2026-10-22
+NC_061283.1	OL616280	Cnidaria	Anthozoa		Taiaroidae	Taiaroa	Taiaroa tauhou	4		circular	19434			12-APR-2023			test	2026-10-22
+NC_035740.1	KY454767	Cnidaria	Scyphozoa		Rhizostomatidae	Nemopilema	Nemopilema nomurai	4		circular	17024			03-APR-2023			test	2026-10-22
+NC_056128.1	MW399220	Cnidaria	Hydrozoa		Oceaniidae	Turritopsis	Turritopsis lata	4		circular	15047			03-APR-2023			test	2026-10-22
+NC_030337.1	KU947038	Cnidaria	Staurozoa	Myostaurida	Haliclystidae	Haliclystus	Haliclystus antarcticus	4		circular	15766			03-APR-2023			test	2026-10-22
+NC_016467.1	JN700942	Cnidaria	Hydrozoa		Olindiasidae	Cubaia	Cubaia aphrodite	4		linear	16148			03-APR-2023	linear		test	2026-10-22
+NC_010214.1	EU237491	Cnidaria	Hydrozoa		Hydridae	Hydra	Hydra oligactis	4		linear	16314			03-APR-2023	linear		test	2026-10-22
+NC_045937.1	MK343092	Echinodermata	Eleutherozoa	Ophiuroidea	Ophiocomidae	Ophiomastix	Ophiomastix mixta	9		circular	16495			03-APR-2023		Echinodermata	test	2026-10-22
+NC_069630.1	ON381167	Echinodermata	Pelmatozoa	Crinoidea	Tropiometridae	Tropiometra	Tropiometra macrodiscus	9		circular	16156			03-APR-2023		Echinodermata	test	2026-10-22
+NC_007689.1	DQ068951	Echinodermata	Pelmatozoa	Crinoidea	Sclerocrinidae	Neogymnocrinus	Neogymnocrinus richeri	9		circular	15966			03-APR-2023		Echinodermata	test	2026-10-22
+NC_010692.1	AM404181	Echinodermata	Pelmatozoa	Crinoidea	Antedonidae	Antedon	Antedon mediterranea	9		circular	16156			03-APR-2023		Echinodermata	test	2026-10-22
+NC_068254.1	OM321037	Echinodermata	Pelmatozoa	Crinoidea	Comatulidae	Comatella	Comatella nigra	9		circular	15834			03-APR-2023		Echinodermata	test	2026-10-22
+NC_066490.1	OP177937	Echinodermata	Pelmatozoa	Crinoidea	Antedonidae	Poliometra	Poliometra prolixa	9		circular	15916			16-APR-2023		Echinodermata	test	2026-10-22
+NC_019810.1	JX519460	Nematoda	Chromadorea	Rhabditida	Metastrongylidae	Dictyocaulus	Dictyocaulus viviparus	5		circular	13310			03-APR-2023		Nematoda	test	2026-10-22
+NC_008828.1	EF368011	Nematoda	Enoplea	Mermithida	Mermithidae	Hexamermis	Hexamermis agrotis	5		circular	24606			03-APR-2023		Nematoda	test	2026-10-22
+NC_025755.1	KM357421	Nematoda	Enoplea	Trichinellida	Trichinellidae	Trichinella	Trichinella zimbabwensis	5		circular	14244			03-APR-2023		Nematoda	test	2026-10-22
+NC_033870.1	KU746821	Nematoda	Enoplea	Dorylaimida	Longidoridae	Xiphinema	Xiphinema pachtaicum	5		circular	12489			03-APR-2023		Nematoda	test	2026-10-22
+NC_008692.1	EF175763	Nematoda	Enoplea	Mermithida	Mermithidae	Romanomermis	Romanomermis nielseni	5		circular	15546			03-APR-2023		Nematoda	test	2026-10-22
+NC_017747.1	GU070737	Nematoda	Enoplea	Trichinellida	Trichuridae	Trichuris	Trichuris suis	5		circular	14436			03-APR-2023		Nematoda	test	2026-10-22
+NC_044703.1	MK896864	Platyhelminthes	Rhabditophora			Rhinebothrium	Rhinebothrium reydai	9		circular	13506			03-APR-2023			test	2026-10-22
+NC_071218.1	ON961029	Platyhelminthes	Trematoda	Plagiorchiida	Troglotrematidae	Paragonimus	Paragonimus iloktsuenensis	9		circular	14827			03-APR-2023			test	2026-10-22
+NC_035256.1	MF078638	Platyhelminthes	Catenulida	Catenulida	Stenostomidae	Stenostomum	Stenostomum sthenum	5		circular	16944			03-APR-2023			test	2026-10-22
+NC_057980.1	MT527191	Platyhelminthes	Rhabditophora	Tricladida	Geoplanidae	Amaga	Amaga expatria	9		circular	14962			03-APR-2023			test	2026-10-22
+NC_050390.1	MT063059	Platyhelminthes	Rhabditophora	Dalytyphloplanida	Graffillidae	Graffilla	Graffilla buccinicola	9		circular	14369			03-APR-2023			test	2026-10-22
+NC_028201.1	KT363736	Platyhelminthes	Rhabditophora	Polycladida	Prosthiostomidae	Prosthiostomum	Prosthiostomum siphunculus	9		circular	15181			03-APR-2023			test	2026-10-22
+NC_053937.1	MN082378	Porifera	Demospongiae	Verongiida	Aplysinidae	Aplysina	Aplysina gerardogreeni	4		circular	19620			03-APR-2023		Porifera-sponges	test	2026-10-22
+NC_028054.1	KM580075	Porifera	Hexactinellida	Hexactinellida	Rossellidae	Vazella	Vazella pourtalesii	5		circular	20312			03-APR-2023		Porifera-sponges	test	2026-10-22
+NC_018356.1	JN234382	Nemertea	Pilidiophora		Lineidae	Kulikovia	Kulikovia alborostrata	5		circular	15476			03-APR-2023		Nemertea-ribbon-worms	test	2026-10-22
+NC_024670.1	KJ717948	Nemertea	Enopla		Tetrastemmatidae	Tetrastemma	Tetrastemma olgarum	5		circular	14580			03-APR-2023		Nemertea-ribbon-worms	test	2026-10-22
+NC_060483.1	JQ824371	Acanthocephala	Palaeacanthocephala	Echinorhynchida	Pomphorhynchidae	Pomphorhynchus	Pomphorhynchus bulbocolli	5		circular	13915			03-APR-2023			test	2026-10-22
+NC_029767.1	KT447549	Acanthocephala	Palaeacanthocephala	Polymorphida	Plagiorhynchidae	Plagiorhynchus	Plagiorhynchus transversus	5		circular	15477			03-APR-2023			test	2026-10-22
+NC_036763.1	LC228485	Xenacoelomorpha	Xenoturbellida	Xenoturbellida	Xenoturbellidae	Xenoturbella	Xenoturbella japonica	5		circular	15249			03-APR-2023			test	2026-10-22
+NC_034947.1	KY825223	Xenacoelomorpha	Acoelomorpha		Isodiametridae	Baltalimania	Baltalimania ylvae	5		circular	16619			03-APR-2023			test	2026-10-22
+NC_085486.1	OR875983	Bryozoa	Gymnolaemata	Cheilostomatida	Membraniporidae	Membranipora	Membranipora villosa	5		circular	15407			01-FEB-2024		Bryozoa	test	2026-10-22
+NC_010197.1	AY690838	Bryozoa	Gymnolaemata	Cheilostomatida	Bugulidae	Bugula	Bugula neritina	5		circular	15433			13-APR-2026		Bryozoa	test	2026-10-22

@@ -46,7 +46,9 @@ from mito_names import PCG, gene_name  # noqa: E402
 
 MIN_REF_PCG = 12                          # a MitoFinder reference must carry (nearly) all genes with standard names
 
-TOOLS = ("ours", "mitoz", "mitos2", "mitom", "mitom_auto", "mitom_native", "mitofinder")
+TOOLS = ("ours", "mitoz", "mitos2", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder")
+# mitom_lo = mitom_native without the record's own proteins among the core's references (refseq89m holds the proteins of
+# 8,012 RefSeq records, MITOS2 uses the same set): the leave-out accuracy a new genome can expect
 MITOFINDER: Dict[str, str] = {}          # {"script": ..., "py2": ...} from the command line
 REF_POOL: List[dict] = []                # --ref_pool records: {acc, organism, lineage, record}
 # MitoM extended clades (batch_mitoz.EXTRA_CLADES) for phyla MitoZ lacks; any other phylum -> all-animal database
@@ -155,12 +157,14 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
     acc, code = row["accession"], str(row["genetic_code"])
     if tool in ("ours", "mitoz") and not row["mitoz_clade"]:
         return None
-    if tool in ("mitom", "mitom_auto", "mitom_native"):   # one command: annotation, MitoM steps, curation (final_annotation/)
+    if tool in ("mitom", "mitom_auto", "mitom_native", "mitom_lo"):   # one command: annotation, MitoM steps, curation
         clade = row["mitoz_clade"] or EXTRA_CLADE.get(row.get("phylum", ""), "Animal")
-        return [[sys.executable, str(PIPE / "batch_mitoz.py"), "run", "-i", str(bare), "-o", str(out / "raw"),
+        return [[*(["env", f"MITOM_EXCLUDE_REF={acc}"] if tool == "mitom_lo" else []),
+                 sys.executable, str(PIPE / "batch_mitoz.py"), "run", "-i", str(bare), "-o", str(out / "raw"),
                  "--clade", clade, "--genetic_code", code, "--threads", str(threads), "--max_tasks", "1",
                  *(["--if_reannotation_2", "auto"] if tool == "mitom_auto" else []),
-                 *(["--core", "native"] if tool == "mitom_native" else []),
+                 *(["--core", "native"] if tool in ("mitom_native", "mitom_lo") else []),
+                 *(["--keep_intermediate", "yes"] if tool == "mitom_lo" else []),   # pre-curation files: rule A/B tests
                  *(["--rrna_hmm_lib", os.environ["MITOM_RRNA_LIB"]] if os.environ.get("MITOM_RRNA_LIB") else [])]]
     if tool == "ours":
         clade = row["mitoz_clade"]
@@ -353,7 +357,8 @@ def collect(tool: str, out: Path, ncbi: SeqRecord) -> SeqRecord:
     if tool == "mitos2":
         return mitos_to_record(out / "mitos", Seq(str(ncbi.seq)), str(ncbi.id))
     pattern = {"ours": "curated/*.gbf", "mitom": "raw/final_annotation/*.gb",
-               "mitom_auto": "raw/final_annotation/*.gb", "mitom_native": "raw/final_annotation/*.gb", "mitoz": "w/**/*.gbf",
+               "mitom_auto": "raw/final_annotation/*.gb", "mitom_native": "raw/final_annotation/*.gb",
+               "mitom_lo": "raw/final_annotation/*.gb", "mitoz": "w/**/*.gbf",
                "mitofinder": "*/*_Final_Results/*_mtDNA_contig.gb"}[tool]
     files = sorted(out.glob(pattern), key=lambda p: p.stat().st_size, reverse=True)
     if not files:

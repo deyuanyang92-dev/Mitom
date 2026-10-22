@@ -81,7 +81,8 @@ env_exists() { "$SOLVER" env list 2>/dev/null | awk '{print $1}' | grep -qx "$1"
 
 for e in $ENVS; do
   if env_exists "$e" && [ "$FORCE" = 0 ]; then
-    say "environment '$e' exists - kept (use --force to recreate)"
+    say "environment '$e' exists - updating it from env/$e.yml (use --force to recreate)"
+    "$SOLVER" env update -n "$e" -f "$HERE/env/$e.yml"
     continue
   fi
   say "creating environment '$e' from env/$e.yml"

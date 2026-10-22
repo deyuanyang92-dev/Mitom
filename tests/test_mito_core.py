@@ -121,3 +121,59 @@ def test_clean_protein_for_exonerate():
     with J at residue 324)."""
     assert mc.clean_protein("MAJLBZUO*") == "MAXLXXXX"
     assert mc.clean_protein("mkvl") == "MKVL"
+
+
+def test_location_across_origin_and_minus_partial():
+    """Review 2026-10-22: genes across the origin of a circular record are found on seq + seq[:ORIGIN_EXT] and written
+    as joins; a 5'-partial minus-strand CDS gets > at its genome end (was a complete location)."""
+    n = 1000
+    plus = mc.location(mc.Feature("CDS", "cox1", 900, 1150, 1), n)
+    assert str(plus) == "join{[900:1000](+), [0:150](+)}"
+    minus = mc.location(mc.Feature("tRNA", "trnF", 980, 1030, -1), n)
+    assert str(minus) == "join{[0:30](-), [980:1000](-)}"
+    assert str(mc.location(mc.Feature("CDS", "nad5", 400, 490, -1, partial5=True), n)) == "[400:>490](-)"
+    assert str(mc.location(mc.Feature("CDS", "nad5", 400, 490, 1, partial5=True), n)) == "[<400:490](+)"
+
+
+def test_parse_mitfi_origin_copy_and_model_name_without_anticodon():
+    """A tRNA in the first ORIGIN_EXT nt is reported twice (i and i + n): one feature. Without an anticodon MiTFi
+    writes the model name in the amino-acid column: trnD, not Thr (NC_058285.1)."""
+    text = "\n".join([
+        ">X|5|101|160|1|1|60|40.0|1E-6|0.0|25|-1|---|trnD|trnD.cm|1|0|?", "S", "T",
+        ">X|5|1101|1160|1|1|60|40.0|1E-6|0.0|25|-1|---|trnD|trnD.cm|0|1|?", "S", "T",     # same tRNA, appended copy
+        ">X|5|501|560|1|1|60|30.0|5E-3|0.0|25|30|UAG|L1|trnL2.cm|0|1|?", "S", "T",        # copy, E > 0.001: dropped
+        ">X|5|601|660|1|1|60|35.0|1E-5|0.0|25|30|UAG|L1|trnL2.cm|1|0|?", "S", "T",        # MiTFi's own L1
+    ])
+    feats = mc.parse_mitfi(text, LOG, 1000)
+    assert [(f.name, f.start, f.end) for f in feats] == [("trnD", 100, 160), ("trnL1", 600, 660)]
+
+
+def test_drop_paralogs_keeps_real_overlaps():
+    """Review: with atp8 absent, its reference hit inside atp6 was annotated as atp8 (score 107 vs 991)."""
+    f = lambda name, s, e, score: mc.Feature("CDS", name, s, e, 1, score=score)  # noqa: E731
+    kept = mc.drop_paralogs([f("atp6", 1000, 1700, 991), f("atp8", 1050, 1212, 107), f("nad4l", 3000, 3300, 400),
+                             f("nad4", 3293, 4600, 1500)], 10000, LOG)
+    assert [x.name for x in kept] == ["atp6", "nad4l", "nad4"]              # 7-nt nad4l / nad4 overlap is real
+
+
+def test_exonerate_code_table_string_for_codes_exonerate_lacks():
+    assert mc.exonerate_code(5) == "5"
+    t33 = mc.exonerate_code(33)                                             # exonerate 2.4.0: no built-in code 33
+    assert len(t33) == 64 and t33.startswith("FFLLSSSSYYY*CCWW") and t33 == \
+        "FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG"
+
+
+def test_coding_frame_keeps_frame_with_single_stop():
+    """exonerate aligns through one premature stop; a short gene's other frames may hold none (review: atp8-size gene
+    moved into a nonsense frame)."""
+    body = "ATG" + "GCC" * 28 + "TAA" + "GCC" * 22
+    assert mc.coding_frame("GG" + body + "GCC" * 3, 2, 2 + len(body), T5) == 2
+
+
+def test_tbl_hits_model_columns(tmp_path):
+    tbl = tmp_path / "x.tbl"
+    tbl.write_text("#\nX - rrnL - cm 52 1230 15964 17183 + no 1 0.30 0.0 908.0 1e-200 ! -\n"
+                   "X - rrnL - cm 1 40 900 861 - no 1 0.30 0.0 20.0 1e-2 ! -\n")
+    h = mc.tbl_hits(tbl)
+    assert (h[0].start, h[0].end, h[0].strand, h[0].hmm_from, h[0].hmm_to, h[0].score) == (15963, 17183, 1, 52, 1230, 908.0)
+    assert (h[1].start, h[1].end, h[1].strand) == (860, 900, -1)

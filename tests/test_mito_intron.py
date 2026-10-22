@@ -211,3 +211,49 @@ def test_feature_notes_read_like_genbank_notes(tmp_path):
         for note in f.qualifiers.get("note", []):
             assert ".py" not in note and "mito_intron" not in note and "manually" not in note.lower()
     assert all("MFannot method" in f.qualifiers["note"][0] for f in introns)
+
+
+def test_existing_stopless_cds_end_not_reused(tmp_path):
+    """Native core review 2026-10: the core ends a CDS at its last aligned codon; mitoz_ends() handed that stop-less
+    end (NC_008164.1 ND5 ...GTA, the T stop 1 nt further) to the model, mito_curate P3 skips joins -> table2asn NoStop.
+    An existing end is reused only when it is a stop / T-TA tail; otherwise the first in-frame complete stop (3468)."""
+    rec = SeqIO.read(str(DATA / "NC_008164.gb"), "genbank")
+    feats = []
+    for f in rec.features:
+        if f.type == "intron":
+            continue
+        if f.type in ("CDS", "gene") and f.qualifiers.get("gene") == ["ND5"]:
+            f.location = FeatureLocation(2337, 3435, 1)                   # exon 2 only, ending on GTA (NCBI: ..3436 = T)
+            f.qualifiers.pop("translation", None)
+        feats.append(f)
+    rec.features = feats
+    (tmp_path / "in").mkdir()
+    SeqIO.write(rec, str(tmp_path / "in" / "NC_008164.gbf"), "genbank")
+    run(tmp_path / "in", tmp_path / "out", 4)
+    cds, introns = intron_models(tmp_path / "out" / "NC_008164.gbf")
+    assert cds["ND5"][0] == "join{[0:717](+), [2337:3468](+)}" and [(s, e) for s, e, _ in introns] == [(718, 2337)]
+    import mito_intron as mi
+    assert mi.ends_with_stop(str(rec.seq), [(1, 717), (2338, 3468)], 4)
+    assert not mi.ends_with_stop(str(rec.seq), [(1, 717), (2338, 3435)], 4)
+    assert mi.ends_with_stop(str(rec.seq), [(1, 717), (2338, 3436)], 4)    # NCBI's T tail
+
+
+def test_chained_alignments_too_far_apart_are_not_an_intron():
+    """Stress case 4a (linear record rotated by 8800 nt): the two pieces of nad5 at both sequence ends were chained
+    into CDS join(<3..875,15777..16559) with a 14,901-nt 'intron'. Chains further apart than MAX_CHAIN_INTRON are
+    refused; the 11,485-nt coral nad5 intron (Montipora NC_006902.1, test_next_chain_when_best_conflicts) still passes."""
+    sys.path.insert(0, str(SCRIPT.parent))
+    import mito_intron as mi
+    far = [mi.Report(1, 291, 3, 875, 900, 1, [(3, 875)]), mi.Report(292, 552, 15777, 16559, 800, 1, [(15777, 16559)])]
+    m, why = mi.build_model("p", "nad5", far, 560)
+    assert m is None and "14901 nt apart" in why and str(mi.MAX_CHAIN_INTRON) in why
+    coral = [mi.Report(1, 240, 2440, 3159, 900, 1, [(2440, 3159)]), mi.Report(241, 612, 14645, 15760, 800, 1, [(14645, 15760)])]
+    m, why = mi.build_model("p", "nad5", coral, 620)
+    assert m is not None and m.exons == [(2440, 3159), (14645, 15760)]
+    # linear record, pieces at both ends: refused when chained across more than --maxintron; a fragment with a short
+    # intron running off both ends (LC670763 cox1 join(<1..235,1101..>1523), test_partial_cds_bare_fragment) is kept
+    cut = mi.Model("p", "nad5", 1, [(3, 875), (10777, 11559)], 1700, 1.0)
+    assert "cut by both ends" in mi.spans_record_ends(cut, 11560, False, 5000)
+    assert "spans the origin" in mi.spans_record_ends(cut, 11560, True, 5000)
+    frag = mi.Model("p", "cox1", 1, [(1, 235), (1101, 1523)], 1700, 1.0)
+    assert mi.spans_record_ends(frag, 1523, False, 5000) == ""

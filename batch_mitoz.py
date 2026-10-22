@@ -218,16 +218,16 @@ class _LockedHandler(logging.Handler):
             self._inner.emit(record)
 
 
-def setup_root_logger(log_file: Path, console_level: int = logging.INFO) -> None:
-    """Everything goes to log_file; the console gets console_level and above (run: WARNING, its steps are printed
-    by Steps / say())."""
+def setup_root_logger(log_file: Path, console_level: int = logging.INFO, mode: str = "a") -> None:
+    """Everything goes to log_file (mode "w": a new log for this run); the console gets console_level and above
+    (run: WARNING, its steps are printed by Steps / say())."""
     log_file.parent.mkdir(parents=True, exist_ok=True)
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     for h in list(root.handlers):
         root.removeHandler(h)
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-    fh = logging.FileHandler(str(log_file), encoding="utf-8")
+    fh = logging.FileHandler(str(log_file), mode=mode, encoding="utf-8")
     fh.setFormatter(fmt)
     sh = logging.StreamHandler()
     sh.setFormatter(logging.Formatter("    ! %(message)s") if console_level > logging.INFO else fmt)
@@ -952,6 +952,9 @@ def iter_inputs(
     raise FileNotFoundError(f"Input not found or unrecognised: {in_path}")
 
 
+MIN_CIRCULAR_LEN = 10000    # a FASTA record shorter than this, or one of several in a file, is a contig: linear
+
+
 def infer_topology_from_description(desc: str) -> str:
     m = re.search(r"topology\s*=\s*(circular|linear)", (desc or "").lower())
     return m.group(1) if m else "circular"
@@ -1076,6 +1079,12 @@ def split_or_sanitize_fastas(
             _seen_sample_names.add(cand_name)
             sample_name = cand_name
             topology    = infer_topology_from_description(desc)
+            if topology == "circular" and not re.search(r"topology\s*=\s*circular", desc.lower()) \
+                    and (len(records) > 1 or len(rec.seq) < MIN_CIRCULAR_LEN):
+                # contigs of an assembly: rotating / joining across a false origin cuts real genes
+                topology = "linear"
+                logging.warning(f"[TOPOLOGY] {orig_token}: {len(records)} records / {len(rec.seq)} nt — treated "
+                                "as linear; add topology=circular to the header to override")
             internal_id = make_internal_id(idx, id_maxlen)
             out_fa      = out_dir / f"{internal_id}.fasta"
             write_one_record_fasta(rec, out_fa, seq_id=internal_id, topology=topology)
@@ -1402,6 +1411,22 @@ def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
     return new_rec
 
 
+def merge_abutting_parts(parts: List, operator: str = "join"):
+    """Consecutive parts of the same strand that abut (a join across the old origin, [s, n) + [0, e), after the
+    shift) become one interval; parts are in transcript order, so on the minus strand the later part lies
+    before the earlier one. The outer ends keep their (fuzzy) positions. One part left: a plain FeatureLocation."""
+    merged = [parts[0]]
+    for part in parts[1:]:
+        prev = merged[-1]
+        if part.strand == prev.strand and part.strand == -1 and int(part.end) == int(prev.start):
+            merged[-1] = FeatureLocation(part.start, prev.end, strand=prev.strand)
+        elif part.strand == prev.strand and part.strand != -1 and int(prev.end) == int(part.start):
+            merged[-1] = FeatureLocation(prev.start, part.end, strand=prev.strand)
+        else:
+            merged.append(part)
+    return merged[0] if len(merged) == 1 else CompoundLocation(merged, operator=operator)
+
+
 def shift_location(location, shift: int, seq_len: int):
     """Shift all feature coordinates by -shift (mod seq_len).
 
@@ -1418,7 +1443,7 @@ def shift_location(location, shift: int, seq_len: int):
                 flat_parts.extend(shifted.parts)
             else:
                 flat_parts.append(shifted)
-        return CompoundLocation(flat_parts, operator=location.operator)
+        return merge_abutting_parts(flat_parts, location.operator)
 
     orig_start = int(location.start)
     orig_end   = int(location.end)
@@ -1441,13 +1466,18 @@ def shift_location(location, shift: int, seq_len: int):
                               FeatureLocation(0, end, strand=strand)])
 
 
+_LINEAR_SKIP_SEEN: set = set()      # sequences already reported by [LINEAR_REORIENT_SKIP] (run: step 3, then the final write)
+
+
 def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
     seq_len = len(record.seq)
     topology = record.annotations.get("topology", "circular")
     if str(topology).lower() == "linear" and start_pos != 0:
-        logging.warning(
+        key = hash(str(record.seq))
+        (logging.info if key in _LINEAR_SKIP_SEEN else logging.warning)(
             f"[LINEAR_REORIENT_SKIP] record={record.id}: target start={start_pos}; "
             "linear topology cannot be circularly rotated, sequence left unchanged.")
+        _LINEAR_SKIP_SEEN.add(key)
         # BUG-V0.29-M: never circularly rotate a linear contig.  The previous
         # implementation preserved topology but still moved the sequence tail
         # before the head, which corrupts incomplete linear contigs.
@@ -1498,11 +1528,14 @@ def edge_gene_truncated(f: "SeqFeature", seq: "Seq", total: int, code: int = 5) 
     does it look cut there? (A complete gene that merely starts at 1 or ends at the last base is not: NCBI
     vertebrate records start with trnF.) CDS: length not a multiple of 3 (except a T / TA stop tail, the
     mitochondrial incomplete stop codon), or no start codon where its 5' end is the sequence end, or no stop
-    codon where its 3' end is the sequence end (codon tables of `code`); tRNA: outside 55-95 nt; rRNA: s-rRNA
-    < 600 nt, l-rRNA < 900 nt (unknown rRNA name: < 600)."""
+    codon in the feature nor in frame within REANNOT_EDGE nt behind it where its 3' end is the sequence end
+    (codon tables of `code`); tRNA: outside 55-95 nt; rRNA: s-rRNA < 600 nt, l-rRNA < 900 nt (unknown rRNA
+    name: < 600). A join across the origin is an origin-spanning feature, judged like any interior one."""
     loc = f.location
-    left, right = int(loc.start) < REANNOT_EDGE, int(loc.end) > total - REANNOT_EDGE
-    if not (left or right):
+    wraps = len(loc.parts) > 1 and any(int(p.end) == total for p in loc.parts) \
+        and any(int(p.start) == 0 for p in loc.parts)       # join across the origin: annotated as such, its ends are inside
+    left, right = (False, False) if wraps else (int(loc.start) < REANNOT_EDGE, int(loc.end) > total - REANNOT_EDGE)
+    if not (left or right or wraps):
         return False
     n = len(loc)
     if f.type == "tRNA":
@@ -1526,7 +1559,18 @@ def edge_gene_truncated(f: "SeqFeature", seq: "Seq", total: int, code: int = 5) 
     if five_at_edge and nt[:3] not in table.start_codons:
         return True
     if three_at_edge and not tail and nt[-3:] not in table.stop_codons:
-        return True
+        # the core annotates a CDS up to its last aligned codon (the stop is added later): a stop in frame within
+        # REANNOT_EDGE nt behind it, or a T / TA tail ending exactly at the sequence end, makes it complete
+        if minus:
+            beyond = str(seq[max(0, int(loc.start) - REANNOT_EDGE):int(loc.start)].reverse_complement()).upper()
+            reaches_end = int(loc.start) <= REANNOT_EDGE
+        else:
+            beyond = str(seq[int(loc.end):int(loc.end) + REANNOT_EDGE]).upper()
+            reaches_end = int(loc.end) + REANNOT_EDGE >= total
+        codons = [beyond[i:i + 3] for i in range(0, len(beyond) - 2, 3)]
+        if any(c in table.stop_codons for c in codons):
+            return False
+        return not (reaches_end and beyond[len(codons) * 3:] in ("T", "TA"))
     return False
 
 
@@ -2390,10 +2434,11 @@ def mitoz_annotate_one(
             _STAGE_PROGRESS.update(done_n)
 
     if rc != 0:
-        lg.error(f"[FAIL] MitoZ annotate returned {rc}")
-        lg.error("---- stderr tail ----\n" +
-                 tail_text(stderr_path.read_text(encoding="utf-8", errors="ignore")
-                           if stderr_path.exists() else ""))
+        err_tail = tail_text(stderr_path.read_text(encoding="utf-8", errors="ignore") if stderr_path.exists() else "")
+        lg.error(f"[FAIL] annotation core returned {rc}")
+        lg.error("---- stderr tail ----\n" + err_tail)
+        last = next((x.strip() for x in reversed(err_tail.splitlines()) if x.strip()), "no stderr")
+        logging.warning(f"[FAIL] {si.sample_name}: annotation core exit {rc}: {last}  (sample log: {workdir / 'sample.log'})")
         close_sample_logger(log_name)
         return internal_id, False, workdir, None, None, (0, 0, 0)
 
@@ -2761,6 +2806,11 @@ def run_snakemake_for_annotation_tasks(
         if rp.exists():
             obj = json.loads(rp.read_text(encoding="utf-8"))
             results[obj["internal_id"]] = obj
+            if not obj.get("ok"):                              # the worker's sample.log holds the details
+                last = next((x.strip() for x in reversed(str(obj.get("stderr_tail") or "").splitlines())
+                             if x.strip()), "no stderr")
+                logging.warning(f"[FAIL] {obj.get('sample_name', obj['internal_id'])}: annotation core exit "
+                                f"{obj.get('returncode', '?')}: {last}  (sample log: {obj.get('workdir')}/sample.log)")
         else:
             iid = tp.stem
             logging.warning(f"[SNAKEMAKE_RESULT_MISSING] {rp} not found for task {iid}")
@@ -2843,6 +2893,19 @@ def run_annotation_stage(
 # ─────────────────────────────────────────────────────────────────────────────
 # Final GenBank output
 # ─────────────────────────────────────────────────────────────────────────────
+def starts_with_gene(gb: Path, which_gene_first: str, force_forward: bool) -> bool:
+    """Does a record of `gb` begin with its orientation gene (the first of which_gene_first present; on the plus
+    strand when force_forward), i.e. no gene feature lies before it?"""
+    for rec in SeqIO.parse(str(gb), "genbank"):
+        feat, _ = find_orientation_feature(rec, which_gene_first)
+        if feat is None or (force_forward and feat.location.strand == -1):
+            continue
+        genes = [f for f in rec.features if f.type in ("CDS", "rRNA", "tRNA")]
+        if genes and feature_start_pos(feat) <= min(feature_start_pos(f) for f in genes):
+            return True
+    return False
+
+
 def finalize_genbank_output(
     *,
     sample_name:       str,
@@ -2996,6 +3059,9 @@ def finalize_genbank_output(
         try:
             # pcg, trna, rrna = counts_from_genbank(dest_gb)
             pcg, trna, rrna = counts_from_genbank(draft_gb)
+            # cox1_first from the file itself: a linear record is never rotated (rotate_record), whatever
+            # reorient_one_gb counted
+            orientation_ok = starts_with_gene(draft_gb, which_gene_first, force_forward)
         except Exception:
             pass
         os.replace(str(draft_gb), str(dest_gb))
@@ -3062,14 +3128,13 @@ def workflow_annotate(args: argparse.Namespace) -> int:
                 preserve_metadata=(args.preserve_phase1_metadata == "yes")
                     if hasattr(args, "preserve_phase1_metadata") else False,
             )
-            summary_rows.append(
-                f"{si.sample_name}\t{pcg}\t{trna}\t{rrna}\t{'yes' if orient_ok else 'no'}\t{mode}")
+            summary_rows.append(f"{si.sample_name}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{mode}")
         except Exception as exc:
             logging.error(f"[FINAL_WRITE_FAIL] {si.sample_name}: {exc}")
             summary.final_write_failed.append(si.sample_name)
 
     write_nonempty_list(out_root / "annotation_failed.txt",
-                        summary.annotation_failed, "# MitoZ non-zero exit")
+                        summary.annotation_failed, "# annotation core non-zero exit")
     write_nonempty_list(out_root / "final_write_failed.txt",
                         summary.final_write_failed, "# Failed during final write")
     write_nonempty_table(
@@ -3094,7 +3159,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     (out_root / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary.log()
-    logging.warning("[KNOWN_LIMITATION] MitoZ cannot annotate introns (group I/II); they are added "
+    logging.warning("[KNOWN_LIMITATION] the annotation core does not annotate introns (group I/II); they are added "
                     "afterwards by mito_intron.py (MFannot method, --intron_fix) when exonerate is "
                     "available - check intron_report.tsv.")
     write_orientation_fallback(out_root, samples)
@@ -3162,6 +3227,11 @@ def workflow_reorient(args: argparse.Namespace) -> int:
     return 0
 
 
+def orientation_text(orient_ok: bool, si: "SampleInfo") -> str:
+    """cox1_orientation_ok column: yes / no / no (linear, not rotated)."""
+    return "yes" if orient_ok else "no (linear, not rotated)" if si.topology == "linear" else "no"
+
+
 def write_orientation_fallback(out_root: Path, samples: List["SampleInfo"]) -> None:
     """oriented_by_fallback.txt: samples whose first gene was absent and that start at a fallback gene."""
     names = {si.internal_id: si.sample_name for si in samples}
@@ -3193,9 +3263,8 @@ def resolve_tools(args: argparse.Namespace) -> str:
         if hasattr(args, "rrna_hmm") and not getattr(args, "phylum", None):
             args.phylum = phylum
         announce(f"[CLADE] auto: {phylum or 'no taxonomy'} -> --clade {args.clade} --genetic_code {args.genetic_code}")
-    if getattr(args, "core", "native") == "native":
-        args.mitoz_fast = ""                                 # MitoZ is not run; the clade only names the protein set
-    if getattr(args, "core", "native") == "mitoz":
+    core = getattr(args, "core", "native")                   # native: MitoZ / MITOS2 are not run (the clade only names the protein set)
+    if core == "mitoz":
         if args.clade not in MITOZ_CLADES:
             return f"ERROR: --core mitoz needs a MitoZ clade ({', '.join(MITOZ_CLADES)}); use --core hybrid"
         changed = [f"{k} {getattr(args, k)}" for k, v in (("trna", "mitoz"), ("rescue", "no"), ("rrna_hmm", "no"))
@@ -3216,7 +3285,7 @@ def resolve_tools(args: argparse.Namespace) -> str:
         args.genetic_code = MITOZ_CODES.get(args.clade, 5)
     os.environ["YZZ_CLADE_DB"] = args.clade if args.clade in EXTRA_CLADES else ""
     os.environ["YZZ_PHASE1_FAST"] = "1" if getattr(args, "if_reannotation_2", "no") == "yes" else ""
-    if not args.conda_env_mitoz and not args.mitoz_path:
+    if core != "native" and not args.conda_env_mitoz and not args.mitoz_path:
         args.conda_env_mitoz = mito_env.mitoz_env()
         if not args.conda_env_mitoz and mito_env.find("mitoz"):
             args.mitoz_path = mito_env.find("mitoz")
@@ -3230,11 +3299,11 @@ def resolve_tools(args: argparse.Namespace) -> str:
     os.environ["YZZ_CIRCOS"] = args.circos
     if args.mitos_bin and args.mitos_refdir:
         os.environ["YZZ_MITOS_BIN"], os.environ["YZZ_MITOS_REFDIR"] = args.mitos_bin, args.mitos_refdir
-    elif args.trna == "mitos2":
+    elif args.trna == "mitos2" and core != "native":
         print("[ENV] MITOS2 not found: MitoZ's own MiTFi tRNA step is used (slow). "
               "Install it: bash install.sh, or give --mitos_bin / --mitos_refdir", file=sys.stderr)
-    args.mitoz_fast = str(MITOZ_FAST) if (args.trna == "mitos2" or args.circos == "no" or args.clade in EXTRA_CLADES) \
-        and MITOZ_FAST.exists() else ""
+    args.mitoz_fast = str(MITOZ_FAST) if core != "native" and MITOZ_FAST.exists() \
+        and (args.trna == "mitos2" or args.circos == "no" or args.clade in EXTRA_CLADES) else ""
     return ""
 
 
@@ -3670,10 +3739,30 @@ def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False) -> 
     (out_root / "README.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def check_transl_tables(orig_dir: Path, code: int) -> List[str]:
+    """[CODE] WARNING per input GenBank record whose CDS /transl_table differs from the genetic code in use
+    (a wrong --genetic_code gives internal stops without any other sign). Returns the records' names."""
+    bad: List[str] = []
+    if not orig_dir.is_dir():
+        return bad
+    for gb in sorted(orig_dir.glob("*.gb")):
+        try:
+            for rec in SeqIO.parse(str(gb), "genbank"):
+                tables = sorted({str(f.qualifiers["transl_table"][0]) for f in rec.features
+                                 if f.type == "CDS" and "transl_table" in f.qualifiers})
+                if tables and tables != [str(code)]:
+                    bad.append(rec.id)
+                    logging.warning(f"[CODE] {rec.id}: record transl_table={'/'.join(tables)} differs from "
+                                    f"--genetic_code {code} — check")
+        except Exception as exc:                   # noqa: BLE001  (a check only)
+            logging.info(f"[CODE] {gb.name}: not checked: {exc!r}")
+    return bad
+
+
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    setup_root_logger(out_root / "run.log", console_level=logging.WARNING)
+    setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w")   # one run, one log
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
     steps = Steps(10)
@@ -3718,8 +3807,9 @@ def workflow_run(args: argparse.Namespace) -> int:
         steps.done(f"{total} FASTA sequences to annotate")
 
     summary = RunSummary()
+    check_transl_tables(out_root / "original_annotation", int(args.genetic_code))
 
-    steps.start("Round-1 annotation (MitoZ: protein genes, rRNAs; MITOS2: tRNAs)")
+    steps.start(f"Round-1 annotation (core: {getattr(args, 'core', 'native')}; protein genes, rRNAs, tRNAs)")
     results1 = run_annotation_stage(
         samples=samples, phase_dirname="01.mitoz_anno1",
         out_root=out_root, args=args,
@@ -3899,8 +3989,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                 auto_accept=(args.auto_accept_metadata == "yes"),
             )
             summary_rows.append(
-                f"{sample}\t{pcg}\t{trna}\t{rrna}\t"
-                f"{'yes' if orient_ok else 'no'}\t{src_tag}\t{meta_mode}")
+                f"{sample}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{src_tag}\t{meta_mode}")
             finalised.append((dest, src_tag))
             meta_log_rows.append(
                 # BUG-V0.29-C: log the actual final body source after partial
@@ -3945,7 +4034,7 @@ def workflow_run(args: argparse.Namespace) -> int:
         "sample_name\tinternal_id\tmetadata_src\tbody_src\tdest\tmode",
         meta_log_rows)
     write_nonempty_list(out_root / "annotation_failed.txt",
-                        summary.annotation_failed, "# MitoZ annotation returned non-zero exit")
+                        summary.annotation_failed, "# annotation core returned non-zero exit")
     write_nonempty_list(out_root / f"no_{args.which_gene_first}_samples.txt",
                         summary.no_target_gene,
                         f"# samples where '{args.which_gene_first}' was not found")
@@ -3965,9 +4054,9 @@ def workflow_run(args: argparse.Namespace) -> int:
 
     # Merge all final GBs including no_{gene}_gene/ subdirectory.
     # Use final_dir.glob("*.gbf") if you want only successfully-oriented records.
-    steps.start("Add what the cores missed: genes from MITOS2, 12S/16S by rRNA HMM, introns, tRNAs across the start")
+    steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns, tRNAs across the start")
     run_rescue(args, final_dir, out_root)
-    steps.info(f"genes added from MITOS2      : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}")
+    steps.info(f"genes added by MITOS2 rescue : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}")
     run_rrna_hmm(args, final_dir, out_root)
     steps.info(f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'rrna_hmm_report.tsv', 'status', 'added')}")
     run_intron_fix(args, in_path, final_dir, out_root)
@@ -4013,7 +4102,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     logging.info(f"[OUTPUT_COUNT] {n_ok}/{total}")
     logging.info(f"[METADATA_MODE] preserve={args.preserve_phase1_metadata}")
     summary.log()
-    logging.info("[KNOWN_LIMITATION] MitoZ cannot annotate introns (group I/II); they are added "
+    logging.info("[KNOWN_LIMITATION] the annotation core does not annotate introns (group I/II); they are added "
                  "afterwards by mito_intron.py (MFannot method, --intron_fix) when exonerate is "
                  "available - check intron_report.tsv.")
     write_orientation_fallback(out_root, samples)
@@ -4043,6 +4132,9 @@ def workflow_run(args: argparse.Namespace) -> int:
     say("")
     say(f"MitoM finished in {duration(time.time() - steps.run_t0)}: {out_root}")
     logging.info("[DONE]")
+    if total and len(summary.annotation_failed) == total:
+        logging.warning(f"[FAIL] every record failed in the annotation core ({total}): see reports/failed_logs/")
+        return 1
     return 0
 
 
@@ -4217,7 +4309,7 @@ _CLADE_DEFAULT = "auto"
 
 
 def default_threads() -> int:
-    """Threads per MitoZ job when --threads is not given: min(8, CPUs of this machine)."""
+    """Threads per annotation job when --threads is not given: min(8, CPUs of this machine)."""
     return min(8, os.cpu_count() or 8)
 
 
@@ -4230,9 +4322,10 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mitom" if os.environ.get("MITOM_LAUNCHER") else "batch_mitoz.py",   # sub-commands show `mitom run`
         description=(
-            "MitoM - batch mitochondrial annotation workflow; MitoZ / MITOS2 are the annotation cores,\n"
-            "reorientation, metadata transfer, introns etc. are MitoM's own steps\n\n"
-            "  annotate          — batch MitoZ annotation\n"
+            "MitoM - batch mitochondrial annotation workflow; the annotation core is MitoM's own mito_core.py\n"
+            "(--core native, default) or MitoZ / MITOS2 (--core mitoz | hybrid); reorientation, metadata\n"
+            "transfer, introns etc. are MitoM's own steps\n\n"
+            "  annotate          — batch annotation (one round)\n"
             "  reorient          — reorient .gbf to start at a target gene\n"
             "  run               — full pipeline (annotate → reorient → reanno → final GB)\n"
             "  transfer_metadata — standalone header-transfer between .gb files\n"
@@ -4309,7 +4402,8 @@ def build_parser() -> argparse.ArgumentParser:
                             "alone (= --trna mitoz --rescue no --rrna_hmm no; overrides explicit --rescue / "
                             "--rrna_hmm values and says so).")
         g.add_argument("--trna", choices=["mitos2", "mitoz"], default="mitos2",
-                       help="tRNA step inside MitoZ: mitos2 (default) = MITOS2 with its sensitive pass run in "
+                       help="tRNA step of the MitoZ core (--core mitoz | hybrid; the native core has its own): mitos2 "
+                            "(default) = MITOS2 with its sensitive pass run in "
                             "parallel (same MiTFi Metazoa models and same tRNAs as runmitos); falls back to MiTFi "
                             "when MITOS2 is missing or fails. mitoz = original single-core MiTFi.")
         g.add_argument("--mitos_bin", default=None,
@@ -4358,7 +4452,7 @@ def build_parser() -> argparse.ArgumentParser:
         # invalid thread counts to MitoZ or ThreadPoolExecutor.
         # g.add_argument("--threads",      type=int, default=16,
         g.add_argument("--threads",      type=positive_int_arg, default=default_threads(),
-                       help="Threads per MitoZ job (default: min(8, number of CPUs) = %(default)s).")
+                       help="Threads per annotation job (default: min(8, number of CPUs) = %(default)s).")
         # g.add_argument("--max_tasks",    type=int, default=16,
         g.add_argument("--max_tasks",    type=positive_int_arg, default=default_max_tasks(),
                        help="Max concurrent annotation jobs (default: CPUs // threads = %(default)s).")
@@ -4411,7 +4505,7 @@ def build_parser() -> argparse.ArgumentParser:
                               "Example: --smk_extra '--profile slurm'")
 
     # ── annotate ──────────────────────────────────────────────────────────
-    a = sub.add_parser("annotate", help="Batch MitoZ annotation only.")
+    a = sub.add_parser("annotate", help="Batch annotation only (one round; the core of --core).")
     add_common(a)
     add_mitoz(a)
     a.add_argument("--preserve_phase1_metadata", choices=["yes", "no"], default="no")

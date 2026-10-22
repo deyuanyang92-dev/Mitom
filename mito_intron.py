@@ -37,9 +37,11 @@ Documented deviations: step 3 uses Rfam instead of RNAweasel; in step 4 each
 shift is judged against the homolog protein (MFannot compares with the starting
 model, which Exonerate can get wrong at the junction - Metridium senile COX1:
 model HMFTSG, NCBI and homolog HMFTVG - and would then reject the true boundary);
-3' ends use the incomplete-stop (T / TA) convention of animal mtDNA; trans-spliced
-genes (exons on both strands) are reported but not modelled; genes spanning the
-origin of a circular record are not handled.
+3' ends use the incomplete-stop (T / TA) convention of animal mtDNA (an existing CDS end is
+reused only when it is a stop / T-TA tail); trans-spliced genes (exons on both strands) are
+reported but not modelled; genes spanning the origin of a circular record, or cut by both
+ends of a linear one, are not handled; chained alignments more than MAX_CHAIN_INTRON nt
+apart are not joined into an intron.
 
 Usage:
   python3 mito_intron.py -i final_gb_dir -o out_dir --genetic_code 5 [--bin env/bin]
@@ -79,6 +81,11 @@ TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII
 # MFannot defaults (PirModels/Option.pir, mfannot:284)
 MIN_ORF_AA, BLAST_EVALUE, SHORT_HSP_EVALUE = 40, 1e-10, 1e-11
 MIN_INTRON, MAX_INTRON, MIN_REPORT_SCORE = 142, 5000, 200
+MAX_CHAIN_INTRON = 13000             # longest intron made by chaining separate alignments (exonerate itself stops at
+                                     # --maxintron): metazoan mt group I / II introns are < 3 kb except the scleractinian
+                                     # nad5 group I intron that hosts ~10 genes, 11,485 nt in Montipora NC_006902.1;
+                                     # a longer "intron" joins the two pieces of a gene cut by the ends of a linear /
+                                     # rotated record (stress case 2026-10: 14,901 nt on a 16,560-nt linear record)
 HEADER_RE = re.compile(r"(pt|pt_cyano|mt|mt_alpha)\s*([\S]*)\s*;", re.I)   # mfannot:1180
 
 
@@ -348,6 +355,10 @@ def build_model(prot_id: str, gene: str, reps: List[Report], qlen: int) -> Tuple
             exons.append(e)
     if len(exons) < 2:
         return None, ""
+    longest = max(exons[i + 1][0] - exons[i][1] - 1 for i in range(len(exons) - 1))
+    if longest > MAX_CHAIN_INTRON:
+        return None, (f"chained alignments {longest} nt apart, longer than any known mt intron ({MAX_CHAIN_INTRON} nt) "
+                      "- pieces of a gene cut by the sequence ends? not modelled")
     coding = sum(b - a + 1 for a, b in exons)
     if coding > 3 * qlen + 33:            # MitoFinder geneChecker_fasta_gaps.py:150 length sanity check
         return None, (f"chained exons ({coding} nt) longer than the homolog allows ({3 * qlen + 33} nt) "
@@ -663,6 +674,13 @@ def mitoz_ends(rec, m: Model, exons_tx: List[Tuple[int, int]], L: int, window: i
     return start, end
 
 
+def ends_with_stop(s: str, exons: List[Tuple[int, int]], gencode: int) -> bool:
+    """The spliced CDS ends on a complete stop codon or a T / TA tail (abbreviated stop) in its own frame."""
+    nt = "".join(s[a - 1:b] for a, b in exons)
+    tail = len(nt) % 3
+    return nt[-tail:] in ("T", "TA") if tail else nt[-3:] in CodonTable.unambiguous_dna_by_id[gencode].stop_codons
+
+
 def valid_exons(exons: List[Tuple[int, int]]) -> bool:
     """Exons non-empty, ordered and separated by at least MIN_INTRON nt."""
     return all(a <= b for a, b in exons) and all(exons[i][1] + MIN_INTRON <= exons[i + 1][0]
@@ -742,6 +760,20 @@ def next_feature_start(rec, m: Model, exons_tx: List[Tuple[int, int]], L: int) -
 
 
 # ── write-back ───────────────────────────────────────────────────────────────
+def spans_record_ends(m: Model, L: int, circular: bool, maxintron: int) -> str:
+    """Reason not to model a gene whose exons touch both sequence ends: on a circular record it spans the origin
+    (not handled); on a linear one it is the two pieces of a gene cut by a rotation when they are chained across a
+    gap longer than exonerate's own --maxintron (stress case 2026-10: 14,901 nt on a 16,560-nt record). A short
+    intron in a fragment that runs off both ends (LC670763 cox1, join(<1..235,1101..>1523)) is kept."""
+    if not (m.exons[0][0] <= 50 and m.exons[-1][1] >= L - 50):
+        return ""
+    if circular:
+        return "gene spans the origin of the circular record - not modelled"
+    gap = max(m.exons[i + 1][0] - m.exons[i][1] - 1 for i in range(len(m.exons) - 1))
+    return (f"gene cut by both ends of the linear record, pieces {gap} nt apart (rotated genome?) - not modelled"
+            if gap > maxintron else "")
+
+
 def to_transcript(m: Model, L: int) -> List[Tuple[int, int]]:
     if m.strand == 1:
         return list(m.exons)
@@ -964,8 +996,9 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
             continue
         if any(overlap(m.span, k.span) for k in models if k.strand == m.strand):
             continue
-        if rec.annotations.get("topology") == "circular" and m.exons[0][0] <= 50 and m.exons[-1][1] >= L - 50:
-            rows.append({"record": rec.id, "gene": gene, "note": "gene spans the origin of the circular record - not modelled"})
+        why = spans_record_ends(m, L, rec.annotations.get("topology") == "circular", a.maxintron)
+        if why:
+            rows.append({"record": rec.id, "gene": gene, "note": why})
             continue
         models.append(m)
     rc_seq = str(Seq(seq).reverse_complement())
@@ -989,8 +1022,14 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
         started, partial5 = extend_to_start(use, adj, a.genetic_code, prev_feature_end(rec, m, adj, L), m.qmiss_n)
         fallback, partial3 = extend_to_stop(use, started, a.genetic_code, next_feature_start(rec, m, adj, L),
                                             m.qmiss_c, rule=a.stop_rule)
+        # the existing ends only when they are a start / stop: the native core ends a CDS at its last aligned codon
+        # (NC_008164.1 ND5 ...GTA, the T stop 1 nt further -> table2asn NoStop; mito_curate P3 skips joins)
+        if z_start is not None and use[z_start - 1:z_start + 2] not in CodonTable.unambiguous_dna_by_id[a.genetic_code].start_codons:
+            z_start = None
         cand = list(adj)
         cand[0] = (z_start if z_start is not None else fallback[0][0], cand[0][1])
+        if z_end is not None and not ends_with_stop(use, cand[:-1] + [(cand[-1][0], z_end)], a.genetic_code):
+            z_end = None
         cand[-1] = (cand[-1][0], z_end if z_end is not None else fallback[-1][1])
         partial5 = partial5 and z_start is None
         partial3 = partial3 and z_end is None

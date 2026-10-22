@@ -3,7 +3,7 @@
 
 Usage: mitom <command> [options]        mitom <command> -h   shows the options of one command
 
-  run                full workflow (input dedup, reorientation, MitoZ/MITOS2 cores, rescue, rRNA HMM
+  run                full workflow (input dedup, reorientation, annotation core, rescue, rRNA HMM
                      fallback, introns, boundary curation, NCBI submission files)      = batch_mitoz.py run
   annotate | reorient | transfer_metadata | replace_organism | dedup
                      single parts of the workflow                                      = batch_mitoz.py <cmd>
@@ -11,7 +11,7 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
   curate             boundary rules + NCBI names on GenBank files                     = mito_curate.py
   intron             introns (MFannot method)                                         = mito_intron.py
   trna               multi-method tRNA annotation                                     = mito_trna.py
-  rescue             add genes MitoZ missed from MITOS2                                = mito_rescue.py
+  rescue             add genes the core missed from MITOS2                              = mito_rescue.py
   rrna-hmm           per-phylum 12S/16S HMMs: build / search                           = mito_rrna_hmm.py
   validate           NCBI table2asn validation and submission files                   = ncbi_validate.py
   fetch              download complete mitogenomes from NCBI by taxon / query          = mito_fetch.py

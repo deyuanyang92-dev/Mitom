@@ -22,8 +22,8 @@ to automatic annotation (e.g. MitoZ / MITOS output):
       (criterion iii; tRNA punctuation model, Ojala et al. 1981). /transl_except + note added.
       When no tRNA follows and the first complete stop lies > 30 nt inside the next same-strand
       protein gene (not the bicistronic pairs atp8-atp6, nad4L-nad4; rRNA ends are trimmed by R1
-      instead; > 10 nt for any other feature), the gene is not
-      extended into it: the annotated end is kept when it is an abbreviated T / TA stop (the end of
+      instead; > 10 nt for any other feature; an rRNA start does not bound an end without any stop signal, R1 moves
+      the rRNA), the gene is not extended into it: the annotated end is kept when it is an abbreviated T / TA stop (the end of
       the protein homology, e.g. cox1 before cox2), else the T / TA right before the next gene
       (e.g. nad6 before cob) is used. An end that stops short of the first complete stop with
       nothing annotated in between (core homology lost at the C-terminus, 100-500 nt in divergent
@@ -31,11 +31,14 @@ to automatic annotation (e.g. MitoZ / MITOS output):
   P7  start and end in different frames (internal stops): replaced by the longer ORF - annotated start
       to its first stop, or annotated stop with the in-frame start nearest the annotated start - when
       it keeps >= half the length (metazoa benchmark 2026-10: 14 CDS with internal stops, NCBI 0).
-  O1  circular record: a CDS that ends <= 2 nt before the transcript end without a stop is continued
-      across the origin to its first in-frame stop (join; genes cut by the cox1-first rotation); at most 60 nt
-      where another feature starts at the origin (genuine overlaps are <= ~50 nt), else 300 nt.
+  O1  circular record: a CDS that ends without a stop <= 2 nt before the transcript end, or further when its
+      open frame runs to the end with nothing annotated in between (the core ends at the last aligned codon), is
+      continued across the origin to its first in-frame stop (join; genes cut by the cox1-first rotation); at most
+      60 nt where another feature starts at the origin (genuine overlaps are <= ~50 nt), else 300 nt.
   P5/P6  illegal start / no stop codon: CDS marked 5'- / 3'-partial with 'start / stop codon not
-      determined' (NCBI practice; table2asn SEQ_FEAT.StartCodon / NoStop otherwise).
+      determined' (NCBI practice; table2asn SEQ_FEAT.StartCodon / NoStop otherwise). A stop-less CDS ending 1-2 nt
+      before the sequence end is first extended to it (the cut codon). A single-interval CDS the core already marked
+      partial (< / >) goes through P1 / P3 / O1 like any other; only joins are left alone (P4).
   R1  rRNA (12S rrnS, 16S rrnL) must not overlap flanking genes; boundaries are trimmed to the
       neighbours (criterion vi) and, by default, extended to the flanking genes (gaps <= --max_fill
       nt, the GenBank convention; --rrna_bounds fill). --rrna_bounds trim only removes overlaps.
@@ -127,10 +130,10 @@ def spans(f: SeqFeature) -> List[Tuple[int, int]]:
 
 
 def simple(f: SeqFeature) -> bool:
-    """Single-interval feature with exact ends (multi-exon / partial / origin-spanning genes are left alone)."""
-    loc = f.location
-    return not isinstance(loc, CompoundLocation) and isinstance(loc.start, ExactPosition) \
-        and isinstance(loc.end, ExactPosition)
+    """Single-interval feature (multi-exon / origin-spanning joins are left alone). Fuzzy ends (< / >) do not exclude
+    it: the native core marks a CDS cut at a sequence end partial, and P1 / P3 / O1 must still run on it (review record
+    A: `<100..700` + TAA got only P4). set_span writes exact positions; P5 / P6 re-mark what stays without start / stop."""
+    return not isinstance(f.location, CompoundLocation)
 
 
 def set_span(f: SeqFeature, s: int, e: int) -> None:
@@ -225,12 +228,12 @@ class Curator:
                     cand.append(self.L + 1 - ge)
         return min(cand) if cand else None
 
-    def next_feature(self, f: SeqFeature) -> Tuple[Optional[int], Optional[str]]:
+    def next_feature(self, f: SeqFeature, types=("tRNA", "rRNA", "CDS")) -> Tuple[Optional[int], Optional[str]]:
         """Transcript position where the nearest downstream feature (tRNA, rRNA, CDS, either strand) begins, and
         its type."""
         s, e = span(f)
         cand = []
-        for g in self.others(f):
+        for g in self.others(f, types=types):
             for gs, ge in spans(g):
                 if f.location.strand == 1 and gs > s:
                     cand.append((gs, g.type))
@@ -295,6 +298,11 @@ class Curator:
             reach = nfs - 1 + (MAX_PCG_OVERLAP if down is not None and nfs == down else MAX_FEATURE_OVERLAP)
         tail_b = (b - new_a + 1) % 3
         has_tail = tail_b in (1, 2) and s[b - tail_b:b] == ("T", "TA")[tail_b - 1]   # annotated end is an abbreviated stop
+        reach_hard = reach                             # the same bound ignoring an rRNA start (branch 4, as in branch 3): R1
+        if nfs_type == "rRNA" and not has_tail:        # fills the rRNA to the short CDS end first (review record B: end
+            nfs_h = self.next_feature(f, types=("tRNA", "CDS"))[0]   # 150 nt short, reach = rRNA start + 10 blocked the
+            reach_hard = None if nfs_h is None else \
+                nfs_h - 1 + (MAX_PCG_OVERLAP if nfs_h == down else MAX_FEATURE_OVERLAP)   # extension) and trims it back after
         why_end = ""
         if down and (trna is None or down < trna) and (nfs is None or nfs >= down) and b < down \
                 and first_stop is not None and new_a < down and first_stop - 2 > down - 1 + MAX_PCG_OVERLAP:
@@ -365,7 +373,7 @@ class Curator:
                              "before it - check manually")
             # else: the annotated end already is an abbreviated stop before that feature: kept
         elif first_stop is not None and first_stop > b and first_stop - b <= MAX_END_EXTENSION and \
-                (reach is None or first_stop <= reach):
+                (reach_hard is None or first_stop <= reach_hard):
             # the core's end stops short (C-terminal homology lost: nad5 / nad4 / nad2 / cox1 in divergent phyla,
             # 100-500 nt) and nothing is annotated up to the first complete stop: extend to it
             # (metazoa benchmark 2026-10, 173 RefSeq records: 50 of 52 ends > 100 nt short match NCBI exactly)
@@ -403,10 +411,16 @@ class Curator:
             return
         s = self.tseq(f)
         a, b = self.tx(f)
-        if b < self.L - 2 or (b - a + 1) % 3 and s[a - 1:b][-((b - a + 1) % 3):] in ("T", "TA"):
+        tail = (b - a + 1) % 3
+        if tail and s[b - tail:b] in ("T", "TA") or not tail and s[b - 3:b] in self.stops:
             return
-        if (b - a + 1) % 3 == 0 and s[b - 3:b] in self.stops:
-            return
+        if b < self.L - 2:
+            # the native core ends at the last aligned codon, which may lie further from the sequence end (review record
+            # F: 12 nt, stop 6 nt past the origin): continued when the open frame reaches the end with nothing annotated
+            # in between (an in-frame stop before the end is P3's business; a feature there bounds the gene)
+            nfs = self.next_feature_start(f)
+            if nfs is not None and nfs > b or any(s[c:c + 3] in self.stops for c in range(b - tail, self.L - 2, 3)):
+                return
         first = 1 if f.location.strand == 1 else self.L          # genome position where the continuation starts
         covered = any(gs <= first <= ge for g in self.others(f) for gs, ge in spans(g))
         ss = s + s[:MAX_ORIGIN_OVERLAP if covered else MAX_ORIGIN_EXT]
@@ -488,7 +502,7 @@ class Curator:
     def pcg_check(self, f: SeqFeature) -> None:
         """P4: report problems that rules cannot fix (no change is made)."""
         if not simple(f):
-            self.log(f, "P4", span(f), span(f), "multi-interval or partial CDS (intron / origin / sequence end) - not curated")
+            self.log(f, "P4", span(f), span(f), "multi-interval CDS (intron / origin) - not curated")
             return
         s = self.tseq(f)
         a, b = self.tx(f)
@@ -515,11 +529,18 @@ class Curator:
                      "frameshift, wrong end or unannotated intron - check manually")
         if not n_stop and not has_stop:
             # P6: no complete or abbreviated stop -> table2asn SEQ_FEAT.NoStop; written 3'-partial like P5
-            loc = f.location
+            loc, old, why = f.location, span(f), ""
+            if self.L - 2 <= b < self.L:
+                # cut by the sequence end (linear record; circular when O1 found no stop): the trailing 1-2 nt belong to
+                # the cut codon, and a partial end short of the sequence end is SEQ_FEAT.PartialProblemNotSpliceConsensus3Prime
+                # (stress case 2026-10: nad2 15558..>16559 on a 16560-nt linear record)
+                loc = FeatureLocation(loc.start, ExactPosition(self.L), 1) if loc.strand == 1 else \
+                    FeatureLocation(ExactPosition(0), loc.end, -1)
+                why = f"extended {self.L - b} nt to the sequence end; "
             f.location = FeatureLocation(loc.start, AfterPosition(loc.end), 1) if loc.strand == 1 else \
                 FeatureLocation(BeforePosition(loc.start), loc.end, -1)
             f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != NO_STOP_NOTE] + [NO_STOP_NOTE]
-            self.log(f, "P6", span(f), span(f), "no complete or abbreviated stop codon: CDS marked 3'-partial, "
+            self.log(f, "P6", old, span(f), why + "no complete or abbreviated stop codon: CDS marked 3'-partial, "
                      "'stop codon not determined' (NCBI practice) - check manually")
 
     def translation(self, f: SeqFeature) -> None:
@@ -672,6 +693,8 @@ class Curator:
                 ac = m.group(1).lower().replace("u", "t")
             if aa in mito_trna.ONE2THREE:
                 name = mito_trna.trna_name(aa, ac)
+                if not ac and re.fullmatch(r"trn[LS][12]", cur):
+                    name = cur                         # anticodon unknown: the core numbered the gene from the MiTFi model
                 notes = [n for n in f.qualifiers.get("note", []) if not n.startswith("anticodon:")]
                 q = {"gene": [name], "product": [f"tRNA-{mito_trna.ONE2THREE[aa]}"],
                      "note": ([f"anticodon: {ac.upper().replace('T', 'U')}"] if ac else []) + notes}
