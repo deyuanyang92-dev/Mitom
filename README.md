@@ -326,6 +326,7 @@ In `sample_dir` mode, exact filenames are preferred. If exact names are absent, 
 | `reorient` | 只对已有 GenBank 按目标基因重定向 | Reorient existing GenBank |
 | `transfer_metadata` | 单独转移 GenBank header metadata | Standalone metadata transfer |
 | `replace_organism` | 单独修复 `/organism=` 和 SOURCE | Standalone organism/source restoration |
+| `nuc` | 核基因标记：rDNA 18S-ITS1-5.8S-ITS2-28S、组蛋白 H1/H2A/H2B/H3/H4（contig 注释 + 多拷贝共识） | Nuclear rDNA and histones |
 
 ## 推荐主流程：run / Recommended Main Workflow
 
@@ -903,6 +904,43 @@ MFannot 找到的 85 个 intron 中 83 个与本脚本坐标完全相同；MFann
 python3 mito_intron.py -i final_gb_dir -o out_dir --genetic_code 4 --bin /root/miniconda3/envs/mitointron/bin
 python3 -m pytest -q tests          # Metridium / Nematostella / Platynereis，排除本物种蛋白
 ```
+
+## 核基因标记 / Nuclear markers: rDNA and histones (mito_nuc.py)
+
+`mitom nuc annotate` 在 contig（基因组浅测序 / SPAdes 组装、PCR 片段、GenBank 记录均可）中注释核 rDNA
+（18S、ITS1、5.8S、ITS2、28S）和组蛋白（H1、H2A、H2B、H3、H4，核遗传密码 1），思路同 MitoFinder：用 NCBI 完整注释作参考，
+把参考的基因边界通过比对逐列投影到 contig 上。
+
+```bash
+mitom nuc annotate -i scaffolds.fasta -o nuc_out --threads 32            # 默认 --genes rdna,histone
+mitom nuc annotate -i my_seqs.gb -o nuc_out --genes rdna
+# 参考库（随附 models/nuc/，2026-10-23 NCBI）重建或加入自己的注释（如 Geneious 导出的 GenBank）：
+mitom nuc fetch -o nuc_refs
+mitom nuc build --gb nuc_refs/rdna.gb nuc_refs/histone.gb my_refs.gb -o my_lib
+mitom nuc annotate -i scaffolds.fasta -o nuc_out --lib my_lib
+```
+
+| 输出 | 内容 |
+|---|---|
+| `nuc_features.tsv` | 每个特征一行：contig、长度、SPAdes 覆盖度、基因、起止、链、5'/3' 是否不完整、最佳参考及物种、一致度、边界依据（aligned 比对得到 / projected 无比对外推） |
+| `nuc_annotation.gb` | 有特征的 contig 的 GenBank（rRNA / misc_RNA / CDS，不完整端为 `<` `>`，CDS 带 translation、transl_table 1） |
+| `genes/<基因>.fasta` | 每个拷贝的序列（组蛋白另有 `.faa`） |
+| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列：多拷贝 rDNA 在组装中散成许多 contig 时，高覆盖片段按重叠拼接、按参考排序，再按覆盖度加权逐位投票；与共识一致度 < 97 %（`--consensus_identity`）的片段（其他物种、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，取覆盖度最高的完整 CDS |
+
+大组装先用每属一个 rDNA 单元、每门每种组蛋白一个蛋白做快速预筛，只把命中的区域（±20 kb）送入精细注释：
+SRR16188826 SPAdes scaffolds（148 万条、7.2 亿 nt）32 线程 2 分 18 秒。
+
+准确度（`benchmark/nuc_bench.py`，排除同属参考；边界完全一致 / ±5 nt / ±20 nt）：
+建库用的 NCBI 378 个物种完整 rDNA 单元 83.2 / 92.7 / 95.2 %（barrnap 0.9 `--kingdom euk` 1.8 / 42.1 / 79.9 %）；
+另取不在库里的 71 个物种完整单元作独立测试 42.3 / 82.6 / 90.6 %（barrnap 2.6 / 58.0 / 71.8 %，完全一致率低主要因为占 21 条的一个甲螨研究
+有自己的端点约定）。完整组蛋白 CDS 整个模型（起止、外显子、基因名）完全一致：建库集 677 个 97.5 %，独立集 172 个 97.7 %。
+另以 RefSeq 精编 rRNA（人、大鼠、猕猴、兔、牛、果蝇、秀丽隐杆线虫）为金标准（`benchmark/nuc_gold_bench.py`）：558 个金标准边界中
+NCBI 提交者注释了 9.3 %（其中完全一致 96.2 %），mitom 排除同属参考时全部边界完全一致 85.8 %、±1 nt 94.3 %，在提交者注释过的 53 个边界上
+79.2 %（低于提交者）；用完整参考库时 100 %，但此时同种的精编记录就在库里，不是独立检验。库中 28 条精编 rRNA（`build --curated`）比对到边界时
+直接决定该边界。
+建库时用其他研究的参考交叉检查每条参考的边界，被多数研究否定的边界（如某蜱类研究 28S 3' 端早约 530 nt）不参与投票
+（`models/nuc/rdna_qc.tsv`）。边界跟随参考提交者的约定（各研究对 5.8S、28S 端点的约定不完全一致）；参考稀少的类群（海绵、刺胞、粘孢子虫、扁形动物）边界多靠外推，
+建议加入本类群的已注释记录。方法与调优记录：`knowledge/topics/nuclear_markers.md`。
 
 ## 注意事项 / Practical Notes
 

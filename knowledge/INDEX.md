@@ -31,6 +31,7 @@
 | topics/ncbi_mito_submission_rules.md | NCBI 线粒体提交规则、RefSeq REVIEWED/PROVISIONAL 含义 |
 | topics/taxon_specific_mtdna.md | 22 个门的特殊结构：线性/多染色体、缺 atp8、缺 tRNA、无臂 tRNA、cox1 反式剪接、嵌套基因 |
 | topics/ml_trna_prediction.md | 机器学习 tRNA 预测调研：未发现优于 MiTFi/MITOS2 的线粒体方法；缺口在无臂 tRNA |
+| topics/nuclear_markers.md | 核基因标记（mito_nuc.py）：rDNA 18S-ITS1-5.8S-ITS2-28S 参考投影注释、组蛋白 exonerate 模型、与 barrnap 0.9 的比较（边界完全一致 85.2 % vs 1.8 %）、海量 contig 预筛、多拷贝 rDNA 共识 |
 | topics/pcg_boundary_methods.md | PCG 起止边界如何决定：MITOS2 概率模型（密码子频率×长度×到参考端点距离）、MitoZ 的 9/ref_start+10 密码子窗口与 atp8 失败原因、MFannot 同源投票、MitoAnnotator 规则、重叠基因 ATG…TAA 结构、可整合的 7 条想法；实验文件在 experiments/mitos2_pcg/ |
 
 ## 未确证问题 / Open questions

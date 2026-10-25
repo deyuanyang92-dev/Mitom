@@ -45,6 +45,8 @@ TOOLS = {
     "arwen":       ("optional extra tRNA method (mito_trna.py)", "mitotools"),
     "aragorn":     ("optional extra tRNA method (mito_trna.py)", "mitotools"),
     "tRNAscan-SE": ("optional extra tRNA method (mito_trna.py)", "mitotools"),
+    "blastn":      ("rDNA 18S-28S annotation (mito_nuc.py, mitom nuc)", "mitotools"),
+    "tblastn":     ("histone annotation (mito_nuc.py, mitom nuc)", "mitotools"),
 }
 REQUIRED = ("blastx", "exonerate", "cmsearch", "nhmmer", "java", "blastp", "table2asn")   # the native core (default)
 
