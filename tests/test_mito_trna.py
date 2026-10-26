@@ -185,3 +185,63 @@ def test_add_wrapped_trna_after_rotation():
     assert mt.add_wrapped(rot, [row]) == ["trnY(gua)"]
     f = next(x for x in rot.features if x.type == "tRNA")
     assert (int(f.location.start), int(f.location.end), f.location.strand) == (679, 740, -1)
+
+
+# ── MitoM-ML (trna_ml.py, --select mitom) ──────────────────────────────────────
+import trna_ml  # noqa: E402
+
+ML_OK = mt.mitom_ready({n: mito_env.find(n) for n in ("cmsearch", "cmalign") if mito_env.find(n)},
+                       mito_env.mitos_refdir(MITOS_REF or None))
+
+
+def test_trna_ml_anticodon_from_alignment():
+    """Anticodon = middle 3 nt of the 7-nt loop of the 2nd of 3 hairpins (gaps and inserts skipped)."""
+    ss = "<<<..>>>.<<<.......>>>.<<<...>>>"
+    aln = "GGGAACCCAGGGCTGTAAAACCCAGGGTTTCCC"
+    assert trna_ml.anticodon_from_alignment(aln, ss) == "gta"
+    assert trna_ml.anticodon_from_alignment(aln, "<<<..>>>") == ""
+
+
+def test_trna_ml_ls_family_by_anticodon():
+    """A trnL1 model hit whose anticodon reads taa (UUR) is a trnL2 candidate."""
+    h = {"model": "trnL1", "clade": "pan", "depth": 0, "family": "L1", "start": 1, "end": 70, "strand": 1, "mfrom": 1,
+         "mto": 70, "clen": 70, "trunc": "no", "bits": 40.0, "evalue": 1e-8, "gc": 0.3, "anticodon": "taa"}
+    c = trna_ml.candidates([h], [], 5)
+    assert [x["family"] for x in c] == ["L2"]
+
+
+def test_select_auto_falls_back_without_models(tmp_path, monkeypatch):
+    """--select auto without MitoM-ML models = the previous default (mitos2_or_support), not an error."""
+    monkeypatch.setattr(trna_ml, "MODELS", tmp_path / "none")
+    assert not mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))
+    r = subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "mito_trna.py"), "-i", str(HERE / "data" / "KY753833_mitoz.gbf"),
+                        "-o", str(tmp_path / "out"), "--select", "mitom", "--tools", "input"], capture_output=True, text=True)
+    assert r.returncode == 2 and "needs MitoM-ML" in r.stderr
+
+
+@pytest.mark.skipif(not ML_OK, reason="MitoM-ML models / cmsearch / refseq89m not available")
+def test_mitom_orbicella_only_ncbi_trnas(tmp_path):
+    """Anthozoan with 2 tRNAs (NCBI: trnM, trnW): ARWEN / ARAGORN report extra tRNAs; MitoM-ML selects exactly
+    the two NCBI tRNAs (default --select auto -> mitom)."""
+    subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "mito_trna.py"), "-i", str(HERE / "data" / "NC_007224_bare.gbf"),
+                    "-o", str(tmp_path), "--genetic_code", "4", "--threads", "4"], check=True, capture_output=True)
+    sel = SeqIO.read(str(tmp_path / "selected" / "NC_007224_bare.gbf"), "genbank")
+    assert sorted(f.qualifiers["gene"][0] for f in sel.features if f.type == "tRNA") == ["trnM(cau)", "trnW(uca)"]
+    rows = list(csv.DictReader((tmp_path / "trna_report.tsv").open(), delimiter="\t"))
+    assert {r["boundary_source"] for r in rows if r["selected"] == "yes"} == {"MitoM-ML"}
+    rev = SeqIO.read(str(tmp_path / "review" / "NC_007224_bare.gbf"), "genbank")
+    assert any("source: ARWEN" in f.qualifiers["note"][0] for f in rev.features if f.type == "tRNA")
+
+
+@pytest.mark.skipif(not ML_OK, reason="MitoM-ML models / cmsearch / refseq89m not available")
+def test_mitom_replaces_mitoz_trnas_keeps_pcgs(tmp_path):
+    """Aphrodita KY753833 (MitoZ input): 22 MitoM-ML tRNAs, one per family incl. L1/L2, S1/S2; CDS / rRNA untouched."""
+    src = HERE / "data" / "KY753833_mitoz.gbf"
+    subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "mito_trna.py"), "-i", str(src), "-o", str(tmp_path),
+                    "--genetic_code", "5", "--threads", "4"], check=True, capture_output=True)
+    after = SeqIO.read(str(tmp_path / "selected" / "KY753833_mitoz.gbf"), "genbank")
+    names = sorted(f.qualifiers["gene"][0].split("(")[0] for f in after.features if f.type == "tRNA")
+    assert names == sorted(f"trn{x}" for x in trna_ml.FAMS)
+    before = SeqIO.read(str(src), "genbank")
+    keep = lambda r: sorted(str(f.location) for f in r.features if f.type in ("CDS", "rRNA"))  # noqa: E731
+    assert keep(after) == keep(before)

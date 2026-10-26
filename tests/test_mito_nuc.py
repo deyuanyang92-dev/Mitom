@@ -105,18 +105,32 @@ def test_orf_extends_to_stop_and_upstream_atg():
     cds = "ATG" + "GCT" * 20 + "TAA"
     seq = Seq("CCC" + cds + "GGG")
     # model covers codons 2..15 only, protein not from position 1
-    exons, p5, p3 = nuc._orf(seq, [(7, 48)], 1, False)
+    exons, p5, p3, _ = nuc._orf(seq, [(7, 48)], 1, False)
     assert exons == [(4, 4 + len(cds) - 1)] and not p5 and not p3
     rc = seq.reverse_complement()
     n = len(rc)
-    exons, p5, p3 = nuc._orf(rc, [(n - 48 + 1, n - 7 + 1)], -1, False)
+    exons, p5, p3, _ = nuc._orf(rc, [(n - 48 + 1, n - 7 + 1)], -1, False)
     assert exons == [(n - (4 + len(cds) - 1) + 1, n - 4 + 1)] and not p5 and not p3
 
 
 def test_orf_open_at_contig_end_is_partial():
     seq = Seq("GCT" * 10)                        # no ATG, no stop
-    exons, p5, p3 = nuc._orf(seq, [(4, 27)], 1, False)
+    exons, p5, p3, _ = nuc._orf(seq, [(4, 27)], 1, False)
     assert exons == [(1, 30)] and p5 and p3
+
+
+def test_orf_minus_strand_partial_ends_and_codon_start():
+    """AM921654.1 / AM921657.1 (table2asn StartCodon, NoStop): on the minus strand the 5' / 3' partial flags were
+    swapped; AB429219.1: a partial CDS <2..>310 of a 312 nt sequence must run to the ends (<1..>312, codon_start 2)"""
+    cds = "ATG" + "GCT" * 20 + "TAA"
+    seq = Seq("CCC" + cds[:40])                  # gene ends at the sequence end: 3' partial
+    rc = seq.reverse_complement()
+    n = len(rc)
+    exons, p5, p3, cs = nuc._orf(rc, [(1, n - 6)], -1, False)
+    assert exons == [(1, n - 3)] and not p5 and p3 and cs == 1
+    seq = Seq("C" + "GCT" * 20 + "TAAGG")        # no ATG, 1 nt before the first full codon
+    exons, p5, p3, cs = nuc._orf(seq, [(5, 40)], 1, False)
+    assert exons == [(1, 64)] and p5 and not p3 and cs == 2
 
 
 @needs_tools
@@ -204,7 +218,9 @@ def test_consensus_from_fragmented_assembly(tmp_path, lib):
         assert next(SeqIO.parse(str(tmp_path / "out" / "consensus" / f"{g}.fasta"), "fasta")).seq == parts[g], g
     rows = csv.DictReader(open(tmp_path / "out" / "consensus.tsv"), delimiter="\t")
     row = next(r for r in rows if r["gene"] == "18S")
-    assert "NODE_8_" in row["dropped"] and row["partial_5"] == row["partial_3"] == "0"
+    # the synthetic unit is random sequence, so the Rfam models cannot confirm the 18S start that sits at the first
+    # contig's end: it is reported 5' partial (an unconfirmed end at a sequence end is never called complete)
+    assert "NODE_8_" in row["dropped"] and (row["partial_5"], row["partial_3"]) == ("1", "0")
 
 
 @needs_tools
@@ -257,3 +273,191 @@ def test_curated_reference_decides_the_boundary(tmp_path):
     nuc.annotate(tmp_path / "in.fa", tmp_path / "out", tmp_path / "lib", ["rdna"], 2)
     row = next(r for r in read_rows(tmp_path / "out") if r["gene"] == "18S")
     assert int(row["end"]) == 500 + len(base["18S"]) and row["evidence"].endswith("curated")
+
+
+def _fake_lib(rdna):
+    from types import SimpleNamespace
+    return SimpleNamespace(rdna={r: {g: (a, b, True, True) for g, (a, b) in gs.items()} for r, gs in rdna.items()},
+                           org={r: (f"{r} sp", r) for r in rdna}, curated=set())
+
+
+def _hsp(qs, qe, ss, se, bits):
+    n = qe - qs + 1
+    return (qs, qe, ss, se, float(bits), "A" * n, "A" * n)
+
+
+def test_rdna_gene_needs_alignment_inside_it():
+    """23007-1 histone contig: 132 nt at the contig end hit the spacer after a sponge 28S (and the inside of a
+    partial 28S annotated longer); 18S and 28S were projected kilobases away over the histone genes"""
+    lib = _fake_lib({"A": {"18S": (1, 1800), "5.8S": (2150, 2310), "28S": (2610, 6010)},
+                     "B": {"18S": (1, 1800), "5.8S": (2150, 2310), "28S": (2610, 6300)}})
+    lib.rdna["B"]["28S"] = (2610, 6300, False, False)     # Pholoe KY753843: 28S ends marked unusable
+    hits = {"A": [_hsp(6268, 6399, 6100, 6231, 176)], "B": [_hsp(6268, 6399, 6100, 6231, 150)]}
+    assert nuc.rdna_loci(hits, lib, 6399) == []
+
+
+def test_rdna_one_gene_per_place_from_two_loci():
+    """23007-2: a reference ordered 28S - spacer - 18S chained the previous unit's 28S tail and the 18S into its
+    own locus beside the unit's locus; the 18S was reported twice (4785 and 4789)"""
+    lib = _fake_lib({"X": {"28S": (1, 3700), "18S": (4900, 6700), "5.8S": (7400, 7560)},
+                     "P": {"18S": (1800, 3600), "5.8S": (4400, 4560), "28S": (4900, 8600)}})
+    hits = {"X": [_hsp(1, 750, 2951, 3700, 3000), _hsp(4785, 6634, 4900, 6749, 400)],
+            "P": [_hsp(4789, 10821, 1800, 7832, 3000)]}
+    loci = nuc.rdna_loci(hits, lib, 10821)
+    s18 = [(L["ref"], L["feats"]["18S"]["lo"]) for L in loci if "18S" in L["feats"]]
+    assert s18 == [("P", 4789)]
+    assert any(L["ref"] == "X" and L["feats"].get("28S", {}).get("hi") == 750 for L in loci)
+    assert {"ITS1", "5.8S", "ITS2", "28S"} <= set(next(L for L in loci if L["ref"] == "P")["feats"])
+
+
+def test_read_input_skips_records_without_sequence(tmp_path):
+    """histone held-out set: NG_032568.1 (a CON record, no ORIGIN) crashed read_input with UndefinedSequenceError"""
+    gb = tmp_path / "in.gb"
+    gb.write_text("LOCUS       CON1                    50 bp    DNA     linear   CON 01-JAN-2020\n"
+                  "DEFINITION  test.\nACCESSION   CON1\nVERSION     CON1.1\nFEATURES             Location/Qualifiers\n"
+                  "     source          1..50\nCONTIG      join(gap(50))\n//\n")
+    SeqIO.write([SeqRecord(Seq("ACGT" * 30), id="R2", name="R2", description="",
+                           annotations={"molecule_type": "DNA"})], str(tmp_path / "r2.gb"), "genbank")
+    gb.write_text(gb.read_text() + (tmp_path / "r2.gb").read_text())
+    fa, org, n, nt = nuc.read_input(gb, tmp_path)
+    assert (n, nt) == (1, 120) and [r.id for r in SeqIO.parse(str(fa), "fasta")] == ["R2"]
+
+
+@needs_tools
+def test_consensus_per_organism_for_genbank_records(tmp_path, lib):
+    """a batch of GenBank records of several species: one consensus per organism, not one chimera of all"""
+    recs = []
+    for i in range(2):
+        parts = {g: (mutate(s, 0.04) if not g.startswith("ITS") else rand(len(s))) for g, s in lib["base"].items()}
+        recs.append(rdna_record(f"S{i}", parts, rand(500), rand(500), f"Species{i} sp"))
+    SeqIO.write(recs, str(tmp_path / "in.gb"), "genbank")
+    nuc.annotate(tmp_path / "in.gb", tmp_path / "out", lib["dir"], ["rdna"], 2)
+    cons = list(csv.DictReader(open(tmp_path / "out" / "consensus.tsv"), delimiter="\t"))
+    assert sorted({c["sample"] for c in cons}) == ["Species0 sp", "Species1 sp"]
+    s18 = {r.id: str(r.seq) for r in SeqIO.parse(str(tmp_path / "out" / "consensus" / "18S.fasta"), "fasta")}
+    assert s18 == {f"Species{i}_sp_18S": str(recs[i].features[0].extract(recs[i].seq)).upper() for i in range(2)}
+
+
+def _feat(lo, hi, how, aln, sup):
+    return {"lo": lo, "hi": hi, "p_lo": False, "p_hi": False, "how": how, "aln": set(aln), "sup": sup, "aligned": len(aln)}
+
+
+def test_tidy_projected_end_stops_at_scaffold_gap():
+    """AB272236.1: 100 N stand for a ~1.3 kb gap; the 28S 5' end was projected through it onto the 18S
+    (NCBI: <2059..>4631). LC713089.1 / BK061357.1: a gap inside an aligned gene stays inside it"""
+    seq = "A" * 1958 + "N" * 100 + "A" * 2573
+    L = {"st": 1, "feats": {"28S": _feat(1249, 4631, "projected/projected", range(2100, 4100), 2000)}}
+    nuc._tidy([L], seq, len(seq))
+    f = L["feats"]["28S"]
+    assert (f["lo"], f["hi"], f["p_lo"]) == (2059, 4631, True)
+    L = {"st": 1, "feats": {"18S": _feat(1, 1646, "projected/aligned", list(range(1, 1400)) + list(range(1520, 1646)), 900)}}
+    seq = "A" * 1482 + "N" * 26 + "A" * 4379
+    nuc._tidy([L], seq, len(seq))
+    assert (L["feats"]["18S"]["lo"], L["feats"]["18S"]["hi"]) == (1, 1646)
+
+
+def test_tidy_drops_rrna_overlapping_another_on_either_strand():
+    """MG590305.1: a reverse 28S projected over the end of the 18S into the 3.2 kb ITS1 (169 nt aligned);
+    PP357355.1: a 28S projected from the IGS over the 18S start"""
+    seq = "A" * 11000
+    a = {"st": 1, "feats": {"18S": _feat(642, 2464, "curated/curated", range(642, 2465), 3000)}}
+    b = {"st": -1, "feats": {"28S": _feat(2302, 4824, "projected/projected", range(3000, 3169), 150)}}
+    c = {"st": 1, "feats": {"28S": _feat(1, 700, "projected/projected", range(600, 700), 90)}}
+    nuc._tidy([a, b, c], seq, len(seq))
+    assert "18S" in a["feats"] and not b["feats"] and not c["feats"]
+
+
+def test_tidy_end_inside_gap_moves_to_its_edge():
+    """PQ211133.1: the 28S start was projected into a 100 N gap (table2asn FeatureBeginsOrEndsInGap)"""
+    seq = "A" * 2032 + "N" * 100 + "A" * 1035
+    L = {"st": 1, "feats": {"28S": _feat(2058, 3167, "projected/aligned", range(2200, 3100), 900)}}
+    nuc._tidy([L], seq, len(seq))
+    assert (L["feats"]["28S"]["lo"], L["feats"]["28S"]["p_lo"]) == (2133, True)
+
+
+def test_definition_line_follows_ncbi_grouping():
+    """NCBI wording, e.g. KY753840.1 / MW412252.1 / PP239203.1 titles"""
+    def f(g, a, b, p5=False, p3=False):
+        loc = FeatureLocation(nuc.BeforePosition(a) if p5 else a, nuc.AfterPosition(b) if p3 else b, 1)
+        return SeqFeature(loc, type="rRNA" if g in nuc.RRNA else "misc_RNA", qualifiers={"product": [nuc.PRODUCT[g]]})
+    unit = [f("18S", 0, 1800, p5=True), f("ITS1", 1800, 2100), f("5.8S", 2100, 2260), f("ITS2", 2260, 2500),
+            f("28S", 2500, 4000, p3=True)]
+    assert nuc.definition("Perinereis wilsoni", {"specimen_voucher": "23007-1"}, unit) == (
+        "Perinereis wilsoni voucher 23007-1 18S ribosomal RNA gene, partial sequence; internal transcribed spacer 1, "
+        "5.8S ribosomal RNA gene, and internal transcribed spacer 2, complete sequence; and 28S ribosomal RNA gene, "
+        "partial sequence")
+    assert nuc.definition("X y", {}, [f("ITS1", 0, 300, p5=True), f("5.8S", 300, 460), f("ITS2", 460, 700)]) == (
+        "X y internal transcribed spacer 1, partial sequence; and 5.8S ribosomal RNA gene and internal transcribed "
+        "spacer 2, complete sequence")      # two groups: '; and' in 94 of 103 NCBI rDNA titles (2026-10-25)
+
+
+def test_tidy_spacer_not_over_rrna_or_in_gap():
+    """LC799786.1: ITS2 drawn inside a 100 N gap; FN995994.2: an ITS1 of one copy ran over the rRNAs of another"""
+    seq = "A" * 1937 + "N" * 100 + "A" * 3000
+    L = {"st": 1, "feats": {"5.8S": _feat(1780, 1938, "aligned/aligned", range(1780, 1939), 300),
+                            "28S": _feat(2038, 5000, "projected/aligned", range(2100, 5000), 3000)}}
+    nuc._tidy([L], seq, len(seq))
+    assert "ITS2" not in L["feats"]
+    seq = "A" * 3400
+    a = {"st": 1, "feats": {"18S": _feat(1, 700, "projected/aligned", range(400, 700), 500),
+                            "5.8S": _feat(971, 1127, "aligned/aligned", range(971, 1128), 300)}}
+    b = {"st": 1, "feats": {"5.8S": _feat(2658, 2814, "aligned/aligned", range(2658, 2815), 290)}}
+    nuc._tidy([a, b], seq, len(seq))
+    assert (a["feats"]["ITS1"]["lo"], a["feats"]["ITS1"]["hi"]) == (701, 970)
+    assert "ITS1" not in b["feats"]          # would run from 1 over the 18S and the other 5.8S
+
+
+CM = all(mito_env.find(t) for t in ("cmsearch",)) and (nuc.LIB / "rfam" / "RF01960.cm").exists()
+
+
+def _curated(acc, gene):
+    import gzip
+    row = next(r for r in csv.DictReader(open(nuc.LIB / "rdna_ref.tsv"), delimiter="\t")
+               if r["ref"].startswith(acc) and r["gene"] == gene)
+    with gzip.open(nuc.LIB / "rdna_ref.fa.gz", "rt") as fh:
+        s = next(str(r.seq) for r in SeqIO.parse(fh, "fasta") if r.id == row["ref"])
+    return s[int(row["start"]) - 1:int(row["end"])]
+
+
+@pytest.mark.skipif(not CM, reason="cmsearch / Rfam models not found")
+def test_cm_ends_place_the_curated_mature_ends(tmp_path):
+    """human 18S (NR_003286) in random flanks; predicted ends 3 nt off (as the hesionid convention of polynoid
+    records, ...GATCATTACCG) are moved to the mature ends, on both strands"""
+    g = _curated("NR_003286", "18S")
+    seq = Seq(rand(700) + g + rand(700))
+    a, b = 701, 700 + len(g)
+    seqs = {"c": seq, "r": seq.reverse_complement()}
+    n = len(seq)
+    jobs = [("c", 1, 5, a - 3), ("c", 1, 3, b + 3), ("r", -1, 5, n - a + 1 + 2), ("r", -1, 3, n - b + 1 - 2)]
+    out = nuc.cm_ends(jobs, seqs, "18S", nuc.LIB / "rfam" / "RF01960.cm", tmp_path, 2)
+    assert out == {0: a, 1: b, 2: n - a + 1, 3: n - b + 1}
+
+
+@pytest.mark.skipif(not CM, reason="cmsearch / Rfam models not found")
+def test_cm_rescue_58s_piece_at_sequence_start(tmp_path):
+    """JN636100.1 / JN636101.1 (ITS2 amplicons): the sequence starts in the 5.8S; the 3' 60 nt of it were not
+    annotated (too short for blastn)"""
+    s58 = _curated("NR_003285", "5.8S")
+    seq = Seq(s58[-60:] + rand(400) + _curated("NR_003287", "28S")[:600])
+    L = {"st": 1, "feats": {"28S": {"lo": 461, "hi": len(seq), "p_lo": False, "p_hi": True, "how": "aligned/projected",
+                                    "aln": set(range(461, 1061)), "sup": 900, "aligned": 600}}}
+    assert nuc._cm_rescue_58s({"c": [L]}, {"c": seq}, nuc.LIB / "rfam", tmp_path, 2) == 1
+    f = L["feats"]["5.8S"]
+    assert (f["lo"], f["hi"], f["p_lo"]) == (1, 60, True) and L["feats"]["ITS2"]["lo"] == 61
+
+
+@pytest.mark.skipif(not CM, reason="cmsearch / Rfam models not found")
+def test_cm_refine_hmm_first_then_partial_when_unconfirmed(tmp_path):
+    """the profile HMM places ends that are a few nt off (label hmm); an end at the sequence end that no model can
+    confirm is partial (OK209792.1: the record starts inside the 18S, the projection said complete at nt 1)"""
+    g = _curated("NR_003286", "18S")
+    seq = Seq(rand(400) + g + rand(400))
+    f = {"lo": 404, "hi": 400 + len(g) - 2, "p_lo": False, "p_hi": False, "how": "aligned/aligned"}
+    L = {"st": 1, "feats": {"18S": f}}
+    assert nuc.cm_refine({"c": [L]}, {"c": seq}, nuc.LIB, tmp_path, 2) == 2
+    assert (f["lo"], f["hi"], f["how"]) == (401, 400 + len(g), "hmm/hmm")
+    cut = Seq(g[25:] + rand(400))                  # starts 25 nt inside the 18S
+    f = {"lo": 1, "hi": len(g) - 25, "p_lo": False, "p_hi": False, "how": "aligned/aligned"}
+    L = {"st": 1, "feats": {"18S": f}}
+    nuc.cm_refine({"c": [L]}, {"c": cut}, nuc.LIB, tmp_path, 2)
+    assert f["p_lo"] and f["lo"] == 1 and not f["p_hi"]

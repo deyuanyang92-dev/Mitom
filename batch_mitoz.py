@@ -2360,7 +2360,24 @@ def preflight(args: argparse.Namespace) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 # MitoZ annotation worker
 # ─────────────────────────────────────────────────────────────────────────────
-def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args) -> List[str]:
+def sample_lineage(si: "SampleInfo") -> str:
+    """NCBI lineage of a sample from its original GenBank record ('' for FASTA input): the MitoM-ML tRNA caller of
+    mito_core.py uses the clade models on this lineage (full lineage 98.5 % vs phylum only 97.9 % tRNA recall,
+    projects/invert_trna)."""
+    if not si.orig_gb_path:
+        return ""
+    from Bio import SeqIO
+    try:
+        for rec in SeqIO.parse(str(si.orig_gb_path), "genbank"):
+            tax = [t for t in rec.annotations.get("taxonomy", []) if t]
+            if tax:
+                return ";".join(tax)
+    except (OSError, ValueError):
+        pass
+    return ""
+
+
+def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args, lineage: str = "") -> List[str]:
     """mito_core.py annotate command for one sample (--core native); `args` is the Namespace or the worker's dict."""
     g = (lambda k, d=None: getattr(args, k, d)) if not isinstance(args, dict) else (lambda k, d=None: args.get(k, d))
     cmd = [sys.executable, "-W", "ignore", str(MITO_CORE), "annotate", "-i", str(fasta_file), "-o", str(workdir),
@@ -2373,6 +2390,8 @@ def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args) -> 
         cmd += ["--phylum", str(g("phylum"))]
     if g("rrna_hmm_lib"):
         cmd += ["--rrna_lib", str(g("rrna_hmm_lib"))]
+    if lineage:
+        cmd += ["--lineage", lineage]
     return cmd
 
 
@@ -2407,7 +2426,7 @@ def mitoz_annotate_one(
         base_args += shlex.split(str(x))
 
     if getattr(args, "core", "native") == "native":
-        cmd = native_core_cmd(fasta_file, workdir, internal_id, args)
+        cmd = native_core_cmd(fasta_file, workdir, internal_id, args, sample_lineage(si))
     else:
         cmd = build_tool_cmd(
             tool_label="MitoZ", exe_name=MITOZ_EXE_NAME, base_args=base_args,
@@ -2478,6 +2497,7 @@ class AnnotTask:
     out_root:      str
     fq1:           Optional[str]
     fq2:           Optional[str]
+    lineage:       str = ""
 
 
 def render_snakemake_worker_script(out_dir: Path) -> Path:
@@ -2606,6 +2626,8 @@ def main():
             cmd += ["--phylum", str(args["phylum"])]
         if args.get("rrna_hmm_lib"):
             cmd += ["--rrna_lib", str(args["rrna_hmm_lib"])]
+        if task.get("lineage"):
+            cmd += ["--lineage", str(task["lineage"])]
         fast = None
     else:
         cmd = build_tool_cmd(
@@ -2853,7 +2875,7 @@ def run_annotation_stage(
             tasks.append(AnnotTask(
                 internal_id=si.internal_id, sample_name=si.sample_name,
                 fasta_file=str(fasta_selector(si)), phase_dirname=phase_dirname,
-                out_root=str(out_root), fq1=fq1, fq2=fq2))
+                out_root=str(out_root), fq1=fq1, fq2=fq2, lineage=sample_lineage(si)))
         return run_snakemake_for_annotation_tasks(
             tasks=tasks, out_root=out_root, phase_name=phase_dirname, args=args)
 

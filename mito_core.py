@@ -12,8 +12,11 @@ placed by mito_curate.py P3, which knows the neighbours. rRNA ends and NCBI name
 rRNAs: the per-phylum profile HMM of MitoM (models/rrna_hmm, nhmmer; --phylum) when the library has the phylum, else
 Infernal cmsearch (fast mode, local) with the MITOS2 covariance models (refseq89m/ncRNA/rrnS.cm, rrnL.cm), best
 cluster of hits; an rRNA still missing is left to MitoM's later rRNA HMM step.
-tRNAs: cmsearch with the MiTFi tRNA models (refseq89m/ncRNA/trn*.cm; a sensitive pass for models without a hit) and
-MiTFi (mitfi_import.jar of the mitos package) for hit selection and anticodons - the same programs MITOS2 runs.
+tRNAs (--trna auto, default): MitoM-ML (trna_ml.py) when its models are installed - MITOS2 tRNA CMs plus the clade CMs
+on --lineage (default Metazoa;<--phylum>), ARWEN / ARAGORN as extra evidence when found, a learned caller and learned
+ends (unseen-family benchmark: recall 98.5 % vs 94.9 % for the MiTFi CMs, projects/invert_trna/REPORT.md); else, or
+with --trna mitfi: cmsearch with the MiTFi tRNA models (refseq89m/ncRNA/trn*.cm; a sensitive pass for models without a
+hit) and MiTFi (mitfi_import.jar of the mitos package) for hit selection and anticodons - the programs MITOS2 runs.
 
 Circular records are searched as sequence + its first ORIGIN_EXT nt, so genes across the origin are found whole and
 written as joins (MITOS2 searches two rotations for the same reason). Several FASTA sequences = contigs of one sample.
@@ -674,6 +677,32 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
     return feats
 
 
+def annotate_trnas_ml(genome: str, n: int, code: int, threads: int, tools: dict, lineage: str, circular: bool,
+                      log) -> List[Feature]:
+    """MitoM-ML tRNAs of one record (genome = the record without the appended ORIGIN_EXT nt)."""
+    import mito_trna
+    import trna_ml
+    ext: list = []
+    with tempfile.TemporaryDirectory(prefix="mito_core_trna.") as td:
+        fa = Path(td) / "g.fa"
+        fa.write_text(f">g\n{genome}\n")
+        for t in ("arwen", "aragorn"):
+            if tools.get(t):
+                ext += mito_trna.unwrap(mito_trna.TOOLS[t](fa, code, {t: tools[t]}, Path(td), None), n)
+    calls = trna_ml.predict(genome, lineage, code, Path(tools["refdir"]) / "ncRNA", tools["cmsearch"], tools["cmalign"], ext,
+                            cpu=max(1, threads))
+    feats = []
+    for c in calls:
+        if c["end"] > n and not circular:
+            continue
+        feats.append(Feature("tRNA", trna_name(c["family"], c["anticodon"], ""), c["start"] - 1, c["end"], c["strand"],
+                             f"MitoM-ML p {c['p']:.3f} ends p {c['bound_p']:.3f}", anticodon=c["anticodon"],
+                             score=c["p"], model="MitoM-ML"))
+    log.info(f"[core] tRNAs (MitoM-ML, lineage {lineage or 'none'}, {'ARWEN/ARAGORN evidence' if ext else 'no ARWEN/ARAGORN'}):"
+             f" {len(feats)}")
+    return feats
+
+
 def trna_name(aa: str, anticodon: str, model: str) -> str:
     """MITOS2 naming: the amino acid MiTFi derives from the anticodon; the two Leu / Ser genes by codon family
     (L1 = CUN: anticodon UAG; L2 = UUR: UAA; S1 = AGN: GCU / UCU; S2 = UCN: UGA), else the model's number."""
@@ -803,7 +832,19 @@ def annotate(args) -> int:
         raise SystemExit(f"[core] reference data not found: {refdir} (refseq89m with featureProt/ and ncRNA/)")
     tools = {"blastx": program("blastx", args.blastx), "exonerate": program("exonerate", args.exonerate),
              "cmsearch": program("cmsearch", args.cmsearch)}
-    if not args.no_trna:
+    lineage = args.lineage or (f"Metazoa;{args.phylum}" if args.phylum else "")
+    use_ml = False
+    if not args.no_trna and args.trna in ("auto", "ml"):
+        import mito_trna
+        for t in ("cmalign", "arwen", "aragorn"):
+            tools[t] = mito_env.find(t, getattr(args, t, None)) or ""
+        tools["refdir"] = str(refdir)
+        use_ml = mito_trna.mitom_ready(tools, str(refdir))
+        if args.trna == "ml" and not use_ml:
+            raise SystemExit("[core] --trna ml: MitoM-ML needs models/trna_ml, cmsearch and cmalign")
+        if not use_ml:
+            log.warning("[core] MitoM-ML not installed (models/trna_ml, cmalign): tRNAs by MiTFi")
+    if not args.no_trna and not use_ml:
         tools["java"] = program("java", args.java)
         tools["mitfi"] = mitfi_files(args.mitos_bin)
     code = int(args.genetic_code)
@@ -824,7 +865,9 @@ def annotate(args) -> int:
             feats = annotate_pcgs(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
             feats += annotate_rrnas(gfa, refdir, tools, tmp, log, args.phylum,
                                     Path(args.rrna_lib) if args.rrna_lib else None, n if topology == "circular" else None)
-            if not args.no_trna:
+            if not args.no_trna and use_ml:
+                feats += annotate_trnas_ml(genome, n, code, args.threads, tools, lineage, topology == "circular", log)
+            elif not args.no_trna:
                 feats += annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
             if args.keep_tmp:
                 shutil.copytree(tmp, out / "core_tmp" / rid, dirs_exist_ok=True)
@@ -857,11 +900,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     a.add_argument("--threads", type=int, default=2)
     a.add_argument("--refdir", default=None, help="MITOS2 reference data (refseq89m); default from mito_env")
     a.add_argument("--no_trna", action="store_true", help="skip the tRNA step")
+    a.add_argument("--trna", choices=["auto", "ml", "mitfi"], default="auto",
+                   help="tRNA caller: auto (default) = MitoM-ML when installed, else MiTFi; ml; mitfi (MITOS2's)")
+    a.add_argument("--lineage", default="", help="NCBI lineage of the record (';'-separated) for the MitoM-ML clade "
+                   "models; default Metazoa;<--phylum>")
     a.add_argument("--phylum", default=None, help="phylum of the record: selects the per-phylum rRNA profile HMM")
     a.add_argument("--rrna_lib", default=None, help="rRNA profile HMM library (default models/rrna_hmm)")
     a.add_argument("--keep_tmp", action="store_true", help="keep blastx / cmsearch / MiTFi files in <out>/core_tmp")
     a.add_argument("--exonerate_model", default=EXONERATE_MODEL, help="exonerate model (protein2dna, protein2dna:bestfit)")
     a.add_argument("--blastx"), a.add_argument("--exonerate"), a.add_argument("--cmsearch"), a.add_argument("--java")
+    a.add_argument("--cmalign"), a.add_argument("--arwen"), a.add_argument("--aragorn")
     a.add_argument("--mitos_bin", default=None, help="MITOS2 environment bin (to find MiTFi); default from mito_env")
     a.add_argument("--exclude_ref", default=None, help="accessions whose own reference proteins are not used "
                    "(benchmark leave-out; default $MITOM_EXCLUDE_REF)")

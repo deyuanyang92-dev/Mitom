@@ -14,6 +14,11 @@ Sources (any subset, --tools):
   aragorn   ARAGORN (-mt)
   trnascan  tRNAscan-SE 2 (-O organellar mode)
   input     tRNA features already present in the input GenBank (e.g. MitoZ)
+  mitom     MitoM-ML (trna_ml.py): MITOS2 tRNA CMs + clade CMs on the record's NCBI lineage, a learned caller
+            using ARWEN / ARAGORN as extra evidence, learned ends. Unseen-family benchmark (1,069 RefSeq invertebrate
+            mitogenomes, 22,099 tRNAs): recall 98.5 % at 0.17 extra tRNAs per genome vs 94.9 % / 0.19 for the
+            MiTFi CMs alone; 0 calls on 150 shuffled genomes (projects/invert_trna/REPORT.md). Lineage: GenBank
+            taxonomy of the record, else --lineage (without one only the pan-metazoan CMs are used)
 
 Support is counted in independent method families (MITOS2; ARWEN+ARAGORN as one, same author and
 algorithm; tRNAscan-SE; input annotation), not in tools.
@@ -22,7 +27,9 @@ Locus groups: predictions on the same strand overlapping >= 50 % of the shorter 
 same amino acid AND anticodon (so trnL1/trnL2 and trnS1/trnS2 stay separate). Overlapping
 predictions with different anticodons form separate groups flagged as a conflict.
 
-Selection (--select mitos2_or_support, default): a group is selected when MITOS2 found it, or when
+Selection --select mitom (default when MitoM-ML is installed: models/trna_ml, cmsearch, cmalign, refseq89m): the
+selected tRNAs are the MitoM-ML calls (its boundaries and anticodons); the other sources stay in the review GenBank.
+Selection --select mitos2_or_support (default otherwise): a group is selected when MITOS2 found it, or when
 >= --min_support (2) independent method families agree. Overlapping groups with different anticodons
 (conflict): the one with stronger evidence (MITOS2, then more families) is kept, ties drop both.
 --select mitos2: the input tRNAs (e.g. MitoZ) are replaced by the MITOS2 tRNAs (tools mitos2,input;
@@ -188,6 +195,33 @@ def parse_mitos_bed(text: str) -> List[Pred]:
 TOOLS = {"mitos2": mitos2, "arwen": arwen, "aragorn": aragorn, "trnascan": trnascan}
 
 
+def mitom_ready(b: Dict[str, str], refdir: Optional[str]) -> bool:
+    import trna_ml
+    return bool(refdir and b.get("cmsearch") and b.get("cmalign") and (trna_ml.MODELS / "caller_train.tsv.gz").exists()
+                and ((trna_ml.MODELS / "clades.tar.gz").exists() or (trna_ml.MODELS / "clades").is_dir()))
+
+
+def mitom(seq: str, lineage: str, code: int, b: Dict[str, str], a, preds: List[Pred], tmp: Path) -> List[Pred]:
+    """MitoM-ML calls; ARWEN / ARAGORN predictions of this record are used as evidence (run here when not
+    among --tools)."""
+    import trna_ml
+    ext = [p for p in preds if p.source in ("ARWEN", "ARAGORN")]
+    if not ext:
+        fa = tmp / "g.fa"
+        for t in ("arwen", "aragorn"):
+            if t in b:
+                ext += unwrap(TOOLS[t](fa, code, b, tmp, a), len(seq))
+    else:
+        ext = [Pred(p.source, p.start, p.end + (len(seq) if p.start > p.end else 0), p.strand, p.aa, p.anticodon)
+               for p in ext]
+    out = []
+    for c in trna_ml.predict(seq, lineage, code, Path(a.mitos_refdir) / a.mitos_ref / "ncRNA", b["cmsearch"],
+                             b["cmalign"], ext, cpu=a.threads):
+        out.append(Pred("MitoM-ML", c["start"], c["end"], c["strand"], c["aa"], c["anticodon"], f"{c['p']:.3f}",
+                        extra={"family": c["family"], "bound_p": str(c["bound_p"])}))
+    return out
+
+
 def from_input(rec) -> List[Pred]:
     """tRNA features of the input annotation (amino acid from /product, anticodon from /note or name)."""
     out = []
@@ -254,7 +288,8 @@ def conflicts(groups: List[List[Pred]]) -> Dict[int, List[int]]:
 # Independent method families: ARWEN and ARAGORN share author and algorithm (Laslett & Canback),
 # so their agreement is one line of evidence, not two (Metridium: both report trnF/trnS2 where NCBI
 # and the covariance-model methods have no tRNA).
-FAMILY = {"MITOS2": "MITOS2 (covariance models, metazoan mt tRNAs)", "ARWEN": "ARWEN/ARAGORN (heuristic)",
+FAMILY = {"MitoM-ML": "MitoM-ML (MITOS2 + clade covariance models, learned caller)",
+          "MITOS2": "MITOS2 (covariance models, metazoan mt tRNAs)", "ARWEN": "ARWEN/ARAGORN (heuristic)",
           "ARAGORN": "ARWEN/ARAGORN (heuristic)", "tRNAscan-SE": "tRNAscan-SE (covariance models)",
           "input": "input annotation"}
 
@@ -358,11 +393,13 @@ def main(argv=None) -> int:
     p.add_argument("-o", "--out", required=True)
     p.add_argument("--genetic_code", type=int, default=5)
     p.add_argument("--tools", default=None,
-                   help="default: mitos2,arwen,aragorn,trnascan,input; with --select mitos2: mitos2,input")
-    p.add_argument("--priority", default="MITOS2,ARWEN,ARAGORN,tRNAscan-SE,input",
+                   help="default: mitom,arwen,aragorn,input with --select mitom; mitos2,arwen,aragorn,trnascan,input "
+                        "with mitos2_or_support / support; mitos2,input with --select mitos2")
+    p.add_argument("--priority", default="MitoM-ML,MITOS2,ARWEN,ARAGORN,tRNAscan-SE,input",
                    help="source whose boundaries are used for the selected tRNA of a group")
-    p.add_argument("--select", choices=["mitos2_or_support", "support", "mitos2"], default="mitos2_or_support",
-                   help="selected tRNAs: mitos2 = replace the input (e.g. MitoZ) tRNAs with the MITOS2 tRNAs "
+    p.add_argument("--select", choices=["auto", "mitom", "mitos2_or_support", "support", "mitos2"], default="auto",
+                   help="selected tRNAs: auto (default) = mitom when MitoM-ML is installed, else mitos2_or_support; "
+                        "mitom = the MitoM-ML calls (a record whose run fails keeps its input tRNAs); mitos2 = replace the input (e.g. MitoZ) tRNAs with the MITOS2 tRNAs "
                         "(MITOS2 boundaries and anticodons; a record whose MITOS2 run fails is kept unchanged); "
                         "mitos2_or_support (default) = found by MITOS2, or supported by >= "
                         "--min_support independent method families; support = families only. Benchmark "
@@ -374,16 +411,28 @@ def main(argv=None) -> int:
     p.add_argument("--mitos_bin", default=None, help="directory with runmitos (MITOS2 environment bin)")
     p.add_argument("--mitos_refdir", default=None, help="MITOS2 reference data directory (contains refseq89m)")
     p.add_argument("--mitos_ref", default="refseq89m")
+    p.add_argument("--lineage", default="",
+                   help="NCBI lineage (';'-separated) for MitoM-ML clade models when the input has no GenBank taxonomy")
+    p.add_argument("--threads", type=int, default=2, help="CPUs for MitoM-ML cmsearch / cmalign")
     p.add_argument("--mitos_mode", choices=["fast", "sensitive", "full"], default="fast",
                    help="fast (default): MITOS2 without its sensitive-mode fallback (scripts/runmitos_fast.py); "
                         "full: unmodified runmitos (much slower when tRNAs are missing, e.g. anthozoans)")
     a = p.parse_args(argv)
     a.mitos_refdir = mito_env.mitos_refdir(a.mitos_refdir, a.mitos_ref)
 
-    if a.tools is None:
-        a.tools = "mitos2,input" if a.select == "mitos2" else "mitos2,arwen,aragorn,trnascan,input"
-    want = [t.strip() for t in a.tools.split(",") if t.strip()]
     found = {n: find(n, a.bin, a.mitos_bin) for n in ("arwen", "aragorn", "tRNAscan-SE", "runmitos")}
+    found.update({n: mito_env.find(n, a.bin) or mito_env.find(n) for n in ("cmsearch", "cmalign")})
+    ml_ok = mitom_ready({k: v for k, v in found.items() if v}, a.mitos_refdir)
+    if a.select == "auto":
+        a.select = "mitom" if ml_ok and (a.tools is None or "mitom" in a.tools.split(",")) else "mitos2_or_support"
+    if a.tools is None:
+        a.tools = {"mitos2": "mitos2,input", "mitom": "mitom,arwen,aragorn,input"}.get(
+            a.select, "mitos2,arwen,aragorn,trnascan,input")
+    want = [t.strip() for t in a.tools.split(",") if t.strip()]
+    if "mitom" in want and not ml_ok:
+        print("[mito_trna] mitom: MitoM-ML needs models/trna_ml, cmsearch, cmalign and MITOS2 refseq89m - skipped",
+              file=sys.stderr)
+        want.remove("mitom")
     need = {"mitos2": "runmitos", "arwen": "arwen", "aragorn": "aragorn", "trnascan": "tRNAscan-SE"}
     for t in list(want):
         if t in need and not found[need[t]]:
@@ -395,6 +444,9 @@ def main(argv=None) -> int:
             want.remove(t)
     if a.select == "mitos2" and "mitos2" not in want:
         print("[mito_trna] --select mitos2 needs MITOS2 (runmitos via --mitos_bin, and --mitos_refdir)", file=sys.stderr)
+        return 2
+    if a.select == "mitom" and "mitom" not in want:
+        print("[mito_trna] --select mitom needs MitoM-ML (models/trna_ml, cmsearch, cmalign, refseq89m)", file=sys.stderr)
         return 2
     b: Dict[str, str] = {k: v for k, v in found.items() if v}
     src, out = Path(a.input), Path(a.out)
@@ -426,22 +478,30 @@ def main(argv=None) -> int:
                 preds: List[Pred] = []
                 failed = []
                 for t in want:
-                    if t == "input":
-                        preds += from_input(rec)
+                    if t in ("input", "mitom"):
+                        preds += from_input(rec) if t == "input" else []
                         continue
                     try:
                         preds += TOOLS[t](fa, a.genetic_code, b, tmp, a)
                     except RuntimeError as exc:
                         failed.append(t)
                         print(f"[mito_trna] {rec.id}: {t} failed ({exc})", file=sys.stderr)
-            if a.select == "mitos2" and "mitos2" in failed:
-                # never drop the existing tRNAs because MITOS2 crashed: record written unchanged
-                print(f"[mito_trna] {rec.id}: MITOS2 failed - input tRNAs kept unchanged", file=sys.stderr)
+                if "mitom" in want:                       # after ARWEN / ARAGORN: their predictions are its evidence
+                    lineage = a.lineage or ";".join(rec.annotations.get("taxonomy", []))
+                    try:
+                        preds += mitom(str(rec.seq), lineage, a.genetic_code, b, a, preds, tmp)
+                    except (RuntimeError, OSError, ValueError) as exc:
+                        failed.append("mitom")
+                        print(f"[mito_trna] {rec.id}: mitom failed ({exc})", file=sys.stderr)
+            sel_tool = {"mitos2": "mitos2", "mitom": "mitom"}.get(a.select)
+            if sel_tool and sel_tool in failed:
+                # never drop the existing tRNAs because the selecting method crashed: record written unchanged
+                print(f"[mito_trna] {rec.id}: {sel_tool} failed - input tRNAs kept unchanged", file=sys.stderr)
                 review.append(rec)
                 selected.append(rec)
                 report.append({"file": f.name, "record": rec.id, "group": "", "tRNA": "", "anticodon": "", "strand": "",
                                "start": "", "end": "", "boundary_source": "", "n_families": "", "sources": "",
-                               "coords_by_source": "", "conflict": "", "selected": "MITOS2 failed; input kept"})
+                               "coords_by_source": "", "conflict": "", "selected": f"{sel_tool} failed; input kept"})
                 continue
             L = len(rec.seq)
             global CIRC_L
@@ -450,6 +510,7 @@ def main(argv=None) -> int:
             groups = group(preds)
             conf = conflicts(groups)
             sources_run = sorted({x for x in ("MITOS2" if "mitos2" in want else "", "ARWEN" if "arwen" in want else "",
+                                              "MitoM-ML" if "mitom" in want else "",
                                               "ARAGORN" if "aragorn" in want else "",
                                               "tRNAscan-SE" if "trnascan" in want else "",
                                               "input" if "input" in want else "") if x})
@@ -473,15 +534,16 @@ def main(argv=None) -> int:
                 # a conflict removes a group only when a conflicting group has equal or stronger
                 # evidence (ARWEN-only hits overlapping a MITOS2 tRNA must not remove it)
                 beaten = any(strength(groups[j - 1], a.select) >= strength(g, a.select) for j in conf.get(gi, []))
-                if a.select == "mitos2":
-                    keep = "MITOS2" in srcs
-                    best = next(x for x in g if x.source == "MITOS2") if keep else best
+                if a.select in ("mitos2", "mitom"):
+                    sel_src = "MITOS2" if a.select == "mitos2" else "MitoM-ML"
+                    keep = sel_src in srcs
+                    best = next(x for x in g if x.source == sel_src) if keep else best
                 elif a.select == "mitos2_or_support":
                     keep = ("MITOS2" in srcs or len(fams) >= a.min_support) and not beaten
                 else:
                     keep = len(fams) >= a.min_support and not beaten
                 if keep:
-                    ac_sel = (best.anticodon or ac) if a.select == "mitos2" else ac
+                    ac_sel = (best.anticodon or ac) if a.select in ("mitos2", "mitom") else ac
                     tf = feature(best, ac_sel, f"tRNA by mito_trna.py: boundaries from {best.source}; "
                                                f"support {support}", L)
                     sel_feats += [SeqFeature(tf.location, type="gene", qualifiers={"gene": tf.qualifiers["gene"]}), tf]
@@ -508,10 +570,11 @@ def main(argv=None) -> int:
         w.writerows(report)
     sel = sum(r["selected"] == "yes" for r in report)
     rule = "MITOS2 tRNAs replace input tRNAs" if a.select == "mitos2" else \
+        "MitoM-ML tRNAs replace input tRNAs" if a.select == "mitom" else \
         ("found by MITOS2 or " if a.select == "mitos2_or_support" else "") + \
         f">= {a.min_support} independent method families"
     print(f"[mito_trna] {len(files)} file(s); tools {', '.join(want)}; {len(report)} tRNA loci, {sel} selected "
-          f"({rule}{'' if a.select == 'mitos2' else '; conflicts -> stronger evidence'}) -> {out}")
+          f"({rule}{'' if a.select in ('mitos2', 'mitom') else '; conflicts -> stronger evidence'}) -> {out}")
     return 0
 
 

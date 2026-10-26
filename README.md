@@ -922,10 +922,11 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out --lib my_lib
 
 | 输出 | 内容 |
 |---|---|
-| `nuc_features.tsv` | 每个特征一行：contig、长度、SPAdes 覆盖度、基因、起止、链、5'/3' 是否不完整、最佳参考及物种、一致度、边界依据（aligned 比对得到 / projected 无比对外推） |
+| `nuc_features.tsv` | 每个特征一行：contig、长度、SPAdes 覆盖度、基因、起止、链、5'/3' 是否不完整、最佳参考及物种、一致度、边界依据（aligned 比对得到 / projected 无比对外推）、`aligned_nt`（参考基因内比对到该特征的 nt，越少越要人工核对） |
 | `nuc_annotation.gb` | 有特征的 contig 的 GenBank（rRNA / misc_RNA / CDS，不完整端为 `<` `>`，CDS 带 translation、transl_table 1） |
+| `submission/nuc.fsa`、`nuc.tbl`、`nuc.sqn` | NCBI 提交文件：定义行按 NCBI 规范自动生成（如 "... 18S ribosomal RNA gene, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, and internal transcribed spacer 2, complete sequence; and 28S ribosomal RNA gene, partial sequence"），来源信息取自输入 GenBank（voucher、isolate、geo_loc_name、collection_date 等）或 `--organism` / `--src`（NCBI source table TSV）；内部说明不写入；rRNA 在负链的序列翻成正向；≥10 N 在 .sqn 中为缺口（100 N = 长度未知）；内部终止的组蛋白写成 gene /pseudo。装有 table2asn 时自动 `-V vb -Z` 校验，结果在 `validation.txt`、`nuc.val`、`nuc.dr`。提交前需加提交者模板（`table2asn -t template.sbt`），NCBI 要求 collection_date 与 geo_loc_name |
 | `genes/<基因>.fasta` | 每个拷贝的序列（组蛋白另有 `.faa`） |
-| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列：多拷贝 rDNA 在组装中散成许多 contig 时，高覆盖片段按重叠拼接、按参考排序，再按覆盖度加权逐位投票；与共识一致度 < 97 %（`--consensus_identity`）的片段（其他物种、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，取覆盖度最高的完整 CDS |
+| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列（GenBank 输入含多个物种时每个物种一条，`sample` 列为物种名）：多拷贝 rDNA 在组装中散成许多 contig 时，高覆盖片段按重叠拼接、按参考排序，再按覆盖度加权逐位投票；与共识一致度 < 97 %（`--consensus_identity`）的片段（其他物种、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，取覆盖度最高的完整 CDS |
 
 大组装先用每属一个 rDNA 单元、每门每种组蛋白一个蛋白做快速预筛，只把命中的区域（±20 kb）送入精细注释：
 SRR16188826 SPAdes scaffolds（148 万条、7.2 亿 nt）32 线程 2 分 18 秒。
@@ -941,6 +942,31 @@ NCBI 提交者注释了 9.3 %（其中完全一致 96.2 %），mitom 排除同�
 建库时用其他研究的参考交叉检查每条参考的边界，被多数研究否定的边界（如某蜱类研究 28S 3' 端早约 530 nt）不参与投票
 （`models/nuc/rdna_qc.tsv`）。边界跟随参考提交者的约定（各研究对 5.8S、28S 端点的约定不完全一致）；参考稀少的类群（海绵、刺胞、粘孢子虫、扁形动物）边界多靠外推，
 建议加入本类群的已注释记录。方法与调优记录：`knowledge/topics/nuclear_markers.md`。
+
+rRNA 端点按与实验测定的成熟末端（RefSeq 精编人类等 rRNA）同源的位置确定：先用 BLAST 投影找到基因，再用 Rfam 模型
+（RF01960 / RF00002 / RF02543，随附 `models/nuc/rfam/`）精修每个端点——先 profile HMM（快，命中离模型端 ≤3 列且离投影 ≤30 nt 才采用），
+其余用协方差模型（±150 nt，命中跑出窗口再 ±600 nt）；模型不能确认且贴着序列末端的端点标为不完整；同种精编参考（≥99.5 %）决定的端点保留。
+`evidence` 列：hmm / cm（模型）、curated / aligned / projected（参考）。`--no_cm` 关闭。
+独立金标准（RefSeq 精编 rRNA 映射到 8 个物种 336 条记录，558 个边界，排除同属参考，`benchmark/nuc_gold_bench.py`）：精确 96.2 %、±1 nt 99.6 %、
+未注出 0.4 %（改动前 85.8 / 96.8 / 1.6 %）；精确不一致的 21 个是秀丽隐杆线虫（模型外侧核苷酸数与哺乳类差 1，排除同属后库中无线虫精编；
+线虫 RefSeq 端点为推定值）。CM 金标准（`benchmark/nuc_cm_gold.py`）多鳞虫 + 沙蚕 146 个边界：100 %（与本软件同一模型，循环），
+NCBI 提交者 0 %。按提交者注释算（`nuc_bench.py`）一致率下降（38.6 % 精确），原因是各研究的约定不同：如 *Junonia* 18S 5' 端提交者早 4 nt、5.8S 早 6 nt（长型），
+mitom 与人类精编同源位置一致。方法与证据：`knowledge/topics/nuclear_markers.md` 第 10、11 节。
+
+低配运行（2 线程，`/usr/bin/time`，2026-10-26）：3 条 contig 4.6 s / 132 MB（1 线程 5.1 s / 101 MB）；61 条 GenBank 23 s / 269 MB；
+200 条 rDNA 记录 3 分 6 秒 / 533 MB（优化前 24 分 20 秒 / 2.7 GB）；5.6 Mb 混合输入（走预筛）3 分 25 秒 / 608 MB。
+
+NCBI 提交校验（table2asn 1.28 `-V vb -Z`，2026-10-25）：多鳞虫 + 沙蚕 50 条、23007 3 条 0 条消息；独立 rDNA 898 条本软件写的特征 0 ERROR
+（剩 40 个 rRNA 跨越长度未知缺口的 WARNING，与 NCBI 现有记录写法相同；1 个 ERROR 是 NCBI 原记录 source 文字括号不配对）；组蛋白 2012 条 0 ERROR
+（修复前 214：负链 CDS 5'/3' partial 标记互换、partial 端未延到序列末端、H1 假内含子、CDS 按 /gene 名连错拷贝），剩 11 个起点不在序列端的 5' partial WARNING（NCBI 标为假基因或 PCR 片段）。
+
+精度（`benchmark/nuc_fp_bench.py`：每个报出的特征是否与记录自身的同名注释重叠，2026-10-25）：独立 rDNA 898 条报出 18S 927 / 5.8S 890 / 28S 895，
+未被记录注释的 28S 1 个（鸟类 IGS 中 1.5 kb 类 28S 片段），重复 0（之前 5 个重复、6 个假 28S）；200 条完整线粒体基因组 0 个特征；
+2032 条组蛋白记录中 807 个"未注释"的组蛋白经逐条核对 805 个是真基因（提交者只写了 gene 特征或无特征）、名称错 0。
+多鳞虫科 / 沙蚕科（NCBI 2026-10-25，排除同属参考）：含 rDNA 的 50 条全部注出；18S 3' 端都在保守的 ...GATCATTA、28S 3' 端都在 ...GATTTGT，
+与 NCBI 不一致处多为提交者把 28S 延到序列末端（含 IGS）或 18S 3' 端偏 60–140 nt；5.8S 3' 端与 KY7538xx 等差 7–8 nt（约定差异，未确证）。
+沙蚕科 NCBI 没有分段注释的完整单元（只有整段 misc_RNA 的 PP239203 *Perinereis wilsoni*），用 Geneious 注释的 23007-1 对照：
+各边界相差 0–3 nt，28S 3' 端 mitom 在保守端 ...GATTTGT，Geneious 早 271 nt。
 
 ## 注意事项 / Practical Notes
 

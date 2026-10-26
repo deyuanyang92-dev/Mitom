@@ -6,3 +6,5 @@ __pycache__/
 .pytest_cache/
 .review/
 mito_config.json
+models/trna_ml/cache/
+models/trna_ml/clades/

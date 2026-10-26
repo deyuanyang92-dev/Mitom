@@ -44,3 +44,8 @@ end, ticks KY4575xx; a firefly study whose 28S ends scatter by up to 2 kb) canno
 Own references (e.g. Geneious exports of Perinereis rDNA): annotate 18S / 5.8S / 28S as rRNA features with
 those names and histones as CDS with product "histone H3" etc., then
 `mitom nuc build --gb rdna.gb histone.gb my_refs.gb -o my_lib` and `mitom nuc annotate ... --lib my_lib`.
+
+Rfam models (`rfam/`, downloaded 2026-10-25 from https://rfam.org/family/<acc>/cm, Rfam data are CC0): RF01960
+SSU_rRNA_eukarya (CLEN 1831), RF00002 5_8S_rRNA (154), RF02543 LSU_rRNA_eukarya (3401), Infernal 1.1.4. `mitom nuc
+annotate` places every rRNA end at the model's first / last column plus the nt the curated RefSeq rRNAs have outside
+it (18S 0 / 0, 5.8S 1 / 3, 28S 2 / 1; `mito_nuc.CM_OFFSET`); `--no_cm` turns this off.

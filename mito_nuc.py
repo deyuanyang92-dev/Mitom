@@ -39,20 +39,20 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
-import io
 import logging
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from Bio import SeqIO
-from Bio.Seq import Seq
+from Bio.Seq import Seq, UndefinedSequenceError
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqFeature import BeforePosition, AfterPosition
 from Bio.SeqRecord import SeqRecord
@@ -70,6 +70,9 @@ PRODUCT = {"18S": "18S ribosomal RNA", "5.8S": "5.8S ribosomal RNA", "28S": "28S
            **{h: f"histone {h}" for h in HISTONES}}
 MAX_PER_SPECIES = 3  # rDNA reference records per species (NCBI has up to ~100 of one species)
 TOPN = 5            # references that vote on an rDNA boundary
+PREFILTER_NT = 5_000_000   # inputs larger than this go through the prefilter
+CHUNK_NT = 300_000  # query nt per blastn chunk (memory bound of the rDNA search)
+BLAST_TARGETS = 100   # reference units kept per region (blastn; 100 vs 500: same gold result, 2 of 992 genes differ)
 EXTRAP = 30         # projection past an HSP end that still counts as a vote (nt)
 MIN_CHAIN_BITS = 100
 MIN_GENE_OVERLAP = 80   # nt of a reference rRNA an alignment chain must cover for the gene to be reported
@@ -109,6 +112,10 @@ def tool(name: str) -> str:
     if not p:
         raise SystemExit(f"{name} not found (mitom doctor; it is in the mitotools environment)")
     return p
+
+
+def tool_ok(name: str) -> bool:
+    return bool(mito_env.find(name))
 
 
 def run(cmd: List[str]) -> str:
@@ -251,7 +258,8 @@ def qc_rdna(lib: Path, threads: int) -> None:
                 vv = votes[(g, side)]
                 if not v[2 + side] or not vv:
                     continue
-                near = lambda p: set().union(set(), *(st for x, st in vv.items() if abs(x - p) <= 5))
+                def near(p, vv=vv):
+                    return set().union(set(), *(st for x, st in vv.items() if abs(x - p) <= 5))
                 best = max(vv, key=lambda p: (len(vv[p]), len(near(p))))    # position most studies map to
                 n_best, n_own = len(near(best)), len(near(v[side]))
                 if abs(best - v[side]) > QC_TOL and n_best >= QC_MIN_STUDIES and n_best > 2 * n_own:
@@ -289,6 +297,7 @@ def fetch(out: Path, email: Optional[str], api_key: Optional[str]) -> None:
 
 class Library:
     def __init__(self, lib: Path, work: Path):
+        self.dir = lib
         self.rdna: Dict[str, Dict[str, Tuple[int, int, bool, bool]]] = defaultdict(dict)
         self.org: Dict[str, Tuple[str, str]] = {}
         for r in csv.DictReader(open(lib / "rdna_ref.tsv"), delimiter="\t"):
@@ -462,7 +471,7 @@ def rdna_loci(hits: Dict[str, list], lib: Library, qlen: int, min_overlap: int =
                     for h in c:
                         cov.update(range(max(a, min(h[2], h[3])), min(b, max(h[2], h[3])) + 1))
                     covered = max(covered, len(cov))
-            trusted = {}
+            trusted, trusted_id = {}, {}
             for side, k in (("start", 0), ("end", 1)):
                 usable = [x for x in L["chains"] if g in lib.rdna[x[1]] and lib.rdna[x[1]][g][2 + k]]
                 # a curated reference aligned over the boundary (or <= EXTRAP nt past its alignment) decides it
@@ -472,7 +481,7 @@ def rdna_loci(hits: Dict[str, list], lib: Library, qlen: int, min_overlap: int =
                     if m is None:
                         m = next((x for x in (project(h, pos, EXTRAP) for h in c) if x is not None), None)
                     if m is not None:
-                        trusted[side] = int(m)
+                        trusted[side], trusted_id[side] = int(m), _identity(c)
                         break
                 # a side no top reference may vote on (partial or failed QC) takes the next references that may
                 for sc, ref, c in [x for x in usable if x in top] or usable[:TOPN]:
@@ -504,17 +513,56 @@ def rdna_loci(hits: Dict[str, list], lib: Library, qlen: int, min_overlap: int =
             lo_p, hi_p = max(1, lo_[0]), min(qlen, hi_[0])
             if hi_p < lo_p or (hi_p - lo_p < 20 and not (p_lo or p_hi)):      # short pieces only at a contig end
                 continue
-            feats[g] = {"lo": lo_p, "hi": hi_p, "p_lo": p_lo, "p_hi": p_hi, "weak": covered < min_overlap,
+            # aligned query nt inside the feature itself (an alignment of a spacer or of another gene does not
+            # carry a gene projected kilobases away) and the bits of that part (picks between overlapping loci)
+            qcov, sup, aln = 0, 0.0, set()
+            for sc, ref, c in top:
+                if g not in lib.rdna[ref]:
+                    continue
+                ga, gb = lib.rdna[ref][g][:2]
+                pos, bits = set(), 0.0
+                for h in c:
+                    # the part of the HSP inside the reference gene, on the query (ungapped offset)
+                    r1, r2 = max(ga, min(h[2], h[3])), min(gb, max(h[2], h[3]))
+                    if r2 < r1:
+                        continue
+                    q1, q2 = sorted(((h[0] + (r - h[2])) if _strand(h) == 1 else (h[0] + (h[2] - r))) for r in (r1, r2))
+                    a_, b_ = max(q1, lo_p, h[0]), min(q2, hi_p, h[1])
+                    if b_ >= a_:
+                        pos.update(range(a_, b_ + 1))
+                        bits += h[4] * (b_ - a_ + 1) / (h[1] - h[0] + 1)
+                aln |= pos
+                qcov, sup = max(qcov, len(pos)), max(sup, bits)
+            feats[g] = {"lo": lo_p, "hi": hi_p, "p_lo": p_lo, "p_hi": p_hi, "sup": sup, "aligned": qcov, "aln": aln,
+                        "cur_id": {5: trusted_id.get("start", 0), 3: trusted_id.get("end", 0)},
+                        "weak": covered < min_overlap or qcov < min_overlap,
                         "how": f"{lo_[1]}/{hi_[1]}" if st == 1 else f"{hi_[1]}/{lo_[1]}"}
         # a gene needs MIN_GENE_OVERLAP aligned nt, except a piece cut by the contig end next to a supported gene
         if all(f["weak"] for f in feats.values()):
             continue
         feats = {g: f for g, f in feats.items() if not f["weak"] or f["p_lo"] or f["p_hi"]}
-        _spacers(feats, st, qlen)
         best = top[0][1]
         ident = _identity(top[0][2])
         out.append({"st": st, "feats": feats, "ref": best, "ref_org": lib.org[best][0], "identity": ident})
-    return out
+    _dedup(out)
+    for L in out:
+        _spacers(L["feats"], L["st"], qlen)
+    return [L for L in out if L["feats"]]
+
+
+def _dedup(loci: List[dict]) -> None:
+    """one rRNA per place: a chain spanning parts of two units (28S - spacer - 18S) forms its own locus beside the
+    unit's locus, and both report the shared gene; keep the copy with more aligned bits inside it"""
+    fs = sorted(((f["sup"], i, g) for i, L in enumerate(loci) for g, f in L["feats"].items() if g in RRNA),
+                reverse=True)
+    kept: List[tuple] = []
+    for _, i, g in fs:
+        f, st = loci[i]["feats"][g], loci[i]["st"]
+        if any(g == g2 and st == st2 and min(f["hi"], b) - max(f["lo"], a) > 0.5 * min(f["hi"] - f["lo"], b - a)
+               for g2, st2, a, b in kept):
+            del loci[i]["feats"][g]
+        else:
+            kept.append((g, st, f["lo"], f["hi"]))
 
 
 def _spacers(feats: dict, st: int, qlen: int) -> None:
@@ -588,7 +636,8 @@ def _rescue_58s(loci: Dict[str, List[dict]], regions: Path, lib: Library, work: 
             # a piece cut by the searched stretch is only kept at the contig end
             if (f["p_lo"] and a > 1) or (f["p_hi"] and b < qlens[q]):
                 continue
-            f = dict(f, lo=f["lo"] + a - 1, hi=f["hi"] + a - 1, p_lo=f["p_lo"] and a == 1, p_hi=f["p_hi"] and b == qlens[q])
+            f = dict(f, lo=f["lo"] + a - 1, hi=f["hi"] + a - 1, p_lo=f["p_lo"] and a == 1, p_hi=f["p_hi"] and b == qlens[q],
+                     aln={x + a - 1 for x in f["aln"]})
             if i < 0:
                 L = dict(x, feats={})
                 loci[q].append(L)
@@ -608,45 +657,382 @@ def _identity(chain) -> float:
 
 
 def annotate_rdna(regions: Path, lib: Library, work: Path, threads: int, leave_out: Dict[str, str],
-                  qlens: Dict[str, int]) -> Dict[str, List[dict]]:
+                  qlens: Dict[str, int], refine: bool = True) -> Dict[str, List[dict]]:
     fmt = "6 qseqid sseqid qstart qend sstart send bitscore qseq sseq"
-    # BLAST threads scale poorly over many short queries: one single-threaded blastn per chunk of the regions
-    chunks: List[list] = [[] for _ in range(max(1, threads))]
-    size = [0] * len(chunks)
-    for r in sorted(SeqIO.parse(str(regions), "fasta"), key=lambda r: -len(r)):
+    # BLAST threads scale poorly over many short queries: single-threaded blastn on chunks of the regions, `threads`
+    # at a time; each chunk's hits (with the alignment strings) are turned into loci and dropped right away, so memory
+    # depends on the chunk size, not on the input size
+    recs = sorted(SeqIO.parse(str(regions), "fasta"), key=lambda r: -len(r))
+    n_chunks = max(1, threads, -(-sum(len(r) for r in recs) // CHUNK_NT))
+    chunks: List[list] = [[] for _ in range(n_chunks)]
+    size = [0] * n_chunks
+    for r in recs:
         i = size.index(min(size))
         chunks[i].append(r)
         size[i] += len(r)
+    del recs
 
-    def blast(i: int) -> Path:
+    def blast(i: int) -> Dict[str, List[dict]]:
         fa, tsv = work / f"rdna_q{i}.fa", work / f"rdna_blast{i}.tsv"
         SeqIO.write(chunks[i], str(fa), "fasta")
         with open(tsv, "w") as o:
             subprocess.run([tool("blastn"), "-task", "megablast", "-word_size", "16", "-query", str(fa),
                             "-db", lib.rdna_db,
                             "-evalue", "1e-10", "-outfmt", fmt, "-num_threads", "1",
-                            "-max_target_seqs", "500",   # short curated references and left-out genera fall out of a top 50
+                            "-max_target_seqs", str(BLAST_TARGETS),
                             "-dust", "no"], stdout=o, check=True)
             # curated references again with blastn word 11: their conserved ends must align in distant taxa too
             if lib.curated_db:
                 subprocess.run([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(fa),
                                 "-db", lib.curated_db, "-evalue", "1e-5", "-outfmt", fmt, "-num_threads", "1",
                                 "-dust", "no"], stdout=o, check=True)
-        return tsv
+        hits: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
+        for line in open(tsv):
+            q, s, qs, qe, ss, se, bs, qa, sa = line.rstrip("\n").split("\t")
+            if leave_out and leave_out.get(_contig(q)) == lib.org[s][1] or _contig(q) == s:
+                continue
+            h = (int(qs), int(qe), int(ss), int(se), float(bs), qa, sa)
+            if h not in hits[q][s]:      # a curated reference found by both searches
+                hits[q][s].append(h)
+        fa.unlink()
+        tsv.unlink()
+        return {q: rdna_loci(h, lib, qlens[q]) for q, h in hits.items()}
 
-    with ThreadPoolExecutor(len(chunks)) as pool:
-        tsvs = list(pool.map(blast, [i for i in range(len(chunks)) if chunks[i]]))
-    hits: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
-    for line in (x for t in tsvs for x in open(t)):
-        q, s, qs, qe, ss, se, bs, qa, sa = line.rstrip("\n").split("\t")
-        if leave_out and leave_out.get(_contig(q)) == lib.org[s][1] or _contig(q) == s:
-            continue
-        h = (int(qs), int(qe), int(ss), int(se), float(bs), qa, sa)
-        if h not in hits[q][s]:      # a curated reference found by both searches
-            hits[q][s].append(h)
-    loci = {q: rdna_loci(h, lib, qlens[q]) for q, h in hits.items()}
+    t0 = time.time()
+    loci: Dict[str, List[dict]] = {}
+    with ThreadPoolExecutor(max(1, threads)) as pool:
+        for part in pool.map(blast, [i for i in range(n_chunks) if chunks[i]]):
+            loci.update(part)
+    logging.info(f"[NUC] rDNA blastn + loci ({n_chunks} chunks): {time.time() - t0:.0f} s")
+    t0 = time.time()
     _rescue_58s(loci, regions, lib, work, leave_out, threads, qlens)
-    return loci
+    logging.info(f"[NUC] 5.8S rescue: {time.time() - t0:.0f} s")
+    seqs = SeqIO.index(str(regions), "fasta")
+    for q, ls in loci.items():
+        _tidy(ls, str(seqs[q].seq).upper(), qlens[q])
+    if refine:
+        rs = {q: seqs[q].seq for q in loci}
+        t0 = time.time()
+        n = cm_refine(loci, rs, lib.dir, work, threads)
+        logging.info(f"[NUC] rRNA ends placed by the Rfam models: {n} ({time.time() - t0:.0f} s)")
+        for q, ls in loci.items():
+            _tidy(ls, str(rs[q]).upper(), qlens[q])
+    return {q: [L for L in ls if L["feats"]] for q, ls in loci.items()}
+
+
+# Rfam covariance models: the mature ends of the curated RefSeq rRNAs (human, rat, macaque, rabbit, cow, hamster,
+# Drosophila, C. elegans) sit at column 1 / the last column, with CM_OFFSET nt outside (5', 3'), measured with
+# cmalign on the 28 curated records 2026-10-25 (C. elegans 5.8S 3' +2, rat 28S 3' +0: the mammal value is used)
+RFAM = {"18S": ("RF01960", 1831), "5.8S": ("RF00002", 154), "28S": ("RF02543", 3401)}
+CM_OFFSET = {"18S": (0, 0), "5.8S": (1, 3), "28S": (2, 1)}
+CM_WIN = 600      # nt on each side of the predicted end searched with the model
+CM_CONF = 5       # end columns that must hold residues of posterior probability >= 0.95
+HMM_MAX_EXTEND = 3     # HMM hits that stop at most this many columns short of the model end are taken ...
+EDGE_MARGIN = 20       # nt an end must leave to the outer edge of its search window
+END_MARGIN = 20        # an unconfirmed end this close to the sequence end is partial
+HMM_MAX_SHIFT = 30     # ... when they move the end at most this far from the reference projection
+SAME_SPECIES_ID = 99.5  # a curated reference this close (same species) decides its boundary even against the model
+
+
+def _read_sto(path: Path) -> Tuple[str, Dict[str, str], Dict[str, str]]:
+    seq: Dict[str, str] = defaultdict(str)
+    pp: Dict[str, str] = defaultdict(str)
+    rf = ""
+    for line in open(path):
+        if line.startswith("#=GC RF"):
+            rf += line.split()[-1]
+        elif line.startswith("#=GR") and line.split()[2] == "PP":
+            _, k, _, v = line.split()
+            pp[k] += v
+        elif line.strip() and not line.startswith("#") and not line.startswith("//"):
+            k, v = line.split()
+            seq[k] += v
+    return rf, seq, pp
+
+
+def cm_ends(jobs: List[tuple], seqs, gene: str, cm: Path, work: Path, threads: int, win: int = CM_WIN,
+            hmm_only: bool = False, max_extend: int = 0, edge: Optional[set] = None,
+            trunc: Optional[set] = None) -> Dict[int, int]:
+    """jobs: (contig, strand, side 5|3, predicted end); returns job index -> end position homologous to the curated
+    mature end (cmsearch on a window of win nt around the end; the hit must reach the model's first (5') / last
+    (3') column with confident residues and the window must hold sequence beyond the end).
+    hmm_only: the model's profile HMM only (no structure, ~25x faster); its local hits stop a few columns short of
+    the model ends, which are added ungapped when at most max_extend columns are missing (no posterior check).
+    edge: filled with the jobs whose hit runs into the outer window edge without reaching the model end (the end
+    is further away than win); trunc: the same where that edge is the sequence end (the gene is cut there)"""
+    tag = f"{gene}_{win}{'_hmm' if hmm_only else ''}"
+    fa = work / f"cm_{tag}.fa"
+    meta = {}
+    with open(fa, "w") as o:
+        for i, (c, st, side, p) in enumerate(jobs):
+            n = len(seqs[c])
+            lo, hi = max(1, p - win), min(n, p + win)
+            s = seqs[c][lo - 1:hi]
+            # the window's outer edge (beyond the end) is the sequence end itself
+            meta[f"j{i}"] = (i, st, side, lo, hi, (lo == 1) if (side == 5) == (st == 1) else (hi == n))
+            o.write(f">j{i}\n{s if st == 1 else s.reverse_complement()}\n")
+    tbl, sto = work / f"cm_{tag}.tbl", work / f"cm_{tag}.sto"
+    run([tool("cmsearch"), "--cpu", str(max(1, threads)), "--notextw", "-E", "1e-5", "--toponly", "--tblout", str(tbl),
+         *(["--hmmonly"] if hmm_only else ["-A", str(sto)]), str(cm), str(fa)])
+    rf, al, pp = _read_sto(sto) if sto.exists() and sto.stat().st_size else ("", {}, {})
+    cons = [i for i, ch in enumerate(rf) if ch not in ".-~"]
+    o5, o3 = CM_OFFSET[gene]
+    clen = RFAM[gene][1]
+    out: Dict[int, int] = {}
+    best: Dict[str, tuple] = {}
+    for line in open(tbl):
+        if line.startswith("#"):
+            continue
+        x = line.split()
+        if x[9] == "+" and (x[0] not in best or float(x[14]) > best[x[0]][4]):
+            best[x[0]] = (int(x[5]), int(x[6]), int(x[7]), int(x[8]), float(x[14]))
+    for k, (mf, mt, sf, se, _) in best.items():
+        i, st, side, lo, hi, at_seq_end = meta[k]
+        wl = hi - lo + 1
+
+        def room(t: int) -> bool:
+            """an end placed close to the outer window edge is an artefact of the window (OY756919.1: CM end 4 nt
+            from a +-150 window edge, not confident in +-600), unless that edge is the sequence end"""
+            ok = at_seq_end or (t - 1 if side == 5 else wl - t) >= EDGE_MARGIN
+            if not ok and edge is not None:
+                edge.add(i)
+            return ok
+        runs_out = (side == 5 and mf > 1 and sf <= 3) or (side == 3 and mt < clen and se >= wl - 2)
+        if runs_out and at_seq_end and trunc is not None:
+            trunc.add(i)
+        if hmm_only:
+            if side == 5 and mf - 1 <= max_extend and sf - (mf - 1) - o5 >= 1:
+                t = sf - (mf - 1) - o5
+            elif side == 3 and clen - mt <= max_extend and se + (clen - mt) + o3 <= wl:
+                t = se + (clen - mt) + o3
+            else:
+                continue
+            if not room(t):
+                continue
+            pos = lo + t - 1 if st == 1 else hi - t + 1
+            # without posterior probabilities a move far from the reference projection is left to the full model
+            # (OY756919.1 Polypodium 28S 3': HMM +146 nt, the covariance model not confident)
+            if abs(pos - jobs[i][3]) <= HMM_MAX_SHIFT:
+                out[i] = pos
+            continue
+        if edge is not None and not at_seq_end and runs_out:
+            edge.add(i)
+        s, p = al.get(f"{k}/{sf}-{se}"), pp.get(f"{k}/{sf}-{se}")
+        if s is None or p is None:        # no posterior probabilities for the hit: not confident
+            continue
+        cols = cons[:CM_CONF] if side == 5 else cons[::-1][:CM_CONF]
+        if not all(s[c] not in ".-~" and p[c] == "*" for c in cols):
+            continue
+        # the end may be the sequence end itself (mature rRNA records, e.g. PDB chains) when the offset nt are there;
+        # lineages have up to 1 nt fewer outside the model (C. elegans 5.8S 3' +2 vs +3), so a sequence end 1 nt
+        # short of the offset is that end (9BH5_A8, C. elegans 5.8S chain)
+        if side == 5 and mf == 1 and sf - o5 >= 1:
+            t = sf - o5
+        elif side == 5 and mf == 1 and at_seq_end and o5 and sf - o5 == 0:
+            t = 1
+        elif side == 3 and mt == clen and se + o3 <= wl:
+            t = se + o3
+        elif side == 3 and mt == clen and at_seq_end and o3 and se + o3 == wl + 1:
+            t = wl
+        else:
+            continue
+        if room(t):
+            out[i] = lo + t - 1 if st == 1 else hi - t + 1
+    return out
+
+
+def _cm_rescue_58s(loci: Dict[str, List[dict]], seqs, d: Path, work: Path, threads: int) -> int:
+    """a 5.8S cut by the sequence start / end next to its ITS2 (ITS2 amplicons: the primer sits in the 5.8S) is often
+    too short for blastn; the stretch between the sequence end and the 28S is searched with the 5.8S model, and a
+    hit ending at the model's last column becomes a 5' partial 5.8S"""
+    jobs, where = [], []
+    for q, ls in loci.items():
+        n = len(seqs[q])
+        for L in ls:
+            f, st = L["feats"], L["st"]
+            if "5.8S" in f or "28S" not in f or "18S" in f:
+                continue
+            a, b = (1, f["28S"]["lo"] - 1) if st == 1 else (f["28S"]["hi"] + 1, n)
+            if b - a < 20 or (st == 1 and a != 1) or (st == -1 and b != n):
+                continue
+            jobs.append((q, st, a, b))
+            where.append(L)
+    if not jobs:
+        return 0
+    fa = work / "cm_58s_rescue.fa"
+    with open(fa, "w") as o:
+        for i, (q, st, a, b) in enumerate(jobs):
+            s = seqs[q][a - 1:b]
+            o.write(f">r{i}\n{s if st == 1 else s.reverse_complement()}\n")
+    tbl = work / "cm_58s_rescue.tbl"
+    run([tool("cmsearch"), "--cpu", str(max(1, threads)), "--notextw", "-E", "1e-3", "--tblout", str(tbl),
+         str(d / f"{RFAM['5.8S'][0]}.cm"), str(fa)])
+    o3, done = CM_OFFSET["5.8S"][1], 0
+    for line in open(tbl):
+        if line.startswith("#"):
+            continue
+        x = line.split()
+        i, mf, mt, sf, se = int(x[0][1:]), int(x[5]), int(x[6]), int(x[7]), int(x[8])
+        q, st, a, b = jobs[i]
+        L = where[i]
+        if x[9] != "+" or mt != RFAM["5.8S"][1] or sf > 3 or mf == 1 or "5.8S" in L["feats"]:
+            continue        # must be the 3' part of the 5.8S running from the sequence start
+        t = min(se + o3, b - a + 1)
+        lo, hi = (a, a + t - 1) if st == 1 else (b - t + 1, b)
+        L["feats"]["5.8S"] = {"lo": lo, "hi": hi, "p_lo": st == 1, "p_hi": st == -1, "sup": 0.0, "aligned": t,
+                              "aln": set(range(lo, hi + 1)), "how": "projected/cm"}
+        _spacers(L["feats"], st, len(seqs[q]))
+        done += 1
+    return done
+
+
+def cm_refine(loci: Dict[str, List[dict]], seqs, lib_dir: Path, work: Path, threads: int) -> int:
+    """move every complete rRNA end to the position homologous to the curated mature end (Rfam CM); ends the model
+    does not place confidently keep the reference projection. Returns the number of ends placed by the model."""
+    d = lib_dir / "rfam"
+    if not d.is_dir():
+        d = LIB / "rfam"
+    if not tool_ok("cmsearch") or not d.is_dir():
+        logging.warning("[NUC] cmsearch or the Rfam models not found: rRNA ends from the reference projection only")
+        return 0
+    placed = _cm_rescue_58s(loci, seqs, d, work, threads)
+    for g, (acc, _) in RFAM.items():
+        jobs, where = [], []
+        for q, ls in loci.items():
+            for L in ls:
+                f = L["feats"].get(g)
+                if not f:
+                    continue
+                st = L["st"]
+                n = len(seqs[q])
+                for side in (5, 3):
+                    lo_side = (side == 5) == (st == 1)
+                    pos = f["lo"] if lo_side else f["hi"]
+                    # a partial end at the sequence end may be the mature end itself (rRNA records, PDB chains)
+                    if (f["p_lo"] if lo_side else f["p_hi"]) and min(pos - 1, n - pos) > CM_WIN:
+                        continue
+                    # an end decided by a curated reference of (nearly) the same species keeps it: the nt outside
+                    # the model columns differ between lineages (C. elegans 5.8S 3' +2, mammals +3)
+                    if f["how"].split("/")[0 if side == 5 else 1] == "curated" and \
+                            f.get("cur_id", {}).get(side, 0) >= SAME_SPECIES_ID:
+                        continue
+                    jobs.append((q, st, side, pos))
+                    where.append((f, lo_side, st))
+        if not jobs:
+            continue
+        # fast first: the model's profile HMM on +-150 nt agrees with the full model whenever its hit stops <= 3
+        # columns short of the model end (4366 ends, benchmark/nuc_cm_speed.py, 2026-10-25); the other ends go to
+        # the covariance model on +-150 nt, then +-600 nt
+        placed_at: Dict[int, Tuple[int, str]] = {}
+        todo, log, cut = list(range(len(jobs))), [], set()
+        for how, kw in (("hmm", dict(win=150, hmm_only=True, max_extend=HMM_MAX_EXTEND)),
+                        ("cm", dict(win=150)), ("cm", dict(win=CM_WIN))):
+            if kw["win"] == CM_WIN:          # the wide window only where the hit ran out of the narrow one
+                todo = [i for i in todo if i in cut]
+            if not todo:
+                break
+            edge: set = set()
+            trunc: set = set()
+            t0 = time.time()
+            res = cm_ends([jobs[i] for i in todo], seqs, g, d / f"{acc}.cm", work, threads, edge=edge, trunc=trunc,
+                          **kw)
+            log.append(f"{how} {kw['win']}: {len(res)}/{len(todo)} {time.time() - t0:.0f} s")
+            placed_at.update({todo[k]: (pos, how) for k, pos in res.items()})
+            cut = {todo[k] for k in edge}
+            # a gene the profile already shows cut by the sequence end cannot get a complete end from the full model
+            todo = [i for k, i in enumerate(todo) if k not in res and k not in trunc]
+        logging.info(f"[NUC] {g} ends: " + ", ".join(log))
+        for i, (pos, how_) in placed_at.items():
+            f, lo_side, st = where[i]
+            f["lo" if lo_side else "hi"] = pos
+            f["p_lo" if lo_side else "p_hi"] = False
+            how = f["how"].split("/")                   # 5' / 3' evidence
+            how[0 if jobs[i][2] == 5 else 1] = how_
+            f["how"] = "/".join(how)
+            placed += 1
+        # an end the models could not place that lies at the sequence end is not shown to be complete: partial,
+        # run to the sequence end (LC765217.1 18S "complete" at nt 2, OK209792.1 at nt 1: both start inside the 18S)
+        for i, (q, st, side, pos) in enumerate(jobs):
+            if i in placed_at:
+                continue
+            f, lo_side, _ = where[i]
+            n = len(seqs[q])
+            if lo_side and pos <= END_MARGIN:
+                f.update(lo=1, p_lo=True)
+            elif not lo_side and n - pos < END_MARGIN:
+                f.update(hi=n, p_hi=True)
+    return placed
+
+
+def _ends(f: dict, st: int) -> Tuple[str, str]:
+    """evidence of the low / high end in forward coordinates ("how" is 5'/3')"""
+    a, b = f["how"].split("/")
+    return (a, b) if st == 1 else (b, a)
+
+
+def _tidy(loci: List[dict], seq: str, qlen: int) -> None:
+    """(1) no end inside a run of >= 10 N; a projected end does not cross a run of >= 10 N (scaffold gap of unknown length) when no part of the
+    gene beyond the gap aligns: the gene stops at the gap, partial; (2) two different rRNAs never overlap, on either strand (a reverse copy projected over a unit
+    is false): the one with fewer aligned bits is dropped when both its ends are projected or it is on the other
+    strand, else cut back to the other one (partial on that side)"""
+    gaps = [(m.start() + 1, m.end()) for m in re.finditer("N{10,}", seq)]
+    for L in loci:
+        for g, f in L["feats"].items():
+            if g not in RRNA:
+                continue
+            lo_how, hi_how = _ends(f, L["st"])
+            aln = f.get("aln", set())
+            for a, b in gaps:
+                if a <= f["lo"] <= b < f["hi"]:          # an end inside the gap: the gene starts after it
+                    f.update(lo=b + 1, p_lo=True)
+                if f["lo"] < a <= f["hi"] <= b:
+                    f.update(hi=a - 1, p_hi=True)
+                if not (f["lo"] < a and b < f["hi"]):
+                    continue
+                # only an end with no alignment of the gene beyond the gap (a gap inside an aligned gene is kept,
+                # as most submitters do)
+                if hi_how == "projected" and not any(x > b for x in aln) and any(x < a for x in aln):
+                    f.update(hi=a - 1, p_hi=True)
+                elif lo_how == "projected" and not any(x < a for x in aln) and any(x > b for x in aln):
+                    f.update(lo=b + 1, p_lo=True)
+    fs = sorted(((f["sup"], i, g) for i, L in enumerate(loci) for g, f in L["feats"].items() if g in RRNA),
+                reverse=True)
+    kept: List[tuple] = []
+    for _, i, g in fs:
+        L = loci[i]
+        f = L["feats"][g]
+        for a, b, st in kept:
+            if min(f["hi"], b) - max(f["lo"], a) < 20:
+                continue
+            if _ends(f, L["st"]) == ("projected", "projected") or st != L["st"]:
+                del L["feats"][g]
+                break
+            if f["lo"] < a:
+                f.update(hi=min(f["hi"], a - 1), p_hi=True)
+            else:
+                f.update(lo=max(f["lo"], b + 1), p_lo=True)
+            if f["hi"] - f["lo"] < 20:
+                del L["feats"][g]
+                break
+        else:
+            kept.append((f["lo"], f["hi"], L["st"]))
+    for L in loci:
+        _spacers(L["feats"], L["st"], qlen)
+    # (3) a spacer neither overlaps an rRNA (of any copy) nor starts / ends in a gap (table2asn
+    # BadRRNAcomponentOverlapRRNA, FeatureInsideGap)
+    rr = [(f["lo"], f["hi"]) for L in loci for g, f in L["feats"].items() if g in RRNA]
+    for L in loci:
+        for its in ("ITS1", "ITS2"):
+            f = L["feats"].get(its)
+            if not f:
+                continue
+            for a, b in rr + gaps:
+                if a <= f["lo"] <= b:
+                    f.update(lo=b + 1, p_lo=True)
+                if a <= f["hi"] <= b:
+                    f.update(hi=a - 1, p_hi=True)
+            if f["hi"] - f["lo"] < 9 or any(f["lo"] < a and b < f["hi"] for a, b in rr):
+                del L["feats"][its]
 
 
 # ── histones ────────────────────────────────────────────────────────────────
@@ -667,8 +1053,22 @@ def _exonerate(target: str, prot: str, model: str, td: Path) -> Optional[tuple]:
     return (sc, ex, qab, qae, ql) if sc and ex else None
 
 
-def _orf(seq: Seq, ex: List[Tuple[int, int]], st: int, at_start: bool) -> Tuple[List[Tuple[int, int]], bool, bool]:
-    """extend the exon model (forward coordinates) to a stop codon and an ATG; returns exons, 5' and 3' partial"""
+def _canonical_introns(tseq: str, ex: List[tuple]) -> bool:
+    """every intron of an exonerate model (forward coordinates of tseq) has GT/GC ... AG splice sites"""
+    ex = sorted(ex)
+    for (a1, b1, st), (a2, b2, _) in zip(ex, ex[1:]):
+        left, right = tseq[b1:b1 + 2].upper(), tseq[a2 - 3:a2 - 1].upper()
+        if (st == "+" and (left not in ("GT", "GC") or right != "AG")) or \
+                (st == "-" and (left != "CT" or right not in ("AC", "GC"))):
+            return False
+    return True
+
+
+def _orf(seq: Seq, ex: List[Tuple[int, int]], st: int,
+         at_start: bool) -> Tuple[List[Tuple[int, int]], bool, bool, int]:
+    """extend the exon model (forward coordinates) to a stop codon and an ATG; returns exons, 5' and 3' partial
+    (of the gene, not of the forward coordinates) and codon_start. An end left open runs to the sequence end
+    (NCBI: a partial CDS end must be at the sequence end; the first codon then starts at codon_start 1-3)"""
     n = len(seq)
     cs = seq if st == 1 else seq.reverse_complement()
     tr = (lambda a, b: (a, b)) if st == 1 else (lambda a, b: (n - b + 1, n - a + 1))
@@ -682,8 +1082,8 @@ def _orf(seq: Seq, ex: List[Tuple[int, int]], st: int, at_start: bool) -> Tuple[
         if c in STOPS:
             p3 = False
             break
-    E[-1] = (E[-1][0], min(p, n))
-    a0, p5 = E[0][0], False
+    E[-1] = (E[-1][0], n if p3 and n - p < 3 else min(p, n))
+    a0, p5, codon_start = E[0][0], False, 1
     if not (at_start and str(cs[a0 - 1:a0 + 2]).upper() == "ATG"):
         q, cand = a0, []
         while q - 3 >= 1:
@@ -698,8 +1098,8 @@ def _orf(seq: Seq, ex: List[Tuple[int, int]], st: int, at_start: bool) -> Tuple[
         else:
             p5 = str(cs[a0 - 1:a0 + 2]).upper() != "ATG"
             if p5 and q - 3 < 1:
-                E[0] = (q, E[0][1])                   # open to the contig end
-    return sorted(tr(a, b) for a, b in E), (p5 if st == 1 else p3), (p3 if st == 1 else p5)
+                E[0], codon_start = (1, E[0][1]), q   # open to the contig end
+    return sorted(tr(a, b) for a, b in E), p5, p3, codon_start
 
 
 def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, leave_out: Dict[str, str],
@@ -740,6 +1140,10 @@ def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, lea
                 for ref in refs[:TOPK]:
                     for model in ("protein2genome", "protein2dna"):
                         m = _exonerate(str(td / "t.fa"), lib.prot[ref], model, td)
+                        # a spliced model needs real splice sites (H1 genes have no introns: a gap in the
+                        # alignment there is a frameshift or a divergent tail, OU230952.1)
+                        if m and not _canonical_introns(str(seq[a:b]), m[1]):
+                            m = None
                         if m:
                             sc = m[0] * (INTRON_PEN ** (len(m[1]) - 1) if model == "protein2genome" else 1)
                             models.append((sc, ref, m))
@@ -748,12 +1152,12 @@ def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, lea
                 sc, ref, (_, ex, qab, qae, ql) = max(models, key=lambda x: x[0])
                 st = 1 if ex[0][2] == "+" else -1
                 ex = [(x + a, y + a) for x, y, _ in ex]
-                exons, p5, p3 = _orf(seq, ex, st, qab == 0)
+                exons, p5, p3, cstart = _orf(seq, ex, st, qab == 0)
                 at_edge = exons[0][0] <= 3 or exons[-1][1] >= len(seq) - 2
                 if (qae - qab) / ql < MIN_PROT_COVER and not at_edge:
                     continue
                 res.append({"gene": lib.hist[ref]["gene"], "st": st, "exons": exons, "p5": p5, "p3": p3,
-                            "ref": lib.hist[ref]["accession"], "ref_org": lib.hist[ref]["organism"], "score": sc})
+                            "codon_start": cstart, "ref": lib.hist[ref]["accession"], "ref_org": lib.hist[ref]["organism"], "score": sc})
         # same CDS found from two overlapping loci: keep the better one
         res.sort(key=lambda r: -r["score"])
         kept = []
@@ -787,6 +1191,11 @@ def read_input(path: Path, work: Path) -> Tuple[Path, Dict[str, str], int, int]:
     with open(fa, "w") as o:
         for r in SeqIO.parse(str(path), fmt):
             rid = re.sub(r"[^A-Za-z0-9_.-]", "_", r.id)
+            try:
+                bytes(r.seq)
+            except UndefinedSequenceError:     # CON / WGS master records list pieces, no sequence
+                logging.warning(f"[NUC] {r.id}: no sequence in the record, skipped")
+                continue
             if rid in ids:
                 raise SystemExit(f"duplicate sequence id {rid} in {path}")
             ids.add(rid)
@@ -841,7 +1250,7 @@ def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
                              "start": a, "end": b, "strand": "+" if L["st"] == 1 else "-",
                              "partial_5": int(p5), "partial_3": int(p3), "length": b - a + 1, "exons": f"{a}-{b}",
                              "best_ref": L["ref"], "best_ref_organism": L["ref_org"], "identity": L["identity"],
-                             "evidence": f["how"]})
+                             "evidence": f["how"], "aligned_nt": f.get("aligned", "")})
     for rid, models in (hist or {}).items():
         c, off = _contig(rid), _offset(rid)
         for m in models:
@@ -852,8 +1261,10 @@ def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
                 parts = parts[::-1]
             loc = parts[0] if len(parts) == 1 else CompoundLocation(parts)
             seq = loc.extract(recs[c].seq)
+            cs = m.get("codon_start", 1)
+            seq = seq[cs - 1:]
             prot = str(seq[: len(seq) // 3 * 3].translate(table=1)).rstrip("*")
-            q = {"gene": [m["gene"]], "product": [PRODUCT[m["gene"]]], "codon_start": ["1"], "transl_table": ["1"],
+            q = {"gene": [m["gene"]], "product": [PRODUCT[m["gene"]]], "codon_start": [str(cs)], "transl_table": ["1"],
                  "note": [f"exonerate model from {m['ref']} {m['ref_org']}"]}
             if "*" not in prot:
                 q["translation"] = [prot]
@@ -863,20 +1274,20 @@ def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
                          "partial_5": int(m["p5"]), "partial_3": int(m["p3"]), "length": sum(y - x + 1 for x, y in ex),
                          "exons": ";".join(f"{x}-{y}" for x, y in ex), "best_ref": m["ref"],
                          "best_ref_organism": m["ref_org"], "identity": "",
-                         "evidence": "internal stop codon" if "*" in prot else "exonerate"})
+                         "evidence": "internal stop codon" if "*" in prot else "exonerate", "aligned_nt": ""})
     return rows, feats
 
 
 def write_outputs(out: Path, recs, org: Dict[str, str], rows: List[dict], feats: Dict[str, List[SeqFeature]]) -> None:
     rows.sort(key=lambda r: (r["contig"], r["start"]))
     cols = ["contig", "contig_len", "contig_cov", "type", "gene", "start", "end", "strand", "partial_5", "partial_3",
-            "length", "exons", "best_ref", "best_ref_organism", "identity", "evidence"]
+            "length", "exons", "best_ref", "best_ref_organism", "identity", "evidence", "aligned_nt"]
     with open(out / "nuc_features.tsv", "w", newline="") as o:
         w = csv.DictWriter(o, cols, delimiter="\t")
         w.writeheader()
         w.writerows(rows)
     gbrecs = []
-    for c, fs in feats.items():
+    for c, fs in sorted(feats.items()):          # fixed order: identical files whatever the thread count
         r = recs[c]
         g = SeqRecord(r.seq, id=c[:16] if len(c) > 16 else c, name=c[:16], description=r.description,
                       annotations={"molecule_type": "DNA", "organism": org.get(c, "unknown"),
@@ -887,7 +1298,7 @@ def write_outputs(out: Path, recs, org: Dict[str, str], rows: List[dict], feats:
     gd = out / "genes"
     gd.mkdir(exist_ok=True)
     by_gene = defaultdict(list)
-    for c, fs in feats.items():
+    for c, fs in sorted(feats.items()):
         for f in fs:
             g = f.qualifiers.get("gene", [None])[0] or \
                 next(k for k, v in PRODUCT.items() if v == f.qualifiers["product"][0])
@@ -898,6 +1309,153 @@ def write_outputs(out: Path, recs, org: Dict[str, str], rows: List[dict], feats:
                 by_gene[g + ".faa"].append(SeqRecord(Seq(f.qualifiers["translation"][0]), id=tag, description=""))
     for g, rs in by_gene.items():
         SeqIO.write(rs, str(gd / (g if g.endswith(".faa") else f"{g}.fasta")), "fasta")
+
+
+# ── NCBI submission files ──────────────────────────────────────────────────
+# source qualifiers carried from GenBank input to the table2asn FASTA definition line
+SRC_MODS = ("isolate", "specimen_voucher", "strain", "clone", "culture_collection", "bio_material", "country",
+            "geo_loc_name", "lat_lon", "collection_date", "collected_by", "identified_by", "host", "tissue_type",
+            "dev_stage", "sex", "altitude")
+DEF_NAME = {"18S": "18S ribosomal RNA gene", "5.8S": "5.8S ribosomal RNA gene", "28S": "28S ribosomal RNA gene",
+            "ITS1": "internal transcribed spacer 1", "ITS2": "internal transcribed spacer 2"}
+
+
+def _join(items: List[str]) -> str:
+    return items[0] if len(items) == 1 else f"{items[0]} and {items[1]}" if len(items) == 2 else \
+        ", ".join(items[:-1]) + ", and " + items[-1]
+
+
+def definition(organism: str, src: Dict[str, str], feats: List[SeqFeature]) -> str:
+    """NCBI rRNA / ITS definition line: parts in sequence order, consecutive parts of equal completeness grouped
+    ('18S ribosomal RNA gene, internal transcribed spacer 1, 5.8S ribosomal RNA gene, and internal transcribed
+    spacer 2, complete sequence; and 28S ribosomal RNA gene, partial sequence'); histone CDS as '... gene(s),
+    complete / partial cds'"""
+    groups: List[list] = []          # [kind, status, names]
+    for f in sorted(feats, key=lambda f: int(f.location.start)):
+        part = isinstance(f.location.start, BeforePosition) or isinstance(f.location.end, AfterPosition) or \
+            any(isinstance(p.start, BeforePosition) or isinstance(p.end, AfterPosition) for p in f.location.parts)
+        if f.type == "CDS":
+            kind, name = "cds", f.qualifiers["product"][0]
+        elif f.type == "gene":                       # /pseudo
+            kind, name = "rna", f"{PRODUCT[f.qualifiers['gene'][0]]} pseudogene"
+        else:
+            g = next(k for k, v in PRODUCT.items() if v == f.qualifiers["product"][0])
+            kind, name = "rna", DEF_NAME[g]
+        status = "partial" if part else "complete"
+        if groups and groups[-1][:2] == [kind, status]:
+            groups[-1][2].append(name)
+        else:
+            groups.append([kind, status, [name]])
+    parts = []
+    for kind, status, names in groups:
+        if kind == "cds":
+            parts.append(f"{_join(names)} gene{'s' if len(names) > 1 else ''}, {status} cds")
+        else:
+            parts.append(f"{_join(names)}, {status} sequence")
+    text = parts[0] if len(parts) == 1 else "; ".join(parts[:-1]) + "; and " + parts[-1]
+    tag = next((f"{lab} {src[k]}" for k, lab in (("specimen_voucher", "voucher"), ("isolate", "isolate"),
+                                                 ("strain", "strain"), ("clone", "clone")) if src.get(k)), "")
+    return " ".join(x for x in (organism, tag, text) if x)
+
+
+def _source_quals(inp: Path, ids: set) -> Dict[str, Dict[str, str]]:
+    if inp.suffix.lower() not in (".gb", ".gbk", ".gbf", ".genbank"):
+        return {}
+    out = {}
+    for r in SeqIO.parse(str(inp), "genbank"):
+        rid = re.sub(r"[^A-Za-z0-9_.-]", "_", r.id)
+        if rid in ids:
+            src = next((f for f in r.features if f.type == "source"), None)
+            out[rid] = {k: src.qualifiers[k][0] for k in SRC_MODS if src is not None and k in src.qualifiers}
+    return out
+
+
+def write_submission(out: Path, inp: Path, recs, org: Dict[str, str], feats: Dict[str, List[SeqFeature]],
+                     organism: Optional[str] = None, src_table: Optional[Path] = None) -> Optional[Path]:
+    """submission/ : nuc.fsa (table2asn source modifiers + NCBI definition line), nuc.tbl (5-column feature
+    table without the tool's notes), sequences with every rRNA on the minus strand reverse-complemented; with
+    table2asn installed nuc.sqn is made and validated (-V vb -Z: nuc.val, nuc.dr, validation.txt); runs of >= 10 N
+    become gaps there (-gaps-min 10, 100 N = unknown length), as NCBI asks"""
+    import ncbi_validate as nv
+    d = out / "submission"
+    d.mkdir(exist_ok=True)
+    src = _source_quals(inp, set(feats))
+    if src_table:
+        for r in csv.DictReader(open(src_table), delimiter="\t"):
+            sid = r.pop("Sequence_ID", None) or r.pop("sequence_id", None)
+            if sid:
+                src.setdefault(sid, {}).update({k: v for k, v in r.items() if v})
+    fsa, tbl, missing = [], [], 0
+    for c in sorted(feats):
+        fs = sorted(feats[c], key=lambda f: int(f.location.start))
+        rec = SeqRecord(recs[c].seq, id=c, description="")
+        rec.features = []
+        for f in fs:
+            q = {k: v for k, v in f.qualifiers.items() if k not in ("note", "translation")}
+            if f.type == "CDS":
+                # linked to its gene by overlap: a /gene name on the CDS makes table2asn take the first gene of
+                # that name in a cluster (CDSgeneRange, GeneXrefStrandProblem)
+                q.pop("gene", None)
+                cds = str(f.location.extract(recs[c].seq)[int(q["codon_start"][0]) - 1:]).upper()
+                last = f.location.parts[-1]                  # 3'-most part (Biopython keeps transcript order)
+                p3 = isinstance(last.end, AfterPosition) if f.location.strand != -1 else \
+                    isinstance(last.start, BeforePosition)
+                if not p3 and (len(cds) % 3 or cds[-3:] not in STOPS):
+                    f.qualifiers.pop("translation", None)     # complete 3' end without a stop codon: pseudogene
+            if f.type != "CDS":
+                rec.features.append(SeqFeature(f.location, type=f.type, qualifiers=q))
+                continue
+            # one gene span per CDS (table2asn MultiIntervalGene otherwise); a model with an internal stop codon
+            # is a pseudogene: gene /pseudo without CDS
+            loc = f.location
+            span = FeatureLocation(loc.parts[0].start if loc.strand != -1 else loc.parts[-1].start,
+                                   loc.parts[-1].end if loc.strand != -1 else loc.parts[0].end, strand=loc.strand)
+            gq = {"gene": f.qualifiers["gene"]}
+            if "translation" not in f.qualifiers:
+                gq.update(pseudo=[""], note=["nonfunctional due to internal stop codon"])
+            rec.features.append(SeqFeature(span, type="gene", qualifiers=gq))
+            if "translation" in f.qualifiers:
+                rec.features.append(SeqFeature(loc, type="CDS", qualifiers=q))
+        rna = [f for f in rec.features if f.type in ("rRNA", "misc_RNA")]
+        if rna and all(f.location.strand == -1 for f in rna):
+            rec = rec.reverse_complement(id=c, description="", features=True)
+        sq = dict(src.get(c, {}))
+        name = sq.pop("organism", None) or org.get(c) or organism
+        if not name:
+            missing += 1
+            name = "unknown"
+        mods = [f"[organism={name}]", "[moltype=genomic DNA]"] + \
+            [f"[{k}={v}]" for k, v in sq.items() if k != "title"]
+        if any(f.type == "CDS" for f in rec.features):
+            mods.append("[gcode=1]")
+        title = sq.get("title") or definition(name, sq, [f for f in rec.features if f.type != "gene"] +
+                                              [f for f in rec.features if "pseudo" in f.qualifiers])
+        fsa.append(f">{c} {' '.join(mods)} {title}\n{rec.seq}\n")
+        tbl.append("\n".join(nv.feature_lines(rec)) + "\n")
+    (d / "nuc.fsa").write_text("".join(fsa))
+    (d / "nuc.tbl").write_text("".join(tbl))
+    if missing:
+        logging.warning(f"[NUC] submission: {missing} sequence(s) without organism (give --organism or --src)")
+    t2a = mito_env.find("table2asn")
+    if not t2a or not fsa:
+        return d
+    subprocess.run([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
+                    "-gaps-min", "10", "-gaps-unknown", "100",
+                    "-o", str(d / "nuc.sqn")], capture_output=True, text=True, check=False)
+    msgs = Counter()
+    val = d / "nuc.val"
+    for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
+        m = nv.MSG_RE.match(line.strip())
+        if m and not nv.IGNORE_CODES.search(m.group(2)):
+            msgs[(m.group(1).upper(), m.group(2))] += 1
+    lines = [f"table2asn -V vb -Z on {len(fsa)} sequence(s); submitter / publication messages not counted "
+             "(add your template with table2asn -t template.sbt)"]
+    lines += [f"{sev}\t{code}\t{n}" for (sev, code), n in msgs.most_common()] or ["no sequence or feature messages"]
+    (d / "validation.txt").write_text("\n".join(lines) + "\n")
+    err = sum(n for (sev, _), n in msgs.items() if sev in ("ERROR", "REJECT", "FATAL"))
+    logging.info(f"[NUC] submission: {d / 'nuc.fsa'} + nuc.tbl; table2asn {err} error(s), "
+                 f"{sum(msgs.values()) - err} warning(s)/info  ({d / 'validation.txt'}, discrepancy report nuc.dr)")
+    return d
 
 
 def _gene_seq(r: dict, recs) -> Seq:
@@ -991,21 +1549,25 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
         out = run([tool("blastn"), "-task", "blastn", "-query", str(work / "pc.fa"), "-subject", str(work / "pc.fa"),
                    "-strand", "plus", "-dust", "no", "-perc_identity", "98", "-evalue", "1e-10",
                    "-outfmt", "6 qseqid sseqid qstart qend sstart send length"])
+        # every containment / dovetail between pieces not yet touched in this round is applied (one pair per
+        # round needed a blastn per fragment: hours for a batch of hundreds of GenBank records)
+        used, gone = set(), set()
         for line in out.splitlines():
             q, t, qs, qe, ss, se, ln = map(int, line.split("\t"))
-            if q == t or ln < 40:
+            if q == t or ln < 40 or q in used or t in used:
                 continue
             lq, lt = len(pieces[q][0]), len(pieces[t][0])
             if qs <= 3 and qe >= lq - 2 and lq <= lt:                  # q inside t
                 pieces[t] = (pieces[t][0], pieces[t][1] + pieces[q][1])
-                del pieces[q]
-                changed = True
-                break
-            if qe >= lq - 2 and ss <= 3 and se < lt - 2:                 # q's end overlaps t's start
+                gone.add(q)
+            elif qe >= lq - 2 and ss <= 3 and se < lt - 2:               # q's end overlaps t's start
                 pieces[q] = (pieces[q][0][:qe] + pieces[t][0][se:], pieces[q][1] + pieces[t][1])
-                del pieces[t]
-                changed = True
-                break
+                gone.add(t)
+            else:
+                continue
+            used.update((q, t))
+            changed = True
+        pieces = sorted((x for i, x in enumerate(pieces) if i not in gone), key=lambda x: -x[1])
     if len(pieces) == 1 or not ref:
         return pieces[0][0]
     with open(work / "pc.fa", "w") as o:
@@ -1054,13 +1616,16 @@ def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: flo
         wt = [float(r["contig_cov"] or 1) for r in frags]
         top = max(range(len(frags)), key=lambda i: (wt[i], int(frags[i]["length"])))
         ref = _ref_gene(lib, frags[top]["best_ref"], g) if g in RRNA else None
-        # seed: the well-covered fragments (same genome as the best one in an assembly of mixed samples)
-        seed = [i for i in range(len(frags)) if wt[i] >= SEED_COV * wt[top]]
-        backbone = _assemble([seqs[i] for i in seed], [wt[i] for i in seed], ref, work)
-        _, idt = _pileup(seqs, wt, backbone, work)
-        ident = {i: idt.get(i, (0.0, 0)) for i in range(len(frags))}
-        keep = sorted({i for i in range(len(frags)) if ident[i][0] >= min_ident and ident[i][1] >= 50} | {top})
-        cons, _ = _pileup([seqs[i] for i in keep], [wt[i] for i in keep], backbone, work)
+        if len(frags) == 1:          # one copy (a GenBank record, a PCR product): the copy itself, no alignment
+            ident, keep, cons = {0: (1.0, len(seqs[0]))}, [0], seqs[0]
+        else:
+            # seed: the well-covered fragments (same genome as the best one in an assembly of mixed samples)
+            seed = [i for i in range(len(frags)) if wt[i] >= SEED_COV * wt[top]]
+            backbone = _assemble([seqs[i] for i in seed], [wt[i] for i in seed], ref, work)
+            _, idt = _pileup(seqs, wt, backbone, work)
+            ident = {i: idt.get(i, (0.0, 0)) for i in range(len(frags))}
+            keep = sorted({i for i in range(len(frags)) if ident[i][0] >= min_ident and ident[i][1] >= 50} | {top})
+            cons, _ = _pileup([seqs[i] for i in keep], [wt[i] for i in keep], backbone, work)
         seq = re.sub("[a-z]", "N", cons).strip("N")
         out.append({"gene": g, "length": len(seq), "n_fragments": len(keep), "n_dropped": len(frags) - len(keep),
                     "internal_N": seq.count("N"),
@@ -1088,21 +1653,29 @@ def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: flo
 def write_consensus(out: Path, cons: List[dict]) -> None:
     d = out / "consensus"
     d.mkdir(exist_ok=True)
-    cols = ["gene", "length", "n_fragments", "n_dropped", "internal_N", "partial_5", "partial_3", "contigs", "dropped"]
+    multi = any(c.get("sample") for c in cons)
+    cols = (["sample"] if multi else []) + ["gene", "length", "n_fragments", "n_dropped", "internal_N", "partial_5",
+                                            "partial_3", "contigs", "dropped"]
     with open(out / "consensus.tsv", "w", newline="") as o:
         w = csv.DictWriter(o, cols, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         w.writerows(cons)
+    fa, faa = defaultdict(str), defaultdict(str)     # one file per gene, one sequence per sample
     for c in cons:
         part = "".join(x for x, y in (("5'-partial ", c["partial_5"]), ("3'-partial ", c["partial_3"])) if y)
-        (d / f"{c['gene']}.fasta").write_text(
-            f">{c['gene']} {part}fragments={c['n_fragments']} length={c['length']}\n{c['seq']}\n")
+        name = re.sub(r"[^A-Za-z0-9_.-]", "_", f"{c['sample']}_{c['gene']}") if multi else c["gene"]
+        fa[c["gene"]] += f">{name} {part}fragments={c['n_fragments']} length={c['length']}\n{c['seq']}\n"
         if c["gene"] in HISTONES:
-            (d / f"{c['gene']}.faa").write_text(f">{c['gene']}\n{str(Seq(c['seq']).translate(table=1)).rstrip('*')}\n")
+            faa[c["gene"]] += f">{name}\n{str(Seq(c['seq']).translate(table=1)).rstrip('*')}\n"
+    for g, txt in fa.items():
+        (d / f"{g}.fasta").write_text(txt)
+    for g, txt in faa.items():
+        (d / f"{g}.faa").write_text(txt)
 
 
 def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int,
-             leave_out: Optional[Path] = None, consensus_identity: float = 0.97) -> List[dict]:
+             leave_out: Optional[Path] = None, consensus_identity: float = 0.97,
+             organism: Optional[str] = None, src_table: Optional[Path] = None, refine: bool = True) -> List[dict]:
     out.mkdir(parents=True, exist_ok=True)
     work = out / "tmp"
     if work.exists():
@@ -1118,24 +1691,55 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
     fa, org, n_seq, n_nt = read_input(inp, work)
     recs = SeqIO.index(str(fa), "fasta")
     logging.info(f"[NUC] {n_seq} sequences, {n_nt:,} nt")
-    windows = prefilter(fa, lib, genes, work, threads)
+    # the prefilter (one reference per genus) only pays off on large assemblies; smaller inputs are searched whole
+    if n_nt > PREFILTER_NT:
+        windows = prefilter(fa, lib, genes, work, threads)
+    else:
+        windows = {r.id: [(1, len(r))] for r in SeqIO.parse(str(fa), "fasta")}
     regions = work / "regions.fa"
     seqs = write_regions(windows, recs, regions)
     logging.info(f"[NUC] prefilter: {len(windows)} contig(s), {len(seqs)} region(s), "
                  f"{sum(len(s) for s in seqs.values()):,} nt")
     rdna = hist = None
     if seqs and "rdna" in genes:
-        rdna = annotate_rdna(regions, lib, work, threads, lo, {k: len(v) for k, v in seqs.items()})
+        rdna = annotate_rdna(regions, lib, work, threads, lo, {k: len(v) for k, v in seqs.items()}, refine)
     if seqs and "histone" in genes:
+        t0 = time.time()
         hist = annotate_histones(regions, lib, work, threads, lo, seqs)
+        logging.info(f"[NUC] histones (tblastn + exonerate): {time.time() - t0:.0f} s")
     rows, feats = collect(recs, rdna, hist)
     write_outputs(out, recs, org, rows, feats)
+    if feats:
+        write_submission(out, inp, recs, org, feats, organism, src_table)
     if rows and consensus_identity > 0:
         rows_s = [{k: str(v) for k, v in r.items()} for r in rows]
-        cons = consensus(rows_s, recs, lib, work, consensus_identity)
+        # GenBank records of several organisms are several samples: a consensus over them would join conserved
+        # 18S of different species (and an all-against-all blastn of hundreds of fragments took hours)
+        groups: Dict[str, List[dict]] = defaultdict(list)
+        for r in rows_s:
+            groups[org.get(r["contig"], "")].append(r)
+        if len(groups) == 1:
+            groups = {"": rows_s}
+        items = sorted(groups.items())
+        if len(items) == 1:
+            res = [consensus(items[0][1], recs, lib, work, consensus_identity)]
+        else:
+            seqs_by_id = {r.id: r for r in (recs[c] for c in {r["contig"] for r in rows_s})}
+            lib._seqs = SeqIO.to_dict(SeqIO.parse(str(lib.rdna_fa), "fasta"))     # SeqIO.index is not thread-safe
+
+            def one(i: int) -> List[dict]:
+                wd = work / f"cons{i}"      # each sample its own blastn scratch files
+                wd.mkdir(exist_ok=True)
+                return consensus(items[i][1], seqs_by_id, lib, wd, consensus_identity)
+            with ThreadPoolExecutor(max(1, threads)) as pool:
+                res = list(pool.map(one, range(len(items))))
+        cons = [dict(c, sample=sample) for (sample, _), cs in zip(items, res) for c in cs]
         write_consensus(out, cons)
-        logging.info(f"[NUC] consensus: " + ", ".join(f"{c['gene']} {c['length']} nt from {c['n_fragments']}"
-                                                     for c in cons) + f"  ({out / 'consensus.tsv'})")
+        if len(groups) > 1:
+            logging.info(f"[NUC] consensus: {len(cons)} sequences of {len(groups)} organisms  ({out / 'consensus.tsv'})")
+        else:
+            logging.info("[NUC] consensus: " + ", ".join(f"{c['gene']} {c['length']} nt from {c['n_fragments']}"
+                                                         for c in cons) + f"  ({out / 'consensus.tsv'})")
     recs.close()
     shutil.rmtree(work)
     counts = Counter(r["gene"] for r in rows)
@@ -1167,6 +1771,11 @@ def main(argv=None) -> int:
     a.add_argument("--consensus_identity", type=float, default=0.97,
                    help="fragments below this identity to a gene's consensus are left out of it (default 0.97; "
                         "0 = no consensus)")
+    a.add_argument("--no_cm", action="store_true",
+                   help="rRNA ends from the reference projection only (default: placed with the Rfam models)")
+    a.add_argument("--organism", help="organism of FASTA input, for the NCBI submission files (GenBank input: /organism)")
+    a.add_argument("--src", type=Path, help="NCBI source table (TSV: Sequence_ID, organism, isolate, specimen_voucher, "
+                                            "country, ...; title = own definition line) for the submission files")
     a.add_argument("--leave_out", type=Path, help=argparse.SUPPRESS)   # benchmark: TSV sequence id -> genus to skip
     args = ap.parse_args(argv)
     handlers = [logging.StreamHandler(sys.stdout)]
@@ -1184,7 +1793,8 @@ def main(argv=None) -> int:
         bad = set(genes) - {"rdna", "histone"}
         if bad:
             ap.error(f"--genes: unknown {', '.join(sorted(bad))}")
-        annotate(args.input, args.out, args.lib, genes, args.threads, args.leave_out, args.consensus_identity)
+        annotate(args.input, args.out, args.lib, genes, args.threads, args.leave_out, args.consensus_identity,
+                 args.organism, args.src, not args.no_cm)
     return 0
 
 

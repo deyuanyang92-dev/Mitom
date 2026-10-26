@@ -62,14 +62,14 @@ def feature_lines(rec) -> List[str]:
     return out
 
 
-def fasta_defline(rec, gencode: Optional[int]) -> str:
+def fasta_defline(rec, gencode: Optional[int], nuclear: bool = False) -> str:
     org = rec.annotations.get("organism", "unknown organism")
     topo = rec.annotations.get("topology", "linear")
-    mods = [f"[organism={org}]", "[location=mitochondrion]", f"[topology={topo}]"]
+    mods = [f"[organism={org}]"] + ([] if nuclear else ["[location=mitochondrion]"]) + [f"[topology={topo}]"]
     if topo == "circular":                       # else SEQ_INST.CompleteCircleProblem (table2asn 2026-10-21)
         mods.append("[completeness=complete]")
     if gencode:
-        mods.append(f"[mgcode={gencode}]")
+        mods.append(f"[{'gcode' if nuclear else 'mgcode'}={gencode}]")
     return f">{rec.id} " + " ".join(mods)
 
 
@@ -88,13 +88,14 @@ def our_intervals(rec, tag: str) -> List[str]:
     return out
 
 
-def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None) -> List[Dict[str, str]]:
+def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
+                    nuclear: bool = False) -> List[Dict[str, str]]:
     """Write rec as NCBI submission inputs (rec.fsa + rec.tbl) and run table2asn on them (rec.sqn, rec.val);
     sbt = submitter template from https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ (optional)."""
     d = out / re.sub(r"[^\w.]+", "_", rec.id)
     d.mkdir(parents=True, exist_ok=True)
     base = d / "rec"
-    (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec)) + "\n" + str(rec.seq) + "\n")
+    (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
     (d / "rec.tbl").write_text("\n".join(feature_lines(rec)) + "\n")
     subprocess.run([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn",
                     *(["-t", sbt] if sbt else [])],
@@ -121,6 +122,7 @@ def main(argv=None) -> int:
     p.add_argument("--focus", default="", help="Only count messages whose text matches this regex (e.g. intron|CDS)")
     p.add_argument("--only_ours", action="store_true",
                    help="Only count messages on features written by mito_intron.py")
+    p.add_argument("--nuclear", action="store_true", help="nuclear sequences (mitom nuc): no location, [gcode=]")
     a = p.parse_args(argv)
     exe = mito_env.find("table2asn", a.table2asn)
     if not exe:
@@ -135,7 +137,7 @@ def main(argv=None) -> int:
     for f in files:
         for rec in SeqIO.parse(str(f), "genbank"):
             n += 1
-            rows += validate_record(rec, out, exe)
+            rows += validate_record(rec, out, exe, nuclear=a.nuclear)
     with open(out / "validation.tsv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["record", "severity", "code", "ours", "message"], delimiter="\t")
         w.writeheader()
