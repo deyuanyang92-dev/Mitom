@@ -664,12 +664,41 @@ class Curator:
                     self.rec.features = [x for x in self.rec.features if x is not f and x is not g]
 
     # ── rRNA rules ──
+    def origin_span(self, f: SeqFeature) -> Optional[Tuple[int, int]]:
+        """(start, end) of a two-part join across the origin of a circular record as one interval, end > L."""
+        parts = f.location.parts
+        if self.rec.annotations.get("topology") != "circular" or len(parts) != 2:
+            return None
+        tail = next((p for p in parts if int(p.end) == self.L), None)
+        head = next((p for p in parts if int(p.start) == 0), None)
+        if tail is None or head is None or tail is head:
+            return None
+        return int(tail.start) + 1, self.L + int(head.end)
+
+    def set_circular_span(self, f: SeqFeature, s: int, e: int) -> None:
+        """set_span on the circle: s..e (1-based, e may exceed L) as one interval or as a join across the origin."""
+        if s < 1:                                       # filled back across the origin
+            s, e = s + self.L, e + self.L
+        if e > self.L and s > self.L:
+            s, e = s - self.L, e - self.L
+        if e <= self.L:
+            set_span(f, s, e)
+            return
+        strand = f.location.strand
+        tail, head = FeatureLocation(s - 1, self.L, strand), FeatureLocation(0, e - self.L, strand)
+        f.location = CompoundLocation([tail, head] if strand != -1 else [head, tail])
+
     def rrna(self, f: SeqFeature) -> None:
-        if not simple(f):
+        # an rRNA across the origin is one interval s..e with e > L (MitoM's frame starts at cox1, so the echinoderm
+        # rrnL before cox1 crosses it: NC_013881.1 ran 19 nt into cox1 and left 46 nt to nad2 unfilled)
+        origin = self.origin_span(f)
+        if not simple(f) and origin is None:
             return
         g = gene_feature(self.rec, f)
-        s, e = old = span(f)
+        s, e = old = origin or span(f)
         nf = [(sp, x) for x in self.others(f, types=("tRNA", "CDS", "rRNA")) for sp in spans(x)]
+        if self.rec.annotations.get("topology") == "circular":        # neighbours across the origin
+            nf += [((a + k, b + k), x) for (a, b), x in list(nf) for k in (-self.L, self.L)]
         neigh = [sp for sp, _ in nf]
         who = {sp: x.qualifiers.get("gene", ["?"])[0] for sp, x in nf}
         noted = self.noted            # R3 'inside' rows once per rRNA pass pair (rrna() runs twice in run())
@@ -710,9 +739,17 @@ class Curator:
         if cds_ov > 50:
             self.log(f, "R3", old, (s, e), f"rRNA overlaps a CDS by {cds_ov} nt - boundary or assembly problem?")
         if (s, e) != old and e - s + 1 >= 200:
-            set_span(f, s, e)
-            if g is not None and simple(g):
-                set_span(g, s, e)
+            # an end at the end of a linear sequence that R1 leaves in place keeps its < / >: the rRNA runs on beyond
+            # the sequenced part (DQ517436.1, a partial genome starting inside rrnL)
+            linear = self.rec.annotations.get("topology") != "circular"
+            keep = linear and (isinstance(f.location.start, BeforePosition) and s == old[0] == 1,
+                               isinstance(f.location.end, AfterPosition) and e == old[1] == self.L)
+            self.set_circular_span(f, s, e)
+            if keep and any(keep):
+                f.location = FeatureLocation(BeforePosition(s - 1) if keep[0] else f.location.start,
+                                             AfterPosition(e) if keep[1] else f.location.end, f.location.strand)
+            if g is not None and (simple(g) or origin):
+                g.location = f.location
             self.log(f, "R1", old, (s, e), "trimmed to flanking genes" + (" and filled to them" if self.a.rrna_bounds == "fill" else ""))
 
     # ── N1: NCBI-style names (every feature, also joins / origin-spanning ones) ──

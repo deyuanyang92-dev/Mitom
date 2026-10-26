@@ -25,7 +25,9 @@ Rules:
     reported ("second copy at X..Y not added"), never added;
   - circular records are searched as seq + first 2000 nt, so a gene across the origin is one hit and
     becomes a join location; clusters that start in the appended part are duplicates and dropped;
-  - the span must cover >= MIN_COVER (0.4) of the model columns (LENG of the .hmm) and be >= MIN_RRNA
+  - the span must cover >= MIN_COVER (0.4) of the model columns (LENG of the .hmm), unless a linear record's
+    sequence end cuts it on the side of its missing columns (the gene runs on beyond the sequenced part; the
+    other end complete), and be >= MIN_RRNA
     (200) nt; <= LEN_HI (1.3) x the 95th percentile length of the references (manifest p95_len) and, when
     complete at both ends, >= LEN_LO (0.7) x their 5th percentile; it must not lie mostly (> 50 %) on an
     existing CDS / rRNA. A span whose model columns start after column 30 / end before LENG - 30 is added
@@ -60,6 +62,7 @@ import tempfile
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
+from Bio.Seq import Seq
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, ExactPosition, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
@@ -74,7 +77,7 @@ MIN_REFS, MAX_ALN, MIN_RRNA, MAX_GAP, EVALUE, MAX_REF_LEN = 3, 60, 200, 300, 1e-
 LEN_HI, LEN_LO, LEN_HI_MEDIAN = 1.3, 0.7, 1.5   # span <= LEN_HI x p95 and (if complete) >= LEN_LO x p5 of the references;
                                                   # manifests from before p5/p95 existed: <= LEN_HI_MEDIAN x median
 ORIGIN_EXT = 2000   # circular records are searched as seq + seq[:ORIGIN_EXT], so a gene across the origin is contiguous
-MANIFEST = ["phylum", "gene", "n_ref", "n_used", "median_len", "p5_len", "p95_len"]
+MANIFEST = ["phylum", "gene", "n_ref", "n_used", "median_len", "p5_len", "p95_len", "n_reversed"]
 MIN_COVER, PARTIAL_COLS = 0.4, 30   # model fraction a span must cover; columns missing at an end = partial there
 NOTE = "annotated by profile HMM similarity (per-phylum rRNA model, {}, {} references)"      # goes into the feature
 CHECK = "ends approximate (span of the profile HMM hits, not curated): check boundaries manually"   # report only
@@ -271,13 +274,23 @@ def _location(span: Hit, partial: List[str], n: int) -> Union[FeatureLocation, C
     return CompoundLocation([first, last] if span.strand == 1 else [last, first])
 
 
-def _verdict(span: Hit, m: dict, leng: int, taken: List[Set[int]], n: int) -> str:
+def _cut_by_sequence_end(span: Hit, leng: int, n: int) -> bool:
+    """A span of a linear record that reaches the sequence end (within PARTIAL_COLS nt) on every side where model
+    columns are missing: the gene runs on beyond the sequenced part (DQ517436.1, a partial annelid genome that
+    starts inside rrnL: 1..462 over the last third of the model, as NCBI annotates it, <1..479)."""
+    left, right = ("5'", "3'") if span.strand == 1 else ("3'", "5'")          # gene end at the sequence start / end
+    cut = {e for e, at_end in ((left, span.start <= PARTIAL_COLS), (right, span.end >= n - PARTIAL_COLS)) if at_end}
+    part = set(_partial(span, leng))
+    return bool(part) and part <= cut
+
+
+def _verdict(span: Hit, m: dict, leng: int, taken: List[Set[int]], n: int, linear: bool = False) -> str:
     """"added" / "added (partial 5')" ... or the reason the joined span is rejected."""
     length, pos = span.end - span.start, {i % n for i in range(span.start, span.end)}
     cover, part = (span.hmm_to - span.hmm_from + 1) / leng, _partial(span, leng)
     hi = LEN_HI * float(m["p95_len"]) if m.get("p95_len") else LEN_HI_MEDIAN * float(m["median_len"])
     lo = LEN_LO * float(m["p5_len"]) if m.get("p5_len") and not part else 0   # a partial gene is short by definition
-    if cover < MIN_COVER:
+    if cover < MIN_COVER and not (linear and _cut_by_sequence_end(span, leng, n)):
         return f"rejected: low coverage ({cover:.2f} of the model < {MIN_COVER})"
     if length < max(MIN_RRNA, lo):
         return f"rejected: short ({length} nt < {max(MIN_RRNA, lo):.0f})"
@@ -324,7 +337,7 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
             if span is None:
                 rows.append(dict(row, gene=name, location="", status="not found"))
                 continue
-            status = _verdict(span, m, leng, taken, n)
+            status = _verdict(span, m, leng, taken, n, linear=not circ)
             rows.append(dict(row, gene=name, location=_loc(span, n), status=status, note=CHECK if status.startswith("added") else "",
                              coverage=f"{(span.hmm_to - span.hmm_from + 1) / leng:.2f}"))
             if not status.startswith("added"):
@@ -333,7 +346,7 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
             q = {"gene": [name], "product": [product], "note": [NOTE.format(phy, m["n_used"])]}
             rec.features += [SeqFeature(fl, type="gene", qualifiers={"gene": [name]}), SeqFeature(fl, type="rRNA", qualifiers=q)]
             taken.append({i % n for i in range(span.start, span.end)})
-            if copy and _verdict(copy, m, leng, taken, n).startswith("added"):
+            if copy and _verdict(copy, m, leng, taken, n, linear=not circ).startswith("added"):
                 rows.append(dict(row, gene=name, location=_loc(copy, n), status=f"second copy at {_loc(copy, n)[:-1]} not added"))
     if any(r["status"].startswith("added") for r in rows):
         src = [f for f in rec.features if f.type == "source"]
@@ -388,8 +401,10 @@ def search_dir(final_dir: Path, lib: Path = LIB, phylum: Optional[str] = None,
 
 
 def _ref_rrnas(gb: Path, exclude: Set[str]) -> Dict[str, List[str]]:
+    """Reference rRNAs per gene, ordered by accession and position, so that a rebuild from the same records
+    samples the same references whatever order the GenBank file has (refs_<phylum>.txt + this code = the models)."""
     from Bio import SeqIO
-    out: Dict[str, List[str]] = {g: [] for g in GENES}
+    found: Dict[str, List[Tuple[str, int, str]]] = {g: [] for g in GENES}
     for r in SeqIO.parse(str(gb), "genbank"):
         if r.id.split(".")[0] in exclude:
             continue
@@ -399,8 +414,36 @@ def _ref_rrnas(gb: Path, exclude: Set[str]) -> Dict[str, List[str]]:
                 continue
             s = str(f.extract(r.seq)).upper()
             if 300 <= len(s) <= MAX_REF_LEN and s.count("N") <= 0.01 * len(s):
-                out[g].append(s)
-    return out
+                found[g].append((r.id, int(f.location.start), s))
+    return {g: [s for _, _, s in sorted(v)] for g, v in found.items()}
+
+
+def _sense(seqs: List[str], gene: str, cpu: int) -> Tuple[List[str], int]:
+    """References read on the strand where the MITOS2 covariance model of `gene` matches them (cmsearch --hmmonly,
+    the model's profile HMM: seconds, same verdict as the full model). A reference whose best hit lies only on the
+    other strand is annotated on the wrong strand and is used reverse-complemented: 5 of the 7 Chaetognatha
+    references (KP899748-KP899752) give 12S / 16S antisense, so the model learned the complementary strand and
+    every chaetognath rRNA was called on the wrong strand (17 such references in 6 phyla, 61-612 bits, none with a
+    hit on the annotated strand). A reference without any hit is kept as it is; without cmsearch or the MITOS2
+    models nothing is checked. Returns (references, number reverse-complemented)."""
+    cmsearch, ref = mito_env.find("cmsearch"), mito_env.mitos_refdir()
+    cm = Path(ref) / mito_env.MITOS_REF / "ncRNA" / f"{gene}.cm" if ref else None
+    if not (seqs and cmsearch and cm and cm.is_file()):
+        return seqs, 0
+    best: Dict[str, Tuple[str, float]] = {}
+    with tempfile.TemporaryDirectory() as td:
+        fa, tbl = Path(td) / "in.fa", Path(td) / "hits.tbl"
+        fa.write_text("".join(f">r{i}\n{s}\n" for i, s in enumerate(seqs)))
+        subprocess.run([str(cmsearch), "--hmmonly", "--notextw", "--cpu", str(cpu), "-E", "1", "--tblout", str(tbl),
+                        str(cm), str(fa)], capture_output=True, check=True)
+        for line in tbl.read_text().splitlines():
+            c = line.split()
+            if line.startswith("#") or len(c) < 15:
+                continue
+            if c[0] not in best or float(c[14]) > best[c[0]][1]:
+                best[c[0]] = (c[9], float(c[14]))
+    flip = {i for i in range(len(seqs)) if best.get(f"r{i}", ("+", 0.0))[0] == "-"}
+    return [str(Seq(s).reverse_complement()) if i in flip else s for i, s in enumerate(seqs)], len(flip)
 
 
 def _pct(xs: List[int], q: float) -> int:
@@ -423,6 +466,7 @@ def build(gbs: List[Path], out: Path, exclude: Optional[Set[str]] = None, cpu: i
     rows = []
     for gb in sorted(gbs):
         for g, seqs in _ref_rrnas(gb, exclude or set()).items():
+            seqs, n_anti = _sense(seqs, g, cpu)
             if len(seqs) < MIN_REFS:
                 continue
             hmm = out / f"{gb.stem}.{g}.hmm"
@@ -442,7 +486,8 @@ def build(gbs: List[Path], out: Path, exclude: Optional[Set[str]] = None, cpu: i
                                    capture_output=True, check=True)
             lens = [len(s) for s in seqs]
             rows.append({"phylum": gb.stem, "gene": g, "n_ref": len(seqs), "n_used": n_used,
-                         "median_len": int(statistics.median(lens)), "p5_len": _pct(lens, 0.05), "p95_len": _pct(lens, 0.95)})
+                         "median_len": int(statistics.median(lens)), "p5_len": _pct(lens, 0.05), "p95_len": _pct(lens, 0.95),
+                         "n_reversed": n_anti})
     old = read_manifest(out)
     old.update({(r["phylum"], r["gene"]): r for r in rows})
     tmp = out / "manifest.tsv.tmp"

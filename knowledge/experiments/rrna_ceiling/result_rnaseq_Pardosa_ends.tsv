@@ -1,0 +1,5 @@
+name	strand	end	ncbi	peak	offset	top	second	background	fragments	stranded
+rrnL	-	5'	12933	12899	34	2	2	0	23364	0
+rrnL	-	3'	11905	11923	-18	1373	152	1	23364	0
+rrnS	-	5'	13673	13653	20	2	1	0	23364	0
+rrnS	-	3'	12984	12986	-2	2	2	0	23364	0

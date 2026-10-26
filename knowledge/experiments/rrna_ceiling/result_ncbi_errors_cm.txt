@@ -1,0 +1,15 @@
+NC_028407.1 rrnS NCBI 12360..13182 strand + | rrnS: + 0 / - 275 bits | rrnL: + 0 / - 0 bits
+NC_028085.1 rrnL NCBI 537..1204 strand + | rrnS: + 0 / - 0 bits | rrnL: + 0 / - 203 bits
+NC_028085.1 rrnS NCBI 3146..3780 strand + | rrnS: + 0 / - 110 bits | rrnL: + 0 / - 0 bits
+NC_032061.1 rrnL NCBI 11833..12976 strand + | rrnS: + 0 / - 0 bits | rrnL: + 0 / - 362 bits
+NC_071876.1 rrnL NCBI 6885..8495 strand + | rrnS: + 0 / - 0 bits | rrnL: + 0 / - 790 bits
+NC_006162.1 rrnS NCBI 7428..8156 strand + | rrnS: + 0 / - 347 bits | rrnL: + 0 / - 0 bits
+NC_005840.1 rrnS NCBI 8180..8868 strand + | rrnS: + 0 / - 230 bits | rrnL: + 0 / - 0 bits
+NC_067052.1 rrnL NCBI 13985..14719 strand - | rrnS: + 0 / - 146 bits | rrnL: + 0 / - 0 bits
+NC_028708.1 rrnL NCBI 12329..13506 strand - | rrnS: + 0 / - 415 bits | rrnL: + 0 / - 0 bits
+NC_044703.1 rrnL NCBI 9610..10339 strand + | rrnS: + 255 / - 0 bits | rrnL: + 0 / - 0 bits
+NC_027943.1 genome whole genome | rrnS: + 422 / - 0 bits (top 12838..13745 + model 1-894) | rrnL: + 704 / - 0 bits (top 14914..16240 + model 1-1537)
+NC_068907.1 rrnS NCBI 12273..13590 strand + | rrnS: + 0 / - 0 bits | rrnL: + 749 / - 0 bits
+PP998669.1 rrnL NCBI 8182..9304 strand + | rrnS: + 0 / - 0 bits | rrnL: + 0 / - 628 bits
+PP998669.1 rrnS NCBI 9386..9984 strand + | rrnS: + 0 / - 366 bits | rrnL: + 0 / - 0 bits
+OQ807204.1 rrnS NCBI 15689..16503 strand - | rrnS: + 440 / - 0 bits | rrnL: + 0 / - 0 bits

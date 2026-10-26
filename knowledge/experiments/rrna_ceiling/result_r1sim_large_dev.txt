@@ -1,0 +1,8 @@
+records 538 split dev; replay of the current rule reproduces MitoM's final rRNA: 1045 of 1060
+final          n=1073 exact 486 (45.3%)  within3 63.4%  within10 69.5%  missed 29
+current        n=1073 exact 494 (46.0%)  within3 64.2%  within10 70.5%  missed 29
+context>=0.2   n=1073 exact 490 (45.7%)  within3 63.5%  within10 69.9%  missed 29
+context>=0.3   n=1073 exact 490 (45.7%)  within3 63.5%  within10 70.3%  missed 29
+context>=0.4   n=1073 exact 490 (45.7%)  within3 63.5%  within10 70.3%  missed 29
+context>=0.5   n=1073 exact 484 (45.1%)  within3 63.0%  within10 69.7%  missed 29
+context>=0.6   n=1073 exact 456 (42.5%)  within3 60.1%  within10 66.7%  missed 29

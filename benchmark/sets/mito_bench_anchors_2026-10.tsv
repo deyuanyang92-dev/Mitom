@@ -1,0 +1,14 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+NC_001322.1		Arthropoda	Insecta	Diptera	Drosophilidae	Drosophila	Drosophila yakuba	5		circular	16019	B	unknown	03-APR-2023		Arthropoda	test	2026-10-26
+NC_006817.1		Arthropoda	Insecta	Diptera	Culicidae	Aedes	Aedes albopictus	5		circular	16665	B	unknown	03-APR-2023		Arthropoda	dev	2026-10-26
+NC_024511.2		Arthropoda	Insecta	Diptera	Drosophilidae	Drosophila	Drosophila melanogaster	5		circular	19524	A-longread	unknown	03-APR-2023		Arthropoda	test	2026-10-26
+MK374364.1		Arthropoda	Insecta	Hemiptera	Pentatomidae	Erthesina	Erthesina fullo	5		circular	16485	A-longread	unknown	06-MAY-2019		Arthropoda	test	2026-10-26
+JN248424.2		Arthropoda	Arachnida	Ixodida	Ixodidae	Ixodes	Ixodes ricinus	5		circular	14566	B	unknown	30-OCT-2012		Arthropoda	dev	2026-10-26
+NC_002081.1		Chordata	Actinopteri	Gadiformes	Gadidae	Gadus	Gadus morhua	2		circular	16696	B	unknown	03-APR-2023		Chordata	dev	2026-10-26
+NC_005089.1		Chordata	Mammalia	Rodentia	Muridae	Mus	Mus musculus	2		circular	16299	B	unknown	03-APR-2023		Chordata	test	2026-10-26
+NC_002177.1		Chordata	Ascidiacea	Stolidobranchia	Pyuridae	Halocynthia	Halocynthia roretzi	13		circular	14771	B	unknown	03-APR-2023		Chordata	dev	2026-10-26
+NC_001453.1		Echinodermata	Echinoidea	Camarodonta	Strongylocentrotidae	Strongylocentrotus	Strongylocentrotus purpuratus	9		circular	15650	B	unknown	03-APR-2023		Echinodermata	dev	2026-10-26
+NC_001572.1		Echinodermata	Echinoidea	Camarodonta	Echinidae	Paracentrotus	Paracentrotus lividus	9		circular	15696	B	unknown	03-APR-2023		Echinodermata	test	2026-10-26
+NC_006886.2		Mollusca	Bivalvia	Mytilida	Mytilidae	Mytilus	Mytilus galloprovincialis	5		circular	16744	B	unknown	03-APR-2023		Mollusca	dev	2026-10-26
+NC_001327.1		Nematoda	Chromadorea	Rhabditida	Ascarididae	Ascaris	Ascaris suum	5		circular	14284	B	unknown	03-APR-2023		Nematoda	test	2026-10-26
+NC_001328.1		Nematoda	Chromadorea	Rhabditida	Rhabditidae	Caenorhabditis	Caenorhabditis elegans	5		circular	13794	B	unknown	03-APR-2023		Nematoda	dev	2026-10-26

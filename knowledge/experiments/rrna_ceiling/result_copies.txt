@@ -1,0 +1,11 @@
+large: gene searches 2042; NCBI has >= 2 copies: 14; runner-up copy over the same model columns: 7; copy scoring >= 0.9 x the gene: 7, of which hit an NCBI rRNA the best span does not: 7
+   NC_081951.1 Arthropoda rrnS n_ncbi 2 best 1126..1731- 44 copy 15357..15962- 44 cover 0.88 hits NCBI copy
+   NC_081951.1 Arthropoda rrnL n_ncbi 2 best 115..811- 187 copy 14346..15042- 187 cover 0.56 hits NCBI copy
+   NC_044480.1 Chordata rrnS n_ncbi 2 best 284..1216+ 764 copy 14930..15862+ 764 cover 1.00 hits NCBI copy
+   NC_044480.1 Chordata rrnL n_ncbi 2 best 1281..2862+ 1261 copy 15927..17508+ 1261 cover 0.99 hits NCBI copy
+   NC_008046.1 Nematoda rrnS n_ncbi 2 best 15403..15999+ 93 copy 16697..17293+ 93 cover 0.84 hits NCBI copy
+   NC_008047.1 Nematoda rrnS n_ncbi 2 best 7764..8369+ 87 copy 17400..18001+ 86 cover 0.83 hits NCBI copy
+   NC_008047.1 Nematoda rrnL n_ncbi 2 best 7138..7689+ 102 copy 16769..17320+ 102 cover 0.56 hits NCBI copy
+  NCBI duplicates not found as a copy: [('NC_067052.1', 'rrnL'), ('NC_026107.1', 'rrnS'), ('NC_016180.1', 'rrnL'), ('NC_022688.1', 'rrnL'), ('NC_036478.1', 'rrnL'), ('NC_028708.1', 'rrnL'), ('NC_044703.1', 'rrnL')]
+annelida: gene searches 1338; NCBI has >= 2 copies: 1; runner-up copy over the same model columns: 0; copy scoring >= 0.9 x the gene: 0, of which hit an NCBI rRNA the best span does not: 0
+  NCBI duplicates not found as a copy: [('NC_068907.1', 'rrnS')]

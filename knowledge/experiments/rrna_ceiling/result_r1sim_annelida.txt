@@ -1,0 +1,8 @@
+records 669 split all; replay of the current rule reproduces MitoM's final rRNA: 1325 of 1331
+final          n=1328 exact 433 (32.6%)  within3 69.8%  within10 79.9%  missed 1
+current        n=1328 exact 431 (32.5%)  within3 69.7%  within10 79.8%  missed 1
+context>=0.2   n=1328 exact 431 (32.5%)  within3 69.7%  within10 79.8%  missed 1
+context>=0.3   n=1328 exact 431 (32.5%)  within3 69.7%  within10 79.8%  missed 1
+context>=0.4   n=1328 exact 431 (32.5%)  within3 69.7%  within10 79.8%  missed 1
+context>=0.5   n=1328 exact 431 (32.5%)  within3 69.7%  within10 79.8%  missed 1
+context>=0.6   n=1328 exact 431 (32.5%)  within3 69.7%  within10 79.8%  missed 1

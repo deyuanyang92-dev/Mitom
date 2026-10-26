@@ -181,6 +181,24 @@ def test_low_model_coverage_is_rejected(tmp_path):
     assert not _added_rrna(r)
 
 
+def test_low_coverage_span_cut_by_the_end_of_a_linear_record_is_a_partial_gene(tmp_path):
+    """DQ517436.1 (partial annelid genome starting inside rrnL): 1..462 over the last third of the model was
+    rejected for low coverage; NCBI (<1..479), MitoZ and MITOS2 annotate it. Accepted only in a linear record,
+    at the sequence end on the side of the missing columns, with the other end complete."""
+    lib = _lib(tmp_path / "lib")
+
+    def status(h, topology):
+        r = rec(rand(5000), [("CDS", 2000, 3500, 1, "COX1"), ("rRNA", 4000, 4600, 1, "s-rRNA")])
+        r.annotations["topology"] = topology
+        return rh.search_record(r, lib, run=lambda hmm, fa: [h])[0]["status"], r
+    st, r = status(hit(0, 300, 581, 880), "linear")                                  # 5' end cut by the start
+    assert st == "added (partial 5')" and isinstance(_added_rrna(r)[0].location.start, BeforePosition)
+    assert status(hit(4700, 5000, 581, 880, strand=-1), "linear")[0] == "added (partial 5')"   # minus: 5' at the end
+    assert status(hit(0, 300, 581, 880), "circular")[0].startswith("rejected: low coverage")   # a circle has no end
+    assert status(hit(1000, 1300, 581, 880), "linear")[0].startswith("rejected: low coverage")  # inside the sequence
+    assert status(hit(0, 300, 1, 300), "linear")[0].startswith("rejected: low coverage")       # 3' end missing inside
+
+
 @pytest.mark.parametrize("strand,cols,status,start_cls,end_cls", [
     (1, (261, 880), "added (partial 5')", BeforePosition, type(None)),
     (-1, (261, 880), "added (partial 5')", type(None), AfterPosition),
@@ -570,3 +588,36 @@ def test_fetch_metazoan_phyla_list_matches_batch_mitoz():
     """The script keeps its own copy (it must not import batch_mitoz); the copy must not go stale."""
     import batch_mitoz
     assert set(fr.METAZOAN_PHYLA) == set(batch_mitoz.METAZOAN_PHYLA)
+
+
+def test_references_on_the_wrong_strand_are_reverse_complemented(tmp_path, monkeypatch):
+    """5 of the 7 Chaetognatha references (KP899748-KP899752) put 12S / 16S on the wrong strand; the model then
+    matched the antisense and MitoM called every chaetognath rRNA on the wrong strand. _sense reads a reference on
+    the strand of the MITOS2 covariance model's best hit (no hit: as annotated)."""
+    cm = tmp_path / "refs" / "refseq89m" / "ncRNA"
+    cm.mkdir(parents=True)
+    (cm / "rrnL.cm").write_text("")
+    monkeypatch.setattr(rh.mito_env, "find", lambda name, *a: "cmsearch")
+    monkeypatch.setattr(rh.mito_env, "mitos_refdir", lambda *a: str(tmp_path / "refs"))
+
+    def fake_run(cmd, **kw):
+        tbl = Path(cmd[cmd.index("--tblout") + 1])
+        row = "{} - rrnL - hmm 1 900 {} {} {} no 1 0.40 0.0 {} 1e-20 ! -\n"
+        tbl.write_text("#\n" + row.format("r0", 1, 900, "+", 300.0) + row.format("r1", 900, 1, "-", 250.0)
+                       + row.format("r1", 1, 400, "+", 40.0))           # r2: no hit
+        return subprocess.CompletedProcess(cmd, 0)
+    monkeypatch.setattr(rh.subprocess, "run", fake_run)
+    seqs, n = rh._sense(["AAC", "CCA", "GGT"], "rrnL", 1)
+    assert seqs == ["AAC", "TGG", "GGT"] and n == 1
+
+
+def test_reference_order_does_not_depend_on_the_file(tmp_path):
+    """The 60 aligned references are sampled from a list sorted by accession and position, so the models can be
+    rebuilt from refs_<phylum>.txt whatever order NCBI returns the records in."""
+    a, b = tmp_path / "a" / "X.gb", tmp_path / "b" / "X.gb"
+    a.parent.mkdir()
+    b.parent.mkdir()
+    _refs_gb(a, [500, 600, 700])
+    recs = list(SeqIO.parse(str(a), "genbank"))
+    SeqIO.write(recs[::-1], str(b), "genbank")
+    assert rh._ref_rrnas(a, set()) == rh._ref_rrnas(b, set())

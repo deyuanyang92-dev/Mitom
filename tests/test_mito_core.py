@@ -216,3 +216,42 @@ def test_orf_before_neighbour_both_strands():
     nb_m = mc.Feature("CDS", "atp6", N - nb.end, N - nb.start, -1)
     g = mc.orf_before(rc, genome, nb_m, "atp8", table, 162, 90, 240)
     assert (g.start, g.end, g.strand) == (N - f.end, N - f.start, -1)
+
+
+def test_rrna_weak_hmm_span_falls_back_to_the_covariance_model(tmp_path, monkeypatch):
+    """A divergent genome (tunicates against the vertebrate-dominated Chordata model: NC_009833.1, NC_013561.1) gives
+    the HMM only a partial span; the covariance model, which finds these rRNAs, is tried instead of dropping the gene."""
+    import logging
+    hmm = tmp_path / "Chordata.rrnS.hmm"
+    hmm.write_text("")
+    (tmp_path / "Chordata.rrnL.hmm").write_text("")
+    weak = mc.mito_rrna_hmm.Hit(start=100, end=300, strand=1, hmm_from=10, hmm_to=200, score=50.0)   # 191 of 900
+    good = mc.mito_rrna_hmm.Hit(start=1000, end=1800, strand=1, hmm_from=1, hmm_to=880, score=400.0)
+    monkeypatch.setattr(mc.mito_rrna_hmm, "nhmmer", lambda h, fa: [weak])
+    monkeypatch.setattr(mc.mito_rrna_hmm, "model_len", lambda h: 900)
+    monkeypatch.setattr(mc.mito_rrna_hmm, "best_spans", lambda hits, n: (hits[0] if hits else None, None))
+    monkeypatch.setattr(mc, "cmsearch", lambda *a, **k: tmp_path / "x.out")
+    monkeypatch.setattr(mc, "tbl_hits", lambda tbl: [good])
+    monkeypatch.setattr(mc, "cm_len", lambda cm: 900)
+    feats = mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, {"cmsearch": "cmsearch"}, tmp_path,
+                              logging.getLogger("t"), phylum="Chordata", rrna_lib=tmp_path)
+    assert [(f.name, f.start, f.end) for f in feats] == [("rrnS", 1000, 1800), ("rrnL", 1000, 1800)]
+    assert all("cmsearch" in f.note for f in feats)
+
+
+def test_rrna_second_copy_added_when_it_scores_like_the_gene(tmp_path, monkeypatch):
+    """Duplicated rRNAs (NC_044480.1 rrnS + rrnL, NC_008046.1 rrnS: both copies in NCBI) were annotated once: the
+    runner-up span over the same model columns is a second copy when it scores >= COPY_FRAC of the gene."""
+    import logging
+    (tmp_path / "Chordata.rrnS.hmm").write_text("")
+    (tmp_path / "Chordata.rrnL.hmm").write_text("")
+    gene = mc.mito_rrna_hmm.Hit(start=100, end=1000, strand=1, hmm_from=1, hmm_to=880, score=700.0)
+    copy = mc.mito_rrna_hmm.Hit(start=9000, end=9900, strand=1, hmm_from=1, hmm_to=880, score=690.0)
+    weak = mc.mito_rrna_hmm.Hit(start=5000, end=5900, strand=-1, hmm_from=1, hmm_to=880, score=300.0)
+    spans = {"Chordata.rrnS.hmm": (gene, copy), "Chordata.rrnL.hmm": (gene, weak)}
+    monkeypatch.setattr(mc.mito_rrna_hmm, "nhmmer", lambda h, fa: [h.name])
+    monkeypatch.setattr(mc.mito_rrna_hmm, "model_len", lambda h: 900)
+    monkeypatch.setattr(mc.mito_rrna_hmm, "best_spans", lambda hits, n: spans[hits[0]])
+    feats = mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, {}, tmp_path, logging.getLogger("t"), phylum="Chordata",
+                              rrna_lib=tmp_path)
+    assert [(f.name, f.start, f.end) for f in feats] == [("rrnS", 100, 1000), ("rrnS", 9000, 9900), ("rrnL", 100, 1000)]

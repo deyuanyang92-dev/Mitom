@@ -588,21 +588,30 @@ def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, p
     else the MITOS2 covariance model (cmsearch, 0.4-0.6 GB, 10 s). On the 24-record benchmark both find the same
     genes (leave-out library); R1 of mito_curate.py then fits the ends to the flanking genes. Hits are joined by
     mito_rrna_hmm's rules (n = record length of a circular record searched with ORIGIN_EXT nt appended); a span over
-    less than MIN_COVER of the model is not taken (MitoM's rRNA HMM step looks again)."""
+    less than MIN_COVER of the model is not taken (MitoM's rRNA HMM step looks again). A second copy (best_spans'
+    runner-up over the same model columns elsewhere) scoring >= COPY_FRAC of the gene is added too: duplicated rRNAs,
+    both copies in NCBI (NC_044480.1 rrnS + rrnL, mermithid nematodes NC_008046.1, NC_008047.1; nhmmer with the
+    leave-out libraries on the 1,050 + 669 benchmark records found 7 such copies, all of them NCBI's second copy)."""
     feats = []
     lib = rrna_lib or mito_rrna_hmm.LIB
     for model in ("rrnS", "rrnL"):
         hmm = rrna_hmm(lib, phylum, model)
         cm = refdir / "ncRNA" / f"{model}.cm"
-        span, how = None, ""
+        span, copy, how = None, None, ""
         if hmm is not None:
-            span = mito_rrna_hmm.best_spans(mito_rrna_hmm.nhmmer(hmm, genome_fa), n)[0]
+            span, copy = mito_rrna_hmm.best_spans(mito_rrna_hmm.nhmmer(hmm, genome_fa), n)
             leng, how = mito_rrna_hmm.model_len(hmm), f"nhmmer {hmm.name}"
             if span is None:
                 log.info(f"[core] {model}: no nhmmer hit with {hmm.name}; trying the covariance model")
+            elif (span.hmm_to - span.hmm_from + 1) / leng < mito_rrna_hmm.MIN_COVER:
+                # a weak partial hit of a divergent genome (tunicates against the vertebrate-dominated Chordata
+                # model: NC_009833.1, NC_013561.1, whose rRNAs MITOS2's covariance models find)
+                log.info(f"[core] {model}: nhmmer span covers {(span.hmm_to - span.hmm_from + 1) / leng:.2f} of "
+                         f"{hmm.name}; trying the covariance model")
+                span = None
         if span is None:
             hits = tbl_hits(cmsearch(tools["cmsearch"], cm, genome_fa, tmp / f"{model}.out", False, log, rrna=True).with_suffix(".tbl"))
-            span = mito_rrna_hmm.best_spans(hits, n)[0]
+            span, copy = mito_rrna_hmm.best_spans(hits, n)
             leng, how = cm_len(cm), "cmsearch"
         if span is None:
             # no sensitive (--nohmm) pass: 2.4 GB and 2 min per model; a missing rRNA is found later by MitoM's
@@ -617,6 +626,11 @@ def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, p
         feats.append(Feature("rRNA", model, span.start, span.end, span.strand,
                              f"{how} bits {span.score:.0f} model {span.hmm_from}-{span.hmm_to}/{leng}", score=span.score))
         log.info(f"[core] {model}: {span.start + 1}..{span.end} ({'+' if span.strand == 1 else '-'}) by {how}")
+        if copy is not None and copy.score >= COPY_FRAC * span.score and \
+                (copy.hmm_to - copy.hmm_from + 1) / leng >= mito_rrna_hmm.MIN_COVER:
+            feats.append(Feature("rRNA", model, copy.start, copy.end, copy.strand,
+                                 f"{how} bits {copy.score:.0f} model {copy.hmm_from}-{copy.hmm_to}/{leng}", score=copy.score))
+            log.info(f"[core] {model}: second copy {copy.start + 1}..{copy.end} ({'+' if copy.strand == 1 else '-'}) by {how}")
     return feats
 
 

@@ -1,42 +1,42 @@
-phylum	gene	n_ref	n_used	median_len	p5_len	p95_len
-Acanthocephala	rrnL	58	58	909	834	950
-Acanthocephala	rrnS	58	58	582	513	902
-Annelida	rrnL	144	60	1251	1051	1384
-Annelida	rrnS	144	60	798	735	861
-Arthropoda	rrnL	140	60	1320	1177	1388
-Arthropoda	rrnS	140	60	786	704	837
-Brachiopoda	rrnL	4	4	1415	1361	1463
-Brachiopoda	rrnS	4	4	1058	843	1271
-Bryozoa	rrnL	41	41	1194	1047	1341
-Bryozoa	rrnS	41	41	815	685	879
-Chaetognatha	rrnL	7	7	1280	1030	1392
-Chaetognatha	rrnS	7	7	641	423	714
-Chordata	rrnL	148	60	1682	1564	1724
-Chordata	rrnS	148	60	952	942	972
-Cnidaria	rrnL	138	60	1872	1587	2576
-Cnidaria	rrnS	137	60	973	905	1187
-Ctenophora	rrnL	30	30	830	812	1017
-Ctenophora	rrnS	29	29	356	318	572
-Echinodermata	rrnL	138	60	1529	1353	1604
-Echinodermata	rrnS	138	60	890	821	917
-Hemichordata	rrnL	4	4	1350	1104	1496
-Hemichordata	rrnS	4	4	854	826	870
-Mollusca	rrnL	150	60	1298	620	1410
-Mollusca	rrnS	145	60	887	703	1036
-Nematoda	rrnL	138	60	959	807	1009
-Nematoda	rrnS	139	60	696	636	736
-Nemertea	rrnL	60	60	1241	1066	1305
-Nemertea	rrnS	60	60	836	750	853
-Onychophora	rrnL	3	3	1136	714	2257
-Placozoa	rrnL	22	22	1016	410	3008
-Placozoa	rrnS	10	10	1691	1463	2042
-Platyhelminthes	rrnL	148	60	980	943	1022
-Platyhelminthes	rrnS	149	60	725	704	763
-Porifera	rrnL	139	60	2483	1448	3006
-Porifera	rrnS	140	60	1243	828	1590
-Rotifera	rrnL	35	35	1138	1105	1383
-Rotifera	rrnS	32	32	718	713	725
-Tardigrada	rrnL	8	8	1169	843	1227
-Tardigrada	rrnS	8	8	773	699	776
-Xenacoelomorpha	rrnL	10	10	1328	1056	1393
-Xenacoelomorpha	rrnS	10	10	767	738	775
+phylum	gene	n_ref	n_used	median_len	p5_len	p95_len	n_reversed
+Acanthocephala	rrnL	58	58	909	834	950	0
+Acanthocephala	rrnS	58	58	582	513	902	0
+Annelida	rrnL	144	60	1251	1051	1384	0
+Annelida	rrnS	144	60	798	735	861	0
+Arthropoda	rrnL	140	60	1320	1177	1388	1
+Arthropoda	rrnS	140	60	786	704	837	1
+Brachiopoda	rrnL	4	4	1415	1361	1463	0
+Brachiopoda	rrnS	4	4	1058	843	1271	0
+Bryozoa	rrnL	41	41	1194	1047	1341	0
+Bryozoa	rrnS	41	41	815	685	879	0
+Chaetognatha	rrnL	7	7	1280	1030	1392	5
+Chaetognatha	rrnS	7	7	641	423	714	5
+Chordata	rrnL	148	60	1682	1564	1724	0
+Chordata	rrnS	148	60	952	942	972	0
+Cnidaria	rrnL	138	60	1872	1587	2576	0
+Cnidaria	rrnS	137	60	973	905	1187	1
+Ctenophora	rrnL	30	30	830	812	1017	0
+Ctenophora	rrnS	29	29	356	318	572	0
+Echinodermata	rrnL	138	60	1529	1353	1604	1
+Echinodermata	rrnS	138	60	890	821	917	0
+Hemichordata	rrnL	4	4	1350	1104	1496	0
+Hemichordata	rrnS	4	4	854	826	870	0
+Mollusca	rrnL	150	60	1298	620	1410	2
+Mollusca	rrnS	145	60	887	703	1036	1
+Nematoda	rrnL	138	60	959	807	1009	0
+Nematoda	rrnS	139	60	696	636	736	0
+Nemertea	rrnL	60	60	1241	1066	1305	0
+Nemertea	rrnS	60	60	836	750	853	0
+Onychophora	rrnL	3	3	1136	714	2257	0
+Placozoa	rrnL	22	22	1016	410	3008	0
+Placozoa	rrnS	10	10	1691	1463	2042	0
+Platyhelminthes	rrnL	148	60	980	943	1022	0
+Platyhelminthes	rrnS	149	60	725	704	763	0
+Porifera	rrnL	139	60	2483	1448	3006	0
+Porifera	rrnS	140	60	1243	828	1590	0
+Rotifera	rrnL	35	35	1138	1105	1383	0
+Rotifera	rrnS	32	32	718	713	725	0
+Tardigrada	rrnL	8	8	1169	843	1227	0
+Tardigrada	rrnS	8	8	773	699	776	0
+Xenacoelomorpha	rrnL	10	10	1328	1056	1393	0
+Xenacoelomorpha	rrnS	10	10	767	738	775	0

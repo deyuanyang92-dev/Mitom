@@ -953,3 +953,66 @@ def test_p3_core_complete_stop_a_few_nt_into_the_trna_kept():
                        ("tRNA", FeatureLocation(149, 215, 1), "trnH", {"product": ["tRNA-His"]})])
     rows = _curate_rec(rec)
     assert int(_by(rec, "CDS", "ND4").location.end) == 159, rows
+
+
+def test_rrna_across_origin_trimmed_and_filled():
+    """R1 skipped rRNAs written as a join across the origin. MitoM's frame starts at cox1, so the echinoderm rrnL
+    before cox1 crosses it (NC_013881.1: 19 nt into cox1, 46 nt to nad2 left unfilled): one interval on the circle."""
+    import random
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation
+    n = 3000
+    rnd = random.Random(5)
+    seq = "".join(rnd.choice("ACGT") for _ in range(n))
+    rrnl = CompoundLocation([FeatureLocation(1650, n, 1), FeatureLocation(0, 19, 1)])     # 1651..3000 + 1..19
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, 600, 1), "COX1"),
+                       ("CDS", FeatureLocation(1000, 1604, 1), "ND2"),
+                       ("rRNA", rrnl, "l-rRNA", {"product": ["16S ribosomal RNA"]})], "circular")
+    rows = _curate_rec(rec)
+    r = _by(rec, "rRNA", "rrnL")
+    assert len(r.location.parts) == 1, r.location                   # trimmed to the cox1 start: no longer across
+    assert (int(r.location.start) + 1, int(r.location.end)) == (1605, n)
+    assert any(x["rule"] == "R1" for x in rows)
+    assert str(_by(rec, "gene", "rrnL").location) == str(r.location)
+
+
+def test_rrna_filled_across_the_origin_is_a_join():
+    """A gap that lies across the origin is filled like any other: the rRNA becomes a join over the origin."""
+    import random
+    from Bio.SeqFeature import FeatureLocation
+    n = 3000
+    rnd = random.Random(6)
+    seq = "".join(rnd.choice("ACGT") for _ in range(n))
+    rec = _mkrec(seq, [("CDS", FeatureLocation(20, 620, 1), "COX1"),
+                       ("tRNA", FeatureLocation(1500, 1570, 1), "trnV", {"product": ["tRNA-Val"]}),
+                       ("rRNA", FeatureLocation(1570, n - 10, 1), "l-rRNA", {"product": ["16S ribosomal RNA"]})],
+                 "circular")
+    _curate_rec(rec)
+    r = _by(rec, "rRNA", "rrnL")
+    assert [(int(p.start), int(p.end)) for p in r.location.parts] == [(1570, n), (0, 20)], r.location
+
+
+def test_rrna_end_left_in_place_keeps_its_partial_mark():
+    """DQ517436.1: the rRNA HMM step adds rrnL <1..481 (the partial sequence starts inside the gene); R1 trims the 3'
+    end to the next tRNA and must keep the < of the 5' end it does not move. An end R1 fills to a gene is determined;
+    a < inside the sequence (model columns missing, not a cut gene) goes as before when R1 changes the rRNA."""
+    import random
+    from Bio.SeqFeature import BeforePosition, FeatureLocation
+    rnd = random.Random(12)
+    seq = "".join(rnd.choice("ACGT") for _ in range(3000))
+    rec = _mkrec(seq, [("rRNA", FeatureLocation(BeforePosition(0), 481, 1), "l-rRNA", {"product": ["16S ribosomal RNA"]}),
+                       ("tRNA", FeatureLocation(479, 549, 1), "trnA", {"product": ["tRNA-Ala"]})])
+    rows = _curate_rec(rec)
+    r = _by(rec, "rRNA", "rrnL")
+    assert isinstance(r.location.start, BeforePosition) and (int(r.location.start) + 1, int(r.location.end)) == (1, 479)
+    assert str(_by(rec, "gene", "rrnL").location) == str(r.location) and any(x["rule"] == "R1" for x in rows)
+    rec = _mkrec(seq, [("tRNA", FeatureLocation(0, 70, 1), "trnV", {"product": ["tRNA-Val"]}),
+                       ("rRNA", FeatureLocation(BeforePosition(100), 900, 1), "l-rRNA", {"product": ["16S ribosomal RNA"]})])
+    _curate_rec(rec)
+    r = _by(rec, "rRNA", "rrnL")
+    assert not isinstance(r.location.start, BeforePosition) and int(r.location.start) == 70     # filled to trnV
+    rec = _mkrec(seq, [("tRNA", FeatureLocation(0, 70, 1), "trnV", {"product": ["tRNA-Val"]}),
+                       ("rRNA", FeatureLocation(BeforePosition(500), 981, 1), "l-rRNA", {"product": ["16S ribosomal RNA"]}),
+                       ("tRNA", FeatureLocation(979, 1049, 1), "trnA", {"product": ["tRNA-Ala"]})])
+    _curate_rec(rec)
+    r = _by(rec, "rRNA", "rrnL")
+    assert not isinstance(r.location.start, BeforePosition) and (int(r.location.start), int(r.location.end)) == (500, 979)

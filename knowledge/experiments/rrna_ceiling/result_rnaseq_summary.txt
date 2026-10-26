@@ -1,0 +1,14 @@
+RNA-seq end pilots (2026-10-26): first 1-2 M read pairs from ENA, fastp adapter trimming (-Q -L), bowtie2
+--end-to-end --very-sensitive to the circularised mitogenome, proper pairs MAPQ >= 10; peak of fragment left / right
+ends within +-60 nt of each NCBI rRNA end (run_one.sh, frags_from_bam.py, ends_from_rnaseq.py).
+
+record        species                  run          library     mt reads  fragments  result
+NC_065213.1   Eisenia fetida           ERR15279231  PolyA       2.6 %     7,831      0-2 fragments at 3 of 4 ends
+NC_026855.1   Sclerolinum brattstromi  SRR3560108   RANDOM      4.1 %     60,492     peaks of 3-34 fragments, 37-56 nt from NCBI and MitoM
+NC_066400.1   Aporrectodea caliginosa  SRR21710608  cDNA (str.) 2.0 %     9,641      peaks 18-35 nt from NCBI and MitoM, next best nearly equal
+NC_034682.1   Spirula spirula          SRR18147353  RANDOM(str.) 1.4 %    15,874     0-66 fragments, peaks 17-60 nt away
+NC_025223.1   Pardosa laura            SRR14728259  RANDOM PCR  1.7 %     23,364     one strong peak (rrnL 3', 1,373 fragments) 18-19 nt from both
+
+Conclusion: ordinary Illumina RNA-seq (random fragmentation, size selection, random priming) gives no
+nucleotide-resolution rRNA ends; a transcript truth needs end-mapping protocols (RACE, PARE, 5'/3' end sequencing,
+direct RNA). Not usable as a gold standard for exact ends.

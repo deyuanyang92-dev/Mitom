@@ -1,0 +1,42 @@
+### large (v23 runs: mitom_native, mitoz, mitos2)
+truth rRNAs: 2097
+MitoM now: exact 997 (47.5%), within 3 1354 (64.6%)
+top-1 projection: <= 0: 911 (43.4%), <= 1: 1182 (56.4%), <= 3: 1358 (64.8%), <= 10: 1521 (72.5%); no ref 41
+  per end exact: 5' 1154  3' 1206
+weighted vote:   <= 0: 944 (45.0%), <= 1: 1209 (57.7%), <= 3: 1369 (65.3%), <= 10: 1559 (74.3%)
+oracle (any of K refs exact): 1214 (57.9%)
+top-1 by relation: {'class': (152, '15%'), 'family': (616, '45%'), 'genus': (886, '55%'), 'order': (288, '33%'), 'other': (17, '0%'), 'phylum': (97, '31%')}
+top-1 by identity: {'<0.80': (417, 'proj 8%', 'mitom 29%'), '>=0.80': (234, 'proj 27%', 'mitom 40%'), '>=0.85': (358, 'proj 38%', 'mitom 42%'), '>=0.90': (441, 'proj 60%', 'mitom 57%'), '>=0.95': (606, 'proj 68%', 'mitom 63%')}
+mitom_native: rRNAs with relatives 2056; ends supported by >= 2 relatives:
+  5' end: n=1187 exact 978 (82.4%), within 3 1103 (92.9%)
+  3' end: n=1294 exact 1094 (84.5%), within 3 1198 (92.6%)
+  both ends supported: n=972 both exact 769 (79.1%), within 3 895 (92.1%)
+mitoz: rRNAs with relatives 1820; ends supported by >= 2 relatives:
+  5' end: n=1112 exact 504 (45.3%), within 3 861 (77.4%)
+  3' end: n=1199 exact 541 (45.1%), within 3 906 (75.6%)
+  both ends supported: n=918 both exact 282 (30.7%), within 3 694 (75.6%)
+mitos2: rRNAs with relatives 2056; ends supported by >= 2 relatives:
+  5' end: n=1187 exact 404 (34.0%), within 3 641 (54.0%)
+  3' end: n=1294 exact 518 (40.0%), within 3 886 (68.5%)
+  both ends supported: n=972 both exact 233 (24.0%), within 3 475 (48.9%)
+### annelida (v23 runs: mitom_native, mitoz, mitos2)
+truth rRNAs: 1328
+MitoM now: exact 433 (32.6%), within 3 927 (69.8%)
+top-1 projection: <= 0: 275 (20.7%), <= 1: 414 (31.2%), <= 3: 659 (49.6%), <= 10: 942 (70.9%); no ref 18
+  per end exact: 5' 412  3' 557
+weighted vote:   <= 0: 328 (24.7%), <= 1: 513 (38.6%), <= 3: 766 (57.7%), <= 10: 1048 (78.9%)
+oracle (any of K refs exact): 532 (40.1%)
+top-1 by relation: {'class': (198, '3%'), 'family': (483, '16%'), 'genus': (460, '35%'), 'order': (145, '22%'), 'other': (8, '0%'), 'phylum': (16, '0%')}
+top-1 by identity: {'<0.80': (496, 'proj 6%', 'mitom 35%'), '>=0.80': (196, 'proj 9%', 'mitom 39%'), '>=0.85': (247, 'proj 21%', 'mitom 32%'), '>=0.90': (252, 'proj 42%', 'mitom 22%'), '>=0.95': (119, 'proj 58%', 'mitom 37%')}
+mitom_native: rRNAs with relatives 1310; ends supported by >= 2 relatives:
+  5' end: n=506 exact 259 (51.2%), within 3 489 (96.6%)
+  3' end: n=690 exact 531 (77.0%), within 3 655 (94.9%)
+  both ends supported: n=364 both exact 172 (47.3%), within 3 335 (92.0%)
+mitoz: rRNAs with relatives 1310; ends supported by >= 2 relatives:
+  5' end: n=506 exact 112 (22.1%), within 3 247 (48.8%)
+  3' end: n=690 exact 48 (7.0%), within 3 66 (9.6%)
+  both ends supported: n=364 both exact 18 (4.9%), within 3 18 (4.9%)
+mitos2: rRNAs with relatives 1310; ends supported by >= 2 relatives:
+  5' end: n=506 exact 116 (22.9%), within 3 265 (52.4%)
+  3' end: n=690 exact 47 (6.8%), within 3 62 (9.0%)
+  both ends supported: n=364 both exact 20 (5.5%), within 3 23 (6.3%)

@@ -1,6 +1,16 @@
 # Per-phylum 12S/16S profile HMMs (mito_rrna_hmm.py)
 
-Rebuilt 2026-10-21 with `python3 mito_rrna_hmm.py build --gb refs/*.gb -o models/rrna_hmm --cpu 8`
+Rebuilt 2026-10-26 from the same reference records (refs_<phylum>.txt, fetched again by accession.version) with two
+changes in `build`: (1) the references are sorted by accession and position before the random sample of 60 is drawn,
+so a rebuild from refs_<phylum>.txt gives the same models whatever order NCBI returns the records in (the 2026-10-21
+models could not be reproduced for that reason); (2) every reference is checked with the MITOS2 covariance model of
+its gene (`cmsearch --hmmonly`): 17 rRNAs whose only hits lie on the other strand (61-612 bits) are annotated on the
+wrong strand in GenBank and are used reverse-complemented (manifest column `n_reversed`): Chaetognatha 5 of 7 per
+gene (Spadella cephaloptera KP899748-KP899752; with them the model matched the antisense and every chaetognath rRNA
+was called on the wrong strand), Arthropoda PZ358533.1 (both genes), Cnidaria KX024566.1 (rrnS), Echinodermata
+LC704718.1 (rrnL), Mollusca MK387718.1 (both) and NC_046494.1 (rrnL).
+
+Built 2026-10-21 with `python3 mito_rrna_hmm.py build --gb refs/*.gb -o models/rrna_hmm --cpu 8`
 (MAFFT --auto of <= 60 random reference rRNAs per phylum and gene (seed 1), hmmbuild --dna; HMMER 3, MAFFT 7).
 41 models (21 phyla), 8 MB. Changes against the first build (same day): reference length cap raised from 2500
 to 4000 nt (Porifera rrnL 80 -> 139 references, Cnidaria rrnL 129 -> 138 (incl. one relabelled), Placozoa rrnL 19 -> 22; before, 43 %
@@ -19,7 +29,8 @@ have no model (Entoprocta, Gastrotricha, Gnathostomulida, Kinorhyncha, Nematomor
 Priapulida).
 
 manifest.tsv columns: phylum, gene, n_ref (references passing the filters), n_used (aligned), median_len,
-p5_len, p95_len (5th and 95th percentile of the reference lengths). mito_rrna_hmm.py accepts a hit when
+p5_len, p95_len (5th and 95th percentile of the reference lengths), n_reversed (references used
+reverse-complemented, see above). mito_rrna_hmm.py accepts a hit when
 it covers >= 40 % of the model (LENG in the .hmm header) and is <= 1.3 x p95_len; spans with both ends complete
 must also be >= 0.7 x p5_len. `python3 mito_rrna_hmm.py build --gb refs/*.gb -o models/rrna_hmm --manifest-only`
 recomputes manifest.tsv from the GenBank references without touching the .hmm files.
