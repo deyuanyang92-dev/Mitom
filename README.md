@@ -827,6 +827,17 @@ python3 mito_trna.py -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen
 
 单用 ARWEN/ARAGORN 在 tRNA 少的类群假阳性极多，故只放 review 文件。刺胞的 FP 多来自 MITOS2，是否为 NCBI 漏注未确证。
 
+**原生核心的 tRNA 与 MITOS2 对比（2026-10-27）**：MitoM-ML（MITOS2 tRNA 模型 + 220 个分支协方差模型，ARWEN/ARAGORN 作证据，学习的判别器与端点）＋ 它没调用的 tRNA 家族由 MiTFi 补 ＋ 脊椎动物取 MiTFi 端点。所用记录都没有参与训练（无脊椎动物：所在科未参与训练且不在 refseq89m；脊椎动物：模型从未见过；环节动物：只在 GenBank、不在 RefSeq 的记录）。召回率 / 精确率 / 两端与 NCBI 完全一致：
+
+| 记录 | MitoM | MITOS2 |
+|---|---|---|
+| 无脊椎动物 1,046 条 | 98.68 / 98.94 / 86.54 % | 96.59 / 98.79 / 84.63 % |
+| 其中从未用来调参的一半 568 条 | 98.88 / 98.93 / 88.76 % | 96.95 / 98.82 / 87.20 % |
+| 脊椎动物 188 条 | 98.43 / 98.55 / 92.71 % | 98.31 / 98.24 / 92.61 % |
+| 环节动物（纯 GenBank）501 条 | 99.35 / 98.95 / 83.52 % | 97.61 / 99.01 / 81.47 % |
+
+ARWEN、ARAGORN、tRNAscan-SE、MiTFi 参数（半全局、重叠、E 值、只按阈值、加分支模型）、多软件投票、重训判别器与端点均测过，见 `benchmark/trna_ml/README.md`。
+
 ## intron 注释 / Introns (mito_intron.py)
 
 **MitoZ 缺陷：MitoZ 无法注释 intron（group I / II）。** `run` / `annotate` 写完最终 GenBank 后自动调用 `mito_intron.py` 补上 intron，并整合进 MitoZ 结果（`--intron_fix auto`：找到 exonerate+blastp 时运行；`yes` 强制，`no` 关闭；`--intron_bin <env>/bin`）。

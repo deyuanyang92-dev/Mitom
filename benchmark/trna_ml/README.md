@@ -94,3 +94,36 @@ records, 6 in 188 vertebrates); without scikit-learn the first MitoM-ML call sto
 checks it, `install.sh` installs it); scikit-learn's OpenMP pool took every core (99 threads per record, load 160 on
 72 cores; `threadpool_limits` to `--threads`). Full MitoM runs give the same tRNAs as the replay of the dumps
 (`compare_runs.py`).
+
+MiTFi variants on the dev half (480 records): default recall 97.39 %, precision 98.82 %; fast pass E 0.1: 97.47 /
+98.71 %; with the clade CMs of the record's lineage given to MiTFi too: 98.18 / 96.14 %, 0.64 false tRNAs per
+record instead of 0.08 (MiTFi's top-hit-per-model selection was made for 22 models; the learned caller is what makes
+the clade models useful: MitoM-ML 97.86 / 98.97 % with the same models).
+
+Final comparison with MITOS2 (runmitos full mode, refseq89m), records every tool finished (11 MITOS2 runs over 1 h
+left out): recall / precision / both ends exact / false positives per record
+
+| set | MitoM (final) | MITOS2 | MiTFi as MitoM runs it |
+|---|---|---|---|
+| unseen families, all 1,046 | 98.68 / 98.94 / 86.54 % / 0.076 | 96.59 / 98.79 / 84.63 % / 0.101 | 97.91 / 98.85 / 85.95 % / 0.086 |
+| tuning half (478) | 98.44 / 98.95 / 83.86 % | 96.15 / 98.74 / 81.54 % | 97.39 / 98.82 / 82.84 % |
+| held-out half (568) | 98.88 / 98.93 / 88.76 % | 96.95 / 98.82 / 87.20 % | 98.35 / 98.88 / 88.54 % |
+
+By phylum (all 1,043 records every tool finished): Arthropoda 754 records 99.13 / 99.21 / 89.35 % vs MITOS2 96.81 /
+99.20 / 87.35 %; Mollusca 147 98.24 / 98.21 / 79.14 % vs 97.60 / 98.08 / 78.53 %; Cnidaria 57 92.86 / 87.50 / 81.63 %
+vs 90.82 / 68.99 / 79.59 % (MITOS2 0.65 false tRNAs per record); Nematoda 23 99.41 / 99.60 / 66.40 % vs 96.05 / 99.18
+/ 61.66 %; Platyhelminthes 22 99.38 / 99.38 / 83.47 % vs 94.21 / 99.56 / 77.69 %; Echinodermata 20 96.83 / 96.83 /
+80.95 % vs 96.15 / 96.80 / 79.37 %; Annelida 13 99.31 / 100 / 86.85 % vs 97.92 / 100 / 86.51 %; Acanthocephala 4
+43.18 / 86.36 / 14.77 % vs 45.45 / 88.89 / 13.64 % (MitoM-ML alone 17 %); Kinorhyncha 1 68.2 % vs 68.2 % recall
+(MitoM-ML alone 0 %). Full MitoM runs agree with the replay of the dumps (221 of 222 records the same tRNAs; 188 of
+188 vertebrates).
+
+| set | MitoM (final) | MITOS2 |
+|---|---|---|
+| 188 vertebrates (held out) | 98.43 / 98.55 / 92.71 % / 0.048 | 98.31 / 98.24 / 92.61 % / 0.080 |
+| 501 GenBank-only annelids (species unseen by MitoM-ML) | 99.35 / 98.95 / 83.52 % / 0.154 | 97.61 / 99.01 / 81.47 % / 0.132 |
+
+The annelids are the one set where MITOS2's precision is higher (by 0.06 points: 11 more calls without an NCBI tRNA
+in 501 records); 58 of MitoM's 77 such calls are at loci where MITOS2 calls a tRNA too, and several of the rest lie
+where NCBI's own protein genes run over a tRNA (OP537514.1 nad1 over trnI, MG428625.1 nd2 over trnS).
+
