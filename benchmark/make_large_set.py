@@ -5,11 +5,13 @@ The pool is a multi-record GenBank file of RefSeq Metazoa complete mitogenomes (
 Ranks come from NCBI Taxonomy (cached in <out>/taxonomy.json). Up to --per_order records per order are
 drawn at random (seeded); hybrids, multi-chromosome records and records without cox1 or CDS are skipped.
 --all: every usable record of any accession type (e.g. all GenBank records of one phylum); an INSDC record
-that an NC_ record of the pool copies is dropped (the NC_ is kept).
+that an NC_ record of the pool copies is dropped (the NC_ is kept). --accs FILE: exactly the usable records listed
+(one accession per line, version optional), e.g. the MitoM-ML tRNA test split.
 
 Writes <out>/gb/<acc>.gb, <out>/bare/<acc>/<acc>.gbf and the record list (mito_sample.py columns).
 
-Usage: python3 make_large_set.py --pool Metazoa.gb --out <root> --tsv sets/mito_bench_large.tsv [--per_order 3 | --all]
+Usage: python3 make_large_set.py --pool Metazoa.gb --out <root> --tsv sets/mito_bench_large.tsv [--per_order 3 | --all |
+       --accs FILE]
 """
 import argparse
 import csv
@@ -43,6 +45,7 @@ def main(argv=None) -> int:
     p.add_argument("--tsv", required=True, type=Path)
     p.add_argument("--per_order", type=int, default=3)
     p.add_argument("--all", action="store_true", help="all usable records, any accession type, no per-order cap")
+    p.add_argument("--accs", type=Path, help="only these accessions (one per line, version optional)")
     p.add_argument("--seed", type=int, default=20261022)
     a = p.parse_args(argv)
     today = datetime.date.today().isoformat()
@@ -52,7 +55,10 @@ def main(argv=None) -> int:
 
     cand = []                                         # (accession, taxid) of usable records
     copied = set()                                    # INSDC accessions an NC_ record of the pool copies
+    wanted = {x.split()[0].split(".")[0] for x in a.accs.read_text().splitlines() if x.strip()} if a.accs else None
     for r in SeqIO.parse(str(a.pool), "genbank"):
+        if wanted is not None and r.id.split(".")[0] not in wanted:
+            continue
         org = str(r.annotations.get("organism", ""))
         if r.id.startswith("NC_"):
             m = re.search(r"identical to ([A-Z]+\d+)", r.annotations.get("comment", ""))
@@ -74,8 +80,8 @@ def main(argv=None) -> int:
     by_order = defaultdict(list)
     for acc, t in cand:
         rk = tax.get(t, {})
-        if a.all:
-            if rk.get("phylum") and acc.split(".")[0] not in copied:
+        if a.all or wanted is not None:
+            if rk.get("phylum") and (wanted is not None or acc.split(".")[0] not in copied):
                 by_order[(rk["phylum"], rk.get("order", ""))].append(acc)
         elif rk.get("phylum") and rk.get("order"):
             by_order[(rk["phylum"], rk["order"])].append(acc)
@@ -84,7 +90,7 @@ def main(argv=None) -> int:
     for key in sorted(by_order):
         accs = sorted(by_order[key])
         rng.shuffle(accs)
-        for acc in accs if a.all else accs[:a.per_order]:
+        for acc in accs if a.all or wanted is not None else accs[:a.per_order]:
             chosen[acc] = key
     print(f"[large_set] {len(cand)} usable, {len(copied)} copied by NC_, {len(by_order)} orders, {len(chosen)} chosen", file=sys.stderr)
 

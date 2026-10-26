@@ -196,9 +196,11 @@ TOOLS = {"mitos2": mitos2, "arwen": arwen, "aragorn": aragorn, "trnascan": trnas
 
 
 def mitom_ready(b: Dict[str, str], refdir: Optional[str]) -> bool:
+    import importlib.util
     import trna_ml
     return bool(refdir and b.get("cmsearch") and b.get("cmalign") and (trna_ml.MODELS / "caller_train.tsv.gz").exists()
-                and ((trna_ml.MODELS / "clades.tar.gz").exists() or (trna_ml.MODELS / "clades").is_dir()))
+                and ((trna_ml.MODELS / "clades.tar.gz").exists() or (trna_ml.MODELS / "clades").is_dir())
+                and importlib.util.find_spec("sklearn") is not None)     # else the first call fails, not MiTFi taken
 
 
 def mitom(seq: str, lineage: str, code: int, b: Dict[str, str], a, preds: List[Pred], tmp: Path) -> List[Pred]:

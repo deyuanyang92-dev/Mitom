@@ -194,6 +194,27 @@ def _parse_tbl(tbl: Path, info, L: int, mode: str) -> List[Dict[str, Any]]:
     return rows
 
 
+def drop_wrap_duplicates(rows: List[Dict[str, Any]], L: int) -> List[Dict[str, Any]]:
+    """A gene at the sequence start is found twice in seq + seq[:WRAP]: at 1.. and, with its ends +-1 nt, again from
+    position L in the appended copy (a hit starting at L is kept as one across the origin). Of a hit across the origin
+    and a hit of the same model and strand inside the sequence that cover >= 50 % of the shorter once shifted by L,
+    the higher-scoring one stays (the one inside on a tie): NC_067910.1 trnM 1..64 was called twice, as 1..63 and as
+    14404..14468 (21 duplicate calls in 1,057 test records). A real gene across the origin outscores the truncated
+    hit of its part after the origin."""
+    drop = set()
+    for i, h in enumerate(rows):
+        if h["end"] <= L:
+            continue
+        for j, x in enumerate(rows):
+            if x["end"] > L or x["model"] != h["model"] or x["strand"] != h["strand"] or j in drop:
+                continue
+            o = min(x["end"], h["end"] - L) - max(x["start"], h["start"] - L) + 1
+            if o >= 0.5 * min(x["end"] - x["start"] + 1, h["end"] - h["start"] + 1):
+                drop.add(i if h["bits"] <= x["bits"] else j)
+                break
+    return [h for i, h in enumerate(rows) if i not in drop]
+
+
 def scan(seq: str, lineage: str, pan: Path, cdir: Optional[Path], cmsearch: str, cmalign: str, tmp: Path,
          cpu: int = 1, rescue: bool = True) -> List[Dict[str, Any]]:
     seq = seq.upper()
@@ -224,6 +245,7 @@ def scan(seq: str, lineage: str, pan: Path, cdir: Optional[Path], cmsearch: str,
             sh(base + [RESCUE_MODE, str(tmp / "miss.cm"), str(q)])
             seen = {(r["model"], r["start"], r["end"]) for r in rows}
             rows += [r for r in _parse_tbl(tbl, info, L, "max") if (r["model"], r["start"], r["end"]) not in seen]
+    rows = drop_wrap_duplicates(rows, L)
     by: Dict[str, List[int]] = {}
     for i, r in enumerate(rows):
         r["anticodon"] = ""
@@ -440,12 +462,14 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
             models: Path = MODELS, cpu: int = 1, thr: float = THRESHOLD, use_clades: bool = True) -> List[Dict[str, Any]]:
     """tRNA calls of one (circular) sequence: dicts with family (A..Y, L1/L2, S1/S2), aa, anticodon, start, end
     (1-based; end > len(seq) for a tRNA across the origin), strand, p (classifier probability), bound_p."""
-    clf, bclf = classifiers(models)
-    cdir = clade_dir(models) if use_clades else None
-    with tempfile.TemporaryDirectory() as td:
-        hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu)
-    calls = call(candidates(hits, ext_hits(ext_preds), code), clf, thr)
-    refine_ends(calls, seq.upper(), bclf)
+    from threadpoolctl import threadpool_limits      # installed with scikit-learn
+    with threadpool_limits(limits=max(1, cpu)):     # its OpenMP pool otherwise takes every core: 16 parallel records
+        clf, bclf = classifiers(models)              # ran 99 threads each (load 160 on 72 cores)
+        cdir = clade_dir(models) if use_clades else None
+        with tempfile.TemporaryDirectory() as td:
+            hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu)
+        calls = call(candidates(hits, ext_hits(ext_preds), code), clf, thr)
+        refine_ends(calls, seq.upper(), bclf)
     return [{"family": c["family"], "aa": c["family"][0], "anticodon": c["anticodon"], "start": c["start"],
              "end": c["end"], "strand": c["strand"], "p": round(c["p"], 4), "bound_p": round(c.get("bound_p", 0), 4)}
             for c in sorted(calls, key=lambda c: c["start"])]

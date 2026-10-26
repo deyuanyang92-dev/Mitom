@@ -210,6 +210,28 @@ def test_trna_ml_ls_family_by_anticodon():
     assert [x["family"] for x in c] == ["L2"]
 
 
+def test_trna_ml_wrap_duplicate_of_a_gene_at_the_sequence_start_is_dropped():
+    """seq + seq[:WRAP] finds a tRNA at 1..64 again from position L (ends +-1 nt): one hit is kept, the better one;
+    a real tRNA across the origin beats the truncated hit of its part after the origin (NC_067910.1 trnM twice)."""
+    L = 14404
+    h = lambda m, s, e, b, st=1: {"model": m, "start": s, "end": e, "strand": st, "bits": b}   # noqa: E731
+    rows = [h("trnM", 1, 64, 40.0), h("trnM", L, L + 64, 39.5), h("trnI", 14276, 14338, 50.0),
+            h("trnF", L - 14, L + 46, 45.0), h("trnF", 1, 46, 20.0), h("trnM", L, L + 64, 39.5, -1)]
+    out = trna_ml.drop_wrap_duplicates(rows, L)
+    assert [(r["model"], r["start"], r["strand"]) for r in out] == [("trnM", 1, 1), ("trnI", 14276, 1), ("trnF", L - 14, 1),
+                                                                     ("trnM", L, -1)]
+
+
+def test_mitom_ready_needs_scikit_learn(tmp_path, monkeypatch):
+    """Without scikit-learn the first MitoM-ML call failed (the whole core run stopped) instead of MiTFi taking over."""
+    import importlib.util
+    real = importlib.util.find_spec
+    if real("sklearn") is not None and (trna_ml.MODELS / "caller_train.tsv.gz").exists():
+        assert mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))     # the same call with scikit-learn
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name, *a: None if name == "sklearn" else real(name, *a))
+    assert not mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))
+
+
 def test_select_auto_falls_back_without_models(tmp_path, monkeypatch):
     """--select auto without MitoM-ML models = the previous default (mitos2_or_support), not an error."""
     monkeypatch.setattr(trna_ml, "MODELS", tmp_path / "none")

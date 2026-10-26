@@ -2,9 +2,10 @@
 # install.sh - one command installs everything the mitogenome annotation workflow needs:
 #   the conda environment mitotools (BLAST, exonerate, Infernal, HMMER, Java for MiTFi, table2asn, ARAGORN,
 #   tRNAscan-SE, MAFFT) - all the native core (mito_core.py, the default) and the MitoM steps use - the MITOS2
-#   reference data refseq89m (Zenodo 4284483, md5 checked: protein sets, rRNA and tRNA models), Biopython for the
-#   system python3, the `mitom` command (~/.local/bin/mitom), then mito_env.py doctor --write-config so no tool path
-#   has to be typed. `--envs "mitotools mitoz mitos"` also installs MitoZ 3.6 and MITOS2 2.1.10 for --core hybrid.
+#   reference data refseq89m (Zenodo 4284483, md5 checked: protein sets, rRNA and tRNA models), Biopython and
+#   scikit-learn (MitoM-ML tRNAs) for the system python3, the `mitom` command (~/.local/bin/mitom), then
+#   mito_env.py doctor --write-config so no tool path has to be typed. `--envs "mitotools mitoz mitos"` also
+#   installs MitoZ 3.6 and MITOS2 2.1.10 for --core hybrid.
 # Existing environments are kept (--force recreates them). Safe to run again.
 #
 # Platforms (checked with mamba solves, 2026-10-20):
@@ -112,6 +113,12 @@ if ! python3 -c "import Bio" 2>/dev/null; then
   say "installing Biopython for $(command -v python3)"
   python3 -m pip install --user biopython 2>/dev/null || python3 -m pip install --user --break-system-packages biopython \
     || echo "could not install Biopython; run the scripts with: $SOLVER run -n mitotools python3 ..." >&2
+fi
+# scikit-learn for the MitoM-ML tRNA caller (trna_ml.py; without it mito_core falls back to MiTFi)
+if ! python3 -c "import sklearn" 2>/dev/null; then
+  say "installing scikit-learn for $(command -v python3)"
+  python3 -m pip install --user scikit-learn 2>/dev/null || python3 -m pip install --user --break-system-packages scikit-learn \
+    || echo "could not install scikit-learn: tRNAs will be annotated by MiTFi (the MITOS2 method)" >&2
 fi
 
 # ── the mitom command ────────────────────────────────────────────────────────

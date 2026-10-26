@@ -255,3 +255,33 @@ def test_rrna_second_copy_added_when_it_scores_like_the_gene(tmp_path, monkeypat
     feats = mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, {}, tmp_path, logging.getLogger("t"), phylum="Chordata",
                               rrna_lib=tmp_path)
     assert [(f.name, f.start, f.end) for f in feats] == [("rrnS", 100, 1000), ("rrnS", 9000, 9900), ("rrnL", 100, 1000)]
+
+
+def test_trna_rescue_adds_mitfi_calls_of_families_ml_did_not_call():
+    """MitoM-ML misses weak tRNAs of divergent genomes (acanthocephalans: 17 % recall); MiTFi's calls of the families it
+    did not call are added, lowest E first, one per family, when they overlap no call by more than 10 nt."""
+    t = lambda name, s, e, st=1, ev="1.0e-05": mc.Feature("tRNA", name, s, e, st, f"MiTFi {name}.cm bits 30.0 E {ev}")  # noqa: E731
+    ml = [mc.Feature("tRNA", "trnA", 100, 170, 1, "MitoM-ML p 0.9"), mc.Feature("tRNA", "trnC", 300, 370, -1, "MitoM-ML p 0.8"),
+          mc.Feature("tRNA", "trnW", 990, 1050, 1, "MitoM-ML p 0.9")]          # across the origin of a 1,000-nt record
+    mitfi = [t("trnA", 105, 175),                         # family already called
+             t("trnD", 800, 870, ev="5.0e-01"), t("trnD", 500, 570, ev="5.0e-02"),   # one per family, lowest E first
+             t("trnE", 160, 230, -1),                     # 10 nt on trnA (other strand): allowed
+             t("trnF", 150, 220),                         # 20 nt on trnA: rejected
+             t("trnY", 0, 40)]                            # 40 nt on trnW across the origin: rejected
+    out = mc.rescue_trnas(ml, mitfi, 1000)
+    assert [(f.name, f.start) for f in out[3:]] == [("trnE", 160), ("trnD", 500)]
+    assert out[:3] == ml
+
+
+def test_vertebrate_trnas_take_mitfi_ends_where_mitfi_calls_the_same_trna():
+    """The learned ends never saw a vertebrate; MiTFi's are NCBI's more often there (held out: 91.3 -> 92.7 % exact)."""
+    ml = [mc.Feature("tRNA", "trnF", 100, 170, 1, "MitoM-ML p 0.9", anticodon="gaa"),
+          mc.Feature("tRNA", "trnV", 300, 370, 1, "MitoM-ML p 0.9"), mc.Feature("tRNA", "trnL2", 500, 575, -1, "MitoM-ML p 0.9")]
+    mitfi = [mc.Feature("tRNA", "trnF", 99, 169, 1, "MiTFi trnF.cm bits 50.0 E 1.0e-10"),
+             mc.Feature("tRNA", "trnV", 300, 370, -1, "MiTFi trnV.cm bits 50.0 E 1.0e-10"),     # other strand: not the same
+             mc.Feature("tRNA", "trnL1", 501, 575, -1, "MiTFi trnL1.cm bits 50.0 E 1.0e-10")]   # other name: not the same
+    out = mc.mitfi_ends(ml, mitfi, 16000)
+    assert [(f.name, f.start, f.end) for f in out] == [("trnF", 99, 169), ("trnV", 300, 370), ("trnL2", 500, 575)]
+    assert out[0].anticodon == "gaa" and out[0].note.endswith("ends by MiTFi") and out[1].note == "MitoM-ML p 0.9"
+    assert mc.vertebrate("Eukaryota;Metazoa;Chordata;Craniata;Vertebrata;Euteleostomi") and mc.vertebrate("Metazoa;Chordata")
+    assert not mc.vertebrate("Eukaryota;Metazoa;Chordata;Tunicata;Ascidiacea") and not mc.vertebrate("Metazoa;Annelida")

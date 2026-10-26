@@ -1,0 +1,23 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+NC_002629.1		Arthropoda	Chilopoda	Lithobiomorpha	Lithobiidae	Lithobius	Lithobius forficatus	5		circular	15695	B	unknown	03-APR-2023		Arthropoda	dev	2026-10-27
+NC_011574.1		Arthropoda	Arachnida	Sarcoptiformes	Steganacaridae	Steganacarus	Steganacarus magnus	5		circular	13818	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_010526.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus urticae	5		circular	13103	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_012571.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Panonychus	Panonychus ulmi	5		circular	13115	B	unknown	03-APR-2023		Arthropoda	dev	2026-10-27
+NC_014347.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Panonychus	Panonychus citri	5		circular	13075	B	unknown	03-APR-2023		Arthropoda	dev	2026-10-27
+NC_014399.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus cinnabarinus	5		circular	13092	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_024676.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus kanzawai	5		circular	13091	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_024677.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus ludeni	5		circular	13064	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_024678.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus malaysiensis	5		circular	13049	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_024679.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus phaselus	5		circular	13084	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_024680.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus pueraricola	5		circular	13084	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_024874.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Tetranychus	Tetranychus truncatus	5		circular	13089	B	unknown	03-APR-2023		Arthropoda	test	2026-10-27
+NC_032381.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Amphitetranychus	Amphitetranychus viennensis	5		circular	13085	B	unknown	03-APR-2023		Arthropoda	dev	2026-10-27
+NC_082149.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Stigmaeopsis	Stigmaeopsis nanjingensis	5		circular	13281	B	unknown	29-SEP-2023		Arthropoda	test	2026-10-27
+NC_082150.1		Arthropoda	Arachnida	Trombidiformes	Tetranychidae	Stigmaeopsis	Stigmaeopsis continentalis	5		circular	13285	B	unknown	29-SEP-2023		Arthropoda	test	2026-10-27
+NC_008046.1		Nematoda	Enoplea	Mermithida	Mermithidae	Thaumamermis	Thaumamermis cosgrovei	5		circular	20013	B	unknown	03-APR-2023		Nematoda	test	2026-10-27
+NC_008047.1		Nematoda	Enoplea	Mermithida	Mermithidae	Diximermis	Diximermis spiculatus	5		circular	18030	B	unknown	03-APR-2023		Nematoda	dev	2026-10-27
+NC_008231.1		Nematoda	Enoplea	Mermithida	Mermithidae	Agamermis	Agamermis sp. BH-2006	5		linear	16561	B	unknown	03-APR-2023	linear	Nematoda	dev	2026-10-27
+NC_008640.1		Nematoda	Enoplea	Mermithida	Mermithidae	Romanomermis	Romanomermis culicivorax	5		circular	26194	B	unknown	03-APR-2023		Nematoda	dev	2026-10-27
+NC_008692.1		Nematoda	Enoplea	Mermithida	Mermithidae	Romanomermis	Romanomermis nielseni	5		circular	15546	B	unknown	03-APR-2023		Nematoda	dev	2026-10-27
+NC_008693.1		Nematoda	Enoplea	Mermithida	Mermithidae	Romanomermis	Romanomermis iyengari	5		circular	18919	B	unknown	03-APR-2023		Nematoda	dev	2026-10-27
+NC_008828.1		Nematoda	Enoplea	Mermithida	Mermithidae	Hexamermis	Hexamermis agrotis	5		circular	24606	B	unknown	03-APR-2023		Nematoda	test	2026-10-27
