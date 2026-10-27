@@ -1,0 +1,6 @@
+# table2asn ERROR per set, MitoM full pipeline v30 (mitom_native), 2026-10-27
+large	mitom_native	records 1050	with ERROR 0	{}
+annelida	mitom_native	records 669	with ERROR 0	{}
+anchors	mitom_native	records 13	with ERROR 0	{}
+vert	mitom_native	records 188	with ERROR 0	{}
+trna	mitom_native	records 577	with ERROR 0	{}

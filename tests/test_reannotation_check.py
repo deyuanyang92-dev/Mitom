@@ -251,3 +251,23 @@ def test_join_across_the_origin_is_an_interior_feature():
     assert bm.edge_gene_truncated(cut, seq, L, 5) is True                                 # 296 nt: not a codon multiple
     t = SeqFeature(FeatureLocation(L - 30, L, 1) + FeatureLocation(0, 40, 1), type="tRNA", qualifiers={"gene": ["trnX"]})
     assert bm.edge_gene_truncated(t, seq, L, 5) is False                                  # 70 nt tRNA
+
+
+def test_linear_record_is_not_reannotated_for_cut_ends_or_missing_genes(tmp_path):
+    """A linear (partial) record is only turned to the plus strand, never rotated: genes cut by its real ends and genes
+    absent from it cannot be fixed by a second round (PP998669.1: trnM at the end, ND4/ND4L/ND5 absent; round 2 only
+    added a false tRNA). Feature sequences that differ after the turn still trigger it."""
+    r = genome(names=[n for n in NAMES if n != "ND5"], tail_gene=True)
+    r.annotations["topology"] = "linear"
+    p1, p2 = tmp_path / "r1.gbf", tmp_path / "reor.gbf"
+    SeqIO.write(r, str(p1), "genbank")
+    rc = r.reverse_complement(id=r.id, name=r.name, description=r.description, annotations=True, features=True)
+    rc.annotations["topology"] = "linear"
+    SeqIO.write(rc, str(p2), "genbank")
+    assert bm.reorient_check(p1, p2) == []
+    r.annotations["topology"] = "circular"                    # the same record, circular: both checks fire
+    SeqIO.write(r, str(p1), "genbank")
+    rc.annotations["topology"] = "circular"
+    SeqIO.write(rc, str(p2), "genbank")
+    probs = bm.reorient_check(p1, p2)
+    assert any("look cut" in x for x in probs) and any("missing" in x for x in probs)

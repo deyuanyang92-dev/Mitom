@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_core  # noqa: E402
 import mito_trna  # noqa: E402
 import trna_ml  # noqa: E402
-from rescue_sim import mitfi_calls, rescue_mitfi  # noqa: E402
+from rescue_sim import mitfi_calls, overlap, rescue_mitfi  # noqa: E402
 from Bio import SeqIO  # noqa: E402
 
 
@@ -33,6 +33,12 @@ def main(argv=None) -> int:
     p.add_argument("--all", action="store_true", help="replay every record (hits as trna_ml.scan returns them now)")
     p.add_argument("--thr", type=float, default=None, help="caller threshold (default trna_ml.THRESHOLD)")
     p.add_argument("--rescue_e", type=float, default=0.1, help="E cut-off of the MiTFi calls that may be added")
+    p.add_argument("--rescue_e_full", type=float, default=None,
+                   help="E cut-off of the MiTFi rescue when MitoM-ML called >= 20 families (default = --rescue_e)")
+    p.add_argument("--second_p", type=float, default=0.0,
+                   help="a weaker second call of a family already called is dropped when its p is below this")
+    p.add_argument("--support_p", type=float, default=0.0,
+                   help="MitoM-ML calls with p below this are kept only when MiTFi calls the same tRNA (0 = off)")
     p.add_argument("--mitfi_runs", default="trna_mitfi", help="runs/<this>/<acc>/final.gbf = MiTFi calls for the rescue")
     a = p.parse_args(argv)
     drop = set(a.drop.split(","))
@@ -54,9 +60,21 @@ def main(argv=None) -> int:
             trna_ml.refine_ends(calls, genome, bclf)
         else:
             calls = d["calls"]
+        if a.second_p:
+            top = {}
+            for c in calls:
+                top[c["family"]] = max(top.get(c["family"], 0), c.get("p", 1))
+            calls = [c for c in calls if c.get("p", 1) >= top[c["family"]] or c.get("p", 1) >= a.second_p]
         mg = a.root / "runs" / a.mitfi_runs / acc / "final.gbf"
         if mg.exists():
-            calls = rescue_mitfi(calls, mitfi_calls(mg, n), a.rescue_e, 10, n)
+            mf = mitfi_calls(mg, n)
+            if a.support_p:
+                calls = [c for c in calls if c.get("p", 1) >= a.support_p or any(
+                    x["family"] == c["family"] and x["strand"] == c["strand"] and
+                    overlap(c, x, n) >= 0.5 * min(c["end"] - c["start"] + 1, x["end"] - x["start"] + 1) for x in mf)]
+            n_fam = len({c["family"] for c in calls})
+            e_cut = a.rescue_e if a.rescue_e_full is None or n_fam < 20 else a.rescue_e_full
+            calls = rescue_mitfi(calls, mf, e_cut, 10, n)
         feats = [mito_core.Feature("tRNA", mito_core.trna_name(c["family"], c.get("anticodon", ""), ""), c["start"] - 1,
                                    c["end"], c["strand"], c.get("src", "MitoM-ML"), anticodon=c.get("anticodon", ""))
                  for c in sorted(calls, key=lambda c: c["start"]) if d["circular"] or c["end"] <= n]

@@ -12,7 +12,9 @@ to automatic annotation (e.g. MitoZ / MITOS output):
       (move upstream, at most --max_start_shift codons; only when the annotated start codon is
       not a valid start, or for --aggressive_start_genes; annelids: nad5 and nad4L; or, unless
       --no_upstream_atg, to the most upstream in-frame ATG when the start codon is not ATG). A start that
-      overlaps the preceding gene is moved downstream only when a start codon lies within 15 nt.
+      overlaps the preceding gene is moved downstream only when a start codon lies within 15 nt. A start placed
+      upstream of a whole same-strand tRNA (in the gene's first third) moves to the first in-frame start codon after
+      it (table2asn BadCDScomponentOverlapTRNA: unionid nad1 across trnL2).
   P2  Two PCGs on the same strand and in the same frame cannot overlap (criterion ii) - reported.
   D1  A protein gene annotated twice at different places (e.g. MitoZ on a duplicated region): only one
       copy is kept - the complete one (start + stop, no internal stop), the longer, then the first in
@@ -31,10 +33,23 @@ to automatic annotation (e.g. MitoZ / MITOS output):
       the protein homology, e.g. cox1 before cox2), else the T / TA right before the next gene
       (e.g. nad6 before cob) is used. An end that stops short of the first complete stop with
       nothing annotated in between (core homology lost at the C-terminus, 100-500 nt in divergent
-      phyla) is extended to that stop (at most 600 nt).
+      phyla) is extended to that stop (at most 600 nt). A gene that would contain a whole same-strand tRNA and has
+      no T / TA before it ends right before the tRNA (3'-partial).
   P7  start and end in different frames (internal stops): replaced by the longer ORF - annotated start
       to its first stop, or annotated stop with the in-frame start nearest the annotated start - when
       it keeps >= half the length (metazoa benchmark 2026-10: 14 CDS with internal stops, NCBI 0).
+  P8  start and end in one frame with internal stops (a start placed upstream across a stop, an end past the gene's
+      stop): the longer of start .. first stop and first start codon after the last internal stop .. end (>= half).
+  P9  one untranslated extra nucleotide (bird / turtle nad3 at position 174, Mindell et al. 1998; rarely other genes):
+      join(start..p-1,p+1..end) as NCBI writes it, with its note, when no single-frame repair keeps 85 % of the gene
+      and a start / stop codon within 30 nt of the annotated ends make an open frame over one skipped nucleotide.
+  P10 a CDS that still has internal stops is written /pseudo (gene and CDS, not translated; table2asn InternalStop).
+  O2  a join across the origin of a circular record written by the core with <= 300 nt past the origin is cut back to
+      the sequence end; P1 / P3 / O1 place its end again (annelid nad2 before cox1 ended without a stop: NoStop).
+  T1  a weak tRNA call (MiTFi E > 1e-3) lying wholly inside a same-strand protein gene is removed when it is a second
+      copy or lies in the gene's middle third; in its first / last third P1 / P3 move the gene end instead.
+  C1  a tRNA still lying wholly inside a same-strand protein gene: the gene is removed when it has no start or stop
+      codon or is /pseudo (a false call), else the conflict is reported.
   O1  circular record: a CDS that ends without a stop <= 2 nt before the transcript end, or further when its
       open frame runs to the end with nothing annotated in between (the core ends at the last aligned codon), is
       continued across the origin to its first in-frame stop (join; genes cut by the cox1-first rotation); at most
@@ -48,6 +63,9 @@ to automatic annotation (e.g. MitoZ / MITOS output):
       nt, the GenBank convention; --rrna_bounds fill). --rrna_bounds trim only removes overlaps.
   R3  rRNA names standardised (rrnS / rrnL; 12S / 16S ribosomal RNA); rRNA with a large CDS
       overlap is reported.
+  N1  NCBI gene names and products (COX1 ... ND4L, rrnS / rrnL, trnX with L1 / L2, S1 / S2 by anticodon); the
+      notes the annotation core writes for itself (reference protein and score, model columns, MitoM-ML / MiTFi
+      scores) are removed, so the GenBank and the NCBI submission files carry only biological notes.
 tRNA boundaries are kept as annotated (criterion v). Every change is listed in
 curation_report.tsv with the rule, old and new coordinates and the reason.
 
@@ -119,6 +137,23 @@ MAX_PCG_OVERLAP = 30        # P3: a complete stop may reach this far into the ne
                             # records: cox1-cox2, nad6-cob end with T/TA instead; atp8-atp6 / nad4L-nad4 overlap by design)
 BICISTRONIC = {("ATP8", "ATP6"), ("ND4L", "ND4")}
 POLYA_NOTE = "TAA stop codon is completed by the addition of 3' A residues to the mRNA"
+FRAMESHIFT_WINDOW = 30      # P9: nt around the annotated start / end searched for the start / stop codon of the join
+FRAMESHIFT_MAX_TRIM = 0.85  # P9 only when no single-frame repair (P7 / P8) keeps this fraction of the CDS (2026-10 runs, 162 CDS
+                            # with internal stops: the 107 bird / turtle nad3 and 5 other NCBI joins all lie below, one at
+                            # 0.81 (grebe nad1); start / end errors NCBI annotates as one interval lie at 0.82-0.99, and
+                            # those at 0.82-0.84 have no join)
+ND3_EXTRA = 174             # P9: CDS position of the untranslated nucleotide of bird / turtle nad3 (NCBI: 174 in 66, 175 in
+                            # 36 of 107 records; Mindell et al. 1998)
+ND3_NOTE = "frameshift mechanism unknown (Mindell et al., 1998, Mol. Biol. Evol., 15:1568-1571)"   # NCBI's nad3 note
+FRAMESHIFT_NOTE = "frameshift: 1 nt not translated (extra nucleotide or sequencing error)"
+STOP_TRIM_MIN = 0.5         # P8: a CDS with internal stops is trimmed when the open part keeps this fraction (as P7)
+PSEUDO_NOTE = "internal stop codon(s): not translated"
+WEAK_TRNA_E = 1e-3          # T1: a MiTFi call with a larger E (or a second copy) lying inside a same-strand protein gene is
+                            # dropped when it is a second copy or lies in the gene's middle third (2026-10 runs: 7 of 9 such calls absent from
+                            # NCBI; the real ones lie at a gene end, where the gene end is moved instead)
+# N1: notes the annotation core writes for itself (reference protein and score, model columns, MitoM-ML / MiTFi
+# scores) - kept in the core's files, not in the GenBank / NCBI submission
+INTERNAL_NOTE = re.compile(r"^(ref \S+ score \d|MitoM-ML p [\d.]|MiTFi \S+ bits [\d.]|nhmmer \S+ bits \d|cmsearch bits \d)")
 
 
 def key(name: str) -> str:
@@ -168,6 +203,9 @@ class Curator:
         self.starts, self.stops = set(t.start_codons), set(t.stop_codons)
         self.rows: List[Dict[str, str]] = []
         self.noted: set = set()
+        self.weak: set = set()          # id() of tRNAs whose core note marks a weak call (T1), read before N1 drops the notes
+        self.copies: set = set()        # ... and of those that are a second copy of a family
+        self.joined: set = set()        # id() of CDS joined over an untranslated nucleotide (P9)
         genes = getattr(a, "aggressive_start_genes", None)
         self.aggressive_genes = {PCG_SYN.get(key(x), x.upper()) for x in genes.split(",") if x} if genes else set()
 
@@ -204,6 +242,17 @@ class Curator:
                 if f.location.strand == -1 and ge > e:
                     best = max(best, self.L + 1 - gs)      # in reverse coordinates
         return best
+
+    def enclosed_trnas(self, f: SeqFeature, a: int, b: int) -> List[Tuple[int, int]]:
+        """Transcript spans of the same-strand tRNAs lying wholly inside a..b (table2asn SEQ_FEAT.BadCDScomponentOverlapTRNA;
+        T1 has dropped the weak ones in the middle of a gene)."""
+        out = []
+        for g in self.others(f, types=("tRNA",), same_strand=True):
+            for gs, ge in spans(g):
+                ts, te = (gs, ge) if f.location.strand == 1 else (self.L + 1 - ge, self.L + 1 - gs)
+                if a <= ts and te <= b:
+                    out.append((ts, te))
+        return sorted(out)
 
     def downstream_gene_start(self, f: SeqFeature) -> Optional[int]:
         """Transcript position where the next same-strand protein gene begins, ignoring the bicistronic
@@ -274,7 +323,17 @@ class Curator:
         # P1: start nearest the preceding gene without overlapping it
         up = self.upstream_end(f)
         new_a = a
-        if a <= up:                                    # start overlaps preceding feature -> move downstream (if near)
+        why_start = "start codon nearest the preceding gene without overlap"
+        enc = [te for ts, te in self.enclosed_trnas(f, a, b) if ts - a < (b - a + 1) / 3]
+        if enc:
+            # a whole tRNA in the 5' third of the gene: the start was placed upstream across it (unionid nad1 across trnL2
+            # into trnV, NC_085464.1; table2asn SEQ_FEAT.BadCDScomponentOverlapTRNA). The first in-frame start codon after
+            # it within 20 codons (NCBI: 0-2 nt after the tRNA in 13 of 14 such records), else the first in-frame codon
+            # after it (P5 then marks the gene 'start codon not determined')
+            c0 = a + -(-(max(enc) + 1 - a) // 3) * 3
+            new_a = next((c for c in range(c0, min(b - 30, c0 + 60) + 1, 3) if s[c - 1:c + 2] in self.starts), c0)
+            why_start = "start moved past the whole tRNA it contained"
+        elif a <= up:                                  # start overlaps preceding feature -> move downstream (if near)
             for c in range(a, min(b - 30, a + MAX_START_MOVE) + 1, 3):
                 if c > up and s[c - 1:c + 2] in self.starts:
                     new_a = c
@@ -369,7 +428,12 @@ class Curator:
                         (f" ({gap:+d} nt spacer)" if gap else "")
                     break
             else:
-                if not self.overlap_fallback(first_stop, trna):
+                if not self.overlap_fallback(first_stop, trna) and any(ts == trna and b - te < (b - new_a + 1) / 3
+                                                                       for ts, te in self.enclosed_trnas(f, new_a, b)):
+                    # the gene would contain the whole tRNA (table2asn SEQ_FEAT.BadCDScomponentOverlapTRNA): the mRNA is cut
+                    # at the tRNA, the gene ends right before it without a stop codon (P6: 3'-partial)
+                    new_b, why_end = trna - 1, "ends before the whole tRNA it contained (no stop codon before it)"
+                elif not self.overlap_fallback(first_stop, trna):
                     self.log(f, "P4", old, old, "no complete or abbreviated stop before the downstream tRNA - check manually")
                 else:
                     new_b, why_end = first_stop, f"first complete stop, {first_stop - trna + 1} nt into the downstream tRNA (no abbreviated stop before it)"
@@ -425,7 +489,7 @@ class Curator:
             if g is not None and simple(g):
                 set_span(g, gs, ge)
             if new_a != a:
-                self.log(f, "P1", old, (gs, ge), "start codon nearest the preceding gene without overlap")
+                self.log(f, "P1", old, (gs, ge), why_start)
             if new_b != b:
                 self.log(f, "P3", old, (gs, ge), why_end)
         else:
@@ -435,7 +499,9 @@ class Curator:
         tail = len(nt) % 3
         for k in ("transl_except",):
             f.qualifiers.pop(k, None)
-        if tail and nt[-tail:] in ("T", "TA"):
+        loc = f.location                               # an end left 3'-partial (cut by a linear sequence end) may continue
+        cut = isinstance(loc.end, AfterPosition) if loc.strand == 1 else isinstance(loc.start, BeforePosition)
+        if tail and nt[-tail:] in ("T", "TA") and not cut:   # (table2asn PartialProblemHasStop with a T / TA stop)
             gs, ge = span(f)
             pos = (f"{ge - tail + 1}..{ge}" if tail > 1 else f"{ge}") if f.location.strand == 1 else \
                 (f"complement({gs}..{gs + tail - 1})" if tail > 1 else f"complement({gs})")
@@ -465,9 +531,11 @@ class Curator:
         covered = any(gs <= first <= ge for g in self.others(f) for gs, ge in spans(g))
         ss = s + s[:MAX_ORIGIN_OVERLAP if covered else MAX_ORIGIN_EXT]
         end = next((c + 3 for c in range(b - (b - a + 1) % 3, len(ss) - 2, 3) if ss[c:c + 3] in self.stops), None)
-        if end is None or end <= self.L:
+        if end is not None and end <= self.L or end is None and not covered:
             return
-        if covered and end - self.L > MAX_FEATURE_OVERLAP or end - self.L <= 2:
+        if end is None or covered and end - self.L > MAX_FEATURE_OVERLAP or end - self.L <= 2:
+            # (no stop within MAX_ORIGIN_OVERLAP nt past the origin, a gene starting there: annelid nad2 before cox1 in
+            # the cox1-first frame, KT429007.1 / NC_012618.1 / EF494507.1 - NCBI ends it with T at the sequence end)
             # (a stop completed by only 1-2 nt past the origin: NCBI ends such genes with T / TA at the sequence end,
             # 11 of 12 cases in 255 RefSeq records; NC_023772.1 cob)
             # the stop lies well inside the feature at the origin: an in-frame T / TA ending at the sequence end is the
@@ -487,8 +555,11 @@ class Curator:
                     f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n] \
                         + [POLYA_NOTE]
                     self.log(f, "O1", old, (gs, ge), f"abbreviated stop {('T', 'TA')[tail - 1]} at the sequence end "
-                             f"(the first complete stop lies {end - self.L} nt inside the gene at the origin)")
+                             + (f"(the first complete stop lies {end - self.L} nt inside the gene at the origin)" if end
+                                else f"(no stop within {MAX_ORIGIN_OVERLAP} nt past the origin, a gene starts there)"))
                     return
+            if end is None:
+                return
         old, k = span(f), end - self.L
         if f.location.strand == 1:
             f.location = CompoundLocation([FeatureLocation(a - 1, self.L, 1), FeatureLocation(0, k, 1)])
@@ -500,6 +571,25 @@ class Curator:
             g.location = f.location
         f.qualifiers.pop("translation", None)
         self.log(f, "O1", old, old, f"continued {k} nt across the origin to the first in-frame stop codon")
+
+    def origin_cut(self, f: SeqFeature) -> None:
+        """O2: a CDS the core wrote as a join across the origin of a circular record, with a short part past the origin
+        (the gene before cox1 in MitoM's cox1-first frame: annelid nad2 running 8-23 nt into cox1 without a stop codon,
+        table2asn NoStop in 14 records of the 2026-10 runs), is cut back to its part before the origin; P1 / P3 / O1 then
+        place its end like that of any gene cut at the sequence end (T / TA at the end, or the first stop past it)."""
+        origin = self.origin_span(f)
+        if origin is None:
+            return
+        head, tail = f.location.parts                  # transcript order: the part before the origin first
+        if len(tail) > MAX_ORIGIN_EXT or len(head) < 60:
+            return
+        f.location = FeatureLocation(head.start, head.end, head.strand)
+        g = gene_feature(self.rec, f)
+        if g is not None:
+            g.location = f.location
+        f.qualifiers.pop("translation", None)
+        self.log(f, "O2", origin, span(f), f"the core's join across the origin cut back to the sequence end ({len(tail)} nt "
+                 "past it); the end is placed again by P3 / O1")
 
     def frame_repair(self, f: SeqFeature) -> None:
         """P7: a CDS whose start and end are in different frames (internal stops) is replaced by the longer of two
@@ -541,10 +631,185 @@ class Curator:
         self.log(f, "P7", old, (gs, ge), "start and end in different frames (internal stops): "
                  + ("start kept, first in-frame stop" if na == a else "stop kept, in-frame start nearest the old start"))
 
-    def pcg_check(self, f: SeqFeature) -> None:
-        """P4: report problems that rules cannot fix (no change is made)."""
+    def internal_stops(self, s: str, a: int, b: int) -> List[int]:
+        """Transcript positions of the in-frame stop codons of a..b before its last codon (frame of a)."""
+        last = b - 2 if (b - a + 1) % 3 == 0 else b + 1    # the last complete codon may be the stop
+        return [c for c in range(a, last - 2, 3) if s[c - 1:c + 2] in self.stops]
+
+    def single_frame_repairs(self, s: str, a: int, b: int) -> List[Tuple[int, int]]:
+        """Open reading frames P7 / P8 would keep: the annotated start to its first in-frame stop; with start and end in
+        one frame the first start codon after the last internal stop to the annotated end; with different frames
+        (annotated end a complete stop) the in-frame start nearest the annotated start in the end's frame (P7)."""
+        st = self.internal_stops(s, a, b)
+        out = [(a, st[0] + 2)] if st else []
+        if (b - a + 1) % 3 == 0 and st:
+            c = next((c for c in range(st[-1] + 3, b - 2, 3) if s[c - 1:c + 2] in self.starts), None)
+            if c is not None:
+                out.append((c, b))
+        elif (b - a + 1) % 3 and s[b - 3:b] in self.stops:
+            best, c = None, b - 5
+            while c >= max(1, a - 3 * self.a.max_start_shift) and s[c - 1:c + 2] not in self.stops:
+                if s[c - 1:c + 2] in self.starts and (best is None or abs(c - a) < abs(best - a)):
+                    best = c
+                c -= 3
+            if best is not None:
+                out.append((best, b))
+        return out
+
+    def frameshift(self, f: SeqFeature) -> None:
+        """P9: a gene with one untranslated extra nucleotide - bird / turtle nad3 at position 174 (Mindell et al. 1998),
+        sometimes other genes (NC_010095.1 grebe nad1, NC_017607.1 turtle nad4, NC_010769.1 sponge cox3 / nad6) - is
+        annotated by NCBI as join(start..p-1,p+1..end): a single-frame CDS keeps internal stops (table2asn InternalStop,
+        109 nad3 in the 2026-10 runs) or loses half the gene. Applied when no single-frame repair (P7 / P8) keeps
+        FRAMESHIFT_MAX_TRIM of the CDS and a start codon and a stop codon within FRAMESHIFT_WINDOW nt of the annotated
+        ends make an open frame over one skipped nucleotide (both parts >= 30 nt). The ends nearest the annotated ones are
+        taken; the skip at nad3 position ND3_EXTRA, else the middle of the possible positions. 2026-10 runs: 97 of 107
+        nad3 both ends as NCBI, 9 more 1 nt off before --abbreviated_overlap (now applied here as in P3)."""
         if not simple(f):
-            self.log(f, "P4", span(f), span(f), "multi-interval CDS (intron / origin) - not curated")
+            return
+        s = self.tseq(f)
+        a, b = self.tx(f)
+        if not self.internal_stops(s, a, b):
+            return
+        n = b - a + 1
+        if any(nb - na + 1 >= FRAMESHIFT_MAX_TRIM * n for na, nb in self.single_frame_repairs(s, a, b)):
+            return
+        name = PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "")
+        L = len(s)
+        starts = [c for c in range(max(1, a - FRAMESHIFT_WINDOW), min(L - 2, a + FRAMESHIFT_WINDOW) + 1)
+                  if s[c - 1:c + 2] in self.starts]
+        ends = [e for e in range(max(3, b - FRAMESHIFT_WINDOW), min(L, b + FRAMESHIFT_WINDOW) + 1) if s[e - 3:e] in self.stops]
+        best = None
+        for S in starts:
+            q5 = next((c for c in range(S + 3, L - 1, 3) if s[c - 1:c + 2] in self.stops), None)   # first stop, S's frame
+            if q5 is None:
+                continue
+            for E in ends:
+                if (E - S) % 3 or E - S < 120:
+                    continue
+                # codons after the skipped nucleotide p are read in E's frame; the 5' part in S's frame up to p
+                l3 = next((c for c in range(E - 5, S, -3) if s[c - 1:c + 2] in self.stops), S)   # last internal stop, E's frame
+                ps = []
+                for p in range(max(l3, S + 30), min(q5 + 2, E - 30) + 1):
+                    k = (p - S) % 3                    # codon broken by the skip: (p-1, p+1, p+2) or (p-2, p-1, p+1)
+                    mixed = "" if k == 0 else (s[p - 2] + s[p:p + 2] if k == 1 else s[p - 3:p - 1] + s[p])
+                    if mixed not in self.stops:
+                        ps.append(p)
+                if not ps:
+                    continue
+                target = S + ND3_EXTRA - 1 if name == "ND3" else (ps[0] + ps[-1]) / 2
+                p = min(ps, key=lambda x: (abs(x - target), x))
+                cand = (abs(S - a) + abs(E - b), abs(p - target), S, p, E)
+                if best is None or cand < best:
+                    best = cand
+        if best is None:
+            return
+        _, _, S, p, E = best
+        nt = s[S - 1:p - 1] + s[p:E]
+        prot = str(Seq(nt).translate(table=self.code))
+        if len(nt) % 3 or "*" in prot[:-1] or not prot.endswith("*"):    # cannot happen: the search checked every codon
+            return
+        why = f"one nucleotide (CDS position {p - S + 1}) not translated: join over a frameshift"
+        trna, down = self.downstream_trna_start(f), self.downstream_gene_start(f)
+        nxt = min((x for x in (trna, down) if x is not None), default=None)
+        tail = 0
+        if getattr(self.a, "abbreviated_overlap", False) and nxt is not None and 1 <= E - nxt + 1 <= 2:
+            t = (nxt - 1 - S) % 3                      # vertebrate convention as in P3: T / TA before the next gene
+                                                       # (the join is nxt-1-S nt long: one nucleotide skipped)
+            if t in (1, 2) and s[nxt - 1 - t:nxt - 1] == ("T", "TA")[t - 1]:
+                E, tail = nxt - 1, t
+        old = span(f)
+        g = gene_feature(self.rec, f)
+        if f.location.strand == 1:
+            f.location = CompoundLocation([FeatureLocation(S - 1, p - 1, 1), FeatureLocation(p, E, 1)])
+        else:
+            f.location = CompoundLocation([FeatureLocation(self.L + 1 - p, self.L + 1 - S, -1),
+                                           FeatureLocation(self.L - E, self.L - p, -1)])
+        if g is not None:                              # the gene spans the whole join (NCBI)
+            gs, ge = span(f)
+            g.location = FeatureLocation(gs - 1, ge, strand=f.location.strand)
+        f.qualifiers.pop("transl_except", None)
+        notes = [x for x in f.qualifiers.get("note", []) if x not in (ND3_NOTE, FRAMESHIFT_NOTE, POLYA_NOTE)]
+        notes.append(ND3_NOTE if name == "ND3" and self.code == 2 and abs(p - S + 1 - ND3_EXTRA) <= 10 else FRAMESHIFT_NOTE)
+        if tail:
+            gs, ge = span(f)
+            pos = (f"{ge - tail + 1}..{ge}" if tail > 1 else f"{ge}") if f.location.strand == 1 else \
+                (f"complement({gs}..{gs + tail - 1})" if tail > 1 else f"complement({gs})")
+            f.qualifiers["transl_except"] = [f"(pos:{pos},aa:TERM)"]
+            notes.append(POLYA_NOTE)
+        f.qualifiers["note"] = notes
+        self.joined.add(id(f))
+        self.log(f, "P9", old, span(f), why)
+
+    def stop_trim(self, f: SeqFeature) -> None:
+        """P8: start and end in one frame with internal stop codons - a start placed upstream across stops (NC_027667.1
+        nad1 72 nt, insect nad4L ~30 nt), an end beyond the gene's stop (NC_024927.1 nad4 348 nt, NC_073527.1 atp8 into
+        atp6): the longer of the annotated start to its first stop and the first start codon after the last internal
+        stop to the annotated end, when it keeps STOP_TRIM_MIN of the length (2026-10 runs: 30 of 33 such genes then
+        start or end as NCBI; a gene still with internal stops is written /pseudo by P10)."""
+        if not simple(f):
+            return
+        s = self.tseq(f)
+        a, b = self.tx(f)
+        if (b - a + 1) % 3 or not self.internal_stops(s, a, b):
+            return
+        na, nb = max(self.single_frame_repairs(s, a, b), key=lambda x: x[1] - x[0])
+        if nb - na + 1 < max(60, STOP_TRIM_MIN * (b - a + 1)):
+            return
+        old = span(f)
+        gs, ge = self.from_tx(f, na, nb)
+        set_span(f, gs, ge)
+        g = gene_feature(self.rec, f)
+        if g is not None and simple(g):
+            set_span(g, gs, ge)
+        self.log(f, "P8", old, (gs, ge), "internal stop codons: " + ("start kept, first in-frame stop" if na == a else
+                                                                     "end kept, first start codon after the last stop"))
+
+    def origin_join_check(self, f: SeqFeature) -> None:
+        """P4 / P5 / P6 / P10 on a CDS joined across the origin that O1 / O2 did not end (the core's join whose part
+        before the origin is short, so O2 cannot cut it back: leave-out runs, NC_006386.1 nad4L 38 nt before the
+        origin on -, NC_023783.1 cox3; table2asn NoStop): the joined sequence is checked like a single interval -
+        internal stops /pseudo, no start codon 5'-partial, no stop 3'-partial with the NCBI notes."""
+        nt = str(f.extract(self.rec.seq)).upper()
+        prot = str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=self.code))
+        parts = list(f.location.parts)
+        minus = f.location.strand == -1
+        if prot.rstrip("*").count("*"):
+            for x in (f, gene_feature(self.rec, f)):
+                if x is not None:
+                    x.qualifiers["pseudo"] = [None]
+            f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != PSEUDO_NOTE] + [PSEUDO_NOTE]
+            self.log(f, "P10", span(f), span(f), "CDS across the origin with internal stop codons written /pseudo")
+            return
+        tail = len(nt) % 3
+        has_stop = nt[-3:] in self.stops if not tail else nt[-tail:] in ("T", "TA")
+        if nt[:3] not in self.starts:
+            p = parts[0]
+            parts[0] = FeatureLocation(p.start, AfterPosition(p.end), -1) if minus else \
+                FeatureLocation(BeforePosition(p.start), p.end, 1)
+            f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != NO_START_NOTE] + [NO_START_NOTE]
+            self.log(f, "P5", span(f), span(f), f"CDS across the origin: first codon {nt[:3]} is not a start codon: "
+                     "5'-partial, 'start codon not determined'")
+        if not has_stop:
+            p = parts[-1]
+            parts[-1] = FeatureLocation(BeforePosition(p.start), p.end, -1) if minus else \
+                FeatureLocation(p.start, AfterPosition(p.end), 1)
+            f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != NO_STOP_NOTE] + [NO_STOP_NOTE]
+            self.log(f, "P6", span(f), span(f), "CDS across the origin without a stop codon: 3'-partial, 'stop codon "
+                     "not determined' - check manually")
+        f.location = CompoundLocation(parts)
+
+    def pcg_check(self, f: SeqFeature) -> None:
+        """P4: report problems that rules cannot fix (no change is made). P10: a CDS that still has internal stops is
+        written /pseudo (gene and CDS; no translation) - NCBI rejects a CDS that cannot be translated (table2asn
+        InternalStop), and its frame needs a manual check."""
+        if id(f) in self.joined:
+            return
+        if not simple(f):
+            if self.origin_span(f) is not None:
+                self.origin_join_check(f)
+            else:
+                self.log(f, "P4", span(f), span(f), "multi-interval CDS (intron / origin) - not curated")
             return
         s = self.tseq(f)
         a, b = self.tx(f)
@@ -555,6 +820,12 @@ class Curator:
         if n_stop:
             self.log(f, "P4", span(f), span(f), f"{n_stop} internal stop codon(s): wrong frame, frameshift "
                      "(assembly indel?) or unannotated intron - check manually")
+            for x in (f, gene_feature(self.rec, f)):
+                if x is not None:
+                    x.qualifiers["pseudo"] = [None]    # value-less /pseudo
+            f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != PSEUDO_NOTE] + [PSEUDO_NOTE]
+            self.log(f, "P10", span(f), span(f), "CDS with internal stop codons written /pseudo (not translated)")
+            return
         if nt[:3] not in self.starts:
             # P5: NCBI rejects an illegal start (SEQ_FEAT.StartCodon); RefSeq writes such CDS 5'-partial with
             # "start codon not determined" (e.g. echinoderm nad4l ATT/ATC under code 9: NC_001627.1, NC_061414.1)
@@ -752,9 +1023,63 @@ class Curator:
                 g.location = f.location
             self.log(f, "R1", old, (s, e), "trimmed to flanking genes" + (" and filled to them" if self.a.rrna_bounds == "fill" else ""))
 
+    def weak_trnas(self) -> None:
+        """T1: a weak tRNA call (MiTFi E > WEAK_TRNA_E, or a second copy: the core's note) lying wholly inside a
+        same-strand protein gene is dropped - tRNAs punctuate the transcripts, a whole one inside a gene on its strand is
+        a false call or a wrong gene end (table2asn SEQ_FEAT.BadCDScomponentOverlapTRNA; 2026-10 runs: 7 of 9 such calls
+        absent from NCBI). Only a second copy of a family, or a call in the middle third of the gene: one in its first or
+        last third is more often a gene end placed across it (NC_060482.1 / NC_060708.1: nad6 extended to the stop
+        inside trnD, NCBI ends nad6 right before trnD) and P1 / P3 move that end instead. Strong calls are never dropped.
+        Run before the protein gene rules, else P3 ends a gene with the T / TA it finds right before such a call."""
+        for t in [x for x in self.rec.features if x.type == "tRNA" and id(x) in self.weak]:
+            host = next((c for c in self.rec.features if c.type == "CDS" and c.location.strand == t.location.strand
+                         and all(any(cs <= ts and te <= ce for cs, ce in spans(c)) for ts, te in spans(t))), None)
+            if host is None:
+                continue
+            a, b = self.tx(host) if simple(host) else (0, 0)
+            ts, te = self.tx(t) if simple(t) else (0, 0)
+            n = b - a + 1
+            if simple(host) and simple(t) and id(t) not in self.copies and (ts - a < n / 3 or b - te < n / 3):
+                continue                               # at a gene end: P1 / P3 move the end
+            g = gene_feature(self.rec, t)
+            self.rec.features = [x for x in self.rec.features if x is not t and x is not g]
+            self.log(t, "T1", span(t), span(t), f"weak tRNA call inside {host.qualifiers.get('gene', ['?'])[0]} "
+                     f"{span(host)[0]}..{span(host)[1]} (same strand) removed")
+
+    def trna_conflicts(self) -> None:
+        """C1: a tRNA still lying wholly inside a same-strand protein gene after P1 / P3 (table2asn
+        BadCDScomponentOverlapTRNA): a gene without start or stop codon (P5 / P6) or not translatable (P10) is a false
+        call and is removed (NC_061193.1 flatworm 'atp8' around tRNA-Glu, NC_013814.1 chaetognath 'atp6' around
+        tRNA-Phe: neither phylum has the gene); a complete gene is kept and the conflict reported (P4)."""
+        for c in [x for x in self.rec.features if x.type == "CDS"]:
+            inside = [t for t in self.rec.features if t.type == "tRNA" and t.location.strand == c.location.strand
+                      and span(c)[0] <= span(t)[0] and span(t)[1] <= span(c)[1] and simple(t)]
+            if not inside:
+                continue
+            notes = c.qualifiers.get("note", [])
+            if "pseudo" in c.qualifiers or NO_START_NOTE in notes or NO_STOP_NOTE in notes:
+                g = gene_feature(self.rec, c)
+                self.rec.features = [x for x in self.rec.features if x is not c and x is not g]
+                self.log(c, "C1", span(c), span(c), f"incomplete or untranslatable gene around "
+                         f"{inside[0].qualifiers.get('gene', ['?'])[0]} {span(inside[0])[0]}..{span(inside[0])[1]} removed")
+            else:
+                self.log(c, "P4", span(c), span(c), f"contains {inside[0].qualifiers.get('gene', ['?'])[0]} "
+                         f"{span(inside[0])[0]}..{span(inside[0])[1]} on its strand - check manually")
+
     # ── N1: NCBI-style names (every feature, also joins / origin-spanning ones) ──
     def names(self, f: SeqFeature) -> None:
         g = gene_feature(self.rec, f)
+        for n in f.qualifiers.get("note", []) if f.type == "tRNA" else []:
+            m = re.match(r"MiTFi \S+ bits [\d.]+ E ([0-9.eE+-]+)( copy)?", n)
+            if m and (float(m.group(1)) > WEAK_TRNA_E or m.group(2)):
+                self.weak.add(id(f))                   # T1 (the note itself is dropped below)
+                if m.group(2):
+                    self.copies.add(id(f))
+        notes = [n for n in f.qualifiers.get("note", []) if not INTERNAL_NOTE.match(n)]
+        if notes:
+            f.qualifiers["note"] = notes
+        else:
+            f.qualifiers.pop("note", None)
         cur = f.qualifiers.get("gene", [""])[0]
         q: Dict[str, List[str]] = {}
         if f.type == "CDS":
@@ -805,12 +1130,17 @@ class Curator:
             if f.type == "rRNA":
                 self.rrna(f)
         self.duplicates()                              # D1 before the boundary rules: a copy must not act as neighbour
+        self.weak_trnas()
         for f in list(self.rec.features):
             if f.type == "CDS":
+                self.origin_cut(f)
+                self.frameshift(f)
                 self.frame_repair(f)
+                self.stop_trim(f)
                 self.pcg(f)
                 self.across_origin(f)
                 self.pcg_check(f)
+        self.trna_conflicts()
         self.pcg_overlaps()
         for f in list(self.rec.features):              # R1 again: P3 / O1 moved CDS ends, trim the rRNAs to them
             if f.type == "rRNA":
@@ -819,7 +1149,7 @@ class Curator:
             if f.type == "CDS":
                 self.translation(f)
         for f in self.rec.features:                    # gene feature = exactly its CDS / RNA (SEQ_FEAT.CDSgeneRange)
-            if f.type in ("CDS", "rRNA", "tRNA"):
+            if f.type in ("CDS", "rRNA", "tRNA") and id(f) not in self.joined:   # (a P9 gene spans its join)
                 g = gene_feature(self.rec, f)
                 if g is not None and str(g.location) != str(f.location):
                     g.location = f.location

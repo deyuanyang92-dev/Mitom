@@ -127,3 +127,40 @@ The annelids are the one set where MITOS2's precision is higher (by 0.06 points:
 in 501 records); 58 of MitoM's 77 such calls are at loci where MITOS2 calls a tRNA too, and several of the rest lie
 where NCBI's own protein genes run over a tRNA (OP537514.1 nad1 over trnI, MG428625.1 nd2 over trnS).
 
+## 2026-10-27 (later): MiTFi second opinion (c2) and MiTFi run exactly as MITOS2 runs it
+
+c2 = the final method above plus two rules chosen on the tuning halves (unseen-family dev half, GenBank-only annelid
+tune half; criterion fixed beforehand: precision >= MITOS2 + 0.1 points on both, then most recall): a MitoM-ML call
+with p < 0.9 is kept only when MiTFi calls the same tRNA (`mito_core.trna_second_opinion`), and a weaker second call
+of a family needs p >= 0.9. Splits of the annelids: `splits/annelid_tune.txt` (317) / `annelid_heldout.txt` (184).
+
+Checking why MITOS2 still found a few tRNAs c2 missed (acanthocephalan trnD of NC_060482.1 / NC_060708.1, trnL2 of
+NC_060484.1) showed that the core's MiTFi step was not quite MITOS2's:
+1. a circular record is searched as the record + its first 3,000 nt (`ORIGIN_EXT`), so cmsearch computed every E-value
+   for a 21 % larger search space (15-kb record): trnD of NC_060482.1 E 0.096 in MITOS2, 0.12 in MitoM, over the 0.1
+   cut-off. Now cmsearch gets `-Z` for the record length on both strands (`mito_core.cmsearch(z=...)`);
+2. `runmitos` runs MiTFi with `--maxtrnaovl 50` (the command-line default; the function default of 10 is not what
+   runs) and `-method l`; the core used `-overlap 10`, so trnL2 of NC_060484.1 (12 nt over trnP, both top hits in
+   MITOS2's own MiTFi output) was dropped. With `-overlap 50 -method l` MiTFi on MITOS2's own cmsearch files gives
+   MITOS2's `tRNAout.nc` line for line (`mito_core.MITFI_TRNA_OVL`).
+The c2 rules were checked again with the corrected MiTFi (`mitom_work/replay_z.sh`, results below).
+
+Results (recall / precision / both ends exact; records every tool finished). Selection on the tuning halves with the
+corrected MiTFi (`mitom_work/eval_z/tuning.txt`): support p 0.9 / second copy p 0.9 / rescue E 0.1 (= c2) passes the
+criterion on both (unseen-family dev 98.30 / 99.01 %, MITOS2 96.15 / 98.74 %; annelid tune 99.28 / 99.28 %, MITOS2
+97.46 / 99.18 %) with the most recall; rescue E 0.05 passes with less recall, support p 0.8 and no second-copy rule
+fail the annelid precision. Held out (`eval_z/heldout.txt`):
+
+| set | MitoM (c2, MiTFi as MITOS2) | MITOS2 |
+|---|---|---|
+| unseen families, held-out half (565) | 98.75 / 99.06 / 88.70 % | 96.95 / 98.82 / 87.20 % |
+| unseen families, all (1,043) | 98.55 / 99.04 / 86.48 % | 96.59 / 98.79 / 84.63 % |
+| 188 vertebrates | 98.38 / 98.55 / 92.66 % | 98.31 / 98.24 / 92.61 % |
+| GenBank-only annelids, held out (184) | 98.90 / 98.72 / 80.20 % | 97.87 / 98.71 / 79.69 % |
+| GenBank-only annelids, all (501) | 99.14 / 99.08 / 83.36 % | 97.61 / 99.01 / 81.47 % |
+
+By phylum every phylum with more than one record is above MITOS2 on all three numbers except Acanthocephala (4
+records, 88 NCBI tRNAs): recall 45.45 % both (was 42.05 % before the MiTFi fixes), precision 86.96 vs 88.89 % (one more
+call without an NCBI tRNA: trnK inside cox1 of NC_060484.1, a weak MiTFi call that curation rule T1 removes in the full
+pipeline); Kinorhyncha (1 record) one more such call (trnL1 E 0.065 over the atp6 / cox3 junction). In the annelid
+sets most calls without an NCBI tRNA are made by MITOS2 too (tuning 47 of 50, held out 43 of 51).

@@ -1,0 +1,17 @@
+### GenBank-only annelids, tune
+tool	records	NCBI tRNAs	predicted	recall	precision	F1	both ends exact	within 1	within 3	FP per record	wrong strand	wrong name
+mitom_native	317	6925	6926	99.28%	99.26%	99.27%	85.18%	93.29%	97.81%	0.123	0	12
+mitos2	317	6925	6805	97.46%	99.18%	98.31%	82.50%	91.23%	95.74%	0.126	0	16
+### GenBank-only annelids, heldout
+tool	records	NCBI tRNAs	predicted	recall	precision	F1	both ends exact	within 1	within 3	FP per record	wrong strand	wrong name
+mitom_native	184	3989	3997	98.90%	98.70%	98.80%	80.20%	90.90%	96.89%	0.147	8	17
+mitos2	184	3989	3955	97.87%	98.71%	98.29%	79.69%	89.67%	95.59%	0.141	8	17
+### all 669 annelids
+tool	records	NCBI tRNAs	predicted	recall	precision	F1	both ends exact	within 1	within 3	FP per record	wrong strand	wrong name
+mitom_native	669	14626	14625	99.12%	99.13%	99.13%	83.45%	92.40%	97.22%	0.111	9	44
+mitos2	669	14626	14428	97.68%	99.02%	98.35%	81.61%	90.67%	95.45%	0.127	9	47
+### Acanthocephala / Kinorhyncha (unseen-family tuning half, full runs)
+Acanthocephala:mitom_native	4	88	45	45.45%	88.89%	60.15%	14.77%	21.59%	23.86%	1.000	0	1
+Acanthocephala:mitos2	4	88	45	45.45%	88.89%	60.15%	13.64%	20.45%	23.86%	1.000	0	1
+Kinorhyncha:mitom_native	1	22	17	68.18%	88.24%	76.92%	36.36%	40.91%	40.91%	2.000	0	0
+Kinorhyncha:mitos2	1	22	16	68.18%	93.75%	78.95%	36.36%	40.91%	45.45%	1.000	0	0

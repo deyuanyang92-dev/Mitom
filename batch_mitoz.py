@@ -1165,16 +1165,23 @@ def collect_genbank_files(src: Path) -> List[Path]:
 
 
 def merge_gb_files(gb_files: List[Path], merged_out: Path) -> int:
+    """The files' text one after the other (each checked by parsing it): a Biopython round trip would write the
+    value-less /pseudo of mito_curate P10 as /pseudo=""."""
     merged_out.parent.mkdir(parents=True, exist_ok=True)
-    all_recs: List["SeqRecord"] = []
+    n, chunks = 0, []
     for gb in gb_files:
         try:
-            all_recs.extend(list(SeqIO.parse(str(gb), "genbank")))
+            k = sum(1 for _ in SeqIO.parse(str(gb), "genbank"))
         except Exception as exc:
             logging.warning(f"[MERGE_SKIP] {gb}: {exc}")
-    if all_recs:
-        SeqIO.write(all_recs, str(merged_out), "genbank")
-    return len(all_recs)
+            continue
+        if k:
+            text = gb.read_text()
+            chunks.append(text if text.endswith("\n") else text + "\n")
+            n += k
+    if chunks:
+        merged_out.write_text("".join(chunks))
+    return n
 
 
 def find_genbank_like_files(root: Path, preferred_prefix: Optional[str] = None) -> List[Path]:
@@ -1602,7 +1609,10 @@ def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
     (edge_gene_truncated, genetic code `code`; MitoZ annotates the sequence as linear, so a gene across the
     original origin is cut or missed) - only when the sequence moved; (2) a standard protein gene / rRNA
     (STANDARD_GENES; not ATP8 / ATP6) missing in round 1; (3) every feature's sequence identical
-    before and after the shift, same features; (4) no feature across the new origin."""
+    before and after the shift, same features; (4) no feature across the new origin. A linear record is never rotated
+    (only turned to the plus strand): its end genes are cut by the real sequence ends and a missing gene is missing
+    from the sequence, so (1) and (2) do not apply - a second round on the same sequence finds nothing new (2026-10
+    benchmark, 15 linear annelid records: the same true tRNAs, 2 more false ones from the re-run)."""
     probs: List[str] = []
     r1 = {r.id: r for r in SeqIO.parse(str(round1_gb), "genbank")}
     for ro in SeqIO.parse(str(reor_gb), "genbank"):
@@ -1613,14 +1623,15 @@ def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
         L = len(a.seq)
         genes = [f for f in a.features if f.type in ("CDS", "rRNA", "tRNA")]
         moved = str(ro.seq) != str(a.seq)
-        if moved:
+        linear = "linear" in (a.annotations.get("topology"), ro.annotations.get("topology"))
+        if moved and not linear:
             edge = sorted({f.qualifiers.get("gene", [f.type])[0] for f in genes
                            if edge_gene_truncated(f, a.seq, L, code)})
             if edge:
                 probs.append(f"{ro.id}: gene(s) at the end of the round-1 sequence, look cut: {', '.join(edge)}")
         have = {f.qualifiers.get("gene", [""])[0] for f in genes}
         miss = [g for g in STANDARD_GENES if g not in have]
-        if miss:
+        if miss and not linear:
             probs.append(f"{ro.id}: standard gene(s) missing in round 1: {', '.join(miss)}")
 
         def seqs(rec: "SeqRecord") -> Dict[Tuple[str, str], List[str]]:

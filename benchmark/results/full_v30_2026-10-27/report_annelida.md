@@ -1,0 +1,1318 @@
+# Benchmark: mitom_native, mitom_native_v27, mitos2 (/media/deyuan/18T_B/yzz/mitom_work/eval_v30b/annelida/eval/all)
+
+## Records
+
+| tool | records | ok | failed | timeout | unsupported | with obvious error | median s/record | median peak RAM (MB) | max peak RAM (MB) |
+|---|---|---|---|---|---|---|---|---|---|
+| mitom_native | 669 | 669 | 0 | 0 | 0 | 293 | 115 | 250 | 325 |
+| mitom_native_v27 | 669 | 669 | 0 | 0 | 0 | 299 | 104 | 182 | 351 |
+| mitos2 | 669 | 669 | 0 | 0 | 0 | 638 | 454 | 1043 | 2430 |
+
+## PCG (records where every tool finished: stratum `common_ok` below; this table: all)
+
+| tool | truth | found | recall | both ends exact | within 3 nt | >3 nt | strand err | name err | missed | extra |
+|---|---|---|---|---|---|---|---|---|---|---|
+| mitom_native | 8639 | 8623 | 99.8% | 7018 (81.2%) | 416 (86.1% cum.) | 1189 | 0 | 0 | 16 | 34 |
+| mitom_native_v27 | 8639 | 8623 | 99.8% | 6945 (80.4%) | 429 (85.4% cum.) | 1249 | 0 | 0 | 16 | 34 |
+| mitos2 | 8639 | 8508 | 98.5% | 4441 (51.4%) | 423 (56.3% cum.) | 3644 | 5 | 4 | 122 | 163 |
+
+## rRNA (records where every tool finished: stratum `common_ok` below; this table: all)
+
+| tool | truth | found | recall | both ends exact | within 3 nt | >3 nt | strand err | name err | missed | extra |
+|---|---|---|---|---|---|---|---|---|---|---|
+| mitom_native | 1328 | 1324 | 99.7% | 437 (32.9%) | 488 (69.7% cum.) | 399 | 3 | 1 | 0 | 4 |
+| mitom_native_v27 | 1328 | 1324 | 99.7% | 434 (32.7%) | 494 (69.9% cum.) | 396 | 3 | 1 | 0 | 4 |
+| mitos2 | 1328 | 1300 | 97.9% | 169 (12.7%) | 25 (14.6% cum.) | 1106 | 2 | 1 | 25 | 6 |
+
+## tRNA (records where every tool finished: stratum `common_ok` below; this table: all)
+
+| tool | truth | found | recall | both ends exact | within 3 nt | >3 nt | strand err | name err | missed | extra |
+|---|---|---|---|---|---|---|---|---|---|---|
+| mitom_native | 14626 | 14498 | 99.1% | 11005 (75.2%) | 1621 (86.3% cum.) | 234 | 9 | 44 | 75 | 74 |
+| mitom_native_v27 | 14626 | 14500 | 99.1% | 11005 (75.2%) | 1583 (86.1% cum.) | 277 | 9 | 49 | 68 | 92 |
+| mitos2 | 14626 | 14287 | 97.7% | 10809 (73.9%) | 1571 (84.6% cum.) | 281 | 9 | 47 | 283 | 85 |
+
+## Same records for every tool (common_ok)
+
+| tool | kind | truth | recall | both ends exact | within 3 nt |
+|---|---|---|---|---|---|
+| mitom_native | PCG | 8639 | 99.8% | 81.2% | 86.1% |
+| mitom_native_v27 | PCG | 8639 | 99.8% | 80.4% | 85.4% |
+| mitos2 | PCG | 8639 | 98.5% | 51.4% | 56.3% |
+| mitom_native | rRNA | 1328 | 99.7% | 32.9% | 69.7% |
+| mitom_native_v27 | rRNA | 1328 | 99.7% | 32.7% | 69.9% |
+| mitos2 | rRNA | 1328 | 97.9% | 12.7% | 14.6% |
+| mitom_native | tRNA | 14626 | 99.1% | 75.2% | 86.3% |
+| mitom_native_v27 | tRNA | 14626 | 99.1% | 75.2% | 86.1% |
+| mitos2 | tRNA | 14626 | 97.7% | 73.9% | 84.6% |
+
+## Protein genes, both ends exact, per phylum
+
+| phylum | records | mitom_native | mitom_native_v27 | mitos2 |
+|---|---|---|---|---|
+| Annelida | 669 | 81.2% | 80.4% | 51.4% |
+
+## Obvious errors by type
+
+| error | mitom_native | mitom_native_v27 | mitos2 |
+|---|---|---|---|
+| boundary_gt30 | 512 | 509 | 1598 |
+| missing_gene | 16 | 16 | 147 |
+| name_error | 45 | 50 | 52 |
+| duplicate_gene | 0 | 0 | 84 |
+| internal_stop | 4 | 12 | 37 |
+| strand_error | 12 | 12 | 16 |
+| records with any error | 293 | 299 | 638 |
+
+## Obvious errors by type, records every tool finished (669 records)
+
+| error | mitom_native | mitom_native_v27 | mitos2 |
+|---|---|---|---|
+| boundary_gt30 | 512 | 509 | 1598 |
+| missing_gene | 16 | 16 | 147 |
+| name_error | 45 | 50 | 52 |
+| duplicate_gene | 0 | 0 | 84 |
+| internal_stop | 4 | 12 | 37 |
+| strand_error | 12 | 12 | 16 |
+| records with any error | 293 | 299 | 638 |
+
+## Error records per tool
+
+**mitom_native** (293 records)
+
+- AY619711.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- AY961084.1: boundary_gt30:cox1
+- BK059172.1: boundary_gt30:nad6
+- DQ517436.1: boundary_gt30:cox3
+- EF506562.1: internal_stop:nad1
+- EF583817.1: boundary_gt30:cox3, boundary_gt30:nad4
+- EF656365.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- EU239688.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- EU293739.1: boundary_gt30:nad2, boundary_gt30:cox1, name_error:A
+- FJ612452.1: boundary_gt30:cox3
+- FJ975144.1: boundary_gt30:rrnS, boundary_gt30:rrnL, internal_stop:nad1
+- FJ976040.1: boundary_gt30:rrnS
+- FJ976042.1: boundary_gt30:cox1, boundary_gt30:rrnS
+- KC790350.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad4
+- KJ789171.1: strand_error:Y, name_error:W
+- KM655838.1: boundary_gt30:nad6
+- KM655839.1: boundary_gt30:nad6
+- KP751904.1: boundary_gt30:atp6
+- KR534503.1: boundary_gt30:nad4l, boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:rrnL, boundary_gt30:rrnS
+- KT726961.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:atp6, boundary_gt30:nad2, boundary_gt30:cox3
+- KT726962.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- KT989318.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989319.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989320.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989321.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989322.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989323.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989324.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989325.1: boundary_gt30:nad2, boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnL
+- KT989326.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989327.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989328.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989329.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989330.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989331.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- KU672396.1: boundary_gt30:nad6
+- KU672397.1: boundary_gt30:nad2, boundary_gt30:nad6
+- KU992689.1: boundary_gt30:nad4l, boundary_gt30:rrnL
+- KX752422.1: boundary_gt30:nad4, boundary_gt30:rrnS, boundary_gt30:rrnL
+- KX752425.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- KX814447.1: boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KY742027.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:nad4
+- KY753827.1: boundary_gt30:rrnL
+- KY753828.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- KY774370.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:nad4
+- KY774371.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:nad4, boundary_gt30:rrnL
+- LC582823.1: boundary_gt30:nad5
+- LC582824.1: boundary_gt30:nad5
+- LC661358.1: boundary_gt30:atp6, boundary_gt30:cob, boundary_gt30:rrnL, strand_error:S, name_error:D
+- LC661359.1: boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:nad4
+- LC677172.1: boundary_gt30:nad4, boundary_gt30:cox1, boundary_gt30:rrnL
+- LC707921.1: boundary_gt30:rrnL
+- LC757642.1: boundary_gt30:atp6, boundary_gt30:cob, boundary_gt30:nad4l, boundary_gt30:nad4, boundary_gt30:nad2
+- LC874204.1: boundary_gt30:nad6, boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:rrnL
+- LC874205.1: boundary_gt30:rrnL
+- MG428625.1: boundary_gt30:nad6, boundary_gt30:cob, boundary_gt30:nad2
+- MG873457.1: boundary_gt30:rrnL
+- MG873458.1: boundary_gt30:cox3, boundary_gt30:nad4, boundary_gt30:rrnL
+- MK120303.1: boundary_gt30:atp6, boundary_gt30:nad4l, boundary_gt30:nad2, boundary_gt30:rrnL
+- MK192098.1: boundary_gt30:rrnS
+- MK347500.1: boundary_gt30:nad6
+- MK548645.1: boundary_gt30:nad4l
+- MK618511.1: boundary_gt30:nad5
+- MK642871.1: boundary_gt30:nad5
+- MK642872.1: boundary_gt30:atp6
+- MN539268.1: boundary_gt30:nad4l, boundary_gt30:nad6, boundary_gt30:rrnL
+- MN812982.1: name_error:S
+- MN830365.1: boundary_gt30:nad6, name_error:S
+- MN830366.1: boundary_gt30:nad6, name_error:S
+- MN830369.1: name_error:S
+- MT108936.1: boundary_gt30:rrnL, name_error:S, name_error:S
+- MT108937.1: boundary_gt30:rrnL, name_error:S, name_error:S
+- MT239480.1: boundary_gt30:nad4, boundary_gt30:rrnS, boundary_gt30:rrnL
+- MT410851.1: boundary_gt30:nad4l, boundary_gt30:cob, name_error:S
+- MT584166.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- MT628551.1: boundary_gt30:nad2, boundary_gt30:atp8, boundary_gt30:nad5
+- MT628565.1: boundary_gt30:nad1, boundary_gt30:nad2
+- MT862376.1: boundary_gt30:nad2
+- MT919975.1: missing_gene:cox2, boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:atp6, boundary_gt30:rrnL, boundary_gt30:rrnS
+- MW435182.1: boundary_gt30:nad2
+- MW528029.1: boundary_gt30:nad2, boundary_gt30:cox2, boundary_gt30:rrnL
+- MW532084.1: boundary_gt30:nad4l
+- MW690579.1: name_error:L
+- MW727509.1: boundary_gt30:rrnL, boundary_gt30:rrnS
+- MW732144.1: boundary_gt30:nad5, name_error:R
+- MW770354.1: name_error:R
+- MW783685.1: boundary_gt30:rrnL
+- MW783686.1: boundary_gt30:nad4
+- MW783689.1: internal_stop:nad6, internal_stop:nad4l
+- MW783693.1: boundary_gt30:cox1
+- MW783695.1: boundary_gt30:nad4l
+- MW783700.1: boundary_gt30:rrnL
+- MW783705.1: boundary_gt30:rrnL
+- MZ131647.1: boundary_gt30:rrnL
+- MZ189977.1: boundary_gt30:cox1
+- MZ202177.1: boundary_gt30:rrnL
+- MZ435261.1: boundary_gt30:nad1, boundary_gt30:rrnL, boundary_gt30:rrnS
+- MZ506667.1: missing_gene:cox2, boundary_gt30:rrnL
+- MZ507570.1: boundary_gt30:nad6, name_error:S
+- NC_001673.1: boundary_gt30:cob
+- NC_006321.1: boundary_gt30:nad4
+- NC_006379.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_007933.1: boundary_gt30:cox1
+- NC_012618.1: boundary_gt30:cox3, boundary_gt30:nad4
+- NC_012768.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_013569.1: boundary_gt30:nad6, boundary_gt30:nad1
+- NC_023124.1: boundary_gt30:cox1, name_error:S, name_error:R
+- NC_023925.1: boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:rrnL
+- NC_023926.1: boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- NC_023927.1: boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:rrnS
+- NC_023928.1: boundary_gt30:nad6
+- NC_025561.1: boundary_gt30:rrnL
+- NC_026859.1: boundary_gt30:nad2
+- NC_027699.1: boundary_gt30:nad4l, boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_027831.1: boundary_gt30:rrnL
+- NC_027854.1: boundary_gt30:rrnL
+- NC_028710.1: missing_gene:cox1, boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:nad4, boundary_gt30:nad5
+- NC_029871.1: boundary_gt30:rrnL
+- NC_030040.1: boundary_gt30:atp8, boundary_gt30:nad4l, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_031402.1: boundary_gt30:rrnL
+- NC_031403.1: boundary_gt30:rrnL, name_error:S
+- NC_031404.1: boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_031412.1: boundary_gt30:cox3, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_032055.1: boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:cox3, boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_035308.1: boundary_gt30:nad5
+- NC_035893.1: boundary_gt30:atp8, boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_037236.1: boundary_gt30:cox1, name_error:S, name_error:R
+- NC_037947.1: boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_044092.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_049135.1: boundary_gt30:cox3
+- NC_049136.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_050262.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_051993.1: name_error:S
+- NC_051994.1: boundary_gt30:rrnL, name_error:S
+- NC_051995.1: name_error:S
+- NC_052721.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_052845.1: name_error:S
+- NC_056279.1: boundary_gt30:rrnL, boundary_gt30:rrnS
+- NC_060302.1: name_error:S
+- NC_060759.1: boundary_gt30:cox1, name_error:S, name_error:R
+- NC_060814.1: boundary_gt30:cox2, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_060815.1: missing_gene:cox2, boundary_gt30:rrnL
+- NC_060816.1: boundary_gt30:rrnL
+- NC_061323.1: boundary_gt30:nad6, boundary_gt30:rrnL, name_error:S
+- NC_061377.1: boundary_gt30:cox3, boundary_gt30:cox2
+- NC_061743.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:cox2, boundary_gt30:rrnL
+- NC_061913.1: boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_063122.1: boundary_gt30:rrnL
+- NC_064058.1: boundary_gt30:nad1
+- NC_064376.1: boundary_gt30:rrnL
+- NC_064503.1: boundary_gt30:rrnS
+- NC_065392.1: boundary_gt30:rrnL
+- NC_065765.1: boundary_gt30:nad4l, boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_066969.1: boundary_gt30:nad2, boundary_gt30:atp6
+- NC_068907.1: name_error:rrnS
+- NC_069202.1: boundary_gt30:cox3
+- NC_069203.1: boundary_gt30:nad2, boundary_gt30:cob
+- NC_069204.1: boundary_gt30:nad5
+- NC_069206.1: boundary_gt30:cob
+- NC_069207.1: boundary_gt30:cob
+- NC_069297.1: boundary_gt30:rrnS, name_error:S
+- NC_070077.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_072217.1: boundary_gt30:rrnL
+- NC_072218.1: boundary_gt30:rrnL
+- NC_072219.1: boundary_gt30:rrnL
+- NC_072221.1: boundary_gt30:rrnL
+- NC_072222.1: boundary_gt30:rrnL
+- NC_072223.1: boundary_gt30:rrnL
+- NC_077651.1: boundary_gt30:rrnL
+- NC_081955.1: boundary_gt30:rrnL
+- NC_082189.1: strand_error:G
+- NC_086457.1: boundary_gt30:rrnL
+- NC_086458.1: boundary_gt30:rrnL
+- NC_087806.1: missing_gene:cox1
+- NC_087807.1: boundary_gt30:rrnL
+- NC_087808.1: missing_gene:atp8, boundary_gt30:rrnL
+- NC_087824.1: boundary_gt30:atp8, boundary_gt30:rrnL
+- NC_087881.1: boundary_gt30:rrnL
+- NC_088773.1: name_error:S
+- OK012096.1: boundary_gt30:nad5
+- OL804287.1: boundary_gt30:rrnL, name_error:S
+- OM047258.1: boundary_gt30:rrnL, name_error:S
+- OM144973.1: boundary_gt30:nad4l
+- OM237314.1: boundary_gt30:rrnL, name_error:S
+- OM257408.1: boundary_gt30:cox3, boundary_gt30:cob
+- OM273170.1: boundary_gt30:rrnL, name_error:S
+- ON312495.1: boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:nad4l, boundary_gt30:rrnL
+- OP531857.1: boundary_gt30:rrnL
+- OP537514.1: boundary_gt30:nad1
+- OP605751.1: name_error:S
+- OP605752.1: boundary_gt30:rrnL, name_error:S
+- OP605754.1: boundary_gt30:rrnL, name_error:S
+- OP648299.1: boundary_gt30:rrnL
+- OP648302.1: boundary_gt30:nad4
+- OP648304.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- OP648305.1: boundary_gt30:rrnL
+- OP648306.1: boundary_gt30:rrnL
+- OP648307.1: boundary_gt30:rrnL
+- OQ076763.1: boundary_gt30:rrnL
+- OQ076767.1: boundary_gt30:nad6, boundary_gt30:nad2, boundary_gt30:rrnL
+- OQ076768.1: boundary_gt30:nad6
+- OQ076773.1: boundary_gt30:rrnL
+- OQ078742.1: missing_gene:atp8, boundary_gt30:cox2, boundary_gt30:nad2
+- OQ807197.1: boundary_gt30:rrnL
+- OQ807200.1: boundary_gt30:rrnL
+- OQ807203.1: boundary_gt30:rrnL
+- OQ807204.1: strand_error:rrnS
+- OR123440.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- OR123444.1: boundary_gt30:rrnS
+- OR123445.1: boundary_gt30:rrnS
+- OR449961.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- OR601003.1: missing_gene:atp8
+- OR637230.1: boundary_gt30:nad4, boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- OR854549.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- OR935903.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935904.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935905.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935906.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935907.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935908.1: boundary_gt30:atp6
+- OR935909.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935910.1: boundary_gt30:atp6
+- OR935911.1: boundary_gt30:atp6
+- OR935912.1: boundary_gt30:atp6
+- OR935914.1: boundary_gt30:atp6
+- OR935915.1: boundary_gt30:atp6
+- OR935916.1: boundary_gt30:nad2
+- OR935917.1: boundary_gt30:nad2
+- OR935918.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935919.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935920.1: boundary_gt30:atp6
+- OR935921.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935922.1: boundary_gt30:nad2, boundary_gt30:atp6
+- OR935923.1: boundary_gt30:atp6
+- OR935924.1: boundary_gt30:atp6
+- OR935925.1: boundary_gt30:atp6
+- OR935926.1: boundary_gt30:atp6
+- OR935927.1: boundary_gt30:atp6
+- OR935928.1: boundary_gt30:atp6
+- OR935929.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935930.1: boundary_gt30:atp6, boundary_gt30:nad1
+- OR935931.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935932.1: boundary_gt30:atp6
+- OR935933.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935934.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935935.1: boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:rrnS
+- OR935936.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935937.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935938.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935939.1: boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:rrnS
+- OR935940.1: boundary_gt30:atp6
+- PP035855.1: boundary_gt30:rrnS
+- PP035856.1: boundary_gt30:rrnL
+- PP165800.1: boundary_gt30:rrnL
+- PP228859.1: boundary_gt30:nad3, boundary_gt30:rrnS
+- PP228860.1: boundary_gt30:nad3, boundary_gt30:rrnS
+- PP440187.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:nad4
+- PP790749.1: boundary_gt30:rrnL
+- PP873346.1: boundary_gt30:atp6
+- PP873347.1: boundary_gt30:nad2
+- PP975882.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:rrnS, boundary_gt30:K, boundary_gt30:E
+- PP998669.1: boundary_gt30:nad6, strand_error:rrnL, strand_error:rrnS, name_error:G, strand_error:Y, strand_error:K, strand_error:I, strand_error:A, strand_error:L, strand_error:V
+- PP999651.1: boundary_gt30:rrnL
+- PQ221480.1: boundary_gt30:cox1
+- PQ221481.1: name_error:T
+- PQ221483.1: name_error:L
+- PQ510072.1: boundary_gt30:rrnL
+- PQ593498.1: boundary_gt30:rrnL
+- PQ593499.1: boundary_gt30:rrnL
+- PQ824720.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- PV083664.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- PV151471.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad1, boundary_gt30:rrnL
+- PV243576.1: boundary_gt30:nad4l, boundary_gt30:rrnS, boundary_gt30:rrnL, name_error:S
+- PV245939.1: boundary_gt30:nad2, boundary_gt30:rrnL
+- PV263602.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- PV424659.1: boundary_gt30:nad6, boundary_gt30:cob, boundary_gt30:atp6
+- PV424660.1: boundary_gt30:atp6
+- PV440316.1: boundary_gt30:rrnL
+- PV440317.1: boundary_gt30:nad1, boundary_gt30:nad6
+- PV460759.1: boundary_gt30:rrnL
+- PV480557.1: boundary_gt30:rrnL
+- PV535851.1: boundary_gt30:rrnL, boundary_gt30:rrnS
+- PV588238.1: boundary_gt30:nad4
+- PV831793.1: boundary_gt30:cox2, boundary_gt30:rrnL
+- PX119664.1: boundary_gt30:nad4l
+- PX168857.1: boundary_gt30:nad5, boundary_gt30:cox2, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:rrnL, boundary_gt30:rrnS, name_error:S, name_error:S
+- PX601449.1: boundary_gt30:atp8, boundary_gt30:rrnS, boundary_gt30:rrnL
+- PX614612.1: boundary_gt30:nad4, boundary_gt30:cox1
+- PX718958.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- PX970953.1: boundary_gt30:nad1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:atp6, missing_gene:nad2, boundary_gt30:rrnL, boundary_gt30:rrnS
+- PX970954.1: boundary_gt30:nad4, boundary_gt30:cox3, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:rrnS
+- PX994373.1: boundary_gt30:cox1, boundary_gt30:rrnS
+- U24570.1: boundary_gt30:cob
+
+**mitom_native_v27** (299 records)
+
+- AY619711.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- AY961084.1: boundary_gt30:cox1
+- BK059172.1: boundary_gt30:nad6
+- DQ517436.1: boundary_gt30:cox3
+- EF506562.1: internal_stop:nad1
+- EF583817.1: boundary_gt30:cox3, boundary_gt30:nad4
+- EF656365.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- EU239688.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- EU293739.1: boundary_gt30:nad2, boundary_gt30:cox1, name_error:A
+- FJ612452.1: boundary_gt30:cox3
+- FJ975144.1: boundary_gt30:rrnS, boundary_gt30:rrnL, internal_stop:nad1
+- FJ976042.1: boundary_gt30:cox1, boundary_gt30:rrnS
+- KC790350.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad4
+- KJ789171.1: strand_error:Y, name_error:W
+- KP751904.1: boundary_gt30:atp6
+- KR534503.1: boundary_gt30:nad4l, boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:rrnL, boundary_gt30:rrnS
+- KT726961.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:atp6, boundary_gt30:nad2, boundary_gt30:cox3
+- KT726962.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- KT989318.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989319.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989320.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989321.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989322.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989323.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989324.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989325.1: boundary_gt30:nad2, boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnL
+- KT989326.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989327.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989328.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989329.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989330.1: boundary_gt30:nad5, boundary_gt30:rrnL, internal_stop:atp6
+- KT989331.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- KU672397.1: boundary_gt30:nad2
+- KU992689.1: boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnL, internal_stop:nad5
+- KX752422.1: boundary_gt30:nad4, boundary_gt30:rrnS, boundary_gt30:rrnL
+- KX752425.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- KX814447.1: boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KY742027.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:nad4
+- KY753827.1: boundary_gt30:rrnL
+- KY753828.1: boundary_gt30:rrnL
+- KY774370.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:nad4
+- KY774371.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:nad4, boundary_gt30:rrnL
+- LC582823.1: boundary_gt30:nad5
+- LC582824.1: boundary_gt30:nad5
+- LC661358.1: boundary_gt30:atp6, boundary_gt30:cob, boundary_gt30:rrnL, strand_error:S, name_error:D
+- LC661359.1: boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:nad4
+- LC677172.1: boundary_gt30:nad4, boundary_gt30:cox1, boundary_gt30:rrnL
+- LC707921.1: boundary_gt30:rrnL
+- LC757642.1: boundary_gt30:atp6, boundary_gt30:cob, boundary_gt30:nad4l, boundary_gt30:nad4, boundary_gt30:nad2
+- LC874204.1: boundary_gt30:nad6, boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:rrnL, internal_stop:nad4l
+- LC874205.1: boundary_gt30:rrnL
+- MG428625.1: boundary_gt30:nad6, boundary_gt30:cob, boundary_gt30:nad2
+- MG873457.1: boundary_gt30:rrnL
+- MG873458.1: boundary_gt30:cox3, boundary_gt30:nad4, boundary_gt30:rrnL
+- MK120303.1: boundary_gt30:atp6, boundary_gt30:nad4l, boundary_gt30:nad2, boundary_gt30:rrnL
+- MK192098.1: boundary_gt30:rrnS
+- MK347500.1: boundary_gt30:nad6
+- MK548645.1: boundary_gt30:nad4l
+- MK618509.1: name_error:V
+- MK618511.1: boundary_gt30:nad5
+- MK642871.1: boundary_gt30:nad5
+- MK642872.1: boundary_gt30:atp6
+- MN539268.1: boundary_gt30:nad4l, boundary_gt30:nad6, boundary_gt30:rrnL
+- MN812982.1: name_error:S
+- MN830365.1: boundary_gt30:nad6, name_error:S
+- MN830366.1: boundary_gt30:nad6, name_error:S
+- MN830369.1: name_error:S
+- MT108936.1: boundary_gt30:rrnL, name_error:S, name_error:S
+- MT108937.1: boundary_gt30:rrnL, name_error:S, name_error:S
+- MT239480.1: boundary_gt30:nad4, boundary_gt30:rrnL
+- MT410851.1: boundary_gt30:nad4l, boundary_gt30:cob, name_error:S
+- MT584166.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- MT628551.1: boundary_gt30:nad2, boundary_gt30:atp8, boundary_gt30:nad5
+- MT628565.1: boundary_gt30:nad1, boundary_gt30:nad2
+- MT862376.1: boundary_gt30:nad2
+- MT919975.1: missing_gene:cox2, boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:atp6, boundary_gt30:rrnL, boundary_gt30:rrnS
+- MW435182.1: boundary_gt30:nad2
+- MW528029.1: boundary_gt30:nad2, boundary_gt30:cox2
+- MW532084.1: boundary_gt30:nad4l
+- MW690579.1: name_error:L
+- MW727509.1: boundary_gt30:rrnL, boundary_gt30:rrnS
+- MW732144.1: boundary_gt30:nad5, name_error:R
+- MW770354.1: name_error:R
+- MW783685.1: boundary_gt30:rrnL
+- MW783686.1: boundary_gt30:nad4
+- MW783689.1: internal_stop:nad6, internal_stop:nad4l
+- MW783693.1: boundary_gt30:cox1
+- MW783695.1: boundary_gt30:nad4l
+- MW783700.1: boundary_gt30:rrnL
+- MW783705.1: boundary_gt30:rrnL
+- MZ131647.1: boundary_gt30:rrnL
+- MZ189977.1: boundary_gt30:cox1
+- MZ202177.1: boundary_gt30:rrnL
+- MZ435261.1: boundary_gt30:nad1, boundary_gt30:rrnL, boundary_gt30:rrnS
+- MZ506667.1: missing_gene:cox2, boundary_gt30:rrnL
+- MZ507570.1: name_error:S
+- NC_001673.1: boundary_gt30:cob
+- NC_006321.1: boundary_gt30:nad4
+- NC_006379.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_007933.1: boundary_gt30:cox1
+- NC_012618.1: boundary_gt30:cox3, boundary_gt30:nad4
+- NC_012768.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_013569.1: boundary_gt30:nad6, boundary_gt30:nad1
+- NC_023124.1: boundary_gt30:cox1, name_error:S, name_error:R
+- NC_023925.1: boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:rrnL
+- NC_023926.1: boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- NC_023927.1: boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:rrnS
+- NC_023928.1: boundary_gt30:nad6
+- NC_025561.1: boundary_gt30:rrnL
+- NC_026859.1: boundary_gt30:nad2
+- NC_027699.1: boundary_gt30:nad4l, boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_027831.1: boundary_gt30:rrnL
+- NC_027854.1: boundary_gt30:rrnL
+- NC_028710.1: missing_gene:cox1, boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:nad4, boundary_gt30:nad5
+- NC_029871.1: boundary_gt30:rrnL
+- NC_030040.1: boundary_gt30:atp8, boundary_gt30:nad4l, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_031402.1: boundary_gt30:rrnL
+- NC_031403.1: boundary_gt30:rrnL, name_error:S
+- NC_031404.1: boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_031412.1: boundary_gt30:cox3, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_032055.1: boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:cox3, boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_035308.1: boundary_gt30:nad5
+- NC_035893.1: boundary_gt30:atp8, boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_037236.1: boundary_gt30:cox1, name_error:S, name_error:R
+- NC_037947.1: boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_044092.1: boundary_gt30:rrnL
+- NC_049135.1: boundary_gt30:cox3
+- NC_049136.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_050262.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_051993.1: name_error:S
+- NC_051994.1: boundary_gt30:rrnL, name_error:S
+- NC_051995.1: name_error:S
+- NC_052721.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_052845.1: name_error:S
+- NC_056279.1: boundary_gt30:rrnL, boundary_gt30:rrnS
+- NC_059817.1: internal_stop:nad2
+- NC_060301.1: internal_stop:nad2
+- NC_060302.1: name_error:S
+- NC_060759.1: boundary_gt30:cox1, name_error:S, name_error:R
+- NC_060814.1: boundary_gt30:cox2, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_060815.1: missing_gene:cox2, boundary_gt30:atp6, boundary_gt30:rrnL
+- NC_060816.1: boundary_gt30:rrnL
+- NC_061323.1: boundary_gt30:rrnL, name_error:S
+- NC_061377.1: boundary_gt30:cox3, boundary_gt30:cox2
+- NC_061743.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:cox2, boundary_gt30:rrnL, boundary_gt30:W
+- NC_061913.1: boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_063122.1: boundary_gt30:rrnL
+- NC_064058.1: boundary_gt30:nad1, boundary_gt30:nad2
+- NC_064376.1: boundary_gt30:rrnL
+- NC_064503.1: boundary_gt30:rrnS, internal_stop:nad2
+- NC_065392.1: boundary_gt30:rrnL
+- NC_065765.1: boundary_gt30:nad4l, boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_066969.1: boundary_gt30:nad2, boundary_gt30:atp6
+- NC_068907.1: name_error:rrnS
+- NC_069202.1: boundary_gt30:cox3
+- NC_069203.1: boundary_gt30:nad2, boundary_gt30:cob
+- NC_069204.1: boundary_gt30:nad5
+- NC_069206.1: boundary_gt30:cob
+- NC_069207.1: boundary_gt30:cob
+- NC_069297.1: boundary_gt30:rrnS, name_error:S
+- NC_070077.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_072217.1: boundary_gt30:rrnL
+- NC_072218.1: boundary_gt30:rrnL
+- NC_072219.1: boundary_gt30:rrnL
+- NC_072221.1: boundary_gt30:rrnL
+- NC_072222.1: boundary_gt30:rrnL
+- NC_072223.1: boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_077651.1: boundary_gt30:rrnL
+- NC_081955.1: boundary_gt30:rrnL
+- NC_082189.1: strand_error:G
+- NC_086457.1: boundary_gt30:rrnL
+- NC_086458.1: boundary_gt30:rrnL
+- NC_087806.1: missing_gene:cox1
+- NC_087807.1: boundary_gt30:rrnL
+- NC_087808.1: missing_gene:atp8, boundary_gt30:rrnL
+- NC_087824.1: boundary_gt30:atp8, boundary_gt30:rrnL
+- NC_087881.1: boundary_gt30:rrnL
+- NC_088773.1: name_error:S
+- OK012096.1: boundary_gt30:nad5
+- OL804287.1: boundary_gt30:rrnL, name_error:S
+- OM047258.1: boundary_gt30:rrnL, name_error:S, name_error:S
+- OM144973.1: boundary_gt30:nad4l
+- OM237314.1: boundary_gt30:rrnL, name_error:S
+- OM257408.1: boundary_gt30:cox3, boundary_gt30:cob
+- OM273170.1: boundary_gt30:rrnL, name_error:S
+- ON312495.1: boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:nad4l, boundary_gt30:rrnL
+- OP531857.1: boundary_gt30:rrnL
+- OP537514.1: boundary_gt30:nad1
+- OP605751.1: name_error:S
+- OP605752.1: boundary_gt30:rrnL, name_error:S
+- OP605754.1: boundary_gt30:rrnL, name_error:S
+- OP648299.1: boundary_gt30:rrnL
+- OP648302.1: boundary_gt30:nad4
+- OP648304.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- OP648305.1: boundary_gt30:nad2, boundary_gt30:rrnL
+- OP648306.1: boundary_gt30:rrnL
+- OP648307.1: boundary_gt30:rrnL
+- OQ076763.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- OQ076767.1: boundary_gt30:nad2, boundary_gt30:rrnL
+- OQ076768.1: boundary_gt30:nad6
+- OQ076773.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- OQ078742.1: missing_gene:atp8, boundary_gt30:cox2, boundary_gt30:nad2
+- OQ807197.1: boundary_gt30:nad2, boundary_gt30:rrnL
+- OQ807198.1: boundary_gt30:nad2
+- OQ807200.1: boundary_gt30:rrnL
+- OQ807201.1: boundary_gt30:nad2
+- OQ807203.1: boundary_gt30:rrnL
+- OQ807204.1: strand_error:rrnS
+- OR123440.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- OR123444.1: boundary_gt30:rrnS
+- OR123445.1: boundary_gt30:rrnS
+- OR449961.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- OR601003.1: missing_gene:atp8
+- OR637230.1: boundary_gt30:nad4, boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- OR854549.1: boundary_gt30:rrnL
+- OR935903.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935904.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935905.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935906.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935907.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935908.1: boundary_gt30:atp6
+- OR935909.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935910.1: boundary_gt30:atp6
+- OR935911.1: boundary_gt30:atp6
+- OR935912.1: boundary_gt30:atp6
+- OR935914.1: boundary_gt30:atp6
+- OR935915.1: boundary_gt30:atp6
+- OR935916.1: boundary_gt30:nad2
+- OR935917.1: boundary_gt30:nad2
+- OR935918.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935919.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935920.1: boundary_gt30:atp6
+- OR935921.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935922.1: boundary_gt30:nad2, boundary_gt30:atp6
+- OR935923.1: boundary_gt30:atp6
+- OR935924.1: boundary_gt30:atp6
+- OR935925.1: boundary_gt30:atp6
+- OR935926.1: boundary_gt30:atp6
+- OR935927.1: boundary_gt30:atp6
+- OR935928.1: boundary_gt30:atp6
+- OR935929.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935930.1: boundary_gt30:atp6, boundary_gt30:nad1
+- OR935931.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935932.1: boundary_gt30:atp6
+- OR935933.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935934.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935935.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935936.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935937.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:atp6
+- OR935938.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935939.1: boundary_gt30:cox3, boundary_gt30:atp6
+- OR935940.1: boundary_gt30:atp6
+- PP035855.1: boundary_gt30:rrnS
+- PP035856.1: boundary_gt30:rrnL
+- PP165800.1: boundary_gt30:rrnL
+- PP228859.1: boundary_gt30:nad3, boundary_gt30:rrnS
+- PP228860.1: boundary_gt30:nad3, boundary_gt30:rrnS
+- PP228861.1: boundary_gt30:nad2
+- PP228862.1: boundary_gt30:nad2
+- PP440187.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:nad4
+- PP790749.1: boundary_gt30:rrnL
+- PP873346.1: boundary_gt30:atp6
+- PP873347.1: boundary_gt30:nad2
+- PP975882.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:rrnS, boundary_gt30:K
+- PP990759.1: boundary_gt30:atp6
+- PP998669.1: boundary_gt30:nad6, strand_error:rrnL, strand_error:rrnS, name_error:G, strand_error:Y, strand_error:K, strand_error:I, strand_error:A, strand_error:L, strand_error:V
+- PP999651.1: boundary_gt30:rrnL
+- PQ221480.1: boundary_gt30:cox1, boundary_gt30:cob, internal_stop:cob
+- PQ221481.1: name_error:T
+- PQ221483.1: name_error:L
+- PQ510072.1: boundary_gt30:rrnL
+- PQ593498.1: boundary_gt30:rrnL
+- PQ593499.1: boundary_gt30:rrnL
+- PQ741859.1: name_error:S
+- PQ824720.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- PV083664.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- PV151471.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad1, boundary_gt30:rrnL
+- PV243576.1: boundary_gt30:nad4l, boundary_gt30:rrnS, boundary_gt30:rrnL, name_error:S
+- PV245939.1: boundary_gt30:rrnL, name_error:S
+- PV263602.1: boundary_gt30:rrnS, boundary_gt30:rrnL
+- PV424659.1: boundary_gt30:nad6, boundary_gt30:cob, boundary_gt30:atp6
+- PV424660.1: boundary_gt30:atp6
+- PV440316.1: name_error:L
+- PV440317.1: boundary_gt30:nad1, boundary_gt30:nad6
+- PV460759.1: boundary_gt30:rrnL
+- PV480557.1: boundary_gt30:rrnL
+- PV535851.1: boundary_gt30:rrnL, boundary_gt30:rrnS
+- PV588238.1: boundary_gt30:nad4
+- PV831793.1: boundary_gt30:cox2, boundary_gt30:rrnL
+- PX119664.1: boundary_gt30:nad4l
+- PX168857.1: boundary_gt30:nad5, boundary_gt30:cox2, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:rrnL, boundary_gt30:rrnS, name_error:S, name_error:S
+- PX601447.1: internal_stop:atp8
+- PX601449.1: boundary_gt30:atp8, boundary_gt30:rrnS, boundary_gt30:rrnL
+- PX614612.1: boundary_gt30:nad4, boundary_gt30:cox1
+- PX718958.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- PX970953.1: boundary_gt30:nad1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:atp6, missing_gene:nad2, boundary_gt30:rrnL, boundary_gt30:rrnS
+- PX970954.1: boundary_gt30:nad4, boundary_gt30:cox3, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:rrnS
+- PX994373.1: boundary_gt30:cox1
+- U24570.1: boundary_gt30:cob
+
+**mitos2** (638 records)
+
+- AY619711.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnS
+- AY741661.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- AY741662.1: boundary_gt30:cox1, boundary_gt30:atp6
+- AY961084.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- BK059172.1: boundary_gt30:nad5, missing_gene:nad6, boundary_gt30:atp6
+- DQ517436.1: boundary_gt30:nad1, boundary_gt30:cox3, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad4
+- EF506562.1: boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:rrnL
+- EF583817.1: boundary_gt30:cox3, boundary_gt30:nad3, boundary_gt30:nad4, boundary_gt30:rrnL
+- EF656365.1: boundary_gt30:nad5, boundary_gt30:rrnS
+- EU236701.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- EU239687.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad5
+- EU293739.1: boundary_gt30:nad4, boundary_gt30:nad2, missing_gene:cox1, name_error:A, internal_stop:cox1, duplicate_gene:cox1
+- FJ422961.1: boundary_gt30:cox1, boundary_gt30:nad3, boundary_gt30:rrnL
+- FJ612452.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad4
+- FJ976040.1: boundary_gt30:nad4
+- FJ976041.1: boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:nad5
+- FJ976042.1: boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:rrnL
+- KC790350.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad5, missing_gene:nad4l, boundary_gt30:nad4, missing_gene:rrnL, boundary_gt30:L
+- KJ754934.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- KJ789165.1: boundary_gt30:nad5, boundary_gt30:cox1
+- KJ789169.1: boundary_gt30:nad5, missing_gene:nad2, boundary_gt30:cob, boundary_gt30:atp6
+- KJ789171.1: boundary_gt30:nad5, strand_error:Y, name_error:W
+- KM655838.1: boundary_gt30:nad4, boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:rrnL
+- KM655839.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- KP751904.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:rrnL
+- KR534503.1: boundary_gt30:rrnL
+- KT429007.1: boundary_gt30:atp6, boundary_gt30:nad5
+- KT429010.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4
+- KT429013.1: boundary_gt30:nad4, boundary_gt30:rrnL
+- KT429014.1: boundary_gt30:atp8, boundary_gt30:rrnL
+- KT726961.1: boundary_gt30:cob, boundary_gt30:nad4, boundary_gt30:atp6, boundary_gt30:nad2, boundary_gt30:cox3, duplicate_gene:cox3
+- KT726962.1: boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- KT989318.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989319.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989320.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989321.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989322.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989323.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989324.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989325.1: strand_error:nad2, boundary_gt30:nad4l, boundary_gt30:rrnL, internal_stop:nad2
+- KT989326.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- KT989327.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:rrnL, duplicate_gene:nad5
+- KT989328.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- KT989329.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL, duplicate_gene:nad5
+- KT989330.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- KT989331.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- KU672396.1: boundary_gt30:nad4, boundary_gt30:atp8, boundary_gt30:nad6, boundary_gt30:rrnL
+- KU672397.1: boundary_gt30:atp8, boundary_gt30:nad6
+- KU992689.1: boundary_gt30:cox2, boundary_gt30:nad4l, boundary_gt30:rrnL
+- KX752422.1: boundary_gt30:nad4, boundary_gt30:rrnS, boundary_gt30:rrnL
+- KX752425.1: boundary_gt30:cox3, boundary_gt30:nad6, missing_gene:atp8, missing_gene:nad5, boundary_gt30:rrnL
+- KX814447.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- KY742027.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:nad4, duplicate_gene:nad4, duplicate_gene:nad5
+- KY753824.1: boundary_gt30:nad2, boundary_gt30:cob
+- KY753825.1: boundary_gt30:cob
+- KY753826.1: boundary_gt30:cob
+- KY753827.1: boundary_gt30:rrnL
+- KY753828.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:cob, missing_gene:nad4l, boundary_gt30:nad4, boundary_gt30:rrnL
+- KY753829.1: missing_gene:nad2, boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, duplicate_gene:nad5
+- KY753830.1: missing_gene:nad2, boundary_gt30:cox1, boundary_gt30:nad4
+- KY753831.1: boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:nad5
+- KY753832.1: name_error:nad2, boundary_gt30:nad6, duplicate_gene:nad4
+- KY753833.1: boundary_gt30:nad2, boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5
+- KY753834.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- KY753836.1: boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:nad4, internal_stop:nad5, duplicate_gene:nad5
+- KY753837.1: boundary_gt30:nad3
+- KY753838.1: boundary_gt30:nad2
+- KY774370.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:rrnL, duplicate_gene:nad4, duplicate_gene:nad5
+- KY774371.1: missing_gene:cox1, missing_gene:atp8, boundary_gt30:nad4, boundary_gt30:rrnL, duplicate_gene:nad4, duplicate_gene:nad5
+- LC573968.1: boundary_gt30:nad4, boundary_gt30:nad1, duplicate_gene:nad5
+- LC573969.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- LC582823.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, duplicate_gene:nad5
+- LC582824.1: boundary_gt30:nad4, name_error:nad2, duplicate_gene:nad4
+- LC661358.1: boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:nad4l, boundary_gt30:nad6, strand_error:S, name_error:D
+- LC661359.1: boundary_gt30:cox1, boundary_gt30:nad4
+- LC677172.1: boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:cox1
+- LC707921.1: boundary_gt30:nad5
+- LC726496.1: missing_gene:nad2
+- LC726497.1: missing_gene:nad2, internal_stop:nad2, duplicate_gene:nad5
+- LC726498.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, internal_stop:nad5, duplicate_gene:nad5
+- LC726499.1: missing_gene:nad4l, boundary_gt30:nad4, missing_gene:nad2
+- LC726500.1: missing_gene:nad2, boundary_gt30:atp8
+- LC726501.1: boundary_gt30:nad4, boundary_gt30:nad2
+- LC726502.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2
+- LC726503.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2
+- LC726504.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2
+- LC726505.1: boundary_gt30:nad4, boundary_gt30:nad2
+- LC726506.1: boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:rrnL
+- LC726507.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, duplicate_gene:nad5
+- LC726508.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6
+- LC726509.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:atp6
+- LC726510.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:atp6
+- LC726511.1: boundary_gt30:nad4, missing_gene:nad2, duplicate_gene:nad4
+- LC726512.1: boundary_gt30:nad4
+- LC726513.1: missing_gene:nad2
+- LC726514.1: missing_gene:nad2
+- LC726515.1: missing_gene:nad2, boundary_gt30:atp8
+- LC726516.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6
+- LC726517.1: missing_gene:nad2
+- LC726518.1: missing_gene:nad2, boundary_gt30:atp8
+- LC726519.1: boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:rrnL
+- LC726520.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6
+- LC726521.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, internal_stop:nad5, duplicate_gene:nad5
+- LC726522.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:atp6
+- LC726523.1: boundary_gt30:nad4, missing_gene:nad2
+- LC726524.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:atp6, duplicate_gene:nad5
+- LC726525.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:atp6
+- LC726526.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, internal_stop:nad2, duplicate_gene:nad5
+- LC726527.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2
+- LC726528.1: boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:atp6, internal_stop:nad2
+- LC726529.1: boundary_gt30:nad4, name_error:nad2, duplicate_gene:nad4
+- LC726530.1: boundary_gt30:nad4, missing_gene:nad2
+- LC726531.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, duplicate_gene:nad5
+- LC726532.1: boundary_gt30:rrnL
+- LC726533.1: boundary_gt30:nad4, boundary_gt30:nad1
+- LC726534.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2
+- LC726535.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6
+- LC726536.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2
+- LC726537.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2
+- LC726538.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad2
+- LC726539.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad2
+- LC726540.1: boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:atp6
+- LC726541.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2
+- LC726542.1: boundary_gt30:nad5, missing_gene:nad2
+- LC726543.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2
+- LC726544.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, duplicate_gene:nad5
+- LC726545.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:rrnL
+- LC726546.1: boundary_gt30:nad5, boundary_gt30:nad4
+- LC726547.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:atp6
+- LC726548.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2
+- LC726549.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:atp6
+- LC726550.1: missing_gene:nad2
+- LC726551.1: boundary_gt30:nad5, boundary_gt30:nad2
+- LC726552.1: boundary_gt30:nad5, missing_gene:nad4l, boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:atp6, boundary_gt30:rrnL
+- LC726553.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, internal_stop:nad2
+- LC726554.1: boundary_gt30:nad4, boundary_gt30:atp8
+- LC726555.1: boundary_gt30:nad4, missing_gene:nad2
+- LC726556.1: missing_gene:nad4l, boundary_gt30:nad4, missing_gene:nad2, internal_stop:nad2, duplicate_gene:nad5
+- LC726557.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6
+- LC726558.1: boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:rrnL
+- LC726559.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2
+- LC726560.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2
+- LC726561.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:atp6
+- LC726562.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad2
+- LC726563.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, internal_stop:nad2, duplicate_gene:nad5
+- LC726564.1: boundary_gt30:nad4, boundary_gt30:nad2
+- LC726565.1: boundary_gt30:nad4, missing_gene:nad2
+- LC726566.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:atp6
+- LC726567.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, internal_stop:nad2, duplicate_gene:nad5
+- LC726568.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2
+- LC726569.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6, boundary_gt30:rrnL, internal_stop:nad5, duplicate_gene:nad5
+- LC726570.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, duplicate_gene:nad5
+- LC726571.1: boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:nad2, duplicate_gene:nad5
+- LC726572.1: boundary_gt30:nad4, boundary_gt30:nad1
+- LC757642.1: boundary_gt30:cox1, boundary_gt30:cob, missing_gene:nad4l, boundary_gt30:nad2, missing_gene:rrnL
+- LC874204.1: missing_gene:nad6, boundary_gt30:nad1, missing_gene:rrnL
+- LC874205.1: missing_gene:rrnL
+- LT159850.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- MF538532.1: boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:rrnL
+- MF960765.1: boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:rrnL
+- MG428625.1: boundary_gt30:cob, missing_gene:rrnL, duplicate_gene:nad5
+- MG873457.1: boundary_gt30:cox1
+- MG873458.1: boundary_gt30:cox3, boundary_gt30:nad3
+- MK120303.1: boundary_gt30:atp6, boundary_gt30:nad4l
+- MK192098.1: boundary_gt30:atp6
+- MK347500.1: boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:rrnL
+- MK548645.1: boundary_gt30:nad4l, duplicate_gene:nad5
+- MK618509.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, name_error:V
+- MK618510.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- MK618511.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1
+- MK618512.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1
+- MK618513.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- MK642867.1: boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:nad2
+- MK642868.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1
+- MK642869.1: boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:nad2
+- MK642870.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad1, boundary_gt30:nad2
+- MK642871.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2, internal_stop:nad5, duplicate_gene:nad5
+- MK642872.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- MN102127.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1
+- MN106285.1: boundary_gt30:nad6, boundary_gt30:nad5
+- MN539268.1: boundary_gt30:nad5, boundary_gt30:atp8
+- MN812982.1: boundary_gt30:nad5, name_error:S, duplicate_gene:cox2
+- MN830365.1: name_error:S
+- MN830366.1: boundary_gt30:rrnL, name_error:S
+- MN830368.1: boundary_gt30:rrnL
+- MN830369.1: boundary_gt30:rrnL, name_error:S
+- MT108936.1: boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:rrnL, name_error:S, name_error:S
+- MT108937.1: boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:rrnL, name_error:S, name_error:S
+- MT239480.1: boundary_gt30:nad3, boundary_gt30:rrnL
+- MT410851.1: boundary_gt30:nad4l, boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:rrnL, name_error:S
+- MT628551.1: boundary_gt30:nad2, boundary_gt30:atp8, boundary_gt30:nad5, boundary_gt30:rrnL
+- MT628565.1: boundary_gt30:nad1, boundary_gt30:nad2
+- MT683771.1: boundary_gt30:nad5, boundary_gt30:nad6
+- MT822294.1: boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:nad5, internal_stop:nad2, duplicate_gene:nad2
+- MT862376.1: boundary_gt30:nad2, boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:rrnL
+- MT872697.1: boundary_gt30:nad1
+- MW222472.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:atp6
+- MW435182.1: boundary_gt30:rrnL
+- MW528029.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:cox2, boundary_gt30:rrnL
+- MW532084.1: boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:nad1, boundary_gt30:nad2
+- MW690579.1: boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, name_error:L
+- MW727509.1: boundary_gt30:nad3, boundary_gt30:cob, boundary_gt30:rrnL, missing_gene:rrnS
+- MW732144.1: boundary_gt30:atp8, boundary_gt30:nad1, boundary_gt30:rrnS, missing_gene:rrnL, name_error:R
+- MW770354.1: boundary_gt30:atp8, boundary_gt30:nad5, name_error:R
+- MW783685.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL, internal_stop:nad5, duplicate_gene:nad5
+- MW783686.1: boundary_gt30:nad2, boundary_gt30:cox1
+- MW783687.1: boundary_gt30:nad2, boundary_gt30:nad5
+- MW783688.1: boundary_gt30:nad2, boundary_gt30:cox1, duplicate_gene:nad4
+- MW783689.1: boundary_gt30:nad2, boundary_gt30:cox1, boundary_gt30:cob
+- MW783691.1: missing_gene:nad2, boundary_gt30:cox1, boundary_gt30:rrnL
+- MW783692.1: missing_gene:nad2, boundary_gt30:nad4
+- MW783693.1: boundary_gt30:cox1
+- MW783694.1: missing_gene:nad2, boundary_gt30:nad4
+- MW783695.1: boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:rrnL
+- MW783698.1: boundary_gt30:nad2, boundary_gt30:nad1
+- MW783699.1: boundary_gt30:nad2, boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4
+- MW783700.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:nad5, boundary_gt30:nad4, missing_gene:rrnL
+- MW783701.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- MW783702.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:nad5, missing_gene:nad4l, boundary_gt30:nad4, boundary_gt30:rrnL
+- MW783703.1: missing_gene:nad2, boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:rrnL
+- MW783704.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:rrnL
+- MW783705.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- MW783706.1: missing_gene:nad2, boundary_gt30:nad4
+- MW783707.1: missing_gene:nad2, boundary_gt30:cob, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- MW794259.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:nad5, boundary_gt30:rrnL
+- MW794260.1: boundary_gt30:cob
+- MW794261.1: boundary_gt30:cob, boundary_gt30:atp6, boundary_gt30:nad5
+- MW816923.1: boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnS
+- MZ131647.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- MZ189977.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- MZ202177.1: boundary_gt30:nad5, boundary_gt30:rrnS, missing_gene:rrnL
+- MZ326700.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- MZ435261.1: boundary_gt30:nad3, boundary_gt30:cob, boundary_gt30:rrnL, missing_gene:rrnS
+- MZ506667.1: boundary_gt30:cox1, boundary_gt30:cox2, boundary_gt30:rrnL
+- MZ507570.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad6, name_error:S, duplicate_gene:nad5
+- NC_001673.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:cob, boundary_gt30:nad1, duplicate_gene:nad5
+- NC_006321.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- NC_006379.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnS
+- NC_007933.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- NC_011014.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_011826.1: boundary_gt30:cox1, boundary_gt30:nad3, boundary_gt30:rrnL
+- NC_012618.1: boundary_gt30:cox3, boundary_gt30:nad3, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_012768.1: boundary_gt30:nad5, boundary_gt30:rrnS
+- NC_013569.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:cox3, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad1, boundary_gt30:rrnL
+- NC_020609.1: boundary_gt30:cox1, boundary_gt30:nad6
+- NC_023124.1: boundary_gt30:nad5, name_error:S, name_error:R
+- NC_023776.1: boundary_gt30:cox1, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_023836.1: boundary_gt30:atp6, boundary_gt30:nad5
+- NC_023925.1: boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad1, boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_023926.1: boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- NC_023927.1: boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:rrnS, duplicate_gene:atp6
+- NC_023928.1: boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_023943.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_024653.1: boundary_gt30:nad5, boundary_gt30:cox1
+- NC_025292.1: boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_025561.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:rrnL
+- NC_026833.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_026856.1: boundary_gt30:nad5
+- NC_026858.1: boundary_gt30:nad5
+- NC_026859.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:cox1, duplicate_gene:nad5
+- NC_026860.1: boundary_gt30:nad5, boundary_gt30:cox1
+- NC_026861.1: boundary_gt30:nad5, boundary_gt30:cox1
+- NC_026862.1: boundary_gt30:nad5
+- NC_026995.1: boundary_gt30:nad2
+- NC_027257.1: boundary_gt30:nad4, boundary_gt30:nad2
+- NC_027258.1: boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:nad2
+- NC_027699.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- NC_027831.1: boundary_gt30:rrnL
+- NC_027832.1: boundary_gt30:nad5, boundary_gt30:nad4
+- NC_027854.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_028050.1: boundary_gt30:atp8, boundary_gt30:nad1
+- NC_028710.1: missing_gene:cox1, boundary_gt30:nad2, boundary_gt30:cob, boundary_gt30:nad4, boundary_gt30:nad5, duplicate_gene:cox1
+- NC_029863.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, duplicate_gene:nad5
+- NC_029864.1: boundary_gt30:nad2
+- NC_029865.1: boundary_gt30:atp6, boundary_gt30:nad4
+- NC_029866.1: boundary_gt30:nad5, boundary_gt30:nad4
+- NC_029867.1: boundary_gt30:nad4
+- NC_029868.1: boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_029869.1: boundary_gt30:nad5
+- NC_029870.1: boundary_gt30:nad5
+- NC_029871.1: boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_029872.1: boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_029879.1: boundary_gt30:nad5, boundary_gt30:nad4
+- NC_030040.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:nad1, boundary_gt30:nad3, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_030269.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_031402.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_031403.1: boundary_gt30:nad5, boundary_gt30:rrnL, name_error:S
+- NC_031404.1: boundary_gt30:cox3, boundary_gt30:nad6, boundary_gt30:nad3, boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_031412.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:rrnL
+- NC_032055.1: boundary_gt30:cox1, boundary_gt30:cob, boundary_gt30:nad2, boundary_gt30:nad4, boundary_gt30:nad5, boundary_gt30:cox3, missing_gene:atp6, boundary_gt30:cox2, boundary_gt30:nad1, boundary_gt30:rrnS, boundary_gt30:rrnL
+- NC_032361.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_034807.1: boundary_gt30:cox1
+- NC_035308.1: boundary_gt30:rrnL
+- NC_035507.1: boundary_gt30:cox1, boundary_gt30:nad5
+- NC_035893.1: boundary_gt30:atp6, boundary_gt30:nad4l, boundary_gt30:nad1, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_036150.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_037085.1: boundary_gt30:nad5
+- NC_037236.1: boundary_gt30:nad6, name_error:S, name_error:R
+- NC_037390.1: boundary_gt30:cox1, missing_gene:rrnL
+- NC_037947.1: boundary_gt30:atp8, boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:rrnL
+- NC_044092.1: boundary_gt30:nad2, boundary_gt30:cox1, missing_gene:rrnL
+- NC_046733.1: boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:nad2
+- NC_046790.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_049135.1: boundary_gt30:cox3, boundary_gt30:nad3, internal_stop:nad5, duplicate_gene:atp8, duplicate_gene:nad5
+- NC_049136.1: boundary_gt30:rrnL, duplicate_gene:nad5
+- NC_050262.1: boundary_gt30:nad4, boundary_gt30:cox1, boundary_gt30:cob
+- NC_050679.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_051993.1: boundary_gt30:nad5, boundary_gt30:nad1, name_error:S
+- NC_051994.1: boundary_gt30:cox1, boundary_gt30:nad3, boundary_gt30:rrnL, duplicate_gene:cox1
+- NC_051995.1: boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:rrnL, name_error:S
+- NC_051996.1: boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:cox1
+- NC_052721.1: missing_gene:nad2, boundary_gt30:nad5, boundary_gt30:nad4, internal_stop:nad5, duplicate_gene:nad5
+- NC_052845.1: boundary_gt30:rrnL, name_error:S
+- NC_053360.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad5
+- NC_056279.1: boundary_gt30:nad3, boundary_gt30:cob, boundary_gt30:rrnL, missing_gene:rrnS
+- NC_057074.1: boundary_gt30:cox1
+- NC_058234.1: boundary_gt30:nad5, boundary_gt30:cox1
+- NC_058285.1: boundary_gt30:atp8, boundary_gt30:rrnL
+- NC_058588.1: boundary_gt30:nad5, boundary_gt30:nad2
+- NC_059817.1: boundary_gt30:cox1, boundary_gt30:nad5
+- NC_060301.1: boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:nad3, boundary_gt30:rrnL
+- NC_060302.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, name_error:S
+- NC_060488.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad4, duplicate_gene:nad5
+- NC_060759.1: boundary_gt30:nad5, name_error:S, name_error:R
+- NC_060814.1: boundary_gt30:cox1, boundary_gt30:cox2, missing_gene:atp8, boundary_gt30:cox3, boundary_gt30:atp6, missing_gene:rrnL
+- NC_060815.1: boundary_gt30:cox1, boundary_gt30:cox2, boundary_gt30:atp6, boundary_gt30:rrnL
+- NC_060816.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_061323.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL, name_error:S
+- NC_061377.1: boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:cox2, boundary_gt30:nad1, boundary_gt30:rrnL
+- NC_061743.1: boundary_gt30:cox1, boundary_gt30:nad4l, boundary_gt30:cox2, boundary_gt30:rrnS, boundary_gt30:rrnL, boundary_gt30:W
+- NC_061913.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:cob, boundary_gt30:nad3, boundary_gt30:nad2, boundary_gt30:rrnL
+- NC_062818.1: boundary_gt30:nad2
+- NC_063122.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- NC_063475.1: boundary_gt30:rrnL, internal_stop:atp6, internal_stop:atp6, duplicate_gene:atp6
+- NC_063588.1: boundary_gt30:nad5, boundary_gt30:nad1
+- NC_063944.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_064058.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:cox2, boundary_gt30:atp6, internal_stop:nad2
+- NC_064338.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:rrnL, duplicate_gene:nad2
+- NC_064376.1: boundary_gt30:nad2, boundary_gt30:rrnL, duplicate_gene:nad5
+- NC_064503.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_065012.1: boundary_gt30:nad5, boundary_gt30:nad4
+- NC_065094.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_065095.1: boundary_gt30:nad5
+- NC_065212.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad2
+- NC_065213.1: boundary_gt30:cox1, boundary_gt30:nad6
+- NC_065392.1: boundary_gt30:nad5, boundary_gt30:rrnS, missing_gene:rrnL
+- NC_065765.1: boundary_gt30:nad5, boundary_gt30:nad6, boundary_gt30:rrnL
+- NC_066398.1: boundary_gt30:cox1, boundary_gt30:nad4
+- NC_066399.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- NC_066400.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- NC_066720.1: boundary_gt30:cox1
+- NC_066721.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- NC_066969.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4
+- NC_068907.1: boundary_gt30:cox2, name_error:rrnS, duplicate_gene:nad5
+- NC_069058.1: boundary_gt30:cox2, duplicate_gene:nad5
+- NC_069059.1: boundary_gt30:cox2, duplicate_gene:nad5
+- NC_069202.1: boundary_gt30:nad1, boundary_gt30:cox3
+- NC_069203.1: missing_gene:nad2, boundary_gt30:cob
+- NC_069204.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_069205.1: boundary_gt30:cox1
+- NC_069206.1: boundary_gt30:nad1, boundary_gt30:cob
+- NC_069207.1: boundary_gt30:nad1, boundary_gt30:cob
+- NC_069297.1: name_error:S
+- NC_070077.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_071182.1: boundary_gt30:nad6
+- NC_071875.1: boundary_gt30:cox1
+- NC_072217.1: boundary_gt30:nad5, boundary_gt30:atp8, boundary_gt30:rrnL
+- NC_072218.1: boundary_gt30:nad5, boundary_gt30:atp6, boundary_gt30:rrnL
+- NC_072219.1: boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_072222.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- NC_072223.1: boundary_gt30:rrnL
+- NC_072606.1: boundary_gt30:nad5, boundary_gt30:cox1
+- NC_077651.1: boundary_gt30:nad6, missing_gene:rrnL
+- NC_081955.1: boundary_gt30:cox1, boundary_gt30:nad4
+- NC_082189.1: boundary_gt30:nad5, strand_error:G
+- NC_082190.1: boundary_gt30:nad5
+- NC_082191.1: boundary_gt30:nad5
+- NC_082192.1: boundary_gt30:cox1
+- NC_082193.1: boundary_gt30:cox1
+- NC_082300.1: duplicate_gene:nad5
+- NC_085286.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- NC_085348.1: boundary_gt30:nad5, boundary_gt30:cob, boundary_gt30:rrnL
+- NC_086457.1: boundary_gt30:rrnL
+- NC_086458.1: boundary_gt30:rrnL
+- NC_087805.1: boundary_gt30:nad5, missing_gene:nad4l, boundary_gt30:nad4
+- NC_087807.1: boundary_gt30:nad5, duplicate_gene:nad5
+- NC_087808.1: boundary_gt30:nad6, boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:rrnL
+- NC_087809.1: missing_gene:nad6, boundary_gt30:nad5, boundary_gt30:nad4
+- NC_087810.1: boundary_gt30:nad4, missing_gene:nad2
+- NC_087824.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad5
+- NC_087881.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL, duplicate_gene:atp6
+- NC_087882.1: boundary_gt30:nad5, boundary_gt30:nad3, boundary_gt30:rrnL
+- NC_088773.1: boundary_gt30:nad5, name_error:S
+- OK012096.1: boundary_gt30:nad4
+- OK032597.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad3, strand_error:nad2, boundary_gt30:rrnL
+- OK040144.1: boundary_gt30:nad5, boundary_gt30:cox1
+- OL681896.1: boundary_gt30:nad5, boundary_gt30:cox1
+- OL681897.1: boundary_gt30:nad5, boundary_gt30:cox1
+- OL681898.1: boundary_gt30:nad5, boundary_gt30:cox1
+- OL782600.1: boundary_gt30:nad6, boundary_gt30:rrnL
+- OL804287.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL, name_error:S
+- OL840313.1: boundary_gt30:cox1, boundary_gt30:nad4
+- OL840315.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- OL840317.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- OM047258.1: boundary_gt30:rrnL, name_error:S, name_error:S
+- OM117615.1: boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:rrnL
+- OM117616.1: boundary_gt30:rrnL, internal_stop:atp6, duplicate_gene:atp6, duplicate_gene:atp8
+- OM144973.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad2, boundary_gt30:nad5, name_error:nad4l, missing_gene:nad4
+- OM203184.1: missing_gene:rrnL, duplicate_gene:atp6, duplicate_gene:atp8
+- OM203185.1: missing_gene:rrnL, internal_stop:atp8, internal_stop:atp6, internal_stop:atp8, internal_stop:atp6, duplicate_gene:atp6, duplicate_gene:atp8
+- OM203186.1: missing_gene:rrnL, internal_stop:atp6, duplicate_gene:atp6
+- OM213998.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- OM213999.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- OM214536.1: duplicate_gene:atp6
+- OM237314.1: boundary_gt30:rrnL, name_error:S
+- OM257408.1: boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:cob, boundary_gt30:atp6, boundary_gt30:rrnL
+- OM273170.1: boundary_gt30:nad4, boundary_gt30:rrnL, name_error:S
+- OM687884.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- OM687885.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- OM687886.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- OM687887.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- OM687888.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- OM687889.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- OM687890.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- ON155433.1: boundary_gt30:cox2
+- ON312495.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:cox2, boundary_gt30:cox1, boundary_gt30:rrnL, internal_stop:cox2
+- ON553959.1: boundary_gt30:nad4
+- ON553960.1: boundary_gt30:nad4
+- ON929992.1: boundary_gt30:nad5, boundary_gt30:cox1
+- ON929993.1: boundary_gt30:nad5, boundary_gt30:cox1
+- ON929994.1: boundary_gt30:nad5
+- ON929996.1: boundary_gt30:nad5
+- ON929999.1: boundary_gt30:cox1
+- ON960857.1: boundary_gt30:atp8
+- OP531856.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:cox1
+- OP531857.1: boundary_gt30:nad2
+- OP537514.1: boundary_gt30:nad4, boundary_gt30:atp6
+- OP605751.1: boundary_gt30:rrnL, name_error:S
+- OP605752.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:rrnL, name_error:S
+- OP605754.1: boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:nad2, name_error:S
+- OP627014.1: boundary_gt30:nad4
+- OP648299.1: boundary_gt30:nad4, boundary_gt30:rrnL
+- OP648300.1: boundary_gt30:nad2, boundary_gt30:rrnL
+- OP648301.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:rrnL
+- OP648302.1: missing_gene:nad2, boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- OP648303.1: missing_gene:nad2, boundary_gt30:nad6
+- OP648304.1: missing_gene:nad2, boundary_gt30:rrnL
+- OP648305.1: missing_gene:nad2, missing_gene:nad6, boundary_gt30:rrnL
+- OP648306.1: boundary_gt30:rrnL
+- OP648307.1: boundary_gt30:rrnL
+- OP787079.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:atp6
+- OQ076763.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:rrnL, duplicate_gene:nad5
+- OQ076767.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:cox1, boundary_gt30:rrnL
+- OQ076768.1: boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:rrnL
+- OQ076773.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:rrnL
+- OQ078742.1: missing_gene:atp8, boundary_gt30:cox3, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:cox2, boundary_gt30:nad1, boundary_gt30:rrnL
+- OQ111865.1: boundary_gt30:cox1, boundary_gt30:nad1, duplicate_gene:nad5
+- OQ111866.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1
+- OQ111867.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad1
+- OQ339201.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- OQ807196.1: boundary_gt30:cox1, missing_gene:nad6, boundary_gt30:nad1
+- OQ807197.1: missing_gene:nad2, boundary_gt30:nad5, boundary_gt30:rrnL, duplicate_gene:nad5
+- OQ807198.1: missing_gene:nad2, boundary_gt30:nad5, boundary_gt30:nad1
+- OQ807199.1: boundary_gt30:nad5
+- OQ807200.1: strand_error:nad2, boundary_gt30:nad6, boundary_gt30:rrnL, internal_stop:nad2
+- OQ807201.1: strand_error:nad2, boundary_gt30:nad5, internal_stop:nad2
+- OQ807202.1: boundary_gt30:nad2
+- OQ807203.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:rrnL, internal_stop:nad4, duplicate_gene:nad4
+- OQ807204.1: boundary_gt30:cox3, boundary_gt30:nad5, strand_error:rrnS, duplicate_gene:nad5
+- OQ807205.1: boundary_gt30:nad5
+- OQ807206.1: boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:nad4
+- OR123440.1: missing_gene:nad2, boundary_gt30:nad5, internal_stop:nad2, duplicate_gene:nad5
+- OR123441.1: boundary_gt30:nad5, boundary_gt30:rrnL
+- OR123444.1: boundary_gt30:nad5, boundary_gt30:nad2
+- OR123445.1: boundary_gt30:nad2, boundary_gt30:nad5, boundary_gt30:nad4
+- OR124844.1: missing_gene:nad6, boundary_gt30:nad5
+- OR161103.1: boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:rrnL
+- OR449961.1: boundary_gt30:atp6, boundary_gt30:rrnL
+- OR489164.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad2
+- OR496151.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1
+- OR551454.1: boundary_gt30:cox1
+- OR601003.1: boundary_gt30:nad3, boundary_gt30:rrnS
+- OR637230.1: boundary_gt30:cob, missing_gene:cox1, boundary_gt30:rrnL
+- OR804091.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- OR804092.1: boundary_gt30:cox1, boundary_gt30:nad5
+- OR854549.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad2, missing_gene:rrnL
+- OR935903.1: boundary_gt30:cox3, boundary_gt30:nad6
+- OR935904.1: boundary_gt30:cox1, boundary_gt30:cox3, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad1
+- OR935905.1: boundary_gt30:cox3, boundary_gt30:nad6
+- OR935906.1: boundary_gt30:cox3, boundary_gt30:nad6
+- OR935907.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935908.1: boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935909.1: boundary_gt30:cox1, boundary_gt30:cox3, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad1
+- OR935910.1: boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935911.1: boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935912.1: boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935913.1: boundary_gt30:nad5
+- OR935914.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935915.1: boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935916.1: boundary_gt30:cox1, boundary_gt30:nad5
+- OR935917.1: boundary_gt30:atp8, boundary_gt30:nad5
+- OR935918.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad5
+- OR935919.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad5
+- OR935920.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935921.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- OR935922.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:rrnL
+- OR935923.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935924.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935925.1: boundary_gt30:nad2, boundary_gt30:atp6, boundary_gt30:nad4
+- OR935926.1: boundary_gt30:atp6, boundary_gt30:nad4, duplicate_gene:nad5
+- OR935927.1: boundary_gt30:atp6, boundary_gt30:nad4
+- OR935928.1: boundary_gt30:atp6, boundary_gt30:nad4, duplicate_gene:nad5
+- OR935929.1: boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- OR935930.1: boundary_gt30:nad2, boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1
+- OR935931.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad5
+- OR935932.1: boundary_gt30:atp6, boundary_gt30:nad4
+- OR935933.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad5
+- OR935934.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad5
+- OR935935.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad5
+- OR935936.1: boundary_gt30:cox1, boundary_gt30:cox3, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad1
+- OR935937.1: boundary_gt30:cox1, boundary_gt30:cox3, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:nad1
+- OR935938.1: boundary_gt30:cox3, boundary_gt30:nad6, boundary_gt30:atp6
+- OR935939.1: boundary_gt30:cox1, boundary_gt30:cox3, boundary_gt30:nad6, boundary_gt30:nad5, boundary_gt30:nad4
+- OR935940.1: boundary_gt30:atp6, boundary_gt30:nad4
+- OZ076472.1: boundary_gt30:nad6
+- PP003976.1: boundary_gt30:nad4
+- PP033590.1: boundary_gt30:nad5, boundary_gt30:nad4
+- PP035855.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad2
+- PP035856.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad4
+- PP079027.1: boundary_gt30:nad5
+- PP165800.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- PP228859.1: boundary_gt30:nad3, missing_gene:rrnS
+- PP228860.1: boundary_gt30:nad3, missing_gene:rrnS
+- PP228861.1: boundary_gt30:cox2
+- PP228862.1: missing_gene:nad6, boundary_gt30:nad4
+- PP266604.1: missing_gene:nad4l, boundary_gt30:nad4, strand_error:nad2
+- PP266605.1: boundary_gt30:nad5, missing_gene:nad2, boundary_gt30:rrnL
+- PP266606.1: missing_gene:nad2, boundary_gt30:rrnL, internal_stop:nad2
+- PP266607.1: boundary_gt30:nad4, missing_gene:nad2, boundary_gt30:rrnL, internal_stop:nad2, internal_stop:nad5, duplicate_gene:nad5
+- PP438738.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:atp6, boundary_gt30:nad2
+- PP440187.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:cox1, duplicate_gene:nad4
+- PP571884.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad2
+- PP595922.1: boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:nad2
+- PP625722.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:nad1
+- PP790749.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:rrnL
+- PP855995.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:nad1, boundary_gt30:nad2
+- PP868406.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1
+- PP873346.1: boundary_gt30:atp8, boundary_gt30:rrnL
+- PP873347.1: boundary_gt30:cox1, boundary_gt30:nad3
+- PP893275.1: boundary_gt30:nad5
+- PP904446.1: boundary_gt30:nad2
+- PP922152.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- PP922153.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad2
+- PP922155.1: boundary_gt30:atp8
+- PP922156.1: boundary_gt30:nad4
+- PP944313.1: boundary_gt30:nad5, internal_stop:nad4, duplicate_gene:nad4
+- PP949297.1: boundary_gt30:atp8, boundary_gt30:nad2
+- PP949969.1: boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:rrnL
+- PP965186.1: boundary_gt30:nad4
+- PP975882.1: boundary_gt30:cox3, boundary_gt30:K
+- PP988498.1: boundary_gt30:cox1, boundary_gt30:nad1
+- PP990759.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2, boundary_gt30:rrnL
+- PP998669.1: missing_gene:rrnL, strand_error:rrnS, name_error:G, strand_error:Y, strand_error:K, strand_error:I, strand_error:A, strand_error:L, strand_error:V
+- PP999651.1: boundary_gt30:atp6, boundary_gt30:nad5, boundary_gt30:cox1, boundary_gt30:nad2, boundary_gt30:rrnL
+- PQ131216.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1
+- PQ164793.1: boundary_gt30:nad5, boundary_gt30:nad2
+- PQ164794.1: boundary_gt30:nad5, boundary_gt30:nad2
+- PQ214935.1: boundary_gt30:cox1, boundary_gt30:nad1, boundary_gt30:nad2
+- PQ221478.1: boundary_gt30:nad5, boundary_gt30:nad4
+- PQ221479.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, duplicate_gene:nad1
+- PQ221480.1: boundary_gt30:cob, boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:rrnL, internal_stop:cob
+- PQ221481.1: boundary_gt30:nad4, boundary_gt30:nad1, name_error:T
+- PQ221482.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- PQ221483.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- PQ278996.1: boundary_gt30:nad1, boundary_gt30:cox1, boundary_gt30:rrnL
+- PQ278997.1: boundary_gt30:nad1, boundary_gt30:cox1, boundary_gt30:rrnL
+- PQ278998.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:cox1
+- PQ278999.1: boundary_gt30:nad4, boundary_gt30:nad1, missing_gene:nad2, boundary_gt30:cox1, boundary_gt30:rrnL
+- PQ279000.1: boundary_gt30:nad4
+- PQ279310.1: boundary_gt30:cox1, boundary_gt30:nad4, boundary_gt30:nad1, boundary_gt30:nad2
+- PQ279311.1: boundary_gt30:cox1, boundary_gt30:nad1
+- PQ279312.1: boundary_gt30:cox1, boundary_gt30:nad1
+- PQ279313.1: boundary_gt30:atp8, boundary_gt30:atp6, missing_gene:nad3, boundary_gt30:nad2, boundary_gt30:rrnL
+- PQ468431.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- PQ510072.1: boundary_gt30:nad2, boundary_gt30:nad5
+- PQ572750.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- PQ572751.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- PQ572752.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad1, boundary_gt30:nad2
+- PQ572753.1: boundary_gt30:cox1
+- PQ593498.1: boundary_gt30:nad4, boundary_gt30:rrnL
+- PQ593499.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- PQ593500.1: boundary_gt30:nad5, boundary_gt30:nad4
+- PQ593501.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad2
+- PQ741859.1: name_error:S
+- PQ774336.1: boundary_gt30:nad5
+- PQ824720.1: boundary_gt30:nad5
+- PV083664.1: boundary_gt30:cox1, boundary_gt30:nad5
+- PV151471.1: boundary_gt30:cox2, boundary_gt30:nad4
+- PV243576.1: boundary_gt30:nad5, boundary_gt30:nad4l, boundary_gt30:nad4, boundary_gt30:rrnS, boundary_gt30:rrnL, name_error:S
+- PV245939.1: boundary_gt30:nad5, boundary_gt30:rrnL, name_error:S
+- PV424659.1: boundary_gt30:atp8, boundary_gt30:cob, boundary_gt30:nad5, boundary_gt30:cox1
+- PV424660.1: duplicate_gene:nad5
+- PV440316.1: boundary_gt30:nad2, boundary_gt30:cox1, boundary_gt30:atp8, boundary_gt30:nad6, name_error:L
+- PV440317.1: boundary_gt30:nad1, boundary_gt30:cox1, boundary_gt30:atp8, missing_gene:nad6, boundary_gt30:atp6, boundary_gt30:rrnL
+- PV460758.1: boundary_gt30:nad4, boundary_gt30:cox1
+- PV460759.1: boundary_gt30:nad5, boundary_gt30:atp6, boundary_gt30:rrnL
+- PV480557.1: boundary_gt30:nad4
+- PV535851.1: boundary_gt30:nad3, boundary_gt30:cob, boundary_gt30:rrnL, missing_gene:rrnS
+- PV573995.1: boundary_gt30:cox1, boundary_gt30:rrnL
+- PV588238.1: boundary_gt30:nad4, boundary_gt30:nad2, boundary_gt30:atp8
+- PV591000.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad3
+- PV591001.1: boundary_gt30:cox1, boundary_gt30:nad1
+- PV591002.1: boundary_gt30:cox1, boundary_gt30:nad4
+- PV591003.1: boundary_gt30:cox1, boundary_gt30:nad4
+- PV591004.1: boundary_gt30:cox1, boundary_gt30:nad4
+- PV591005.1: boundary_gt30:cox1
+- PV591006.1: boundary_gt30:cox1, boundary_gt30:nad5
+- PV591007.1: boundary_gt30:cox1, boundary_gt30:nad5
+- PV591008.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:rrnL
+- PV591009.1: boundary_gt30:cox1, boundary_gt30:nad1
+- PV591010.1: boundary_gt30:cox1, boundary_gt30:nad5, boundary_gt30:nad4
+- PV591011.1: boundary_gt30:cox1
+- PV591012.1: boundary_gt30:cox1
+- PV591013.1: boundary_gt30:cox1, boundary_gt30:nad5
+- PV831793.1: boundary_gt30:rrnL
+- PX116062.1: boundary_gt30:nad5, boundary_gt30:nad2, boundary_gt30:rrnL
+- PX119664.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:rrnL
+- PX168857.1: boundary_gt30:nad5, boundary_gt30:cox2, boundary_gt30:cob, boundary_gt30:rrnS, name_error:S, name_error:S, duplicate_gene:rrnL
+- PX275613.1: boundary_gt30:atp6, boundary_gt30:nad4, boundary_gt30:nad1
+- PX601447.1: boundary_gt30:nad2
+- PX601449.1: boundary_gt30:rrnL
+- PX614612.1: boundary_gt30:cox3, boundary_gt30:nad5, boundary_gt30:cox1
+- PX718958.1: boundary_gt30:cox2, boundary_gt30:nad1
+- PX896337.1: boundary_gt30:nad5, boundary_gt30:nad4, boundary_gt30:nad1
+- PX970953.1: boundary_gt30:cox1, boundary_gt30:atp6, boundary_gt30:nad2, boundary_gt30:cox3, boundary_gt30:rrnS
+- PX970954.1: boundary_gt30:cob, boundary_gt30:nad4l, boundary_gt30:nad5, boundary_gt30:cox3, missing_gene:atp8, boundary_gt30:cox2, boundary_gt30:cox1, missing_gene:rrnL, boundary_gt30:rrnS
+- PX994373.1: boundary_gt30:cox1, boundary_gt30:rrnL, duplicate_gene:nad4
+- U24570.1: boundary_gt30:cox1, boundary_gt30:nad6, boundary_gt30:cob, boundary_gt30:nad1, duplicate_gene:nad5

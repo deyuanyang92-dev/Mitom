@@ -285,3 +285,53 @@ def test_vertebrate_trnas_take_mitfi_ends_where_mitfi_calls_the_same_trna():
     assert out[0].anticodon == "gaa" and out[0].note.endswith("ends by MiTFi") and out[1].note == "MitoM-ML p 0.9"
     assert mc.vertebrate("Eukaryota;Metazoa;Chordata;Craniata;Vertebrata;Euteleostomi") and mc.vertebrate("Metazoa;Chordata")
     assert not mc.vertebrate("Eukaryota;Metazoa;Chordata;Tunicata;Ascidiacea") and not mc.vertebrate("Metazoa;Annelida")
+
+
+def test_trna_second_opinion_keeps_sure_calls_and_weak_ones_mitfi_also_calls():
+    """p < 0.9 needs MiTFi's call of the same tRNA (37 % of such calls were wrong without it on the tuning halves);
+    a weaker second call of a family needs p >= 0.9 even with MiTFi; without MiTFi only the second-copy rule applies."""
+    t = lambda name, s, e, p, st=1: mc.Feature("tRNA", name, s, e, st, f"MitoM-ML p {p}", score=p)   # noqa: E731
+    ml = [t("trnA", 100, 170, 0.95), t("trnC", 300, 370, 0.6), t("trnD", 500, 570, 0.7),
+          t("trnM", 700, 770, 0.97), t("trnM", 900, 970, 0.85), t("trnS1", 1100, 1170, 0.99), t("trnS1", 1300, 1370, 0.92)]
+    mitfi = [mc.Feature("tRNA", "trnC", 302, 371, 1, "MiTFi"), mc.Feature("tRNA", "trnM", 900, 970, 1, "MiTFi"),
+             mc.Feature("tRNA", "trnD", 500, 570, -1, "MiTFi")]                     # other strand: no support
+    keep = lambda fs: [(f.name, f.start) for f in fs]                              # noqa: E731
+    assert keep(mc.trna_second_opinion(ml, mitfi, 16000)) == [("trnA", 100), ("trnC", 300), ("trnM", 700),
+                                                              ("trnS1", 1100), ("trnS1", 1300)]
+    assert keep(mc.trna_second_opinion(ml, None, 16000)) == [("trnA", 100), ("trnC", 300), ("trnD", 500), ("trnM", 700),
+                                                             ("trnS1", 1100), ("trnS1", 1300)]
+
+
+def test_mitfi_path_runs_cmsearch_and_mitfi_as_mitos2(tmp_path, monkeypatch):
+    """E-values at the record length (cmsearch -Z: the record is searched with ORIGIN_EXT nt appended) and MiTFi
+    -overlap 50 -method l, as runmitos runs them: NC_060482.1 trnD at E 0.096 (0.12 with the appended nt) and
+    NC_060484.1 trnL2 overlapping trnP by 12 nt were lost; with both, MiTFi's output equals MITOS2's own tRNAout.nc."""
+    calls = []
+
+    class P:
+        stdout = ""
+
+    def fake_run(cmd, log):
+        calls.append(cmd)
+        return P()
+    monkeypatch.setattr(mc, "run", fake_run)
+    (tmp_path / "ncRNA").mkdir()
+    for m in ("trnA", "trnD"):
+        (tmp_path / "ncRNA" / f"{m}.cm").write_text("")
+    fa = tmp_path / "g.fa"
+    fa.write_text(">g\nACGT\n")
+    tools = {"cmsearch": "cmsearch", "java": "java", "mitfi": (Path("mitfi_import.jar"), Path("codes"))}
+    mc.annotate_trnas("A" * 16845, fa, tmp_path, 5, 1, tools, tmp_path, LOG, n=13845)
+    cms = [c for c in calls if c[0] == "cmsearch"]
+    assert len(cms) == 4 and all(c[c.index("-Z") + 1] == f"{2 * 13845 / 1e6:.6f}" for c in cms)   # fast + sensitive
+    java = [c for c in calls if c[0] == "java"]
+    assert java and all(c[c.index("-overlap") + 1] == "50" and c[c.index("-method") + 1] == "l" for c in java)
+
+
+def test_parse_mitfi_keeps_trnas_overlapping_as_mitos2_allows():
+    """NC_060484.1: trnL2 8233..8305 and trnP 8294..8357 overlap by 12 nt, both top hits; MITOS2 keeps both."""
+    text = "\n".join([
+        ">X|5|8294|8357|1|1|67|40.8|1.7E-6|0.0|36|29|UGG|P|trnP.cm|1|1|l", "SEQ", "STRUCT",
+        ">X|5|8233|8305|1|1|71|35.7|1.3E-5|0.0|37|29|UAA|L2|trnL2.cm|1|1|l", "SEQ", "STRUCT",
+    ])
+    assert [f.name for f in mc.parse_mitfi(text, LOG)] == ["trnL2", "trnP"]

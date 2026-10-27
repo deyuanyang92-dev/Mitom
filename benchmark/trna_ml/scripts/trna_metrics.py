@@ -51,6 +51,7 @@ def main(argv=None) -> int:
     p.add_argument("root", type=Path)
     p.add_argument("tools", nargs="+")
     p.add_argument("--features", type=Path, help="default ROOT/eval/all/features.tsv")
+    p.add_argument("--timing", type=Path, help="status table of the same evaluation (default: timing.tsv next to it)")
     p.add_argument("--set", type=Path)
     p.add_argument("--by", choices=["phylum"], default=None)
     p.add_argument("--accs", type=Path, help="only these records")
@@ -61,7 +62,7 @@ def main(argv=None) -> int:
     if a.accs:
         keep = {x.strip() for x in a.accs.read_text().split() if x.strip()}
         accs = {x for x in accs if x in keep or x.split(".")[0] in keep}
-    ok = {(r["tool"], r["accession"]) for r in csv.DictReader(open(feats.parent / "timing.tsv"), delimiter="\t")
+    ok = {(r["tool"], r["accession"]) for r in csv.DictReader(open(a.timing or feats.parent / "timing.tsv"), delimiter="\t")
           if r["status"] == "ok"}
     common = {x for x in accs if all((t, x) in ok for t in a.tools)}
     group = {}

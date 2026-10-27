@@ -721,11 +721,11 @@ out/
 主要文件：
 
 - `final_annotation/<登录号>.gb`：**最终 GenBank**：端点校正（mito_curate.py）并统一为 NCBI 命名——CDS `COX1…CYTB`、`ND1…ND6`、`ND4L`；rRNA `rrnS`/`rrnL`（12S/16S ribosomal RNA）；tRNA `/gene` 只写符号（`trnL1`/`trnL2`、`trnS1`/`trnS2` 按反密码子，沿用 MITOS 约定 L1 = CUN、L2 = UUR、S1 = AGN、S2 = UCN；脊椎动物 HGNC/RefSeq 的 L1/L2 编号相反，请按投稿类群核对），反密码子写在 `/note`；非法起始密码子按 NCBI 惯例标 5′ partial（"start codon not determined"）。`--curate no` 时为校正前的注释。
-- `ncbi_submission/`：每条记录的 NCBI 提交文件和校验报告。`submission_summary.tsv` 中 ERROR 为 0 的记录可直接提交；GenBank 平面文件（.gb）本身不能直接提交给 NCBI。
+- `ncbi_submission/`：每条记录的 NCBI 提交文件和校验报告。`submission_summary.tsv` 中 ERROR 为 0 的记录可直接提交；GenBank 平面文件（.gb）本身不能直接提交给 NCBI（NCBI 只收 table2asn 生成的 `.sqn`，或 BankIt 上传 `.fsa` + `.tbl`），`.sqn/.tbl` 与 `final_annotation/*.gb` 是同一份注释。正式提交时用 `--sbt` 给出 NCBI 提交者模板（https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。2026-10-27 全部基准记录（2,497 条：1,050 条多类群 RefSeq、669 条环节动物、577 条科未参与训练的无脊椎动物、188 条脊椎动物、13 条锚定基因组）用默认流程注释：table2asn ERROR 0 条（此前 199 条，主要是鸟类/龟类 ND3 移码、蚌类 nad1 包住 trnL2、环节动物 nad2 跨原点无终止子）；余下 WARNING 为 NCBI 自己记录里也有的类型（ND3 移码 join 的 ShortIntron、无起始/终止密码子基因的 partial 提示）。
 - `summary.tsv` 的 `annotation_used`：`round 2` = 定向后重注；`round 1, shifted` = 第一轮注释随序列平移（通过检查，不必重注）；`round 1, not re-oriented` = 未找到定向基因。
 - 输出目录里用户自己的文件和目录不会被移动或删除；同一目录再次运行会替换上一次的结果。
 
-The `run` output: final_annotation/ (one GenBank per record), final_annotation_all.gb, original_annotation/ (the input records, compared in original_vs_mitom.tsv), summary.tsv, ncbi_submission/, reports/, run.log and, with `--keep_intermediate yes`, work/. README.txt in the folder explains every item. Files the user put into the folder are left alone; a second run into the same folder replaces the previous results.
+The `run` output: final_annotation/ (one GenBank per record), final_annotation_all.gb, original_annotation/ (the input records, compared in original_vs_mitom.tsv), summary.tsv, ncbi_submission/, reports/, run.log and, with `--keep_intermediate yes`, work/. README.txt in the folder explains every item. Files the user put into the folder are left alone; a second run into the same folder replaces the previous results. NCBI accepts the `.sqn` (table2asn) or `.fsa` + `.tbl` (BankIt) of `ncbi_submission/`, not a GenBank flat file; give the submitter template with `--sbt`. On the 2,497 benchmark records of 2026-10-27 no table2asn ERROR remains (199 before: bird / turtle nad3 frameshift, unionid nad1 over trnL2, annelid nad2 across the origin without a stop).
 
 `annotate`（只注释：不去重、不定向、不比较）仍是平铺布局：
 
@@ -756,11 +756,17 @@ Some report files are written only when non-empty.
 
 | 规则 | 准则 | 做法 |
 |---|---|---|
-| P1 | (i) 起始密码子取离上游基因最近且不重叠者 | 起点与上游 tRNA/rRNA 或同框 PCG 重叠 → 后移到第一个起始密码子，但只在 15 nt 内有起始密码子时才移动，否则保留重叠（173 条多类群真值：≤15 nt 的移动对 31 错 12，更远的移动对 14 错 28）；首密码子非起始密码子时才向上游找；`--aggressive_start_genes` 列出的基因总是按准则找最上游——默认为空，`mitom run` 只在环节动物 clade 传 `ND5,ND4L`（环节动物 benchmark 7/7 正确；其他类群 173 条里错 52 对 17）；`--aggressive_start` 对所有基因如此 |
+| P1 | (i) 起始密码子取离上游基因最近且不重叠者 | 起点与上游 tRNA/rRNA 或同框 PCG 重叠 → 后移到第一个起始密码子，但只在 15 nt 内有起始密码子时才移动，否则保留重叠（173 条多类群真值：≤15 nt 的移动对 31 错 12，更远的移动对 14 错 28）；起点放在一个完整同链 tRNA 的上游（基因前三分之一包住整个 tRNA，如蚌类 nad1 包住 trnL2）→ 移到该 tRNA 之后第一个同框起始密码子；首密码子非起始密码子时才向上游找；`--aggressive_start_genes` 列出的基因总是按准则找最上游——默认为空，`mitom run` 只在环节动物 clade 传 `ND5,ND4L`（环节动物 benchmark 7/7 正确；其他类群 173 条里错 52 对 17）；`--aggressive_start` 对所有基因如此 |
 | P2 | (ii) 同链同框 PCG 不可重叠（不同框可以，如 atp8-atp6、nad4L-nad4） | 只报告 |
-| P3 | (iii) 第一个完整终止密码子，或紧接下游 tRNA 前的 T/TA 不完整终止（tRNA 间断模型） | 完整终止落在下游同链 tRNA 内 ≥3 nt → 截到 tRNA 前并加 `/transl_except` 与 polyA note（真值：伸入 1–2 nt 时 NCBI 保留完整终止 130:57，≥5 nt 时多用 T/TA）；完整终止仅与 tRNA 重叠 1–2 nt 时保留；下游无 tRNA 而完整终止伸入下一个同链蛋白基因 > 30 nt（atp8-atp6、nad4L-nad4 除外；真值：11–30 nt 内保留完整终止 17:6，更深则 T/TA 为主）→ 不延伸：保留原 T/TA 末端（如 cox1→cox2），否则取下一基因前的 T/TA（如 nad6→cob）；核心工具已注释的、伸入下一基因的完整终止不回缩；已是 T/TA 结尾的基因不会为了 90 nt 内的完整终止伸入其他特征（rRNA、反链 tRNA）> 10 nt；注释末端停在第一个完整终止之前、且中间没有任何已注释基因 → 延伸到该终止（≤ 600 nt；核心工具在分化大的类群丢了 C 端同源区：nad5/nad4/nad2/cox1 短 100–500 nt；多类群 benchmark 52 例中 50 例延伸后与 NCBI 完全一致） |
+| P3 | (iii) 第一个完整终止密码子，或紧接下游 tRNA 前的 T/TA 不完整终止（tRNA 间断模型） | 完整终止落在下游同链 tRNA 内 ≥3 nt → 截到 tRNA 前并加 `/transl_except` 与 polyA note（真值：伸入 1–2 nt 时 NCBI 保留完整终止 130:57，≥5 nt 时多用 T/TA）；完整终止仅与 tRNA 重叠 1–2 nt 时保留；下游无 tRNA 而完整终止伸入下一个同链蛋白基因 > 30 nt（atp8-atp6、nad4L-nad4 除外；真值：11–30 nt 内保留完整终止 17:6，更深则 T/TA 为主）→ 不延伸：保留原 T/TA 末端（如 cox1→cox2），否则取下一基因前的 T/TA（如 nad6→cob）；核心工具已注释的、伸入下一基因的完整终止不回缩；已是 T/TA 结尾的基因不会为了 90 nt 内的完整终止伸入其他特征（rRNA、反链 tRNA）> 10 nt；注释末端停在第一个完整终止之前、且中间没有任何已注释基因 → 延伸到该终止（≤ 600 nt；核心工具在分化大的类群丢了 C 端同源区：nad5/nad4/nad2/cox1 短 100–500 nt；多类群 benchmark 52 例中 50 例延伸后与 NCBI 完全一致）；会把整个同链 tRNA 包进去、且 tRNA 前没有 T/TA 的基因 → 结束在该 tRNA 之前（3′ partial） |
 | D1 | — | 同一蛋白基因在不同位置注释两次（MitoZ 遇重复区）→ 只保留完整、较长、靠前的一份；另一条链上与之重叠、不完整或含内部终止的同名拷贝（反义链假阳性）也删除 |
 | P7 | — | 起点与终点不在同一读码框（内部终止，NCBI ERROR）→ 取两者中较长的开放读码框：保留起点到第一个终止，或保留终止、在其读码框内取离原起点最近的起始密码子；新 ORF 不足原长一半时不改，只报告（多类群 benchmark：内部终止 14 → 5） |
+| P8 | — | 起点与终点同框但有内部终止（起点越过终止子放在上游，或终点越过基因的终止子）→ 取"原起点到第一个终止"与"最后一个内部终止之后的第一个起始密码子到原终点"中较长者（≥ 原长一半） |
+| P9 | — | 一个多余碱基不翻译（鸟类、龟类 ND3 第 174 位，Mindell et al. 1998；少数其他基因）→ 按 NCBI 写成 `join(起点..p-1,p+1..终点)` 并加 NCBI 的 note；只在单读码框修正都保不住 85% 基因、且原起止点 30 nt 内有起始/终止密码子能跨过一个碱基构成开放读码框时使用（2026-10 运行：107 个 ND3 中 97 个两端与 NCBI 完全一致） |
+| P10 | — | 以上都修不好、仍有内部终止的 CDS → 基因与 CDS 标 `/pseudo`（不翻译），note 写明，需人工核对（table2asn 否则报 InternalStop） |
+| O2 | — | 核心工具写成跨原点 join、原点后只有一小段（≤ 300 nt）的 CDS（cox1 在首位时环节动物 nad2 伸进 cox1 却没有终止子，NoStop）→ 截回到序列末端，再由 P1/P3/O1 重新定终止；O1 在原点后 60 nt 内找不到终止、而原点处紧接下一个基因时，读码框内落在序列末端的 T/TA 作不完整终止（NCBI 写法） |
+| T1 | — | 完全落在同链蛋白基因内部的弱 tRNA 预测（MiTFi E > 1e-3）：是第二拷贝或位于基因中间三分之一 → 删除（tRNA 是转录本的间断点，同链基因中部不可能有完整 tRNA；table2asn BadCDScomponentOverlapTRNA）；位于基因首/尾三分之一 → 保留 tRNA，由 P1/P3 把基因端点移到它之外（棘头动物 nad6 被延伸到 trnD 内的终止子，NCBI 的 nad6 止于 trnD 之前） |
+| C1 | — | 修正后仍完全包住同链 tRNA 的 CDS：无起始/终止密码子或已标 pseudo → 视为假阳性删除（扁形动物"atp8"、毛颚动物"atp6"：这两个门本无此基因）；完整基因只报告 |
 | P4 | — | 内部终止密码子、非起始密码子首位、多段/部分 CDS → 只报告，不改 |
 | R1 | (vi) rRNA 边界不扩展到两侧基因 | 与两侧 tRNA/CDS/rRNA 的重叠切掉（默认 `--rrna_bounds trim`）；`fill` 再补到两侧基因（空隙 ≤ `--max_fill` 100 nt，GenBank 常见写法） |
 | R3 | 命名 | rrnS / rrnL，12S / 16S ribosomal RNA；rRNA 与 CDS 重叠 > 50 nt 报告 |
@@ -827,14 +833,29 @@ python3 mito_trna.py -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen
 
 单用 ARWEN/ARAGORN 在 tRNA 少的类群假阳性极多，故只放 review 文件。刺胞的 FP 多来自 MITOS2，是否为 NCBI 漏注未确证。
 
-**原生核心的 tRNA 与 MITOS2 对比（2026-10-27）**：MitoM-ML（MITOS2 tRNA 模型 + 220 个分支协方差模型，ARWEN/ARAGORN 作证据，学习的判别器与端点）＋ 它没调用的 tRNA 家族由 MiTFi 补 ＋ 脊椎动物取 MiTFi 端点。所用记录都没有参与训练（无脊椎动物：所在科未参与训练且不在 refseq89m；脊椎动物：模型从未见过；环节动物：只在 GenBank、不在 RefSeq 的记录）。召回率 / 精确率 / 两端与 NCBI 完全一致：
+**原生核心的 tRNA 与 MITOS2 对比（2026-10-27）**：MitoM-ML（MITOS2 tRNA 模型 + 220 个分支协方差模型，ARWEN/ARAGORN 作证据，学习的判别器与端点）＋ MiTFi 二次确认（p < 0.9 的调用须 MiTFi 也调用；同家族较弱的第二个调用须 p ≥ 0.9）＋ 它没调用的 tRNA 家族由 MiTFi 补 ＋ 脊椎动物取 MiTFi 端点。MiTFi 完全按 MITOS2 的方式运行（E 值按记录长度计算、tRNA 重叠上限 50 nt，与 MITOS2 自己的 MiTFi 输出逐行一致）。所用记录都没有参与训练（无脊椎动物：所在科未参与训练且不在 refseq89m；脊椎动物：模型从未见过；环节动物：只在 GenBank、不在 RefSeq 的记录）；规则在调参的一半上按事先定的标准选定（精确率比 MITOS2 高 ≥ 0.1 个百分点，再取召回最高），另一半只用来检验。召回率 / 精确率 / 两端与 NCBI 完全一致：
 
 | 记录 | MitoM | MITOS2 |
 |---|---|---|
-| 无脊椎动物 1,046 条 | 98.68 / 98.94 / 86.54 % | 96.59 / 98.79 / 84.63 % |
-| 其中从未用来调参的一半 568 条 | 98.88 / 98.93 / 88.76 % | 96.95 / 98.82 / 87.20 % |
-| 脊椎动物 188 条 | 98.43 / 98.55 / 92.71 % | 98.31 / 98.24 / 92.61 % |
-| 环节动物（纯 GenBank）501 条 | 99.35 / 98.95 / 83.52 % | 97.61 / 99.01 / 81.47 % |
+| 无脊椎动物 1,043 条 | 98.55 / 99.04 / 86.48 % | 96.59 / 98.79 / 84.63 % |
+| 其中从未用来调参的一半 565 条 | 98.75 / 99.06 / 88.70 % | 96.95 / 98.82 / 87.20 % |
+| 脊椎动物 188 条（未用来调参） | 98.38 / 98.55 / 92.66 % | 98.31 / 98.24 / 92.61 % |
+| 环节动物（纯 GenBank）501 条 | 99.14 / 99.08 / 83.36 % | 97.61 / 99.01 / 81.47 % |
+| 其中从未用来调参的 184 条 | 98.90 / 98.72 / 80.20 % | 97.87 / 98.71 / 79.69 % |
+
+按门（无脊椎动物 1,043 条）：节肢、软体、刺胞、线虫、扁形、棘皮、环节等各门三项都高于 MITOS2；棘头动物（4 条）召回持平 45.5%、精确率少 1 个 tRNA（87.0% vs 88.9%），动吻动物（1 条）精确率少 1 个 tRNA。
+
+**完整流程与 MITOS2 的对比（2026-10-27，v30：上述全部规则 + NCBI 提交规则，裸序列输入，与 NCBI 注释逐基因比较；两者都完成的记录）**。蛋白基因（PCG）与 rRNA 为两端与 NCBI 完全一致的比例，tRNA 为召回率 / 精确率 / 两端完全一致：
+
+| 记录 | PCG MitoM / MITOS2 | rRNA MitoM / MITOS2 | tRNA MitoM | tRNA MITOS2 | NCBI ERROR（MitoM） |
+|---|---|---|---|---|---|
+| 多类群 RefSeq 1,050 条（24 个门） | 84.0 / 59.4 % | 48.9 / 16.9 % | 96.84 / 97.90 / 84.26 % | 95.76 / 97.44 / 83.07 % | 0 条 |
+| 环节动物 669 条 | 81.2 / 51.4 % | 32.9 / 12.7 % | 99.12 / 99.13 / 83.45 % | 97.68 / 99.02 / 81.61 % | 0 条 |
+| 科未参与训练的无脊椎动物 577 条（不在 refseq89m） | 80.9 / 53.4 % | 33.9 / 19.2 % | 98.76 / 99.06 / 88.70 % | 96.95 / 98.82 / 87.20 % | 0 条 |
+| 脊椎动物 188 条 | 88.9 / 72.7 % | 67.6 / 37.0 % | 98.38 / 98.55 / 92.66 % | 98.31 / 98.24 / 92.61 % | 0 条 |
+| 锚定基因组 13 条 | 87.3 / 47.9 % | 57.7 / 3.8 % | 98.61 / 98.27 / 86.11 % | 96.88 / 98.24 / 82.64 % | 0 条 |
+
+PCG 两端一致按门（1,050 条）24 个门全部高于 MITOS2；PCG、rRNA 召回也全部更高。唯一不高于 MITOS2 的数字：纯 GenBank 环节动物中从未调参的 184 条，tRNA 精确率 98.70% vs 98.71%（4,000 个调用里多 1 个 NCBI 没有的；其中 43 个与 MITOS2 相同，MitoM 多找到 41 个真 tRNA）；动吻动物（1 条）多 1 个；棘头动物（4 条）召回、精确率持平。报告见 `benchmark/results/full_v30_2026-10-27/`。
 
 ARWEN、ARAGORN、tRNAscan-SE、MiTFi 参数（半全局、重叠、E 值、只按阈值、加分支模型）、多软件投票、重训判别器与端点均测过，见 `benchmark/trna_ml/README.md`。
 

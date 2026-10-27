@@ -14,8 +14,10 @@ Infernal cmsearch (fast mode, local) with the MITOS2 covariance models (refseq89
 cluster of hits; an rRNA still missing is left to MitoM's later rRNA HMM step.
 tRNAs (--trna auto, default): MitoM-ML (trna_ml.py) when its models are installed - MITOS2 tRNA CMs plus the clade CMs
 on --lineage (default Metazoa;<--phylum>), ARWEN / ARAGORN as extra evidence when found, a learned caller and learned
-ends (unseen-family benchmark: recall 98.5 % vs 94.9 % for the MiTFi CMs, projects/invert_trna/REPORT.md); the tRNA
-families it does not call are then searched with MiTFi as below and its calls of them added (rescue_trnas); else, or
+ends (unseen-family benchmark: recall 98.5 % vs 94.9 % for the MiTFi CMs, projects/invert_trna/REPORT.md); MiTFi (as
+below) gives a second opinion: calls with p < 0.9 need its call of the same tRNA, a weaker second call of a family
+needs p >= 0.9 (trna_second_opinion), the families MitoM-ML does not call are taken from it (rescue_trnas), and
+vertebrates take its ends (mitfi_ends); else, or
 with --trna mitfi: cmsearch with the MiTFi tRNA models (refseq89m/ncRNA/trn*.cm; a sensitive pass for models without a
 hit) and MiTFi (mitfi_import.jar of the mitos package) for hit selection and anticodons - the programs MITOS2 runs.
 
@@ -105,6 +107,9 @@ CM_EVALUE_SENSITIVE = 0.1  # cmsearch --max pass for models without a hit (MITOS
 TRNA_NAMES = ["trn" + f for f in "A C D E F G H I K L1 L2 M N P Q R S1 S2 T V W Y".split()]
 TRNA_RESCUE_OVL = 10       # a MiTFi tRNA of a family MitoM-ML did not call is added when it overlaps no call by more
                            # than this many nt (rescue_trnas)
+TRNA_SURE_P = 0.9          # MitoM-ML calls below this p need MiTFi's call of the same tRNA, and a weaker second call
+                           # of a family needs at least this p (trna_second_opinion; tuning halves: 37 % of the calls
+                           # below 0.9 without MiTFi were wrong, 2 % above, 30 % of the weaker second copies below)
 EXONERATE_MODEL = "protein2dna"   # protein2dna:bestfit = whole reference protein aligned (set by --exonerate_model)
 EXONERATE_CODES = {1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23}   # built into exonerate 2.4.0; others
                            # (24, 33: Hemichordata) are passed as the 64-letter table ("No built in genetic code ... [24]")
@@ -115,6 +120,9 @@ PARALOG_MIN_OVERLAP = 60   # a CDS overlapping a better-scoring CDS of another g
                            # the shorter one is a paralog hit (atp8 inside atp6, nad2 inside nad5 when the real gene is
                            # absent; MitoZ genomic_cluster.pl / MITOS2 _nonoverlapping_greedy drop these too)
 COPY_EVALUE = 1e-3         # MiTFi copies (second hits of a model) only this good (MITOS2 runmitos.py)
+MITFI_TRNA_OVL = 50        # tRNAs may overlap this much in MiTFi: runmitos --maxtrnaovl default (its function default 10 is
+                           # not what the command runs); with 10, NC_060484.1 lost trnL2 overlapping trnP by 12 nt (MITOS2
+                           # keeps both); MiTFi -overlap 50 -method l reproduces MITOS2's own tRNAout.nc line for line
 BAD_REFS = {"NC_008151:cob_0-a--1-18769-16822"}   # refseq89m cob.fas entry that is a cox1 protein (87.8 % identity
                            # to cox1, no cob hit): gave a false CYTB inside COX1 (stress test 2026-10-22)
 EXCLUDE_REFS: set = set()  # accessions whose own proteins are not used (--exclude_ref / $MITOM_EXCLUDE_REF; benchmark
@@ -542,10 +550,14 @@ def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.C
 
 
 # ── RNAs ─────────────────────────────────────────────────────────────────────
-def cmsearch(cm: str, model: Path, genome_fa: Path, out: Path, sensitive: bool, log, rrna: bool = False) -> Path:
+def cmsearch(cm: str, model: Path, genome_fa: Path, out: Path, sensitive: bool, log, rrna: bool = False,
+             z: Optional[float] = None) -> Path:
     """cmsearch as MITOS2 runs it (local mode, --cpu 1 --notextw --smxsize 80000); fast pass --noF4b -E 0.01,
-    sensitive pass --max -E 0.1 (rRNA: --nohmm). Local mode finds the truncated tRNAs of nematodes."""
+    sensitive pass --max -E 0.1 (rRNA: --nohmm). Local mode finds the truncated tRNAs of nematodes. z = search space
+    (Mb) for the E-values: a circular record is searched with ORIGIN_EXT nt appended, MITOS2 searches it at its length."""
     cmd = [cm, "--cpu", "1", "--notextw", "--smxsize", "80000", "--tblout", str(out.with_suffix(".tbl"))]
+    if z:
+        cmd += ["-Z", f"{z:.6f}"]
     if rrna:                                   # same rrnL hit, 536 -> 463 MB, 3.8 -> 2.7 s (alignment matrix cap)
         cmd += ["--mxsize", "128"]
     if sensitive:
@@ -651,13 +663,18 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
     seqname = genome_fa.name
 
     def search(model: Path, sensitive: bool) -> Path:
-        return cmsearch(tools["cmsearch"], model, genome_fa, tmp / f"{seqname}_{model.stem}.cmout", sensitive, log)
+        # E-values for the record's length on both strands, as MITOS2 (which searches rotations of the record, not the
+        # record + ORIGIN_EXT): the 3,000 appended nt made every E ~1.2x larger on a 15-kb record, so hits MITOS2 keeps
+        # at E 0.08-0.1 were lost (NC_060482.1 / NC_060708.1 acanthocephalan trnD, E 0.096 -> 0.12)
+        return cmsearch(tools["cmsearch"], model, genome_fa, tmp / f"{seqname}_{model.stem}.cmout", sensitive, log,
+                        z=2 * n / 1e6)
 
     jar, codes = tools["mitfi"]
 
     def mitfi(outs: List[Path], evalue: float) -> List[Feature]:
         cmd = [tools["java"], "-jar", str(jar), "-code", str(code), "-codefile", str(codes), "-structure", "-genome",
-               str(genome_fa), "-glength", str(n), "-evalue", str(evalue), "-overlap", "10"]
+               str(genome_fa), "-glength", str(n), "-evalue", str(evalue), "-method", "l", "-overlap",
+               str(MITFI_TRNA_OVL)]
         for o in outs:
             cmd += ["-in", str(o)]
         return parse_mitfi(run(cmd, log).stdout, log, n)
@@ -727,16 +744,33 @@ def rescue_trnas(ml: List[Feature], mitfi: List[Feature], n: int) -> List[Featur
     return out
 
 
+def same_trna(a: Feature, b: Feature, n: int) -> bool:
+    """Same tRNA name and strand, overlapping >= 50 % of the shorter (across the origin too)."""
+    o = max(min(a.end, b.end + k) - max(a.start, b.start + k) for k in (-n, 0, n))
+    return a.name == b.name and a.strand == b.strand and o >= 0.5 * min(a.end - a.start, b.end - b.start)
+
+
+def trna_second_opinion(ml: List[Feature], mitfi: Optional[List[Feature]], n: int) -> List[Feature]:
+    """MitoM-ML calls kept when sure enough: a weaker second call of a family needs p >= TRNA_SURE_P, and any call with
+    p < TRNA_SURE_P needs MiTFi's call of the same tRNA (not applied without MiTFi). Chosen on the tuning halves of
+    the unseen-family set and the GenBank-only annelids (precision >= MITOS2 + 0.1 points, most recall), then
+    checked on the held-out halves (benchmark/trna_ml/README.md)."""
+    best: Dict[str, float] = {}
+    for f in ml:
+        best[f.name] = max(best.get(f.name, 0.0), f.score)
+    out = [f for f in ml if f.score >= best[f.name] or f.score >= TRNA_SURE_P]
+    if mitfi is not None:
+        out = [f for f in out if f.score >= TRNA_SURE_P or any(same_trna(f, g, n) for g in mitfi)]
+    return out
+
+
 def mitfi_ends(ml: List[Feature], mitfi: List[Feature], n: int) -> List[Feature]:
     """MitoM-ML calls with MiTFi's ends wherever MiTFi calls the same tRNA (name and strand, >= 50 % of the shorter).
     For vertebrates: the learned ends never saw one and are 1 nt off NCBI more often than MiTFi's (434 large-set
     chordates: both ends exact 90.2 -> 91.4 %, MITOS2 91.1 %; 188 held-out vertebrates 91.3 -> 92.7 %)."""
-    def overlap(a: Feature, b: Feature) -> int:
-        return max(min(a.end, b.end + k) - max(a.start, b.start + k) for k in (-n, 0, n))
     out = []
     for f in ml:
-        m = next((g for g in mitfi if g.name == f.name and g.strand == f.strand and
-                  overlap(f, g) >= 0.5 * min(f.end - f.start, g.end - g.start)), None)
+        m = next((g for g in mitfi if same_trna(f, g, n)), None)
         out.append(f if m is None else Feature(f.kind, f.name, m.start, m.end, f.strand, f.note + ", ends by MiTFi",
                                                anticodon=f.anticodon, score=f.score, model=f.model))
     return out
@@ -799,13 +833,13 @@ def parse_mitfi(text: str, log, n: Optional[int] = None) -> List[Feature]:
         feats.append(Feature("tRNA", name, start, stop, strand, f"MiTFi {model} bits {bits:.1f} E {evalue:.1e}"
                              + (" copy" if copy and not tophit else ""), anticodon=anticodon, acpos=acpos, score=bits,
                              model=mm.group(1) if mm else model))
-    # overlapping tRNAs of different models: keep the better score (MITOS2 keeps both as copies of a locus)
-    # (the same tRNA found at i and at i + n in a circular record is one feature: complete overlap)
+    # tRNAs overlapping by more than MiTFi allows (the same tRNA found at i and at i + n in a circular record: complete
+    # overlap): the better score is kept
     feats.sort(key=lambda f: -f.score)
     kept: List[Feature] = []
     L = n or max((f.end for f in feats), default=1)
     for f in feats:
-        if all(len(positions(f, L) & positions(k, L)) <= 10 for k in kept):
+        if all(len(positions(f, L) & positions(k, L)) <= MITFI_TRNA_OVL for k in kept):
             kept.append(f)
     return sorted(kept, key=lambda f: f.start)
 
@@ -917,17 +951,22 @@ def annotate(args) -> int:
                                     Path(args.rrna_lib) if args.rrna_lib else None, n if topology == "circular" else None)
             if not args.no_trna and use_ml:
                 trnas = annotate_trnas_ml(genome, n, code, args.threads, tools, lineage, topology == "circular", log)
-                missing = [x for x in TRNA_NAMES if x not in {f.name for f in trnas}]
-                vert = vertebrate(lineage)
-                if (missing or vert) and tools.get("mitfi"):
-                    mitfi = annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
-                    if vert:
+                mitfi = annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum) \
+                    if tools.get("mitfi") else None
+                kept = trna_second_opinion(trnas, mitfi, n)
+                if len(kept) < len(trnas):
+                    log.info(f"[core] MitoM-ML calls not sure enough without MiTFi: "
+                             f"{' '.join(f.name for f in trnas if f not in kept)}")
+                trnas = kept
+                if mitfi is not None:
+                    if vertebrate(lineage):
                         trnas = mitfi_ends(trnas, mitfi, n)
                         log.info(f"[core] vertebrate: tRNA ends of MiTFi for {sum('ends by MiTFi' in f.note for f in trnas)}")
+                    missing = [x for x in TRNA_NAMES if x not in {f.name for f in trnas}]
                     if missing:
-                        log.info(f"[core] MitoM-ML did not call {' '.join(missing)}: MiTFi calls of them added")
                         found = rescue_trnas(trnas, mitfi, n)
-                        log.info(f"[core] tRNAs added from MiTFi: {' '.join(f.name for f in found[len(trnas):]) or 'none'}")
+                        log.info(f"[core] MitoM-ML did not call {' '.join(missing)}; added from MiTFi: "
+                                 f"{' '.join(f.name for f in found[len(trnas):]) or 'none'}")
                         trnas = found
                 feats += trnas
             elif not args.no_trna:

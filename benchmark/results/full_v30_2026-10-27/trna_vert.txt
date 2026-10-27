@@ -1,0 +1,5 @@
+records every tool finished: 188
+tool	records	NCBI tRNAs	predicted	recall	precision	F1	both ends exact	within 1	within 3	FP per record	wrong strand	wrong name
+mitom_native	188	4140	4133	98.38%	98.55%	98.46%	92.66%	96.84%	97.73%	0.048	31	20
+mitom_native_v28	188	4140	4135	98.43%	98.55%	98.49%	92.71%	96.88%	97.78%	0.048	31	20
+mitos2	188	4140	4143	98.31%	98.24%	98.27%	92.61%	96.76%	97.66%	0.080	31	27

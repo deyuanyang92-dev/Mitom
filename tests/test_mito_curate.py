@@ -1016,3 +1016,211 @@ def test_rrna_end_left_in_place_keeps_its_partial_mark():
     _curate_rec(rec)
     r = _by(rec, "rRNA", "rrnL")
     assert not isinstance(r.location.start, BeforePosition) and (int(r.location.start), int(r.location.end)) == (500, 979)
+
+
+def test_core_notes_for_itself_are_not_in_the_final_genbank():
+    """N1: the core's own notes (reference protein and score, MitoM-ML / MiTFi scores, rRNA model columns) are not for
+    NCBI; biological notes (anticodon, polyA-completed stop) stay."""
+    import random
+    from Bio.SeqFeature import FeatureLocation
+    rnd = random.Random(13)
+    seq = "".join(rnd.choice("ACGT") for _ in range(3000))
+    rec = _mkrec(seq, [
+        ("CDS", FeatureLocation(0, 300, 1), "COX1", {"note": ["ref NC_023943:cox1-1-0-1533 score 2461 residues 1-511/511"]}),
+        ("tRNA", FeatureLocation(400, 465, 1), "trnN", {"product": ["tRNA-Asn"],
+                                                        "note": ["anticodon: GUU", "MitoM-ML p 0.969 ends p 0.852"]}),
+        ("tRNA", FeatureLocation(470, 535, 1), "trnD", {"product": ["tRNA-Asp"], "note": ["MiTFi trnD.cm bits 45.1 E 1.2e-09"]}),
+        ("rRNA", FeatureLocation(600, 1500, 1), "rrnL", {"product": ["16S ribosomal RNA"],
+                                                         "note": ["nhmmer Annelida.rrnL.hmm bits 404 model 116-1192/1307"]})])
+    _curate_rec(rec)
+    notes = {f.qualifiers["gene"][0]: f.qualifiers.get("note", []) for f in rec.features if f.type in ("CDS", "tRNA", "rRNA")}
+    assert notes["trnN"] == ["anticodon: GUU"] and notes["trnD"] == [] and notes["rrnL"] == []
+    assert not any(n.startswith("ref ") for n in notes["COX1"])
+
+
+def test_p9_nad3_extra_nucleotide_is_a_join():
+    """Bird / turtle nad3: one untranslated nucleotide at CDS position 174 (Mindell et al. 1998). NCBI writes
+    join(start..173,175..end) with the frameshift note; a single-frame CDS had internal stops (table2asn InternalStop in
+    109 nad3 of the 2026-10 runs). The gene spans the whole join; the protein is translated across it."""
+    from Bio.SeqFeature import FeatureLocation
+    coding = "ATG" + "GTA" + "AGC" + "GCC" * 54 + "GCT" + "AAC" + "GCC" * 56 + "TAA"   # 351 nt, frame +1 closed early
+    gene = coding[:173] + "T" + coding[173:]                                           # extra T at CDS position 174
+    seq = "C" * 60 + gene + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 60 + len(gene), 1), "ND3", {"transl_table": ["2"]})])
+    rows = _curate_rec(rec, genetic_code=2)
+    cds = _by(rec, "CDS", "ND3")
+    assert [(int(p.start), int(p.end)) for p in cds.location.parts] == [(60, 233), (234, 60 + len(gene))], rows
+    assert _mc().ND3_NOTE in cds.qualifiers["note"] and any(r["rule"] == "P9" for r in rows)
+    assert (int(_by(rec, "gene", "ND3").location.start), int(_by(rec, "gene", "ND3").location.end)) == (60, 60 + len(gene))
+    from Bio.Seq import Seq
+    assert cds.qualifiers["translation"] == [str(Seq(coding[:-3]).translate(table=2))]
+
+
+def test_p8_start_across_a_stop_moves_past_it():
+    """NC_027667.1 nad1 / insect nad4L: the start placed upstream across an in-frame stop; the first start codon after the
+    last internal stop is taken (>= half the gene kept)."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 5 + "TAA" + "GCC" * 3 + "ATG" + "GCC" * 100 + "TAA"
+    seq = "C" * 60 + body + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 60 + len(body), 1), "ND1")])
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "ND1")
+    assert int(cds.location.start) == 60 + 30 and int(cds.location.end) == 60 + len(body), rows
+    assert any(r["rule"] == "P8" for r in rows) and "pseudo" not in cds.qualifiers
+
+
+def test_p10_untranslatable_cds_is_pseudo():
+    """A stop in the middle, no frameshift join, neither open part >= half: /pseudo on CDS and gene, no translation
+    (table2asn InternalStop otherwise)."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 40 + "TAA" + "GCC" * 60 + "TAA"
+    seq = "C" * 60 + body + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 60 + len(body), 1), "ND2")])
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "ND2")
+    assert "pseudo" in cds.qualifiers and "pseudo" in _by(rec, "gene", "ND2").qualifiers, rows
+    assert "translation" not in cds.qualifiers and (int(cds.location.start), int(cds.location.end)) == (60, 60 + len(body))
+
+
+def test_o2_core_join_across_the_origin_cut_back():
+    """Annelid nad2 before cox1 in the cox1-first frame: the core joined it 14 nt past the origin without a stop codon
+    (table2asn NoStop); it ends with the T at the sequence end (abbreviated stop), as NCBI writes it."""
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation
+    cox1 = "ATG" + "GCC" * 200 + "TAA"
+    nad2 = "ATG" + "GCC" * 99 + "T"
+    seq = cox1 + "C" * 100 + nad2
+    L = len(seq)
+    loc = CompoundLocation([FeatureLocation(L - len(nad2), L, 1), FeatureLocation(0, 14, 1)])
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, len(cox1), 1), "COX1"), ("CDS", loc, "ND2")], "circular")
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "ND2")
+    assert len(cds.location.parts) == 1 and (int(cds.location.start), int(cds.location.end)) == (L - len(nad2), L), rows
+    assert cds.qualifiers.get("transl_except") == [f"(pos:{L},aa:TERM)"] and any(r["rule"] == "O2" for r in rows)
+
+
+def test_p1_start_moved_past_a_whole_trna():
+    """Unionid nad1 (NC_085464.1): the start lay upstream across trnL2 (table2asn BadCDScomponentOverlapTRNA); it moves to
+    the first in-frame start codon after the tRNA."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 36 + "ATG" + "GCC" * 270 + "TAA"
+    seq = "C" * 59 + body + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(59, 59 + len(body), 1), "ND1"),
+                       ("tRNA", FeatureLocation(99, 165, 1), "trnL2", {"product": ["tRNA-Leu"]})])
+    rows = _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.start) + 1 == 171, rows
+
+
+def test_p3_end_before_a_whole_trna_without_stop():
+    """A gene whose first stop lies past a whole same-strand tRNA and no T / TA right before it: it ends before the tRNA,
+    3'-partial (the gene must not contain the tRNA: table2asn BadCDScomponentOverlapTRNA)."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 212 + "TAA"
+    seq = "C" * 60 + body + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 60 + len(body), 1), "COX3"),
+                       ("tRNA", FeatureLocation(609, 675, 1), "trnG", {"product": ["tRNA-Gly"]})])
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "COX3")
+    assert int(cds.location.end) == 609 and _mc().NO_STOP_NOTE in cds.qualifiers["note"], rows
+
+
+def test_t1_weak_trna_inside_a_gene_removed_strong_kept():
+    """A weak MiTFi call (E 9.3e-02) inside a protein gene on its strand is dropped; a strong one (E 4.8e-08) is kept."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 300 + "TAA"
+    seq = "C" * 60 + body + "C" * 60
+    for note, kept in (("MiTFi trnC.cm bits 17.8 E 9.3e-02", False), ("MiTFi trnP.cm bits 49.3 E 4.8e-08", True)):
+        rec = _mkrec(seq, [("CDS", FeatureLocation(60, 60 + len(body), 1), "ND2"),
+                           ("tRNA", FeatureLocation(500, 566, 1), "trnC", {"product": ["tRNA-Cys"], "note": [note]})])
+        rows = _curate_rec(rec)
+        assert any(f.type == "tRNA" for f in rec.features) == kept, rows
+
+
+def test_c1_incomplete_gene_around_a_trna_removed():
+    """NC_061193.1: a 120-nt 'atp8' without start or stop codon around tRNA-Glu (flatworms lack atp8): removed."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "TTT" + "GCC" * 39
+    seq = "C" * 60 + body + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 180, 1), "ATP8"),
+                       ("tRNA", FeatureLocation(95, 160, 1), "trnE", {"product": ["tRNA-Glu"]})])
+    rows = _curate_rec(rec)
+    assert not any(f.type == "CDS" for f in rec.features) and any(r["rule"] == "C1" for r in rows), rows
+
+
+def test_partial_end_keeps_no_abbreviated_stop():
+    """A CDS cut by the end of a linear sequence (3'-partial) whose last nucleotide is T: no T stop / transl_except (the
+    codon may continue past the sequenced part; table2asn PartialProblemHasStop)."""
+    from Bio.SeqFeature import AfterPosition, ExactPosition, FeatureLocation
+    body = "ATG" + "GCC" * 100 + "T"
+    seq = "C" * 60 + body
+    rec = _mkrec(seq, [("CDS", FeatureLocation(ExactPosition(60), AfterPosition(len(seq)), 1), "ND2",
+                        {"note": ["stop codon not determined"]})])
+    _curate_rec(rec)
+    cds = _by(rec, "CDS", "ND2")
+    assert "transl_except" not in cds.qualifiers and isinstance(cds.location.end, AfterPosition)
+
+
+def test_o1_no_stop_past_the_origin_ends_with_t_at_the_sequence_end():
+    """KT429007.1 / NC_012618.1 / EF494507.1: nad2 before cox1 (cox1-first frame) has no stop within 60 nt past the origin
+    (cox1's frame differs); NCBI ends it with the in-frame T at the sequence end + transl_except - it was written
+    3'-partial ('Partial CDS on complete sequence')."""
+    from Bio.SeqFeature import FeatureLocation
+    cox1 = "ATG" + "GCC" * 200 + "TAA"
+    nad2 = "ATG" + "GCC" * 99 + "T"                    # 301 nt: in-frame T at the sequence end
+    seq = cox1 + "C" * 100 + nad2
+    L = len(seq)
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, len(cox1), 1), "COX1"),
+                       ("CDS", FeatureLocation(L - len(nad2), L - 1, 1), "ND2")], "circular")
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "ND2")
+    assert (int(cds.location.start), int(cds.location.end)) == (L - len(nad2), L), rows
+    assert cds.qualifiers.get("transl_except") == [f"(pos:{L},aa:TERM)"] and _mc().NO_STOP_NOTE not in cds.qualifiers.get("note", [])
+
+
+def test_t1_weak_trna_at_a_gene_end_kept_and_the_gene_end_moved():
+    """NC_060482.1 / NC_060708.1: the weak trnD (MiTFi E 0.096, as MITOS2) lies in the last third of nad6, which P3 had
+    extended to the stop inside trnD; NCBI ends nad6 right before trnD. The tRNA is kept, the gene ends before it."""
+    from Bio.SeqFeature import FeatureLocation
+    body = "ATG" + "GCC" * 146 + "T" + "AAGCC" * 12 + "GCCGCCTAA"         # T at 502 then tRNA 503..562, TAA at 563..571
+    seq = "C" * 60 + body + "C" * 60
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, 60 + len(body), 1), "ND6"),
+                       ("tRNA", FeatureLocation(502, 562, 1), "trnD", {"product": ["tRNA-Asp"],
+                                                                      "note": ["MiTFi trnD.cm bits 19.8 E 9.6e-02"]})])
+    rows = _curate_rec(rec)
+    assert any(f.type == "tRNA" for f in rec.features) and not any(r["rule"] == "T1" for r in rows), rows
+    assert int(_by(rec, "CDS", "ND6").location.end) <= 504, rows
+
+
+def test_p9_join_ending_with_ta_before_the_next_trna_vertebrate_convention():
+    """Bird nad3 join (skip at CDS position 174) whose TAA runs 1 nt into tRNA-Arg: with --abbreviated_overlap it ends
+    with TA right before the tRNA (NCBI, 9 of 107 nad3). The tail is counted on the join (one nucleotide skipped)."""
+    from Bio.SeqFeature import FeatureLocation
+    from Bio.Seq import Seq
+    coding = "ATG" + "GTA" + "AGC" + "GCC" * 54 + "GCT" + "AAC" + "GCC" * 56 + "TAA"
+    gene = coding[:173] + "T" + coding[173:]
+    seq = "C" * 60 + gene + "C" * 60
+    end = 60 + len(gene)                                   # 1-based end of the TAA
+    rec = _mkrec(seq, [("CDS", FeatureLocation(60, end, 1), "ND3", {"transl_table": ["2"]}),
+                       ("tRNA", FeatureLocation(end - 1, end + 64, 1), "trnR", {"product": ["tRNA-Arg"]})])
+    rows = _curate_rec(rec, genetic_code=2, abbreviated_overlap=True)
+    cds = _by(rec, "CDS", "ND3")
+    assert [(int(p.start), int(p.end)) for p in cds.location.parts] == [(60, 233), (234, end - 1)], rows
+    assert cds.qualifiers["transl_except"] == [f"(pos:{end - 2}..{end - 1},aa:TERM)"]
+    assert cds.qualifiers["translation"] == [str(Seq(coding[:-3]).translate(table=2))]
+
+
+def test_cds_across_the_origin_without_stop_marked_3prime_partial():
+    """Leave-out runs: the core joined nad4L across the origin on - with only 38 nt before the origin (O2 cannot cut it
+    back) and no stop codon (table2asn NoStop, NC_006386.1). The joined CDS is checked like one interval: 3'-partial
+    with 'stop codon not determined'."""
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import BeforePosition, CompoundLocation, FeatureLocation
+    plus = "ATG" + "GCC" * 89                                  # 270 nt, no stop
+    seq_plus = plus[38:] + "C" * 600 + plus[:38]               # + strand: 38 nt before the origin, 232 after
+    L = len(seq_plus)
+    rc = str(Seq(seq_plus).reverse_complement())               # the gene on - : 1..38 then L-231..L
+    loc = CompoundLocation([FeatureLocation(0, 38, -1), FeatureLocation(L - 232, L, -1)])
+    rec = _mkrec(rc, [("CDS", loc, "ND4L")], "circular")
+    rows = _curate_rec(rec)
+    cds = _by(rec, "CDS", "ND4L")
+    assert str(cds.extract(rec.seq)) == plus
+    assert isinstance(cds.location.parts[-1].start, BeforePosition) and _mc().NO_STOP_NOTE in cds.qualifiers["note"], rows
