@@ -14,7 +14,10 @@ the spacers between the rRNAs.
 Histones: tblastn of the reference proteins, HSPs grouped into loci, exonerate protein2genome and protein2dna
 (intronless) with the TOPK best proteins of the locus, best score wins (spliced models x INTRON_PEN per
 intron); the CDS is extended in frame to the next stop codon and, when the model does not start with ATG at
-protein position 1, to the farthest upstream in-frame ATG before a stop. Nuclear code (transl_table 1).
+protein position 1, to the farthest upstream in-frame ATG before a stop. Nuclear code (transl_table 1). Each copy
+is classed replication-dependent (tandem cluster) / replacement (H3.3, spliced) / single-copy from H3 residues
+31/87/89/90, introns and its coverage relative to the single-copy coverage (histone_class); the per-gene consensus
+takes a cluster copy first (pick_histone).
 Massive assemblies: both searches first run with one reference per genus (rDNA) / per gene and phylum
 (histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go to the steps above.
 
@@ -1047,6 +1050,66 @@ def _tidy(loci: List[dict], seq: str, qlen: int) -> None:
 
 
 # ── histones ────────────────────────────────────────────────────────────────
+# Replication-dependent histones (the tandem cluster; the H3 / H4 markers of phylogenetics) vs replacement
+# variants. Canonical H3 (H3.1 / H3.2) and H3.3 differ at four residues in animals (numbered without the initiator
+# Met): A31 S87 V89 M90 vs S31 A87 I89 G90; replication-dependent genes have no introns; H2A.X ends in SQ(E/D)Phi.
+# Found on MJ20260820041 (2026-10-28): SPAdes splits the histone cluster into 84-134 nt contigs at ~4000x, so the
+# "complete, best covered" H3 of the consensus was a single-copy H3.3 (14x) in 3 of 6 annelid assemblies and
+# canonical H3 in 2 - different paralogs under one gene name.
+H3_SITES = (31, 87, 89, 90)
+H3_SIGNATURE = {"canonical H3": "ASVM", "H3.3": "SAIG"}
+H2AX_END = re.compile(r"SQ[ED][ACFGILMVWY]$")
+CLUSTER_RATIO = 5.0     # contig coverage / single-copy coverage at or above which a copy counts as a cluster copy
+SINGLE_RATIO = 2.0      # below: a single-copy gene (MJ20260820041: H2A.X, extra H2B / H3 at 0.8-1.5x; cluster 100-270x)
+CLASS_RANK = {"replication-dependent": 3, "": 2, "single-copy": 1, "replacement": 0}
+
+
+def histone_class(gene: str, prot: str, n_exons: int, ratio: Optional[float]) -> Tuple[str, str]:
+    """('replication-dependent' | 'single-copy' | 'replacement' | '', evidence) for one histone CDS (protein with or
+    without Met). Sequence evidence (H3 residues, introns) outranks coverage."""
+    why, cls = [], ""
+    if gene == "H3":
+        i = prot.find("ARTKQTAR")
+        if i >= 0 and len(prot) - i >= max(H3_SITES):
+            r = "".join(prot[i + p - 1] for p in H3_SITES)
+            score = {k: sum(a == b for a, b in zip(r, v)) for k, v in H3_SIGNATURE.items()}
+            (best, hi), (_, lo) = sorted(score.items(), key=lambda x: -x[1])
+            if hi >= 3 and hi > lo:
+                why.append(f"H3 residues 31/87/89/90 {r} ({best})")
+                cls = "replication-dependent" if best == "canonical H3" else "replacement"
+    if gene == "H2A" and H2AX_END.search(prot):
+        why.append(f"H2A.X C-terminus {prot[-4:]}")
+    if n_exons > 1:
+        why.append(f"{n_exons - 1} intron(s)")
+        cls = "replacement"
+    if ratio is not None:
+        why.append(f"copy ratio {ratio:.1f}")
+        if not cls and ratio >= CLUSTER_RATIO:
+            cls = "replication-dependent"
+        elif not cls and ratio < SINGLE_RATIO:
+            cls = "single-copy"
+    return cls, "; ".join(why)
+
+
+def single_copy_cov(ids) -> Optional[float]:
+    """Coverage of the single-copy genome from SPAdes contig names (NODE_1_length_5000_cov_12.3): the
+    length-weighted median coverage of contigs >= 1 kb; None for other names."""
+    pairs = []
+    for c in ids:
+        m = re.search(r"length_(\d+)_cov_([\d.]+)", c)
+        if m and int(m.group(1)) >= 1000:
+            pairs.append((float(m.group(2)), int(m.group(1))))
+    if not pairs:
+        return None
+    pairs.sort()
+    half, acc = sum(n for _, n in pairs) / 2, 0
+    for cov, n in pairs:
+        acc += n
+        if acc >= half:
+            return cov
+    return None
+
+
 def _exonerate(target: str, prot: str, model: str, td: Path) -> Optional[tuple]:
     (td / "p.fa").write_text(f">p\n{prot}\n")
     out = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
@@ -1306,8 +1369,12 @@ def _loc(a: int, b: int, st: int, p_lo: bool, p_hi: bool) -> FeatureLocation:
     return FeatureLocation(BeforePosition(a - 1) if p_lo else a - 1, AfterPosition(b) if p_hi else b, strand=st)
 
 
-def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
+def collect(recs, rdna, hist, base_cov: Optional[float] = None) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
     rows, feats = [], defaultdict(list)
+
+    def ratio(c: str) -> Optional[float]:
+        cov = _cov(c)
+        return float(cov) / base_cov if cov and base_cov else None
     for rid, loci in (rdna or {}).items():
         c, off = _contig(rid), _offset(rid)
         for L in loci:
@@ -1327,7 +1394,8 @@ def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
                              "start": a, "end": b, "strand": "+" if L["st"] == 1 else "-",
                              "partial_5": int(p5), "partial_3": int(p3), "length": b - a + 1, "exons": f"{a}-{b}",
                              "best_ref": L["ref"], "best_ref_organism": L["ref_org"], "identity": L["identity"],
-                             "evidence": f["how"], "aligned_nt": f.get("aligned", "")})
+                             "evidence": f["how"], "aligned_nt": f.get("aligned", ""),
+                             "copy_ratio": f"{ratio(c):.1f}" if ratio(c) is not None else ""})
     for rid, models in (hist or {}).items():
         c, off = _contig(rid), _offset(rid)
         for m in models:
@@ -1341,8 +1409,11 @@ def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
             cs = m.get("codon_start", 1)
             seq = seq[cs - 1:]
             prot = str(seq[: len(seq) // 3 * 3].translate(table=1)).rstrip("*")
+            rt = ratio(c)
+            cls, why = histone_class(m["gene"], prot, len(ex), rt)
             q = {"gene": [m["gene"]], "product": [PRODUCT[m["gene"]]], "codon_start": [str(cs)], "transl_table": ["1"],
-                 "note": [f"exonerate model from {m['ref']} {m['ref_org']}"]}
+                 "note": [f"exonerate model from {m['ref']} {m['ref_org']}"
+                          + (f"; {cls} histone ({why})" if cls else "")]}
             if "*" not in prot:
                 q["translation"] = [prot]
             feats[c].append(SeqFeature(loc, type="CDS", qualifiers=q))
@@ -1351,16 +1422,18 @@ def collect(recs, rdna, hist) -> Tuple[List[dict], Dict[str, List[SeqFeature]]]:
                          "partial_5": int(m["p5"]), "partial_3": int(m["p3"]), "length": sum(y - x + 1 for x, y in ex),
                          "exons": ";".join(f"{x}-{y}" for x, y in ex), "best_ref": m["ref"],
                          "best_ref_organism": m["ref_org"], "identity": "",
-                         "evidence": "internal stop codon" if "*" in prot else "exonerate", "aligned_nt": ""})
+                         "evidence": "internal stop codon" if "*" in prot else "exonerate", "aligned_nt": "",
+                         "copy_ratio": f"{rt:.1f}" if rt is not None else "", "class": cls, "class_evidence": why})
     return rows, feats
 
 
 def write_outputs(out: Path, recs, org: Dict[str, str], rows: List[dict], feats: Dict[str, List[SeqFeature]]) -> None:
     rows.sort(key=lambda r: (r["contig"], r["start"]))
     cols = ["contig", "contig_len", "contig_cov", "type", "gene", "start", "end", "strand", "partial_5", "partial_3",
-            "length", "exons", "best_ref", "best_ref_organism", "identity", "evidence", "aligned_nt"]
+            "length", "exons", "best_ref", "best_ref_organism", "identity", "evidence", "aligned_nt", "copy_ratio",
+            "class", "class_evidence"]
     with open(out / "nuc_features.tsv", "w", newline="") as o:
-        w = csv.DictWriter(o, cols, delimiter="\t")
+        w = csv.DictWriter(o, cols, delimiter="\t", restval="")
         w.writeheader()
         w.writerows(rows)
     gbrecs = []
@@ -1753,13 +1826,24 @@ def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: flo
         if not cds:
             continue
         lens = sorted(int(r["length_aa"]) for r in lib.hist.values() if r["gene"] == h)
-        typical = 3 * lens[len(lens) // 2] if lens else 0
-        r = max(cds, key=lambda r: (r["partial_5"] == r["partial_3"] == "0" and int(r["length"]) >= 0.8 * typical,
-                                    float(r["contig_cov"] or 0), int(r["length"])))
+        r = pick_histone(cds, 3 * lens[len(lens) // 2] if lens else 0)
+        n_rep = sum(c.get("class") == "replacement" for c in cds)
         out.append({"gene": h, "length": int(r["length"]), "n_fragments": 1, "n_dropped": 0, "internal_N": 0,
                     "partial_5": int(r["partial_5"]), "partial_3": int(r["partial_3"]), "contigs": r["contig"],
-                    "dropped": f"{len(cds) - 1} other copies", "seq": str(_gene_seq(r, recs))})
+                    "class": r.get("class", ""),
+                    "dropped": f"{len(cds) - 1} other copies" + (f" ({n_rep} replacement)" if n_rep else ""),
+                    "seq": str(_gene_seq(r, recs))})
     return out
+
+
+def pick_histone(cds: List[dict], typical: int) -> dict:
+    """The copy that stands for a histone gene: replication-dependent (cluster) copies first, then undecided, then
+    single-copy, replacement variants (H3.3, spliced genes) last - they are other paralogs; within a class complete
+    and >= 80 % of the typical length, then coverage, then length. A cluster copy that SPAdes left as a fragment
+    is reported partial rather than replaced by a complete variant."""
+    return max(cds, key=lambda r: (CLASS_RANK.get(r.get("class", ""), 2),
+                                   r["partial_5"] == r["partial_3"] == "0" and int(r["length"]) >= 0.8 * typical,
+                                   float(r["contig_cov"] or 0), int(r["length"])))
 
 
 def write_consensus(out: Path, cons: List[dict]) -> None:
@@ -1767,9 +1851,9 @@ def write_consensus(out: Path, cons: List[dict]) -> None:
     d.mkdir(exist_ok=True)
     multi = any(c.get("sample") for c in cons)
     cols = (["sample"] if multi else []) + ["gene", "length", "n_fragments", "n_dropped", "internal_N", "partial_5",
-                                            "partial_3", "contigs", "dropped"]
+                                            "partial_3", "class", "contigs", "dropped"]
     with open(out / "consensus.tsv", "w", newline="") as o:
-        w = csv.DictWriter(o, cols, delimiter="\t", extrasaction="ignore")
+        w = csv.DictWriter(o, cols, delimiter="\t", extrasaction="ignore", restval="")
         w.writeheader()
         w.writerows(cons)
     fa, faa = defaultdict(str), defaultdict(str)     # one file per gene, one sequence per sample
@@ -1821,7 +1905,10 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
         t0 = time.time()
         hist = annotate_histones(regions, lib, work, threads, lo, seqs)
         logging.info(f"[NUC] histones (tblastn + exonerate): {time.time() - t0:.0f} s")
-    rows, feats = collect(recs, rdna, hist)
+    base = single_copy_cov(recs.keys()) if hist else None
+    if base:
+        logging.info(f"[NUC] single-copy coverage {base:.1f}x (length-weighted median of SPAdes contigs >= 1 kb)")
+    rows, feats = collect(recs, rdna, hist, base)
     write_outputs(out, recs, org, rows, feats)
     if feats:
         write_submission(out, inp, recs, org, feats, organism, src_table)

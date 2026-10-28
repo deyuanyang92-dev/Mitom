@@ -18,3 +18,7 @@ dependencies:
   - bwa                 # read depth ring of the genome maps (mito_plot.py, --infq); minimap2 is used instead when
                         # installed (8x faster) but is not listed: its k8 pulls sysroot_linux-64 (+0.5 GB on Linux)
   - openjdk>=17          # MiTFi (models/mitfi/mitfi_import.jar), the tRNA selection step of mito_core.py
+  - matplotlib           # genome maps (mito_plot.py imports matplotlib and numpy)
+  - scikit-learn=1.6.1   # MitoM-ML tRNA caller (trna_ml.py; models trained locally, cached per version)
+  - defusedxml           # NCBI XML in benchmark/mito_sample.py (tests/test_mito_sample.py imports it)
+  - pytest               # tests/

@@ -563,3 +563,55 @@ def test_cm_refine_hmm_first_then_partial_when_unconfirmed(tmp_path):
     L = {"st": 1, "feats": {"18S": f}}
     nuc.cm_refine({"c": [L]}, {"c": cut}, nuc.LIB, tmp_path, 2)
     assert f["p_lo"] and f["lo"] == 1 and not f["p_hi"]
+
+
+def _h3(sites):
+    """H3 test protein with residues 31/87/89/90 set (numbered without Met)"""
+    p = list(H3)
+    for pos, aa in zip(nuc.H3_SITES, sites):
+        p[pos] = aa                               # index pos = residue pos (H3 starts with Met)
+    return "".join(p)
+
+
+def test_histone_class_h3_signatures():
+    """MJ20260820041: the H3 consensus was H3.3 (S31 A87 I89 G90) in 3 annelid assemblies, canonical in 2"""
+    assert nuc.histone_class("H3", _h3("ASVM"), 1, None)[0] == "replication-dependent"
+    cls, why = nuc.histone_class("H3", _h3("SAIG"), 1, None)
+    assert cls == "replacement" and "H3.3" in why
+    assert nuc.histone_class("H3", _h3("SAIM"), 1, None)[0] == "replacement"       # 3 of 4 sites decide
+    assert nuc.histone_class("H3", _h3("ASIG"), 1, None)[0] == ""                    # 2 vs 2: undecided
+    assert nuc.histone_class("H3", H3[:60], 1, None)[0] == ""                       # fragment: sites not reached
+    assert nuc.histone_class("H3", H3, 1, None)[0] == "replication-dependent"       # test protein is canonical
+
+
+def test_histone_class_introns_copy_ratio_h2ax():
+    assert nuc.histone_class("H4", "MSGRGKGG", 2, 300.0)[0] == "replacement"        # spliced: never a cluster gene
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, 300.0)[0] == "replication-dependent"
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, 1.2)[0] == "single-copy"
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, 3.0)[0] == ""                     # between: undecided
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, None)[0] == ""                    # no coverage: undecided
+    assert nuc.histone_class("H3", _h3("SAIG"), 1, 300.0)[0] == "replacement"       # residues outrank coverage
+    assert "H2A.X" in nuc.histone_class("H2A", "MSGRGKTGGKARAKAKSRSSRAGLQFPVGRVHRLLRKGNYSQEY", 1, None)[1]
+
+
+def test_pick_histone_prefers_cluster_copy():
+    """a complete single-copy H3.3 (14x) must not stand for H3 when cluster copies (4000x) are fragments"""
+    rows = [{"contig": "h33", "contig_cov": "14", "partial_5": "0", "partial_3": "0", "length": "411",
+             "class": "replacement"},
+            {"contig": "frag", "contig_cov": "4000", "partial_5": "1", "partial_3": "0", "length": "300",
+             "class": "replication-dependent"},
+            {"contig": "unk", "contig_cov": "", "partial_5": "0", "partial_3": "0", "length": "411", "class": ""}]
+    assert nuc.pick_histone(rows, 411)["contig"] == "frag"
+    assert nuc.pick_histone(rows[::2], 411)["contig"] == "unk"     # undecided before replacement
+    assert nuc.pick_histone(rows[:1], 411)["contig"] == "h33"      # only a variant: still reported
+    h2ax = {"contig": "h2ax", "contig_cov": "15", "partial_5": "0", "partial_3": "0", "length": "402",
+            "class": "single-copy"}
+    assert nuc.pick_histone([h2ax, rows[0]], 375)["contig"] == "h2ax"   # single-copy before replacement
+    assert nuc.pick_histone([h2ax, rows[1]], 375)["contig"] == "frag"   # cluster fragment before single copy
+
+
+def test_single_copy_cov_from_spades_names():
+    ids = ["NODE_1_length_50000_cov_12.0", "NODE_2_length_40000_cov_14.0", "NODE_3_length_2000_cov_4000.0",
+           "NODE_4_length_500_cov_1.0"]
+    assert nuc.single_copy_cov(ids) == 12.0
+    assert nuc.single_copy_cov(["scaffold_1", "contig2"]) is None
