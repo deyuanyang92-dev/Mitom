@@ -3,7 +3,7 @@
 
 Applies the annotation criteria of Fourdrilis et al. 2018 (Sci. Rep. 8:17964) as summarised by
 Ghiselli et al. 2021 (Phil. Trans. R. Soc. B 376:20200159, doi:10.1098/rstb.2020.0159, section 3)
-to automatic annotation (e.g. MitoZ / MITOS output):
+to automatic annotation (MitoM's core, or another annotator's GenBank such as MITOS output):
 
   P1  PCG start: the first eligible in-frame start codon at the 5' end, i.e. the start codon
       nearest the preceding gene WITHOUT overlapping it (criterion i). Only applied when the

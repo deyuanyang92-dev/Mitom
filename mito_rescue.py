@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""mito_rescue.py - add genes that MitoZ missed, taken from a MITOS2 annotation of the same sequence.
+"""mito_rescue.py - add genes the annotation core missed, taken from a MITOS2 annotation of the same sequence
+(optional: --rescue yes; needs the MITOS2 installation).
 
 MitoZ gives the most exact protein-gene boundaries, but misses some short or divergent genes that
 MITOS2 finds. 2026-10-20 dev benchmark (NCBI NC_ annotation as reference, offline simulation):
@@ -57,8 +58,8 @@ MITOS_GENE = re.compile(r"^(.+?)(?:_(\d+))?(?:-([a-z]))?$")       # nad5, nad5_1
 MITOS_SKIP = re.compile(r"^(OH|OL)", re.I)
 MIN_RRNA = 300
 
-# MITOS2 name -> MitoZ gene name and product (as in MitoZ's final GenBank)
-MITOZ_NAMES = {
+# MITOS2 name -> the core's gene name and product (the names the core writes; mito_curate N1 makes them NCBI's)
+CORE_NAMES = {
     "atp6": ("ATP6", "ATP synthase F0 subunit 6"), "atp8": ("ATP8", "ATP synthase F0 subunit 8"),
     "cox1": ("COX1", "cytochrome c oxidase subunit I"), "cox2": ("COX2", "cytochrome c oxidase subunit II"),
     "cox3": ("COX3", "cytochrome c oxidase subunit III"), "cob": ("CYTB", "cytochrome b"),
@@ -78,12 +79,12 @@ CONTAINER_FACTOR = 1.5
 MAX_FRAG_GAP = 3000      # CDS fragments (-a/-b) further apart than this are not joined
 NOTE = "annotated by similarity to a MITOS2 prediction (not found by the primary annotation)"
 HINT = "MITOS2 boundaries are less exact than MitoZ's (52 % vs 80 % both ends exact): check the ends manually"
-_MAX_LEN_BY_NAME = {n.lower(): MAX_LEN[g] for g, (n, _) in MITOZ_NAMES.items()}
+_MAX_LEN_BY_NAME = {n.lower(): MAX_LEN[g] for g, (n, _) in CORE_NAMES.items()}
 _MAX_LEN_BY_NAME.update({g.lower(): v for g, v in MAX_LEN.items()})
 
 
 def max_len(gene: str) -> Optional[int]:
-    """Longest expected length (nt) of a gene given by its MitoZ or MITOS2 name; None when unknown."""
+    """Longest expected length (nt) of a gene given by its core or MITOS2 name; None when unknown."""
     return _MAX_LEN_BY_NAME.get(gene.lower())
 
 
@@ -172,12 +173,12 @@ def _translation(f: SeqFeature, seq: Any, code: int) -> Optional[str]:
 
 
 def rescue(rec: SeqRecord, mitos: SeqRecord, code: int) -> List[str]:
-    """Add to rec (MitoZ annotation) the protein genes and rRNAs of mitos (mitos_to_record) that rec lacks.
-    Returns the MitoZ-style names added."""
+    """Add to rec (the core's annotation) the protein genes and rRNAs of mitos (mitos_to_record) that rec lacks.
+    Returns the core-style names added."""
     n = len(rec)
     have = {f.qualifiers.get("gene", [""])[0] for f in rec.features if f.type in ("CDS", "rRNA")}
-    others = [(MITOZ_NAMES[f.qualifiers["gene"][0]][0], _positions(f, n)) for f in mitos.features
-              if f.type in ("CDS", "rRNA") and f.qualifiers["gene"][0] in MITOZ_NAMES]
+    others = [(CORE_NAMES[f.qualifiers["gene"][0]][0], _positions(f, n)) for f in mitos.features
+              if f.type in ("CDS", "rRNA") and f.qualifiers["gene"][0] in CORE_NAMES]
     taken = []
     for f in rec.features:
         if f.type not in ("CDS", "rRNA", "tRNA"):
@@ -194,9 +195,9 @@ def rescue(rec: SeqRecord, mitos: SeqRecord, code: int) -> List[str]:
         taken.append(pos)
     best: Dict[str, SeqFeature] = {}
     for f in mitos.features:
-        if f.type not in ("CDS", "rRNA") or f.qualifiers["gene"][0] not in MITOZ_NAMES:
+        if f.type not in ("CDS", "rRNA") or f.qualifiers["gene"][0] not in CORE_NAMES:
             continue
-        name = MITOZ_NAMES[f.qualifiers["gene"][0]][0]
+        name = CORE_NAMES[f.qualifiers["gene"][0]][0]
         pos = _positions(f, n)
         if name in have or any(len(pos & t) > 0.5 * len(pos) for t in taken):
             continue
@@ -212,7 +213,7 @@ def rescue(rec: SeqRecord, mitos: SeqRecord, code: int) -> List[str]:
             continue
         taken.append(pos)
         mname = f.qualifiers["gene"][0]
-        product = MITOZ_NAMES[mname][1]
+        product = CORE_NAMES[mname][1]
         q = {"gene": [name], "product": [product], "note": [NOTE]}
         if f.type == "CDS":
             q = {"gene": [name], "codon_start": ["1"], "transl_table": [str(code)], "product": [product],
@@ -267,7 +268,7 @@ def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, jobs:
         changed = False
         for rec in recs:
             have = {f.qualifiers.get("gene", [""])[0] for f in rec.features if f.type in ("CDS", "rRNA")}
-            if all(v[0] in have for v in MITOZ_NAMES.values()):      # nothing to rescue: MITOS2 not run
+            if all(v[0] in have for v in CORE_NAMES.values()):      # nothing to rescue: MITOS2 not run
                 continue
             with tempfile.TemporaryDirectory() as td:
                 fa = Path(td) / "in.fa"

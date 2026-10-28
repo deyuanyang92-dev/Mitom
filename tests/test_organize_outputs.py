@@ -38,8 +38,8 @@ def test_organize_touches_only_mitom_files_and_can_run_twice(tmp_path):
 def test_organize_keep_moves_work_dirs(tmp_path):
     out = tmp_path
     final = _fake_run(out, "0")
-    (out / "01.mitoz_anno1").mkdir()
-    (out / "01.mitoz_anno1" / "x.log").write_text("")
+    (out / "01.anno_round1").mkdir()
+    (out / "01.anno_round1" / "x.log").write_text("")
     bm.organize_outputs(out, final, keep=True)
-    assert (out / "work" / "01.mitoz_anno1" / "x.log").is_file() and not (out / "01.mitoz_anno1").exists()
+    assert (out / "work" / "01.anno_round1" / "x.log").is_file() and not (out / "01.anno_round1").exists()
     assert (out / "work" / "05.curated").is_dir()

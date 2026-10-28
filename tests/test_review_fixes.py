@@ -83,7 +83,7 @@ def test_core_failure_is_warned_on_the_root_logger(tmp_path, monkeypatch, caplog
     fa.write_text(">S00001 topology=circular\nACGT\n")
     si = bm.SampleInfo("sampleA", "sampleA", "S00001", "circular", fa, fa)
     with caplog.at_level(logging.WARNING, logger=""):
-        iid, ok, *_ = bm.mitoz_annotate_one(si, fa, tmp_path / "out", "01.mitoz_anno1", a, None, None)
+        iid, ok, *_ = bm.annotate_one(si, fa, tmp_path / "out", "01.anno_round1", a)
     assert not ok
     msgs = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
     assert any(m.startswith("[FAIL] sampleA: annotation core exit 3: boom: no refseq89m") for m in msgs), msgs
@@ -104,20 +104,13 @@ def test_run_returns_nonzero_when_every_record_failed(tmp_path, monkeypatch):
 
 
 # ---- resolve_tools under the native core --------------------------------------------------------------------
-def test_native_core_neither_looks_for_mitoz_nor_complains_about_mitos2(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(mito_env, "mitoz_env", lambda: "mitoz")
+def test_native_core_does_not_complain_about_optional_mitos2(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(mito_env, "mitos_bin", lambda explicit=None: None)
     monkeypatch.setattr(mito_env, "mitos_refdir", lambda explicit=None: None)
     a = parse(tmp_path, "--clade", "Mollusca", "--genetic_code", "5")
     assert bm.resolve_tools(a) == ""
     err = capsys.readouterr().err
-    assert "MitoZ found" not in err and "MITOS2 not found" not in err
-    assert a.conda_env_mitoz is None and a.mitoz_fast == ""
-    a = parse(tmp_path, "--clade", "Mollusca", "--genetic_code", "5", "--core", "hybrid")
-    assert bm.resolve_tools(a) == ""
-    err = capsys.readouterr().err
-    assert "MitoZ found automatically: mitoz" in err and "MITOS2 not found" in err
-    assert a.mitoz_fast == str(bm.MITOZ_FAST)
+    assert "MitoZ" not in err and "MITOS2 not found" not in err
 
 
 # ---- cox1_first of a linear record ---------------------------------------------------------------------------
@@ -214,8 +207,8 @@ def test_env_config_path_is_used_before_the_file_exists(tmp_path, monkeypatch):
 
 
 def test_rescue_auto_skipped_for_native_core(tmp_path, monkeypatch):
-    """--rescue auto runs MITOS2 only for the mitoz / hybrid cores: under the native core it cost 5-7 min and ~1 GB per
-    record lacking a gene (mostly atp8 of taxa without atp8) for 2 genes in 24 records."""
+    """--rescue auto does not run MITOS2: under the native core it cost 5-7 min and ~1 GB per record lacking a gene
+    (mostly atp8 of taxa without atp8) for 2 genes in 24 records."""
     import argparse
     import batch_mitoz as bm
     import mito_rescue

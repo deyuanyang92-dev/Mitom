@@ -93,7 +93,7 @@ def test_complete_record_skips_mitos2(tmp_path):
     """MITOS2 protein annotation is slow (208 s on NC_038192.1): records with all 13 PCGs + 2 rRNAs are not sent."""
     d = tmp_path / "final"
     d.mkdir()
-    names = [v[0] for v in mr.MITOZ_NAMES.values()]
+    names = [v[0] for v in mr.CORE_NAMES.values()]
     feats = [("rRNA" if "rRNA" in n else "CDS", 100 * i, 100 * i + 90, 1, n) for i, n in enumerate(names)]
     SeqIO.write(mitoz_rec(feats), str(d / "S1.gbf"), "genbank")
     assert mr.rescue_dir(d, 5, run=lambda *a: (_ for _ in ()).throw(AssertionError("MITOS2 must not run"))) == []
@@ -130,7 +130,7 @@ def test_container_release_counts_only_absent_genes(tmp_path):
 
 def test_max_len_table_covers_all_genes():
     """Every rescuable gene has an expected maximum length (nt), keyed by MITOS2 name."""
-    assert set(mr.MAX_LEN) == set(mr.MITOZ_NAMES)
+    assert set(mr.MAX_LEN) == set(mr.CORE_NAMES)
     assert mr.MAX_LEN["nad5"] == 2000 and mr.MAX_LEN["rrnL"] == 1900 and mr.MAX_LEN["atp8"] == 250
 
 

@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "MitoM: animal mitochondrial genome annotation that combines MitoZ, MITOS2 and other tools"
+title: "MitoM: animal mitochondrial genome annotation"
 message: >-
   If you use this software, please cite this GitHub repository AND the tools it runs
   (see "references" below and the README section "Citation"). No other conditions apply:
@@ -9,7 +9,7 @@ authors:
   - alias: deyuanyang92-dev
 repository-code: "https://github.com/deyuanyang92-dev/Mitom"
 license: CC0-1.0
-keywords: [mitochondrial genome, annotation, MitoZ, MITOS2, GenBank, Metazoa]
+keywords: [mitochondrial genome, annotation, MITOS2, GenBank, NCBI submission, Metazoa]
 references:
   - type: article
     title: "MitoZ: a toolkit for animal mitochondrial genome assembly, annotation and visualization"
@@ -60,14 +60,20 @@ references:
     year: 2009
     doi: 10.1186/1471-2105-10-421
   - type: article
-    title: "GeneWise and Genomewise"
-    authors: [{family-names: Birney, given-names: Ewan}]
-    journal: Genome Research
-    year: 2004
-    doi: 10.1101/gr.1865504
-  - type: article
     title: "Biopython: freely available Python tools for computational molecular biology and bioinformatics"
     authors: [{family-names: Cock, given-names: Peter J. A.}]
     journal: Bioinformatics
     year: 2009
     doi: 10.1093/bioinformatics/btp163
+  - type: article
+    title: "Matplotlib: A 2D graphics environment"
+    authors: [{family-names: Hunter, given-names: John D.}]
+    journal: Computing in Science & Engineering
+    year: 2007
+    doi: 10.1109/MCSE.2007.55
+  - type: article
+    title: "Minimap2: pairwise alignment for nucleotide sequences"
+    authors: [{family-names: Li, given-names: Heng}]
+    journal: Bioinformatics
+    year: 2018
+    doi: 10.1093/bioinformatics/bty191

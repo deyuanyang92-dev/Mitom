@@ -91,10 +91,10 @@ def render_svg(title: str, subtitle: str, nodes: Iterable[Node], out_path: Path)
 def main() -> int:
     zh_nodes: List[Node] = [
         ("input", ["输入数据", "FASTA / GenBank；FASTQ 双端可选"]),
-        ("preflight", ["输入识别与依赖检查", "Biopython、MitoZ、Snakemake"]),
+        ("preflight", ["输入识别与依赖检查", "Biopython、Snakemake"]),
         ("gb_convert", ["GenBank 去重与转换", "保留 B64_2 与 B64 为不同编号"]),
         ("internal", ["生成内部 FASTA", "S00001...；记录 id_map.tsv"]),
-        ("phase1", ["第一轮 MitoZ 注释", "输出 01.mitoz_anno1/ 和 sample.log"]),
+        ("phase1", ["第一轮注释（mito_core.py）", "输出 01.anno_round1/ 和 sample.log"]),
         ("reorient", ["按目标基因重定向", "默认 cox1；保留 linear / circular"]),
         ("phase2", ["可选第二轮重注释", "if_reannotation_2=yes 时运行"]),
         ("finalize", ["最终 GenBank 生成", "ID 重写、metadata 恢复、/organism= 同步"]),
@@ -104,10 +104,10 @@ def main() -> int:
 
     en_nodes: List[Node] = [
         ("input", ["Input data", "FASTA / GenBank; optional paired FASTQ"]),
-        ("preflight", ["Detect input and check dependencies", "Biopython, MitoZ, Snakemake"]),
+        ("preflight", ["Detect input and check dependencies", "Biopython, Snakemake"]),
         ("gb_convert", ["Deduplicate and convert GenBank", "Keep local IDs such as B64_2 distinct from B64"]),
         ("internal", ["Create internal FASTA files", "S00001... plus id_map.tsv"]),
-        ("phase1", ["MitoZ annotation, phase 1", "Writes 01.mitoz_anno1/ and sample.log files"]),
+        ("phase1", ["Annotation, phase 1 (mito_core.py)", "Writes 01.anno_round1/ and sample.log files"]),
         ("reorient", ["Reorient by target gene", "Default cox1; preserve linear / circular topology"]),
         ("phase2", ["Optional phase-2 re-annotation", "Runs when if_reannotation_2=yes"]),
         ("finalize", ["Build final GenBank files", "Rewrite IDs, restore metadata, synchronize /organism="]),

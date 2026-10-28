@@ -1,4 +1,4 @@
-"""batch_mitoz.resolve_tools / optional post-steps / final-step helpers (review B findings 6, 7, 10, 11, 14, 15, C8).
+"""batch_mitoz.resolve_tools / optional post-steps / final-step helpers (review B findings 6, 7, 10, 11, 15).
 
 Run: python3 -m pytest -q tests/test_resolve_tools.py
 """
@@ -73,23 +73,6 @@ def test_clade_decision_is_printed(tmp_path, capsys):
     assert "[CLADE] auto: Mollusca -> --clade Mollusca --genetic_code 5" in capsys.readouterr().err
 
 
-@pytest.mark.skipif(not (mito_env.mitoz_env() or mito_env.find("mitoz")), reason="MitoZ not installed here")
-def test_env_decision_is_printed(tmp_path, capsys):
-    bm.resolve_tools(parse(tmp_path, "--clade", "Mollusca", "--core", "hybrid"))
-    assert "[ENV] MitoZ found automatically" in capsys.readouterr().err
-
-
-# ---- B14: --core mitoz ------------------------------------------------------------------------------------
-def test_core_mitoz_override_is_logged_and_documented(tmp_path, capsys):
-    a = parse(tmp_path, "--clade", "Mollusca", "--core", "mitoz", "--rrna_hmm", "yes")
-    assert bm.resolve_tools(a) == ""
-    err = capsys.readouterr().err
-    assert "[CORE]" in err and "--rrna_hmm yes" in err and "--rrna_hmm no" in err
-    assert (a.trna, a.rescue, a.rrna_hmm) == ("mitoz", "no", "no")
-    h = subprocess.run([sys.executable, str(HERE.parent / "batch_mitoz.py"), "run", "-h"], capture_output=True, text=True)
-    assert "--rescue no --rrna_hmm no" in " ".join(h.stdout.split())
-
-
 # ---- B7: optional steps never abort the run ---------------------------------------------------------------
 def ns(**kw):
     base = dict(rescue="yes", rrna_hmm="yes", mitos_bin="/x", mitos_refdir="/y", genetic_code=5, phylum=None,
@@ -120,21 +103,6 @@ def test_rescue_failure_is_logged_and_the_run_continues(tmp_path, monkeypatch, c
     with caplog.at_level(logging.ERROR):
         assert bm.run_rescue(ns(), tmp_path, tmp_path) is None
     assert any("[RESCUE] failed" in m and "MITOS2 exploded" in m for m in caplog.messages)
-
-
-def test_wrapped_trna_failure_is_logged_and_the_run_continues(tmp_path, monkeypatch, caplog):
-    import mito_trna
-
-    def boom(*a, **k):
-        raise ValueError("bad row")
-    r = SeqRecord(Seq("ACGT" * 50), id="S1", description="")
-    r.annotations["molecule_type"] = "DNA"
-    SeqIO.write(r, str(tmp_path / "S1.gbf"), "genbank")
-    (tmp_path / "wrap.tsv").write_text("S1\tY\tgta\tACGT\n")
-    monkeypatch.setattr(mito_trna, "add_wrapped", boom)
-    with caplog.at_level(logging.ERROR):
-        assert bm.add_wrapped_trnas(tmp_path, tmp_path / "wrap.tsv") is None
-    assert any("[TRNA_WRAP] failed" in m for m in caplog.messages)
 
 
 # ---- B6/A: tell the user when the rRNA HMM step skipped records because no phylum was given --------------
@@ -215,24 +183,3 @@ def test_body_source_tag_tells_auto_skip_from_phase2_failure():
     assert bm.fallback_src_tag("auto", "S2", {"S2"}) == "phase1b_reoriented"       # re-annotation failed
     assert bm.fallback_src_tag("yes", "S1", {"S1"}) == "phase1b_reoriented"
     assert bm.fallback_src_tag("no", "S1", set()) == "phase1b_reoriented"
-
-
-# ---- C8 / B9: tRNAs of samples finalised from fast round 1 --------------------------------------------------
-def test_which_samples_get_the_sensitive_trna_pass(tmp_path):
-    rows = [(tmp_path / "A.gbf", "phase2_mitoz"), (tmp_path / "B.gbf", "phase1_raw"),
-            (tmp_path / "C.gbf", "phase1b_reoriented"), (tmp_path / "D.gbf", "phase1b_reoriented+partial_no_gene_merged"),
-            (tmp_path / "E.gbf", "shifted_round1"), (tmp_path / "F.gbf", "phase2_mitoz+partial_no_gene_merged")]
-    got = bm.phase1_fast_finalised(rows, phase1_fast=True)
-    assert [p.name for p in got] == ["B.gbf", "C.gbf", "D.gbf"]
-    assert bm.phase1_fast_finalised(rows, phase1_fast=False) == []
-
-
-def test_sensitive_trna_pass_skipped_silently_without_mitos2(tmp_path, monkeypatch):
-    def boom(*a, **k):
-        raise AssertionError("no subprocess without MITOS2")
-    monkeypatch.setattr(bm.subprocess, "run", boom)
-    (tmp_path / "B.gbf").write_text("x")
-    a = ns(mitos_bin=None, mitos_refdir=None, trna="mitos2")
-    assert bm.resensitise_trnas(a, [tmp_path / "B.gbf"], tmp_path) == 0
-    a = ns(trna="mitoz")                                    # MiTFi tRNAs requested: nothing is replaced
-    assert bm.resensitise_trnas(a, [tmp_path / "B.gbf"], tmp_path) == 0

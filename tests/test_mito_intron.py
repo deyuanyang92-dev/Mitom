@@ -214,7 +214,7 @@ def test_feature_notes_read_like_genbank_notes(tmp_path):
 
 
 def test_existing_stopless_cds_end_not_reused(tmp_path):
-    """Native core review 2026-10: the core ends a CDS at its last aligned codon; mitoz_ends() handed that stop-less
+    """Native core review 2026-10: the core ends a CDS at its last aligned codon; core_ends() handed that stop-less
     end (NC_008164.1 ND5 ...GTA, the T stop 1 nt further) to the model, mito_curate P3 skips joins -> table2asn NoStop.
     An existing end is reused only when it is a stop / T-TA tail; otherwise the first in-frame complete stop (3468)."""
     rec = SeqIO.read(str(DATA / "NC_008164.gb"), "genbank")

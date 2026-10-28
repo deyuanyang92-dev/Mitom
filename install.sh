@@ -3,24 +3,23 @@
 #   the conda environment mitotools (BLAST, exonerate, Infernal, HMMER, Java for MiTFi, table2asn, ARAGORN,
 #   tRNAscan-SE, MAFFT) - all the native core (mito_core.py, the default) and the MitoM steps use - the MITOS2
 #   reference data refseq89m (Zenodo 4284483, md5 checked: protein sets, rRNA and tRNA models), Biopython and
-#   scikit-learn (MitoM-ML tRNAs) for the system python3, the `mitom` command (~/.local/bin/mitom), then
-#   mito_env.py doctor --write-config so no tool path has to be typed. `--envs "mitotools mitoz mitos"` also
-#   installs MitoZ 3.6 and MITOS2 2.1.10 for --core hybrid.
+#   scikit-learn (MitoM-ML tRNAs) and matplotlib (genome maps) for the system python3, the `mitom` command
+#   (~/.local/bin/mitom), then mito_env.py doctor --write-config so no tool path has to be typed.
+#   `--envs "mitotools mitos"` also installs MITOS2 2.1.10 (optional: --rescue yes, mito_trna.py review).
 # Existing environments are kept (--force recreates them). Safe to run again.
 #
 # Platforms (checked with mamba solves, 2026-10-20):
 #   Linux x86_64 / Windows WSL2   everything
-#   macOS Intel                   MitoZ + mitotools; MITOS2 has no macOS build (viennarna<2) -> MitoZ's own
-#                                 tRNA step is used automatically (slower). Full workflow: use the Docker image.
+#   macOS Intel                   mitotools; the optional MITOS2 has no macOS build (viennarna<2)
 #   macOS Apple Silicon           as macOS Intel, through Rosetta 2 (osx-64 packages)
 #   Windows (native)              not supported by the bioinformatics packages: use WSL2 or Docker
 #
-# Usage: bash install.sh [--force] [--refdir DIR] [--envs "mitotools mitoz mitos"]
+# Usage: bash install.sh [--force] [--refdir DIR] [--envs "mitotools mitos"]
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REFDIR="${MITOS_REFDIR:-$HOME/mitos_refs}"
-ENVS="mitotools"            # the native core needs only this one; --envs "mitotools mitoz mitos" adds --core hybrid
+ENVS="mitotools"            # MitoM needs only this one; --envs "mitotools mitos" adds the optional MITOS2
 FORCE=0
 REF_URL="https://zenodo.org/records/4284483/files/refseq89m.tar.bz2"
 REF_MD5="bb6325e27612e61a6995e88e8ffcecf8"
@@ -48,11 +47,11 @@ case "$OS" in
         echo "Apple Silicon: Rosetta 2 is needed. Run: softwareupdate --install-rosetta --agree-to-license" >&2
         exit 1
       fi
-      export CONDA_SUBDIR=osx-64          # bioconda has no arm64 build of tbl2asn (MitoZ) / table2asn
+      export CONDA_SUBDIR=osx-64          # bioconda has no arm64 build of table2asn
       say "Apple Silicon: installing Intel (osx-64) packages, run through Rosetta 2"
     fi
     keep=""; for e in $ENVS; do [ "$e" != mitos ] && keep="$keep $e"; done; ENVS="${keep# }"
-    say "macOS: MITOS2 cannot be installed (no macOS build of viennarna<2); MitoZ's own tRNA step will be used"
+    say "macOS: the optional MITOS2 cannot be installed (no macOS build of viennarna<2)"
     ;;
   MINGW*|MSYS*|CYGWIN*)
     echo "Windows: please use WSL2 (wsl --install -d Ubuntu, then run this script inside Ubuntu) or Docker." >&2
@@ -119,6 +118,12 @@ if ! python3 -c "import sklearn" 2>/dev/null; then
   say "installing scikit-learn for $(command -v python3)"
   python3 -m pip install --user scikit-learn 2>/dev/null || python3 -m pip install --user --break-system-packages scikit-learn \
     || echo "could not install scikit-learn: tRNAs will be annotated by MiTFi (the MITOS2 method)" >&2
+fi
+# matplotlib >= 3.6 for the genome maps (mito_plot.py; --plot no works without it)
+if ! python3 -c "import sys, matplotlib as m; sys.exit(tuple(int(x) for x in m.__version__.split('.')[:2]) < (3, 6))" 2>/dev/null; then
+  say "installing matplotlib for $(command -v python3)"
+  python3 -m pip install --user "matplotlib>=3.6" 2>/dev/null || python3 -m pip install --user --break-system-packages "matplotlib>=3.6" \
+    || echo "could not install matplotlib: run with --plot no" >&2
 fi
 
 # ── the mitom command ────────────────────────────────────────────────────────

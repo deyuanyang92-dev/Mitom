@@ -33,13 +33,13 @@ def test_run_curate_passes_the_clade_option(tmp_path, monkeypatch):
     assert seen[1][seen[1].index("--aggressive_start_genes") + 1] == ""
 
 
-def test_native_core_is_the_default():
-    """The native core (mito_core.py, one conda environment) is the default; MitoZ is only needed for --core hybrid."""
+def test_native_core_only():
+    """MitoM's own core (mito_core.py, one conda environment) is the only core: MitoZ removed (user 2026-10-28)."""
     import subprocess
     out = subprocess.run([sys.executable, str(HERE.parent / "batch_mitoz.py"), "run", "-h"], capture_output=True, text=True).stdout
-    assert "--core {native,hybrid,mitoz}" in out.replace("\n", "").replace(" ", "") or "{native,hybrid,mitoz}" in out
+    assert "--core" not in out and "MitoZ" not in out and "--plot" in out
     import mito_env
-    assert "mitoz" not in mito_env.REQUIRED and "blastx" in mito_env.REQUIRED and "java" in mito_env.REQUIRED
+    assert "mitoz" not in mito_env.TOOLS and "blastx" in mito_env.REQUIRED and "java" in mito_env.REQUIRED
 
 
 def test_abbreviated_overlap_only_for_chordata():

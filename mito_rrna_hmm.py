@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mito_rrna_hmm.py - last-resort 12S/16S search with per-phylum profile HMMs (MitoM).
 
-Most genomes are annotated well by the cores (MitoZ / MITOS2 covariance models); this step runs only for
+Most genomes are annotated well by the core (per-phylum HMMs / MITOS2 covariance models); this step runs only for
 an rRNA that is still missing after them and the MITOS2 rescue. It searches the genome with an nhmmer
 profile HMM built from the NCBI rRNAs of the record's own phylum, as EMMA does with its (vertebrate)
 HMMs (knowledge/tools/emma.md).
@@ -94,7 +94,7 @@ class Hit(NamedTuple):
 
 
 def gene_of(f: SeqFeature) -> Optional[str]:
-    """rrnS / rrnL for an rRNA feature named in MitoZ, NCBI or free style; None otherwise. Exact aliases are
+    """rrnS / rrnL for an rRNA feature named in the core's, NCBI or free style; None otherwise. Exact aliases are
     mito_curate.RRNA_NAMES (shared with R3); NAMES / small / large are the looser free-text match."""
     qs = f.qualifiers.get("gene", []) + f.qualifiers.get("product", [])
     alias = next((RRNA_NAMES[name_key(q)] for q in qs if name_key(q) in RRNA_NAMES), None)

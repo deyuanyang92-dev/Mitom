@@ -20,7 +20,7 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 <text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">输入数据</tspan><tspan x="490" dy="1.35em">FASTA / GenBank；FASTQ 双端可选</tspan></text>
 <path class="arrow" d="M 490 189 L 490 206" />
 <rect class="node" x="140" y="212" width="700" height="72" />
-<text x="490" y="240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">输入识别与依赖检查</tspan><tspan x="490" dy="1.35em">Biopython、MitoZ、Snakemake</tspan></text>
+<text x="490" y="240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">输入识别与依赖检查</tspan><tspan x="490" dy="1.35em">Biopython、Snakemake</tspan></text>
 <path class="arrow" d="M 490 289 L 490 306" />
 <rect class="node" x="140" y="312" width="700" height="72" />
 <text x="490" y="340" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">GenBank 去重与转换</tspan><tspan x="490" dy="1.35em">保留 B64_2 与 B64 为不同编号</tspan></text>
@@ -29,7 +29,7 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 <text x="490" y="440" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">生成内部 FASTA</tspan><tspan x="490" dy="1.35em">S00001...；记录 id_map.tsv</tspan></text>
 <path class="arrow" d="M 490 489 L 490 506" />
 <rect class="node" x="140" y="512" width="700" height="72" />
-<text x="490" y="540" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">第一轮 MitoZ 注释</tspan><tspan x="490" dy="1.35em">输出 01.mitoz_anno1/ 和 sample.log</tspan></text>
+<text x="490" y="540" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">第一轮注释（mito_core.py）</tspan><tspan x="490" dy="1.35em">输出 01.anno_round1/ 和 sample.log</tspan></text>
 <path class="arrow" d="M 490 589 L 490 606" />
 <rect class="node" x="140" y="612" width="700" height="72" />
 <text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">按目标基因重定向</tspan><tspan x="490" dy="1.35em">默认 cox1；保留 linear / circular</tspan></text>

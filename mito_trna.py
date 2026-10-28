@@ -13,7 +13,7 @@ Sources (any subset, --tools):
   arwen     ARWEN (metazoan mitochondrial tRNA; recommended by GeSeq for metazoan mtDNA)
   aragorn   ARAGORN (-mt)
   trnascan  tRNAscan-SE 2 (-O organellar mode)
-  input     tRNA features already present in the input GenBank (e.g. MitoZ)
+  input     tRNA features already present in the input GenBank
   mitom     MitoM-ML (trna_ml.py): MITOS2 tRNA CMs + clade CMs on the record's NCBI lineage, a learned caller
             using ARWEN / ARAGORN as extra evidence, learned ends. Unseen-family benchmark (1,069 RefSeq invertebrate
             mitogenomes, 22,099 tRNAs): recall 98.5 % at 0.17 extra tRNAs per genome vs 94.9 % / 0.19 for the
@@ -32,14 +32,14 @@ selected tRNAs are the MitoM-ML calls (its boundaries and anticodons); the other
 Selection --select mitos2_or_support (default otherwise): a group is selected when MITOS2 found it, or when
 >= --min_support (2) independent method families agree. Overlapping groups with different anticodons
 (conflict): the one with stronger evidence (MITOS2, then more families) is kept, ties drop both.
---select mitos2: the input tRNAs (e.g. MitoZ) are replaced by the MITOS2 tRNAs (tools mitos2,input;
+--select mitos2: the input tRNAs are replaced by the MITOS2 tRNAs (tools mitos2,input;
 the input tRNAs stay visible in the review GenBank). Boundaries otherwise come from the first source
 in --priority (MITOS2 first: most exact boundaries vs NCBI).
 
 MITOS2 runs in fast mode by default when this script is run on its own (scripts/runmitos_fast.py): runmitos
 re-searches every tRNA model it did not find with a sensitive cmsearch (--max, E 0.1, single CPU): 640 s vs
 8 s on one anthozoan (Metridium), plus spurious tRNAs; fast mode skips that pass (--mitos_mode sensitive runs
-it in parallel, --mitos_mode full is the unmodified runmitos). The MitoM pipeline (batch_mitoz.py, mitoz_fast.py)
+it in parallel, --mitos_mode full is the unmodified runmitos). The MitoM pipeline (batch_mitoz.py)
 defaults to sensitive: fast mode missed 28/28 of the weak tRNAs found only by that pass (2026-10-20 dev
 benchmark), and it is used only for round 1 when round 2 re-annotates the sequence.
 
@@ -63,9 +63,8 @@ import tempfile
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -334,56 +333,11 @@ def feature(p: Pred, ac: str, note: str, L: int) -> SeqFeature:
     else:
         loc = FeatureLocation(p.start - 1, p.end, strand=p.strand)
     return SeqFeature(loc, type="tRNA",
-                      qualifiers={"gene": [name + (f"({ac.replace('t', 'u')})" if ac else "")],   # MitoZ style trnN(guu)
+                      qualifiers={"gene": [name + (f"({ac.replace('t', 'u')})" if ac else "")],   # the core's style trnN(guu)
                                   "product": [f"tRNA-{ONE2THREE[p.aa]}"], "note": [note]})
 
 
 # ── driver ───────────────────────────────────────────────────────────────────
-def split_wrapped(preds: List[Pred], seq: str) -> Tuple[List[Pred], List[Dict[str, str]]]:
-    """Separate tRNAs across the origin (start > end, or end beyond the sequence) from the others. MiTFi's
-    table (mitoz_fast.py) cannot hold them: a 980..40 tRNA there became 40..980. They are returned as
-    {aa, anticodon, seq} (tRNA sequence 5'->3') so add_wrapped() can put them back by sequence later."""
-    L, linear, wrapped = len(seq), [], []
-    for p in preds:
-        end = p.end + L if p.start > p.end else p.end
-        if end <= L:
-            linear.append(p)
-            continue
-        s = Seq((seq + seq)[p.start - 1:end])
-        wrapped.append({"aa": p.aa, "anticodon": p.anticodon,
-                        "seq": str(s if p.strand == 1 else s.reverse_complement()).upper()})
-    return linear, wrapped
-
-
-def add_wrapped(rec, rows: List[Dict[str, str]]) -> List[str]:
-    """Add the tRNAs from split_wrapped() to a circular record (gene + tRNA features) where the sequence occurs
-    exactly once (either strand) and no tRNA of the same amino acid overlaps it. Returns the names added."""
-    seq = str(rec.seq).upper()
-    L, added = len(seq), []
-    for row in rows:
-        n = len(row["seq"])
-        circ = seq + seq[:n - 1]
-        hits = [(m.start(), 1) for m in re.finditer(f"(?={row['seq']})", circ)] + \
-               [(m.start(), -1) for m in re.finditer(f"(?={Seq(row['seq']).reverse_complement()})", circ)]
-        if len(hits) != 1:
-            continue
-        i, strand = hits[0]
-        span = {(i + k) % L for k in range(n)}
-        product = f"tRNA-{ONE2THREE[row['aa']]}"
-        if any(f.type == "tRNA" and f.qualifiers.get("product") == [product]
-               and span & {int(x) % L for part in f.location.parts for x in range(part.start, part.end)}
-               for f in rec.features):
-            continue
-        t = feature(Pred("MITOS2", i + 1, i + n, strand, row["aa"], row["anticodon"]), row["anticodon"],
-                    "tRNA by MITOS2 across the sequence origin, added by mito_trna.add_wrapped", L)
-        g = SeqFeature(t.location, type="gene", qualifiers={"gene": list(t.qualifiers["gene"])})
-        at = next((k for k, f in enumerate(rec.features) if f.type != "source" and int(f.location.start) > i),
-                  len(rec.features))
-        rec.features[at:at] = [g, t]
-        added.append(t.qualifiers["gene"][0])
-    return added
-
-
 def find(name: str, bin_dir: Optional[str], mitos_bin: Optional[str]) -> Optional[str]:
     return mito_env.find(name, mitos_bin if name == "runmitos" else bin_dir)
 
@@ -401,7 +355,7 @@ def main(argv=None) -> int:
                    help="source whose boundaries are used for the selected tRNA of a group")
     p.add_argument("--select", choices=["auto", "mitom", "mitos2_or_support", "support", "mitos2"], default="auto",
                    help="selected tRNAs: auto (default) = mitom when MitoM-ML is installed, else mitos2_or_support; "
-                        "mitom = the MitoM-ML calls (a record whose run fails keeps its input tRNAs); mitos2 = replace the input (e.g. MitoZ) tRNAs with the MITOS2 tRNAs "
+                        "mitom = the MitoM-ML calls (a record whose run fails keeps its input tRNAs); mitos2 = replace the input tRNAs with the MITOS2 tRNAs "
                         "(MITOS2 boundaries and anticodons; a record whose MITOS2 run fails is kept unchanged); "
                         "mitos2_or_support (default) = found by MITOS2, or supported by >= "
                         "--min_support independent method families; support = families only. Benchmark "
@@ -457,9 +411,9 @@ def main(argv=None) -> int:
     if a.select == "mitos2":
         # MITOS2 runs on the sequence of each input GenBank record, so its coordinates always match that
         # record; the input must therefore be the final, reoriented annotation (batch_mitoz 04.final_gb),
-        # never a FASTA or the round-1 MitoZ output from before reorientation
+        # never a FASTA or the round-1 output from before reorientation
         bad = [x for x in files if x.suffix.lower() not in GB_EXT or any(
-            part.startswith(("00.", "01.mitoz_anno1")) for part in x.parts)]
+            part.startswith(("00.", "01.anno_round1", "01.mitoz_anno1")) for part in x.parts)]   # (01.mitoz_anno1: older runs)
         if bad:
             print(f"[mito_trna] --select mitos2 needs the final reoriented GenBank (e.g. 04.final_gb/), "
                   f"not: {', '.join(map(str, bad[:3]))}", file=sys.stderr)
@@ -516,7 +470,7 @@ def main(argv=None) -> int:
                                               "ARAGORN" if "aragorn" in want else "",
                                               "tRNAscan-SE" if "trnascan" in want else "",
                                               "input" if "input" in want else "") if x})
-            # old tRNAs and their gene features are replaced (MitoZ writes a gene feature per tRNA)
+            # old tRNAs and their gene features are replaced (the core writes a gene feature per tRNA)
             trna_genes = {g for x in rec.features if x.type == "tRNA" for g in x.qualifiers.get("gene", [])}
             others = [x for x in rec.features if x.type != "tRNA" and not (
                 x.type == "gene" and (set(x.qualifiers.get("gene", [])) & trna_genes

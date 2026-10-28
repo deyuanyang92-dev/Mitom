@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mito_core.py - MitoM's own annotation core: protein genes, rRNAs and tRNAs of one mitogenome without MitoZ.
+"""mito_core.py - MitoM's own annotation core: protein genes, rRNAs and tRNAs of one mitogenome.
 
 Protein genes: the genome is searched with blastx against the per-gene protein sets of the MITOS2 reference data
 (refseq89m/featureProt/<gene>.fas, MIT licence: RefSeq proteins of all Metazoa); the best locus per gene is aligned
@@ -24,8 +24,9 @@ hit) and MiTFi (mitfi_import.jar of the mitos package) for hit selection and ant
 Circular records are searched as sequence + its first ORIGIN_EXT nt, so genes across the origin are found whole and
 written as joins (MITOS2 searches two rotations for the same reason). Several FASTA sequences = contigs of one sample.
 
-Output: <out>/<prefix>.gbf (GenBank with gene / CDS / rRNA / tRNA features, MitoZ-style names so that every later
-MitoM step works unchanged) and <out>/<prefix>.core.tsv (one row per feature with the evidence).
+Output: <out>/<prefix>.gbf (GenBank with gene / CDS / rRNA / tRNA features, the core's names such as nad1 and
+trnN(guu), which every later MitoM step understands; mito_curate N1 writes NCBI's names) and <out>/<prefix>.core.tsv
+(one row per feature with the evidence).
 
 Usage: mito_core.py annotate -i genome.fa -o workdir [--prefix ID] --genetic_code 5 [--threads 2]
                              [--refdir ~/mitos_refs/refseq89m] [--no_trna]
@@ -58,7 +59,7 @@ import mito_env  # noqa: E402
 import mito_rrna_hmm  # noqa: E402  (per-phylum rRNA profile HMMs: nhmmer search, best span)
 
 PCG = ("atp6", "atp8", "cob", "cox1", "cox2", "cox3", "nad1", "nad2", "nad3", "nad4", "nad4l", "nad5", "nad6")
-NAMES = {                                   # MitoZ-style /gene and /product, understood by every later MitoM step
+NAMES = {                                   # the core's /gene and /product, understood by every later MitoM step
     "atp6": ("ATP6", "ATP synthase F0 subunit 6"), "atp8": ("ATP8", "ATP synthase F0 subunit 8"),
     "cox1": ("COX1", "cytochrome c oxidase subunit I"), "cox2": ("COX2", "cytochrome c oxidase subunit II"),
     "cox3": ("COX3", "cytochrome c oxidase subunit III"), "cob": ("CYTB", "cytochrome b"),

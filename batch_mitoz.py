@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# DESC: MitoM - batch mitochondrial annotation workflow (MitoZ / MITOS2 as annotation cores)
+# DESC: MitoM - batch mitochondrial genome annotation workflow (MitoM's own annotation core)
 # VERSION: v4 (Added: 20260325_1556)
 # -*- coding: utf-8 -*-
 """
-MitoM - batch mitochondrial annotation workflow (MitoZ / MITOS2 as annotation cores) — publication-grade.
+MitoM - batch mitochondrial genome annotation workflow; the annotation core is MitoM's own mito_core.py.
 
 v0.28 over v0.27:
   BUG-V0.28-A  _acc_variants: return type changed from List[str] to
@@ -121,7 +121,7 @@ v0.20 over v0.19:
 
 Features
 --------
-1. annotate          — batch MitoZ annotate with internal short IDs
+1. annotate          — batch annotation (mito_core.py) with internal short IDs
 2. reorient          — reorient existing .gbf to start at a target gene
 3. run               — annotate → reorient → optional re-annotation →
                        guaranteed final reorientation → metadata transfer
@@ -138,7 +138,7 @@ Scheduler backends
 
 The Snakemake path generates:
   _snakemake_{phase}/Snakefile
-  _snakemake_{phase}/_mitoz_worker.py  (self-contained worker; annotation only)
+  _snakemake_{phase}/_worker.py        (self-contained worker; annotation only)
   _snakemake_{phase}/{id}.json         (per-sample task payloads)
 Finalization (ID-rewrite, reorientation, metadata overlay, organism sync)
 is executed in the main process after all Snakemake jobs complete, so all
@@ -151,19 +151,18 @@ When GenBank files are used as input and --preserve_phase1_metadata yes
   • All header fields (LOCUS bp-count, DEFINITION, ACCESSION, VERSION,
     KEYWORDS, SOURCE line, ORGANISM + taxonomy lineage, REFERENCE,
     COMMENT, DBLINK) — from the original input GenBank.
-  • Re-annotated gene features (CDS / tRNA / rRNA) — from MitoZ.
+  • Re-annotated gene features (CDS / tRNA / rRNA) — from the annotation core.
   • /organism= qualifier inside FEATURES source — from the original input
-    GenBank (synced in Step 3.5, fixes MitoZ placeholder strings).
-  • /source= and all other source-feature qualifiers — from MitoZ.
+    GenBank (synced in Step 3.5).
+  • /source= and all other source-feature qualifiers — from the annotation core.
 
 Requirements
 ------------
-Python ≥ 3.8, biopython, mitoz in PATH or via --conda_env_mitoz/--mitoz_path,
+Python ≥ 3.8, biopython, matplotlib; the programs of the mitotools conda environment (install.sh);
 snakemake (optional).
 
 Citation
 --------
-MitoZ:      Meng et al. (2019) NAR doi:10.1093/nar/gkz173
 Snakemake:  Mölder et al. (2021) F1000Res doi:10.12688/f1000research.29032.2
 Biopython:  Cock et al. (2009) Bioinformatics doi:10.1093/bioinformatics/btp163
 """
@@ -197,8 +196,6 @@ try:
     from Bio.SeqRecord import SeqRecord
 except Exception:
     SeqIO = None  # type: ignore
-
-MITOZ_EXE_NAME = "mitoz"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Logging
@@ -293,7 +290,7 @@ class Progress:
 
 
 _STAGE_PROGRESS: Optional[Progress] = None          # set by run_annotation_stage; updated per finished sample
-STAGE_LABEL = {"01.mitoz_anno1": "round-1 annotation", "03.mitoz_anno2_reoriented": "round-2 annotation"}
+STAGE_LABEL = {"01.anno_round1": "round-1 annotation", "03.anno_round2_reoriented": "round-2 annotation"}
 
 
 def watch_files(pattern_dir: Path, pattern: str, progress: Progress, stop: threading.Event) -> threading.Thread:
@@ -361,57 +358,17 @@ def which_or_none(exe: str) -> Optional[str]:
         return None
 
 
-def resolve_exe_from_path(exe_name: str, tool_path: Optional[str]) -> Optional[Path]:
-    if not tool_path:
-        return None
-    p = Path(tool_path).expanduser()
-    if p.is_dir():
-        return (p / exe_name).resolve()
-    return p.resolve()
 
-
-def build_tool_cmd(
-    *,
-    tool_label: str,
-    exe_name: str,
-    base_args: List[str],
-    conda_env: Optional[str],
-    tool_path: Optional[str],
-    conda_exe: str = "conda",
-) -> List[str]:
-    if conda_env:
-        conda_bin = which_or_none(conda_exe)
-        if not conda_bin:
-            raise FileNotFoundError(f"[{tool_label}] '{conda_exe}' not found in PATH.")
-        return [conda_bin, "run", "-n", conda_env, "--no-capture-output", exe_name] + base_args
-    exe_path = resolve_exe_from_path(exe_name, tool_path)
-    if exe_path is not None:
-        if not exe_path.exists():
-            raise FileNotFoundError(f"[{tool_label}] not found at: {exe_path}")
-        if exe_path.suffix.lower() == ".py":
-            return [sys.executable, str(exe_path)] + base_args
-        return [str(exe_path)] + base_args
-    found = which_or_none(exe_name)
-    if not found:
-        raise FileNotFoundError(
-            f"[{tool_label}] cannot find '{exe_name}' in PATH.\n"
-            f"  Use --conda_env_mitoz ENV  or  --mitoz_path DIR_OR_FILE"
-        )
-    return [found] + base_args
-
-
-MITOZ_FAST = Path(__file__).resolve().parent / "scripts" / "mitoz_fast.py"
-MITO_CORE = Path(__file__).resolve().parent / "mito_core.py"      # --core native: MitoM's own annotation core
-# MitoZ 3.6 `annotate --clade` choices (checked before any job starts)
-MITOZ_CLADES = ("Chordata", "Arthropoda", "Echinodermata", "Annelida-segmented-worms", "Bryozoa", "Mollusca",
+MITO_CORE = Path(__file__).resolve().parent / "mito_core.py"      # MitoM's annotation core
+# --clade choices: taxonomic groups that set the genetic code and the curation rules of the group (names kept
+# from earlier MitoM versions so that existing commands keep working)
+BASE_CLADES = ("Chordata", "Arthropoda", "Echinodermata", "Annelida-segmented-worms", "Bryozoa", "Mollusca",
                 "Nematoda", "Nemertea-ribbon-worms", "Porifera-sponges")
-# MitoZ's genetic code per clade (mitoz/annotate/annotation.py genetic_code_dict)
-MITOZ_CODES = {"Chordata": 2, "Echinodermata": 9, "Porifera-sponges": 4}
-# Protein databases MitoZ ships (profiles/MT_database) but does not offer as --clade; "Animal" = all of them
-# (any other phylum). scripts/mitoz_fast.py maps them in with --profiles_dir (mito_env.mitoz_profiles).
-# 2026-10-20 dev benchmark, 48 records of these phyla: 48/48 annotated, PCG both ends exact 54 % (MITOS2 49 %).
+# genetic code per clade when --genetic_code is not given
+CLADE_CODES = {"Chordata": 2, "Echinodermata": 9, "Porifera-sponges": 4}
+# further groups that need --genetic_code; "Animal" = any other phylum
 EXTRA_CLADES = ("Cnidaria", "Platyhelminthes-flatworms", "Chaetognatha-arrow-worms", "Animal")
-ALL_CLADES = MITOZ_CLADES + EXTRA_CLADES
+ALL_CLADES = BASE_CLADES + EXTRA_CLADES
 # --clade auto: phylum (from the GenBank taxonomy) -> clade; any other metazoan phylum -> "Animal"
 PHYLUM_CLADE = {"Chordata": "Chordata", "Arthropoda": "Arthropoda", "Echinodermata": "Echinodermata",
                 "Annelida": "Annelida-segmented-worms", "Bryozoa": "Bryozoa", "Mollusca": "Mollusca",
@@ -448,7 +405,7 @@ def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optio
     phylum, CDS transl_tables that differ between records (unless `genetic_code` is given), unreadable file.
     Class names in PHYLUM_SYNONYMS stand for their phylum when the lineage has no phylum token. Input with no
     taxonomy at all (FASTA, or GenBank without a lineage) keeps the previous default clade with a WARNING
-    message, as before auto existed (check_mitoz.py 2026-10-21); records without taxonomy do not block the
+    message, as before auto existed (2026-10-21 check); records without taxonomy do not block the
     known phylum of the others. A non-empty taxonomy that matches nothing is an ERROR, never a fallback."""
     in_path = Path(in_path)
     files = [in_path] if in_path.is_file() else sorted(p for p in in_path.rglob("*") if p.is_file())
@@ -502,20 +459,6 @@ def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optio
     code = genetic_code or (next(iter(codes)) if codes else PHYLUM_CODE.get(phylum, 5))
     return PHYLUM_CLADE.get(phylum, "Animal"), code, phylum, ""
 
-
-def fast_mitoz_cmd(cmd: List[str], fast: str) -> List[str]:
-    """`... mitoz annotate ARGS` -> `... <MitoZ env python> scripts/mitoz_fast.py annotate ARGS`.
-    mitoz_fast.py runs MitoZ unchanged except the tRNA step (MITOS2 instead of single-core MiTFi) and the
-    circos plot (skipped); it must run with the Python of the MitoZ environment."""
-    if not fast or "annotate" not in cmd:
-        return cmd
-    for i, x in enumerate(cmd):
-        if Path(x).name == MITOZ_EXE_NAME:
-            if x == MITOZ_EXE_NAME and "run" in cmd[:i]:          # conda run -n ENV ... mitoz
-                return cmd[:i] + ["python", fast] + cmd[i + 1:]
-            py = Path(x).parent / "python"
-            return cmd[:i] + [str(py), fast] + cmd[i + 1:] if py.exists() else cmd
-    return cmd
 
 
 _FASTA_EXTS = {".fa", ".fasta", ".fna", ".fas"}
@@ -1588,7 +1531,7 @@ def select_reannotation(samples: List["SampleInfo"], results1: Dict[str, Dict], 
     chosen, rows = [], []
     for si in samples:
         iid = si.internal_id
-        reor = out_root / "01.mitoz_anno1" / iid / "reoriented" / f"{iid}.reoriented.gbf"
+        reor = out_root / "01.anno_round1" / iid / "reoriented" / f"{iid}.reoriented.gbf"
         best = results1.get(iid, {}).get("best_gb")
         try:
             probs = reorient_check(Path(best), reor, code) if best else ["no round-1 GenBank"]
@@ -1606,7 +1549,7 @@ def select_reannotation(samples: List["SampleInfo"], results1: Dict[str, Dict], 
 def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
     """Reasons to re-annotate a reoriented record; [] = the shifted round-1 annotation can be used as is.
     Checks: (1) a gene within REANNOT_EDGE nt of the ends of the round-1 sequence that looks cut there
-    (edge_gene_truncated, genetic code `code`; MitoZ annotates the sequence as linear, so a gene across the
+    (edge_gene_truncated, genetic code `code`; the core annotates the sequence as linear, so a gene across the
     original origin is cut or missed) - only when the sequence moved; (2) a standard protein gene / rRNA
     (STANDARD_GENES; not ATP8 / ATP6) missing in round 1; (3) every feature's sequence identical
     before and after the shift, same features; (4) no feature across the new origin. A linear record is never rotated
@@ -2270,61 +2213,16 @@ def check_environment(args: argparse.Namespace) -> List[str]:
         raise RuntimeError(f"Python 3.8+ required, found {major}.{minor}")
     logging.info(f"[ENV] Python {major}.{minor} ✔")
 
-    if getattr(args, "cmd", None) in ("annotate", "run") and getattr(args, "core", "native") == "native":
+    if getattr(args, "cmd", None) in ("annotate", "run"):
         import mito_env
         for prog in ("blastx", "exonerate", "cmsearch", "java"):
             found = mito_env.find(prog, None)
             if found:
                 logging.info(f"[ENV] {prog} ✔  {found}")
             else:
-                problems.append(f"[ENV] --core native needs {prog} (install.sh; mito_env.py doctor)")
+                problems.append(f"[ENV] MitoM needs {prog} (install.sh; mito_env.py doctor)")
         if not mito_env.mitos_refdir(getattr(args, "mitos_refdir", None)):
-            problems.append("[ENV] --core native needs the MITOS2 reference data refseq89m (--mitos_refdir; install.sh)")
-    elif getattr(args, "cmd", None) in ("annotate", "run"):
-        conda_env = getattr(args, "conda_env_mitoz", None)
-        tool_path = getattr(args, "mitoz_path", None)
-        conda_exe = getattr(args, "conda_exe", "conda")
-        try:
-            test_cmd = build_tool_cmd(
-                tool_label="MitoZ", exe_name=MITOZ_EXE_NAME, base_args=["--version"],
-                conda_env=conda_env, tool_path=tool_path, conda_exe=conda_exe)
-        except FileNotFoundError as exc:
-            raise RuntimeError(f"[ENV] MitoZ not reachable: {exc}") from exc
-        logging.info(f"[ENV] Testing MitoZ: {' '.join(test_cmd)}")
-        try:
-            result = subprocess.run(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    text=True, timeout=30)
-            combined = (result.stdout or "") + (result.stderr or "")
-            if result.returncode == 0 or "mitoz" in combined.lower():
-                ver_line = next((ln.strip() for ln in combined.splitlines() if ln.strip()), "?")
-                logging.info(f"[ENV] MitoZ reachable ✔  ({ver_line[:80]})")
-            else:
-                problems.append(f"[ENV] MitoZ test rc={result.returncode}. Output: {combined[:200]}")
-        except subprocess.TimeoutExpired:
-            problems.append("[ENV] MitoZ test timed out after 30s")
-        except Exception as exc:
-            raise RuntimeError(f"[ENV] MitoZ execution error: {exc}") from exc
-
-        if conda_env:
-            conda_bin = which_or_none(conda_exe)
-            if conda_bin:
-                try:
-                    r = subprocess.run([conda_bin, "env", "list"],
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       text=True, timeout=15)
-                    env_names = [ln.split()[0] for ln in r.stdout.splitlines()
-                                 if ln.strip() and not ln.startswith("#")]
-                    if conda_env not in env_names:
-                        problems.append(
-                            f"[ENV] Conda env '{conda_env}' not found. "
-                            f"Available: {', '.join(env_names[:10])}")
-                    else:
-                        logging.info(f"[ENV] Conda env '{conda_env}' found ✔")
-                except Exception as exc:
-                    problems.append(f"[ENV] Could not list conda envs: {exc}")
-            else:
-                problems.append(
-                    f"[ENV] '{conda_exe}' not in PATH but --conda_env_mitoz='{conda_env}' set.")
+            problems.append("[ENV] MitoM needs the MITOS2 reference data refseq89m (--mitos_refdir; install.sh)")
 
     smk_bin = getattr(args, "snakemake_bin", None)
     backend = getattr(args, "scheduler_backend", "threads")
@@ -2369,7 +2267,7 @@ def preflight(args: argparse.Namespace) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MitoZ annotation worker
+# Annotation worker (mito_core.py)
 # ─────────────────────────────────────────────────────────────────────────────
 def sample_lineage(si: "SampleInfo") -> str:
     """NCBI lineage of a sample from its original GenBank record ('' for FASTA input): the MitoM-ML tRNA caller of
@@ -2408,10 +2306,9 @@ def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args, lin
     return cmd
 
 
-def mitoz_annotate_one(
+def annotate_one(
     si: SampleInfo, fasta_file: Path, out_root: Path, phase_dirname: str,
-    args: argparse.Namespace, fq1: Optional[Path], fq2: Optional[Path],
-    total: int = 0, done_counter: Optional[List] = None,
+    args: argparse.Namespace, total: int = 0, done_counter: Optional[List] = None,
 ) -> Tuple[str, bool, Path, Optional[Path], Optional[Path], Tuple[int, int, int]]:
     internal_id = si.internal_id
     workdir     = out_root / phase_dirname / internal_id
@@ -2420,41 +2317,16 @@ def mitoz_annotate_one(
     lg = get_sample_logger(log_name, workdir / "sample.log")
     lg.info(f"[SAMPLE] internal_id={internal_id} sample_name={si.sample_name}")
     lg.info(f"[INPUT_FASTA] {fasta_file}")
-
-    base_args: List[str] = [
-        "annotate",
-        "--workdir",       str(workdir),
-        "--outprefix",     internal_id,
-        "--thread_number", str(int(args.threads)),
-        "--clade",         str(args.clade),
-        "--genetic_code",  str(int(args.genetic_code)),
-        "--fastafiles",    str(fasta_file),
-    ]
-    if args.species_name:
-        base_args += ["--species_name", str(args.species_name)]
-    if fq1 and fq2:
-        base_args += ["--fq1", str(fq1), "--fq2", str(fq2)]
-        lg.info(f"[FQ] fq1={fq1}  fq2={fq2}")
-    for x in args.mitoz_extra or []:
-        base_args += shlex.split(str(x))
-
-    if getattr(args, "core", "native") == "native":
-        cmd = native_core_cmd(fasta_file, workdir, internal_id, args, sample_lineage(si))
-    else:
-        cmd = build_tool_cmd(
-            tool_label="MitoZ", exe_name=MITOZ_EXE_NAME, base_args=base_args,
-            conda_env=args.conda_env_mitoz, tool_path=args.mitoz_path,
-            conda_exe=args.conda_exe)
-        cmd = fast_mitoz_cmd(cmd, getattr(args, "mitoz_fast", ""))
+    cmd = native_core_cmd(fasta_file, workdir, internal_id, args, sample_lineage(si))
     lg.info("[CMD] " + " ".join(cmd))
 
     logs_dir    = workdir / "logs"
-    stdout_path = logs_dir / "mitoz_annotate.stdout.log"
-    stderr_path = logs_dir / "mitoz_annotate.stderr.log"
+    stdout_path = logs_dir / "core.stdout.log"
+    stderr_path = logs_dir / "core.stderr.log"
     rc, dt      = run_cmd_capture(cmd, cwd=workdir, stdout_path=stdout_path, stderr_path=stderr_path)
     if rc != 0:
-        (logs_dir / "mitoz_annotate.returncode.txt").write_text(str(rc) + "\n", encoding="utf-8")
-    (logs_dir / "mitoz_annotate.runtime_sec.txt").write_text(f"{dt:.2f}\n", encoding="utf-8")
+        (logs_dir / "core.returncode.txt").write_text(str(rc) + "\n", encoding="utf-8")
+    (logs_dir / "core.runtime_sec.txt").write_text(f"{dt:.2f}\n", encoding="utf-8")
 
     if done_counter is not None:
         lock: threading.Lock = done_counter[1]
@@ -2508,51 +2380,28 @@ class AnnotTask:
     fasta_file:    str
     phase_dirname: str
     out_root:      str
-    fq1:           Optional[str]
-    fq2:           Optional[str]
     lineage:       str = ""
 
 
 def render_snakemake_worker_script(out_dir: Path) -> Path:
-    """Generate the self-contained MitoZ annotation worker script.
+    """Generate the self-contained annotation worker script (mito_core.py annotate per sample).
 
-    NOTE (v0.27): This worker handles MitoZ annotation only.
+    NOTE (v0.27): This worker handles annotation only.
     finalize_genbank_output (ID-rewrite, reorientation, metadata overlay,
     /organism= sync) is always executed in the main process after all
     Snakemake jobs complete, so all pipeline bug-fixes are applied
     regardless of the scheduler backend.
     """
-    fp   = out_dir / "_mitoz_worker.py"
+    fp   = out_dir / "_worker.py"
     code = r'''#!/usr/bin/env python3
-"""Self-contained MitoZ annotation worker invoked by Snakemake.
+"""Self-contained annotation worker (mito_core.py annotate) invoked by Snakemake.
 
-This script handles MitoZ annotation only.  Finalization steps
+This script handles annotation only.  Finalization steps
 (ID-rewrite, reorientation, metadata overlay, organism sync) are
 executed in the main pipeline process after all workers finish.
 """
 import json, re, shlex, shutil, subprocess, sys, time
 from pathlib import Path
-
-MITOZ_EXE_NAME = "mitoz"
-
-def which_or_none(exe):
-    try: return shutil.which(exe)
-    except: return None
-
-def build_tool_cmd(tool_label, exe_name, base_args, conda_env, tool_path, conda_exe="conda"):
-    if conda_env:
-        cb = which_or_none(conda_exe)
-        if not cb: raise FileNotFoundError(f"[{tool_label}] '{conda_exe}' not found")
-        return [cb, "run", "-n", conda_env, "--no-capture-output", exe_name] + base_args
-    if tool_path:
-        p = Path(tool_path).expanduser()
-        exe = (p / exe_name).resolve() if p.is_dir() else p.resolve()
-        if not exe.exists(): raise FileNotFoundError(f"[{tool_label}] not found: {exe}")
-        if exe.suffix.lower() == ".py": return [sys.executable, str(exe)] + base_args
-        return [str(exe)] + base_args
-    found = which_or_none(exe_name)
-    if not found: raise FileNotFoundError(f"[{tool_label}] '{exe_name}' not in PATH")
-    return [found] + base_args
 
 def tail_text(s, n=120): return "\n".join((s or "").splitlines()[-n:])
 
@@ -2605,29 +2454,12 @@ def main():
     phase_dirname = task["phase_dirname"]
     out_root      = Path(task["out_root"]).resolve()
     fasta_file    = Path(task["fasta_file"]).resolve()
-    fq1, fq2      = task.get("fq1"), task.get("fq2")
     workdir       = out_root / phase_dirname / internal_id
     workdir.mkdir(parents=True, exist_ok=True)
     logs_dir = workdir / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
 
-    base_args = [
-        "annotate",
-        "--workdir",       str(workdir),
-        "--outprefix",     internal_id,
-        "--thread_number", str(int(args["threads"])),
-        "--clade",         str(args["clade"]),
-        "--genetic_code",  str(int(args["genetic_code"])),
-        "--fastafiles",    str(fasta_file),
-    ]
-    if args.get("species_name"):
-        base_args += ["--species_name", str(args["species_name"])]
-    if fq1 and fq2:
-        base_args += ["--fq1", str(fq1), "--fq2", str(fq2)]
-    for x in args.get("mitoz_extra", []):
-        base_args += shlex.split(str(x))
-
-    if args.get("core") == "native":
+    if True:                                       # MitoM's annotation core
         cmd = [sys.executable, "-W", "ignore", args["mito_core"], "annotate", "-i", str(fasta_file), "-o", str(workdir),
                "--prefix", internal_id, "--genetic_code", str(int(args["genetic_code"])),
                "--threads", str(int(args["threads"]))]
@@ -2643,21 +2475,6 @@ def main():
             cmd += ["--rrna_method", str(args["rrna_method"])]
         if task.get("lineage"):
             cmd += ["--lineage", str(task["lineage"])]
-        fast = None
-    else:
-        cmd = build_tool_cmd(
-            "MitoZ", MITOZ_EXE_NAME, base_args,
-            args.get("conda_env_mitoz"), args.get("mitoz_path"),
-            args.get("conda_exe", "conda"))
-        fast = args.get("mitoz_fast")
-    if fast:
-        for i, x in enumerate(cmd):
-            if Path(x).name == MITOZ_EXE_NAME:
-                if x == MITOZ_EXE_NAME and "run" in cmd[:i]:
-                    cmd = cmd[:i] + ["python", fast] + cmd[i + 1:]
-                elif (Path(x).parent / "python").exists():
-                    cmd = cmd[:i] + [str(Path(x).parent / "python"), fast] + cmd[i + 1:]
-                break
 
     t0 = time.time()
     p  = subprocess.run(cmd, cwd=str(workdir),
@@ -2665,15 +2482,15 @@ def main():
     dt = time.time() - t0
 
     if p.stdout:
-        (logs_dir / "mitoz_annotate.stdout.log").write_text(
+        (logs_dir / "core.stdout.log").write_text(
             p.stdout, encoding="utf-8", errors="ignore")
     if p.stderr:
-        (logs_dir / "mitoz_annotate.stderr.log").write_text(
+        (logs_dir / "core.stderr.log").write_text(
             p.stderr, encoding="utf-8", errors="ignore")
     if p.returncode != 0:
-        (logs_dir / "mitoz_annotate.returncode.txt").write_text(
+        (logs_dir / "core.returncode.txt").write_text(
             str(p.returncode) + "\n", encoding="utf-8")
-    (logs_dir / "mitoz_annotate.runtime_sec.txt").write_text(
+    (logs_dir / "core.runtime_sec.txt").write_text(
         f"{dt:.2f}\n", encoding="utf-8")
 
     result = {
@@ -2732,7 +2549,7 @@ def render_snakemake_snakefile(
 rule task_{rule_id}:
     input:  task={json.dumps(str(tp), ensure_ascii=False)}
     output: done={json.dumps(done_s, ensure_ascii=False)}
-    # BUG-V0.29-G: old code declared threads: 1 while MitoZ receives
+    # BUG-V0.29-G: old code declared threads: 1 while the core receives
     # --thread_number, causing Snakemake to over-schedule CPU.
     # threads: 1
     threads: {max(1, int(job_threads))}
@@ -2757,11 +2574,8 @@ def run_snakemake_for_annotation_tasks(
     args_json     = snk_work / "args.json"
     args_payload  = {
         "threads": int(args.threads), "clade": args.clade,
-        "genetic_code": int(args.genetic_code), "species_name": args.species_name,
-        "mitoz_extra": args.mitoz_extra or [], "conda_env_mitoz": args.conda_env_mitoz,
-        "mitoz_path": args.mitoz_path, "conda_exe": args.conda_exe,
-        "mitoz_fast": getattr(args, "mitoz_fast", ""),
-        "core": getattr(args, "core", "native"), "mito_core": str(MITO_CORE),
+        "genetic_code": int(args.genetic_code),
+        "mito_core": str(MITO_CORE),
         "mitos_refdir": getattr(args, "mitos_refdir", None), "mitos_bin": getattr(args, "mitos_bin", None),
         "phylum": getattr(args, "phylum", None), "rrna_hmm_lib": getattr(args, "rrna_hmm_lib", None),
         "rrna_method": getattr(args, "rrna_method", "hmm"),
@@ -2867,8 +2681,6 @@ def run_annotation_stage(
     *, samples: List[SampleInfo], phase_dirname: str, out_root: Path,
     args: argparse.Namespace, fasta_selector,
 ) -> Dict[str, Dict]:
-    infq = Path(args.infq).resolve() if getattr(args, "infq", None) else None
-    suffix1, suffix2 = parse_suffix_fq(args.suffix_fq)
     backend = getattr(args, "scheduler_backend", "threads")
     if backend == "auto":
         # Snakemake schedules nothing when every sample runs at once, and its process costs ~120 MB (a third of the
@@ -2882,16 +2694,10 @@ def run_annotation_stage(
     if backend == "snakemake":
         tasks: List[AnnotTask] = []
         for si in samples:
-            fq1 = fq2 = None
-            if infq:
-                fq1p, fq2p = find_fq_pair_for_sample(
-                    si.sample_name, infq, args.fq_position, suffix1, suffix2)
-                fq1 = str(fq1p) if fq1p else None
-                fq2 = str(fq2p) if fq2p else None
             tasks.append(AnnotTask(
                 internal_id=si.internal_id, sample_name=si.sample_name,
                 fasta_file=str(fasta_selector(si)), phase_dirname=phase_dirname,
-                out_root=str(out_root), fq1=fq1, fq2=fq2, lineage=sample_lineage(si)))
+                out_root=str(out_root), lineage=sample_lineage(si)))
         return run_snakemake_for_annotation_tasks(
             tasks=tasks, out_root=out_root, phase_name=phase_dirname, args=args)
 
@@ -2900,13 +2706,8 @@ def run_annotation_stage(
     done_counter: List = [0, threading.Lock()]
 
     def _task(si: SampleInfo) -> Tuple:
-        fq1 = fq2 = None
-        if infq:
-            fq1, fq2 = find_fq_pair_for_sample(
-                si.sample_name, infq, args.fq_position, suffix1, suffix2)
-        return mitoz_annotate_one(
-            si, fasta_selector(si), out_root, phase_dirname, args, fq1, fq2,
-            total=total, done_counter=done_counter)
+        return annotate_one(si, fasta_selector(si), out_root, phase_dirname, args,
+                            total=total, done_counter=done_counter)
 
     with cf.ThreadPoolExecutor(max_workers=int(args.max_tasks)) as ex:
         futs = {ex.submit(_task, si): si for si in samples}
@@ -2973,7 +2774,7 @@ def finalize_genbank_output(
     pcg = trna = rrna = 0
     orientation_ok = False
 
-    td = Path(tempfile.mkdtemp(prefix="mitoz_final_"))
+    td = Path(tempfile.mkdtemp(prefix="mitom_final_"))
     dest_gb.parent.mkdir(parents=True, exist_ok=True)
     draft_gb = dest_gb.with_name(f".{dest_gb.name}.tmp")
     committed = False
@@ -3127,9 +2928,6 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     setup_root_logger(out_root / "pipeline.log")
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
-    wrap_file = out_root / "trna_wrap.tsv"         # MITOS2 tRNAs across the origin (scripts/mitoz_fast.py)
-    wrap_file.write_text("")
-    os.environ["YZZ_TRNA_WRAP"] = str(wrap_file)
 
     in_path     = Path(args.input).resolve()
     split_dir   = out_root / "00.internal_fasta"
@@ -3143,7 +2941,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     logging.info(f"[ID_MAP] {id_map}  (total: {len(samples)})")
 
     results = run_annotation_stage(
-        samples=samples, phase_dirname="01.mitoz_anno1",
+        samples=samples, phase_dirname="01.anno_round1",
         out_root=out_root, args=args,
         fasta_selector=lambda si: si.internal_fasta)
 
@@ -3188,7 +2986,6 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     run_rescue(args, final_dir, out_root)
     run_rrna_hmm(args, final_dir, out_root)
     run_intron_fix(args, in_path, final_dir, out_root)
-    add_wrapped_trnas(final_dir, out_root / "trna_wrap.tsv")
     merge_dir = run_curate_and_submit(args, final_dir, out_root)
     refresh_summary(out_root, merge_dir)
     all_final_gbs = sorted(
@@ -3196,6 +2993,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
         if p.is_file() and p.stat().st_size > 0)
     if all_final_gbs:
         merge_gb_files(all_final_gbs, out_root / "all.final.gbf")
+    logging.info(f"[PLOT] {run_plots(args, merge_dir, out_root)}")
     (out_root / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary.log()
@@ -3286,10 +3084,10 @@ def announce(msg: str) -> None:
 
 
 def resolve_tools(args: argparse.Namespace) -> str:
-    """Fill unset tool locations from mito_env (config file, PATH, conda environments), check the clade,
-    and pass the MITOS2 settings to scripts/mitoz_fast.py. Returns an error message, '' when fine."""
-    if str(MITOZ_FAST.parents[1]) not in sys.path:
-        sys.path.insert(0, str(MITOZ_FAST.parents[1]))
+    """Fill unset tool locations from mito_env (config file, PATH, conda environments) and check the clade.
+    Returns an error message, '' when fine."""
+    if str(Path(__file__).resolve().parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
     import mito_env
     if args.clade == "auto":
         clade, code, phylum, err = auto_clade(Path(args.input), getattr(args, "genetic_code", None))
@@ -3303,16 +3101,6 @@ def resolve_tools(args: argparse.Namespace) -> str:
         if hasattr(args, "rrna_hmm") and not getattr(args, "phylum", None):
             args.phylum = phylum
         announce(f"[CLADE] auto: {phylum or 'no taxonomy'} -> --clade {args.clade} --genetic_code {args.genetic_code}")
-    core = getattr(args, "core", "native")                   # native: MitoZ / MITOS2 are not run (the clade only names the protein set)
-    if core == "mitoz":
-        if args.clade not in MITOZ_CLADES:
-            return f"ERROR: --core mitoz needs a MitoZ clade ({', '.join(MITOZ_CLADES)}); use --core hybrid"
-        changed = [f"{k} {getattr(args, k)}" for k, v in (("trna", "mitoz"), ("rescue", "no"), ("rrna_hmm", "no"))
-                   if getattr(args, k, v) != v]
-        if changed:
-            announce(f"[CORE] --core mitoz = MitoZ alone: --trna mitoz --rescue no --rrna_hmm no "
-                     f"(overrides --{', --'.join(changed)})")
-        args.trna, args.rescue, args.rrna_hmm = "mitoz", "no", "no"
     if args.clade not in ALL_CLADES:
         return (f"ERROR: --clade '{args.clade}' is not a supported clade. Choose one of:\n  " + ", ".join(ALL_CLADES)
                 + "\n  (Animal = all-animal protein database, for any phylum not listed.)")
@@ -3322,28 +3110,11 @@ def resolve_tools(args: argparse.Namespace) -> str:
         if args.clade in EXTRA_CLADES:
             return (f"ERROR: --clade {args.clade} needs --genetic_code (e.g. 4 Cnidaria, 9 Platyhelminthes, "
                     "5 most invertebrates; NCBI table of your taxon)")
-        args.genetic_code = MITOZ_CODES.get(args.clade, 5)
-    os.environ["YZZ_CLADE_DB"] = args.clade if args.clade in EXTRA_CLADES else ""
-    os.environ["YZZ_PHASE1_FAST"] = "1" if getattr(args, "if_reannotation_2", "no") == "yes" else ""
-    if core != "native" and not args.conda_env_mitoz and not args.mitoz_path:
-        args.conda_env_mitoz = mito_env.mitoz_env()
-        if not args.conda_env_mitoz and mito_env.find("mitoz"):
-            args.mitoz_path = mito_env.find("mitoz")
-        if args.conda_env_mitoz or args.mitoz_path:
-            announce(f"[ENV] MitoZ found automatically: {args.conda_env_mitoz or args.mitoz_path}")
+        args.genetic_code = CLADE_CODES.get(args.clade, 5)
     if not args.intron_bin:
         args.intron_bin = mito_env.bin_with("exonerate", "cmsearch", "blastp", "makeblastdb")
     args.mitos_bin = mito_env.mitos_bin(args.mitos_bin)
     args.mitos_refdir = mito_env.mitos_refdir(args.mitos_refdir)
-    os.environ["YZZ_TRNA"] = args.trna
-    os.environ["YZZ_CIRCOS"] = args.circos
-    if args.mitos_bin and args.mitos_refdir:
-        os.environ["YZZ_MITOS_BIN"], os.environ["YZZ_MITOS_REFDIR"] = args.mitos_bin, args.mitos_refdir
-    elif args.trna == "mitos2" and core != "native":
-        print("[ENV] MITOS2 not found: MitoZ's own MiTFi tRNA step is used (slow). "
-              "Install it: bash install.sh, or give --mitos_bin / --mitos_refdir", file=sys.stderr)
-    args.mitoz_fast = str(MITOZ_FAST) if core != "native" and MITOZ_FAST.exists() \
-        and (args.trna == "mitos2" or args.circos == "no" or args.clade in EXTRA_CLADES) else ""
     return ""
 
 
@@ -3359,7 +3130,7 @@ def run_curate_and_submit(args: argparse.Namespace, final_dir: Path, out_root: P
 
 
 def aggressive_start_genes(clade: Optional[str]) -> str:
-    """mito_curate.py --aggressive_start_genes for a MitoZ clade: nad5 / nad4L start at the most upstream in-frame
+    """mito_curate.py --aggressive_start_genes for a clade: nad5 / nad4L start at the most upstream in-frame
     start codon in NCBI annelid records (7 / 7, annelid benchmark 2026-10) but not in other phyla (173 metazoa
     records: 17 right, 52 wrong)."""
     return "ND5,ND4L" if (clade or "").lower().startswith("annelida") else ""
@@ -3450,10 +3221,11 @@ def optional_step(tag: str) -> Callable[[F], F]:
 
 @optional_step("RESCUE")
 def run_rescue(args: argparse.Namespace, final_dir: Path, out_root: Path) -> None:
-    """Add genes MitoZ missed from MITOS2 (mito_rescue.py), in place; report rescue_report.tsv."""
+    """Add genes the core missed from a MITOS2 annotation (mito_rescue.py, --rescue yes; MITOS2 is optional), in
+    place; report rescue_report.tsv."""
     if getattr(args, "rescue", "no") == "no":
         return
-    if args.rescue == "auto" and getattr(args, "core", "native") == "native":
+    if args.rescue == "auto":
         # the native core retries other loci / blastx placement itself; MITOS2 took 5-7 min and ~1 GB per record
         # lacking a gene (mostly atp8 of nematodes / flatworms, which have none) for 2 genes in 24 records
         logging.info("[RESCUE] skipped: native core (--rescue yes runs MITOS2 for records missing a gene)")
@@ -3503,26 +3275,9 @@ def run_rrna_hmm(args: argparse.Namespace, final_dir: Path, out_root: Path) -> N
         print(msg, file=sys.stderr)
 
 
-@optional_step("TRNA_WRAP")
-def add_wrapped_trnas(final_dir: Path, wrap_file: Path) -> None:
-    """Put MITOS2 tRNAs across the sequence origin into the final GenBank files (MiTFi's table, which MitoZ
-    turns into features, cannot hold them; scripts/mitoz_fast.py collects them in wrap_file). Matched by
-    sequence, so the final rotation / orientation does not matter (mito_trna.add_wrapped)."""
-    if not wrap_file.exists() or not wrap_file.read_text().strip():
-        return
-    import mito_trna
-    rows = [dict(zip(("id", "aa", "anticodon", "seq"), line.split("\t")))
-            for line in wrap_file.read_text().splitlines() if line.strip()]
-    for gbf in sorted(final_dir.rglob("*.gbf")):
-        recs = list(SeqIO.parse(str(gbf), "genbank"))
-        added = [f"{r.id}:{n}" for r in recs for n in mito_trna.add_wrapped(r, rows)]
-        if added:
-            SeqIO.write(recs, str(gbf), "genbank")
-            logging.info(f"[TRNA_WRAP] {gbf.name}: added {', '.join(added)} (across the sequence origin)")
-
 
 def run_intron_fix(args: argparse.Namespace, in_path: Path, final_dir: Path, out_root: Path) -> None:
-    """Add introns to final GenBank files in place with mito_intron.py (MitoZ cannot).
+    """Add introns to final GenBank files in place with mito_intron.py.
     in_path is kept for the call signature; the protein library is MFannot's (--intron_lib)."""
     if args.intron_fix == "no":
         return
@@ -3554,7 +3309,7 @@ def run_intron_fix(args: argparse.Namespace, in_path: Path, final_dir: Path, out
 
 INTERMEDIATE_DIRS = (
     "00.internal_fasta", "00.gb_converted_fasta", "00.reoriented_fasta_internal",
-    "01.mitoz_anno1", "03.mitoz_anno2_reoriented", "04.final_body_merged", "04.trna_resensitised",
+    "01.anno_round1", "03.anno_round2_reoriented", "04.final_body_merged",
 )
 
 
@@ -3563,7 +3318,7 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
     """Delete internal-ID intermediates once final output is written.
 
     Kept: 04.final_gb/, all.final.gbf, *.tsv / *.txt reports, pipeline.log,
-    run_params.json.  dedup_report.tsv is moved to out_root; MitoZ logs of
+    run_params.json.  dedup_report.tsv is moved to out_root; core logs of
     problem samples are copied to failed_logs/ before deletion. `run` then
     arranges what is kept into its final layout (organize_outputs).
     """
@@ -3574,7 +3329,7 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
     for si in samples:
         if si.sample_name not in problems:
             continue
-        for phase in ("01.mitoz_anno1", "03.mitoz_anno2_reoriented"):
+        for phase in ("01.anno_round1", "03.anno_round2_reoriented"):
             wd = out_root / phase / si.internal_id
             for log in [wd / "sample.log", *sorted((wd / "logs").glob("*.log"))]:
                 if log.is_file():
@@ -3599,7 +3354,7 @@ def run_phase2(phase2_samples: List["SampleInfo"], args: argparse.Namespace, out
     if not phase2_samples:
         return {}
     return run_annotation_stage(
-        samples=phase2_samples, phase_dirname="03.mitoz_anno2_reoriented",
+        samples=phase2_samples, phase_dirname="03.anno_round2_reoriented",
         out_root=out_root, args=args,
         fasta_selector=lambda si: reor_fasta_dir / f"{si.internal_id}.fasta")
 
@@ -3610,42 +3365,6 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
     meant to run but failed (or is off)."""
     return "shifted_round1" if mode == "auto" and iid not in reannotated_ids else "phase1b_reoriented"
 
-
-def phase1_fast_finalised(rows: List[Tuple[Path, str]], phase1_fast: bool) -> List[Path]:
-    """Final files whose body is the round-1 annotation (body_source phase1_raw / phase1b_reoriented...) although
-    round 1 ran with the fast tRNA mode (YZZ_PHASE1_FAST=1, --if_reannotation_2 yes): their tRNA set is the
-    fast-mode one, which misses tRNAs found only by MITOS2's sensitive pass (review C finding 8)."""
-    return [dest for dest, tag in rows if phase1_fast and tag.startswith("phase1")]
-
-
-def resensitise_trnas(args: argparse.Namespace, dests: List[Path], out_root: Path) -> int:
-    """Re-run the tRNA step in MITOS2 sensitive mode (mito_trna.py --select mitos2 --mitos_mode sensitive) on the
-    final files `dests` and copy the result over them. Skipped silently when MITOS2 is not configured or the
-    MiTFi tRNA step was asked for (--trna mitoz). Returns the number of files replaced; never raises."""
-    if not dests or getattr(args, "trna", "mitos2") != "mitos2" or not (
-            getattr(args, "mitos_bin", None) and getattr(args, "mitos_refdir", None)):
-        return 0
-    script = Path(__file__).resolve().with_name("mito_trna.py")
-    done = 0
-    for dest in dests:
-        try:
-            out = out_root / "04.trna_resensitised" / dest.stem
-            p = subprocess.run(
-                [sys.executable, "-W", "ignore", str(script), "--select", "mitos2", "--mitos_mode", "sensitive",
-                 "-i", dest.name, "-o", str(out), "--genetic_code", str(int(args.genetic_code)),
-                 "--mitos_bin", str(args.mitos_bin), "--mitos_refdir", str(args.mitos_refdir)],
-                capture_output=True, text=True, cwd=str(dest.parent))      # relative -i: mito_trna.py rejects '00.*' dirs
-            produced = out / "selected" / f"{dest.stem}.gbf"            # mito_trna.py: <out>/selected/<input stem>.gbf
-            if p.returncode == 0 and produced.is_file() and produced.stat().st_size > 0:
-                shutil.copy2(produced, dest)
-                done += 1
-            else:
-                logging.warning(f"[TRNA] sensitive tRNA step failed for {dest.name} (exit {p.returncode}): "
-                                f"{p.stderr[-200:]} - fast-mode tRNAs kept")
-        except Exception as exc:
-            logging.warning(f"[TRNA] sensitive tRNA step failed for {dest.name}: {exc} - fast-mode tRNAs kept")
-    logging.info(f"[TRNA] re-ran sensitive tRNA step for {done} round-1-finalised sample(s)")
-    return done
 
 
 def count_rows(table: Path, column: Optional[str] = None, value: Any = None) -> int:
@@ -3676,6 +3395,7 @@ OUTPUT_LAYOUT = [
     ("original_vs_mitom.tsv", "original vs MitoM annotation, one row per gene"),
     ("summary.tsv", "one row per record: gene counts, orientation, round, NCBI errors"),
     ("ncbi_submission/", "NCBI submission files per record (.fsa .tbl .sqn) and table2asn results"),
+    ("plots/", "circular genome map per record (.png, .pdf): genes, GC content, GC skew, read depth with --infq"),
     ("reports/", "one report per step (deduplication, round-2 decisions, curation, ...)"),
     ("run.log", "everything the run did, with all commands"),
     ("work/", "intermediate files (only with --keep_intermediate yes)"),
@@ -3696,12 +3416,63 @@ REPORT_NOTES = {
 
 
 REPORT_FILES = tuple(REPORT_NOTES) + (
-    "trna_wrap.tsv", "intron_fix.log", "annotation_failed.txt", "final_write_failed.txt", "reorient_failed.txt",
+    "intron_fix.log", "annotation_failed.txt", "final_write_failed.txt", "reorient_failed.txt",
     "metadata_transfer_failed.txt", "metadata_key_mismatch.txt", "no_target_gene_samples.txt", "failed_samples.txt",
     "annotation-summary.tsv", "pipeline.log",
 )                                                   # top-level files `run` writes; organize_outputs moves these to reports/
-WORK_DIRS = INTERMEDIATE_DIRS + ("04.final_gb", "05.curated", "_snakemake_01.mitoz_anno1",
-                                 "_snakemake_03.mitoz_anno2_reoriented")   # folders of the run: work/ or deleted
+WORK_DIRS = INTERMEDIATE_DIRS + ("04.final_gb", "05.curated", "_snakemake_01.anno_round1",
+                                 "_snakemake_03.anno_round2_reoriented")   # folders of the run: work/ or deleted
+
+
+def _plot_file(job: Tuple[Path, Path, List[str], int]) -> Tuple[int, int, List[str]]:
+    """run_plots worker, one final GenBank file: (maps written, maps with read depth, messages for the log)."""
+    import mito_plot
+    gbf, out, reads, threads = job
+    n = depth_n = 0
+    msgs: List[str] = []
+    for rec in SeqIO.parse(str(gbf), "genbank"):
+        depth = None
+        if reads:
+            try:
+                depth = mito_plot.depth_from_reads(rec, reads, threads=threads)
+                depth_n += 1
+            except Exception as exc:                       # noqa: BLE001  (a figure must not end the run)
+                msgs.append(f"[PLOT] {rec.id}: no depth ring ({exc})")
+        try:
+            mito_plot.plot_record(rec, out, depth=depth)
+            n += 1
+        except Exception as exc:                           # noqa: BLE001
+            msgs.append(f"[PLOT] {rec.id}: {exc!r}")
+    return n, depth_n, msgs
+
+
+def run_plots(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
+    """mito_plot.py: one circular map per final record -> out_root/plots/<record>.png / .pdf (--max_tasks processes,
+    ~1.7 s per record); with --infq the reads of the record's sample add a sequencing-depth ring (minimap2, --threads
+    each). Returns the line for the step summary; never raises."""
+    if getattr(args, "plot", "yes") == "no":
+        return "skipped (--plot no)"
+    try:
+        import mito_plot  # noqa: F401  (matplotlib)
+    except Exception as exc:                               # noqa: BLE001  (a figure must not end the run)
+        logging.error(f"[PLOT] mito_plot.py not usable: {exc!r}")
+        return "skipped: mito_plot.py not usable (see run.log)"
+    infq = Path(args.infq).resolve() if getattr(args, "infq", None) else None
+    s1, s2 = parse_suffix_fq(args.suffix_fq) if infq else ("", "")
+    jobs = [(gbf, out_root / "plots",
+             [str(x) for x in find_fq_pair_for_sample(gbf.stem, infq, args.fq_position, s1, s2) if x] if infq else [],
+             int(args.threads)) for gbf in sorted(gb_dir.rglob("*.gbf"))]
+    n = depth_n = 0
+    try:
+        import multiprocessing as mp
+        with mp.get_context("fork").Pool(max(1, min(len(jobs), int(getattr(args, "max_tasks", 1) or 1)))) as pool:
+            for k, d, msgs in pool.imap(_plot_file, jobs):          # matplotlib is not thread-safe: processes
+                n, depth_n = n + k, depth_n + d
+                for m in msgs:
+                    logging.warning(m)
+    except Exception as exc:                               # noqa: BLE001
+        logging.error(f"[PLOT] failed: {exc!r}")
+    return f"{n} map(s) in plots/" + (f", {depth_n} with read depth" if depth_n else "")
 
 
 def write_summary(out_root: Path) -> None:
@@ -3825,7 +3596,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w")   # one run, one log
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
-    steps = Steps(10)
+    steps = Steps(11)
     say("")
     say("MitoM - mitochondrial genome annotation")
     say(f"    input        : {Path(args.input).resolve()}")
@@ -3834,9 +3605,6 @@ def workflow_run(args: argparse.Namespace) -> int:
     say(f"    parallel     : {args.max_tasks} records at a time x {args.threads} threads")
     say(f"    round 2      : {args.if_reannotation_2}  (auto = only records whose annotation is broken by the cox1 shift)")
     say(f"    full log     : {out_root / 'run.log'}")
-    wrap_file = out_root / "trna_wrap.tsv"         # MITOS2 tRNAs across the origin (scripts/mitoz_fast.py)
-    wrap_file.write_text("")
-    os.environ["YZZ_TRNA_WRAP"] = str(wrap_file)
 
     in_path     = Path(args.input).resolve()
     split_dir   = out_root / "00.internal_fasta"
@@ -3869,9 +3637,9 @@ def workflow_run(args: argparse.Namespace) -> int:
     summary = RunSummary()
     check_transl_tables(out_root / "original_annotation", int(args.genetic_code))
 
-    steps.start(f"Round-1 annotation (core: {getattr(args, 'core', 'native')}; protein genes, rRNAs, tRNAs)")
+    steps.start("Round-1 annotation (protein genes, rRNAs, tRNAs)")
     results1 = run_annotation_stage(
-        samples=samples, phase_dirname="01.mitoz_anno1",
+        samples=samples, phase_dirname="01.anno_round1",
         out_root=out_root, args=args,
         fasta_selector=lambda si: si.internal_fasta)
     for si in samples:
@@ -3900,7 +3668,7 @@ def workflow_run(args: argparse.Namespace) -> int:
         best_gb = Path(r1["best_gb"]) if r1.get("best_gb") else None
         if not best_gb or not best_gb.exists():
             continue
-        reor_dir   = out_root / "01.mitoz_anno1" / si.internal_id / "reoriented"
+        reor_dir   = out_root / "01.anno_round1" / si.internal_id / "reoriented"
         reor_dir.mkdir(parents=True, exist_ok=True)
         gb_reor    = reor_dir / f"{si.internal_id}.reoriented.gbf"
         gb_no_gene = reor_dir / f"{si.internal_id}.no_{args.which_gene_first}.gbf"
@@ -3994,10 +3762,10 @@ def workflow_run(args: argparse.Namespace) -> int:
             r2 = results2.get(iid, {})
             if r2.get("best_gb") and Path(r2["best_gb"]).exists():
                 chosen_gb = Path(r2["best_gb"])
-                src_tag   = "phase2_mitoz"
+                src_tag   = "phase2"
 
         if chosen_gb is None:
-            gb_reor = (out_root / "01.mitoz_anno1" / iid / "reoriented"
+            gb_reor = (out_root / "01.anno_round1" / iid / "reoriented"
                        / f"{iid}.reoriented.gbf")
             if gb_reor.exists():
                 chosen_gb = gb_reor
@@ -4074,14 +3842,6 @@ def workflow_run(args: argparse.Namespace) -> int:
             logging.error(f"[FINAL_WRITE_FAIL] {sample}: {exc}")
             summary.final_write_failed.append(sample)
 
-    # round 1 ran with the fast MITOS2 tRNA mode (it only oriented the sequence): samples that end with the round-1
-    # annotation (no orientation gene, failed round 2...) get the sensitive tRNA pass now (review C finding 8)
-    try:
-        if getattr(args, "core", "native") != "native":      # mito_core.py already runs the sensitive tRNA pass
-            resensitise_trnas(args, phase1_fast_finalised(
-                finalised, phase1_fast=os.environ.get("YZZ_PHASE1_FAST") == "1"), out_root)
-    except Exception as exc:
-        logging.warning(f"[TRNA] sensitive tRNA step skipped: {exc}")
     write_nonempty_table(
         out_root / "annotation-summary.tsv",
         "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok\tbody_source\tmetadata_mode",
@@ -4114,17 +3874,13 @@ def workflow_run(args: argparse.Namespace) -> int:
 
     # Merge all final GBs including no_{gene}_gene/ subdirectory.
     # Use final_dir.glob("*.gbf") if you want only successfully-oriented records.
-    steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns, tRNAs across the start")
+    steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
     run_rescue(args, final_dir, out_root)
     steps.info(f"genes added by MITOS2 rescue : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}")
     run_rrna_hmm(args, final_dir, out_root)
     steps.info(f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'rrna_hmm_report.tsv', 'status', 'added')}")
     run_intron_fix(args, in_path, final_dir, out_root)
     steps.info(f"intron results               : {count_rows(out_root / 'intron_report.tsv')} rows in reports/intron_report.tsv")
-    add_wrapped_trnas(final_dir, out_root / "trna_wrap.tsv")
-    n_wrap = len([x for x in (out_root / "trna_wrap.tsv").read_text().splitlines() if x.strip()]) \
-        if (out_root / "trna_wrap.tsv").exists() else 0
-    steps.info(f"tRNAs across the sequence start: {n_wrap}")
     steps.done()
 
     steps.start("Boundary rules for protein genes and rRNAs, NCBI gene names")
@@ -4182,6 +3938,9 @@ def workflow_run(args: argparse.Namespace) -> int:
             steps.done("comparison failed (see run.log); the annotation itself is complete")
     else:
         steps.done("FASTA input has no original annotation: skipped")
+
+    steps.start("Genome maps (circular plots)")
+    steps.done(run_plots(args, merge_dir, out_root))
 
     steps.start("Organise the output")
     organize_outputs(out_root, merge_dir, keep=args.keep_intermediate == "yes")
@@ -4382,9 +4141,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mitom" if os.environ.get("MITOM_LAUNCHER") else "batch_mitoz.py",   # sub-commands show `mitom run`
         description=(
-            "MitoM - batch mitochondrial annotation workflow; the annotation core is MitoM's own mito_core.py\n"
-            "(--core native, default) or MitoZ / MITOS2 (--core mitoz | hybrid); reorientation, metadata\n"
-            "transfer, introns etc. are MitoM's own steps\n\n"
+            "MitoM - batch mitochondrial genome annotation workflow with MitoM's own annotation core\n"
+            "(mito_core.py); reorientation, metadata transfer, introns, curation, NCBI files, genome maps\n\n"
             "  annotate          — batch annotation (one round)\n"
             "  reorient          — reorient .gbf to start at a target gene\n"
             "  run               — full pipeline (annotate → reorient → reanno → final GB)\n"
@@ -4392,7 +4150,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  replace_organism  — restore /organism= in FEATURES source from original GB\n\n"
             "Snakemake support\n"
             "  Use --scheduler_backend snakemake (or auto, which auto-detects).\n"
-            "  Snakemake parallelises the MitoZ annotation phase; all post-\n"
+            "  Snakemake parallelises the annotation phase; all post-\n"
             "  processing (reorientation, metadata overlay, organism sync) runs\n"
             "  in the main process, so all bug-fixes apply regardless of backend.\n"
             "  Cluster submission: --smk_extra '--profile slurm'\n\n"
@@ -4407,16 +4165,14 @@ def build_parser() -> argparse.ArgumentParser:
             "  --preserve_phase1_metadata yes (default for 'run'), the final\n"
             "  output records carry the original header (SOURCE, ORGANISM,\n"
             "  DEFINITION, REFERENCE …) AND have the /organism= qualifier\n"
-            "  inside FEATURES source restored from the original file.\n"
-            "  MitoZ placeholder strings (e.g. 'Test sp.') are eliminated.\n\n"
-            "KNOWN LIMITATION (to be upgraded):\n"
-            "  MitoZ cannot annotate introns (group I/II). After annotation,\n"
+            "  inside FEATURES source restored from the original file.\n\n"
+            "Introns (group I/II):\n"
+            "  after annotation,\n"
             "  mito_intron.py (Python port of MFannot's intron method: Exonerate\n"
             "  protein2genome + MFannot boundary rules + Rfam intron type) adds them\n"
             "  when exonerate is available (--intron_fix auto|yes|no, --intron_bin).\n"
             "  Results: intron_report.tsv. Intron models need expert review.\n\n"
             "Citation:\n"
-            "  MitoZ:      Meng et al. (2019) NAR doi:10.1093/nar/gkz173\n"
             "  Snakemake:  Mölder et al. (2021) F1000Res doi:10.12688/f1000research.29032.2\n"
             "  Biopython:  Cock et al. (2009) Bioinformatics doi:10.1093/bioinformatics/btp163\n"
         ),
@@ -4427,8 +4183,8 @@ def build_parser() -> argparse.ArgumentParser:
     def add_common(sp: argparse.ArgumentParser) -> None:
         sp.add_argument("-i", "--input",  required=True,
                         help="Input FASTA file/dir or GenBank file/dir.")
-        sp.add_argument("-o", "--out_root", default="mitoz_batch_out",
-                        help="Output root directory (default: mitoz_batch_out).")
+        sp.add_argument("-o", "--out_root", default="mitom_out",
+                        help="Output root directory (default: mitom_out).")
         sp.add_argument("--if_split_fasta", choices=["yes", "no"], default="yes")
         # BUG-V0.29-E: old parser accepted id_maxlen < 6, which makes S00001
         # style internal IDs collide after truncation.
@@ -4445,33 +4201,17 @@ def build_parser() -> argparse.ArgumentParser:
                         help="RC the sequence when target gene is on minus strand (default: on).")
         sp.add_argument("--no_force_forward", action="store_false", dest="force_forward")
 
-    def add_mitoz(sp: argparse.ArgumentParser) -> None:
-        g = sp.add_argument_group("MitoZ")
-        g.add_argument("--conda_exe",       default="conda")
-        g.add_argument("--conda_env_mitoz", default=None,
-                       help="Conda env containing MitoZ (e.g. mitoz3.6).")
-        g.add_argument("--mitoz_path",      default=None,
-                       help="Path to MitoZ executable or directory.")
-        g.add_argument("--core", choices=["native", "hybrid", "mitoz"], default="native",
-                       help="Annotation core only - every MitoM step (reorientation, round-2 annotation, metadata "
-                            "transfer, introns, tRNA origin fix) runs with any. native (default): MitoM's own core "
-                            "(mito_core.py: blastx + exonerate on the MITOS2 reference proteins, per-phylum rRNA "
-                            "profile HMMs, Infernal + MiTFi with the MITOS2 tRNA models; one conda environment, no "
-                            "MitoZ); hybrid: MitoZ protein genes / rRNAs (+ extended clades) with MITOS2 tRNAs and "
-                            "MITOS2 rescue of missed genes (needs the mitoz and mitos environments); mitoz: MitoZ "
-                            "alone (= --trna mitoz --rescue no --rrna_hmm no; overrides explicit --rescue / "
-                            "--rrna_hmm values and says so).")
-        g.add_argument("--trna", choices=["mitos2", "mitoz"], default="mitos2",
-                       help="tRNA step of the MitoZ core (--core mitoz | hybrid; the native core has its own): mitos2 "
-                            "(default) = MITOS2 with its sensitive pass run in "
-                            "parallel (same MiTFi Metazoa models and same tRNAs as runmitos); falls back to MiTFi "
-                            "when MITOS2 is missing or fails. mitoz = original single-core MiTFi.")
+    def add_annotation(sp: argparse.ArgumentParser) -> None:
+        g = sp.add_argument_group("Annotation")
+        g.add_argument("--core", choices=["native"], default="native", help=argparse.SUPPRESS)   # old scripts
         g.add_argument("--mitos_bin", default=None,
                        help="MITOS2 environment bin (runmitos). Default: found automatically (mito_env.py).")
         g.add_argument("--mitos_refdir", default=None,
                        help="Directory containing MITOS2 refseq89m. Default: found automatically.")
-        g.add_argument("--circos", choices=["no", "yes"], default="no",
-                       help="Draw MitoZ's circos plot (default no: ~8 s per record, not used downstream).")
+        g.add_argument("--plot", choices=["yes", "no"], default="yes",
+                       help="Circular genome map per record (mito_plot.py, matplotlib) -> plots/<record>.png and .pdf: "
+                            "genes by strand and type, GC content, GC skew; with --infq also the read depth (minimap2). "
+                            "Default yes (about 2 s per record, --max_tasks in parallel).")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",
                        help="yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and "
                             "NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/")
@@ -4480,8 +4220,8 @@ def build_parser() -> argparse.ArgumentParser:
                             "for the .sqn files")
         g.add_argument("--rescue", choices=["auto", "yes", "no"], default="auto",
                        help="Add protein genes / rRNAs the core missed from a MITOS2 annotation (mito_rescue.py; "
-                            "nothing annotated is changed). auto (default) = run when MITOS2 is found and the core is "
-                            "mitoz / hybrid; yes = also with the native core.")
+                            "nothing annotated is changed; needs the optional MITOS2 installation). auto (default) / "
+                            "no = not run (the core retries other loci itself); yes = run for records missing a gene.")
         g.add_argument("--rrna_hmm", choices=["auto", "yes", "no"], default="auto",
                        help="Last-resort 12S/16S search for rRNAs still missing after the cores and the rescue, "
                             "with per-phylum profile HMMs built from NCBI rRNAs (mito_rrna_hmm.py; only missing "
@@ -4489,7 +4229,7 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--rrna_hmm_lib", default=None,
                        help="Per-phylum rRNA HMM library (mito_rrna_hmm.py build). Default: models/rrna_hmm.")
         g.add_argument("--rrna_method", choices=["hmm", "cm"], default="hmm",
-                       help="12S/16S search of the native core: hmm (default, faster) = per-phylum profile HMMs, "
+                       help="12S/16S search of the core: hmm (default, faster) = per-phylum profile HMMs, "
                             "MITOS2's covariance models where no model or hit; cm = MITOS2's covariance models only. "
                             "Same accuracy (2026-10-28, 450 leave-out records: found 98.5 / 98.5 %%, both ends exact "
                             "47.4 / 47.6 %%); hmm takes seconds and ~0.1 GB, cm ~10 s and ~0.5 GB per gene.")
@@ -4498,7 +4238,7 @@ def build_parser() -> argparse.ArgumentParser:
                             "or the phylum of an explicit --clade; with --clade Animal and FASTA input give it here, "
                             "otherwise the record's own taxonomy is used when it has one).")
         g.add_argument("--intron_fix", choices=["auto", "yes", "no"], default="auto",
-                       help="Add introns MitoZ misses with mito_intron.py (MFannot method: Exonerate "
+                       help="Add introns with mito_intron.py (MFannot method: Exonerate "
                             "protein2genome + MFannot boundary rules + Rfam intron type). "
                             "auto = run when exonerate is found (default).")
         g.add_argument("--intron_bin", default=None,
@@ -4512,10 +4252,10 @@ def build_parser() -> argparse.ArgumentParser:
                             "(repeatable).")
         g.add_argument("--keep_intermediate", choices=["yes", "no"], default="no",
                        help="Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run: moved to "
-                            "work/). Default no: deleted after the final output is written; MitoZ logs of problem "
+                            "work/). Default no: deleted after the final output is written; core logs of problem "
                             "samples are always kept (run: reports/failed_logs/, annotate: failed_logs/).")
         # BUG-V0.29-E: old parser accepted zero/negative values and passed
-        # invalid thread counts to MitoZ or ThreadPoolExecutor.
+        # invalid thread counts to the core or ThreadPoolExecutor.
         # g.add_argument("--threads",      type=int, default=16,
         g.add_argument("--threads",      type=positive_int_arg, default=default_threads(),
                        help="Threads per annotation job (default: min(8, number of CPUs) = %(default)s).")
@@ -4523,25 +4263,22 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--max_tasks",    type=positive_int_arg, default=default_max_tasks(),
                        help="Max concurrent annotation jobs (default: CPUs // threads = %(default)s).")
         g.add_argument("--clade",        default=_CLADE_DEFAULT,
-                       help="MitoZ --clade / protein database. auto (default): from the taxonomy of the GenBank "
+                       help="Taxonomic group (sets the genetic code and group rules). auto (default): from the taxonomy of the GenBank "
                             "input (one phylum per run; class names such as Vertebrata, Gastropoda, Insecta count "
-                            "for their phylum; MitoZ clade, extended clade or Animal). A taxonomy that names no "
+                            "for their phylum; a group below or Animal). A taxonomy that names no "
                             "known phylum, several phyla, or CDS transl_tables that differ between records are "
                             "errors; input with NO taxonomy at all (FASTA, GenBank without a lineage) falls back to "
                             "Annelida-segmented-worms with a WARNING - give the clade explicitly for any other "
                             f"taxon: {', '.join(ALL_CLADES)}.")
         g.add_argument("--genetic_code", type=int, default=None,
                        help="Genetic code (default with --clade auto: the CDS transl_table of the input, else the "
-                            "phylum's usual code; otherwise MitoZ's code of the clade - 2 Chordata, 9 Echinodermata, "
+                            "phylum's usual code; otherwise the code of the clade - 2 Chordata, 9 Echinodermata, "
                             "4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal).")
-        g.add_argument("--species_name", default=None)
-        g.add_argument("--mitoz_extra",  action="append", default=[],
-                       metavar="ARG",
-                       help="Extra arguments passed verbatim to MitoZ annotate.")
+        g.add_argument("--species_name", default=None, help=argparse.SUPPRESS)   # old scripts (was passed to MitoZ)
 
-        fq = sp.add_argument_group("FASTQ (optional — for reference-guided annotation)")
+        fq = sp.add_argument_group("FASTQ (optional - read depth ring of the genome maps, --plot)")
         fq.add_argument("--infq", default=None,
-                        help="Directory containing paired FASTQ files.")
+                        help="Directory with the paired FASTQ files of the samples (matched by sample name).")
         fq.add_argument("--fq_position", choices=["flat", "sample_dir"], default="flat")
         fq.add_argument("--suffix_fq", default="_1.clean.fq.gz,_2.clean.fq.gz")
 
@@ -4553,7 +4290,7 @@ def build_parser() -> argparse.ArgumentParser:
                              "  auto      — use Snakemake if available, else threads\n"
                              "  snakemake — always use Snakemake\n"
                              "  threads   — always use ThreadPoolExecutor\n"
-                             "MitoZ annotation is parallelised; finalization runs\n"
+                             "Annotation is parallelised; finalization runs\n"
                              "in the main process regardless of backend."
                          ))
         sch.add_argument("--snakemake_bin",    default=None)
@@ -4571,9 +4308,9 @@ def build_parser() -> argparse.ArgumentParser:
                               "Example: --smk_extra '--profile slurm'")
 
     # ── annotate ──────────────────────────────────────────────────────────
-    a = sub.add_parser("annotate", help="Batch annotation only (one round; the core of --core).")
+    a = sub.add_parser("annotate", help="Batch annotation only (one round of mito_core.py).")
     add_common(a)
-    add_mitoz(a)
+    add_annotation(a)
     a.add_argument("--preserve_phase1_metadata", choices=["yes", "no"], default="no")
 
     # ── reorient ──────────────────────────────────────────────────────────
@@ -4585,7 +4322,7 @@ def build_parser() -> argparse.ArgumentParser:
         "run",
         help="Full pipeline: annotate → reorient → re-annotate → guaranteed final reorientation.")
     add_common(run_p)
-    add_mitoz(run_p)
+    add_annotation(run_p)
     run_p.add_argument("--if_reannotation_2", choices=["yes", "auto", "no"], default="auto",
                        help="Phase-2 re-annotation of the reoriented sequences. auto (default): round 1 runs in "
                             "full and only samples that fail the check after the cox1 shift (gene at the original "
@@ -4620,7 +4357,7 @@ def build_parser() -> argparse.ArgumentParser:
         "replace_organism",
         help=(
             "Restore /organism= and SOURCE text in FEATURES source blocks.\n"
-            "Fixes MitoZ placeholder values (e.g. 'Test sp.') that survive\n"
+            "Fixes placeholder organism names (e.g. 'Test sp.') that survive\n"
             "transfer_metadata because they live in the body, not the header.\n"
             "In 'run' mode this is applied automatically as Step 3.5."
         ),
@@ -4671,8 +4408,6 @@ def main() -> int:
 
     args = build_parser().parse_args()
 
-    if getattr(args, "conda_env_mitoz", None) == "":
-        args.conda_env_mitoz = None
     if args.cmd in ("annotate", "run"):
         err = resolve_tools(args)
         if err:

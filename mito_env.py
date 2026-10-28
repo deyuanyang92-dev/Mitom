@@ -8,7 +8,7 @@ typed. Order: command-line value > config file > PATH > automatic scan of conda 
 Config file (JSON, all keys optional), first found of:
   $YZZ_MITO_CONFIG, <yzz root>/config/mitoz.json (inside the yzz workflow), <this dir>/mito_config.json,
   ~/.config/yzz/mito.json
-  {"conda_env_mitoz": "mitoz3.6", "mitoz_path": "", "mitos_bin": ".../envs/mitos/bin",
+  {"mitos_bin": ".../envs/mitos/bin",
    "mitos_refdir": "/opt/mitos_refs", "tools_bin": ".../envs/mitotools/bin",
    "intron_bin": ".../envs/mitointron/bin", "trna_bin": ".../envs/mitotrna/bin"}
 
@@ -32,8 +32,7 @@ HERE = Path(__file__).resolve().parent
 MITOS_REF = "refseq89m"
 # what each program is needed for, and the conda environment (env/*.yml) that installs it
 TOOLS = {
-    "mitoz":       ("optional: --core hybrid / mitoz (MitoZ annotation)", "mitoz"),
-    "runmitos":    ("optional: --core hybrid tRNA step, MITOS2 rescue of missed genes (mito_rescue.py)", "mitos"),
+    "runmitos":    ("optional: MITOS2 rescue of missed genes (mito_rescue.py, --rescue yes), mito_trna.py", "mitos"),
     "exonerate":   ("protein gene boundaries (mito_core.py); intron models (mito_intron.py)", "mitotools"),
     "cmsearch":    ("tRNA / rRNA covariance models (mito_core.py); intron typing (mito_intron.py)", "mitotools"),
     "blastx":      ("protein gene search (mito_core.py)", "mitotools"),
@@ -47,6 +46,7 @@ TOOLS = {
     "tRNAscan-SE": ("optional extra tRNA method (mito_trna.py)", "mitotools"),
     "blastn":      ("rDNA 18S-28S annotation (mito_nuc.py, mitom nuc)", "mitotools"),
     "tblastn":     ("histone annotation (mito_nuc.py, mitom nuc)", "mitotools"),
+    "minimap2":    ("optional: read depth ring of the genome maps (mito_plot.py, --infq)", "mitotools"),
 }
 REQUIRED = ("blastx", "exonerate", "cmsearch", "nhmmer", "java", "blastp", "table2asn")   # the native core (default)
 
@@ -119,8 +119,6 @@ def find(name: str, explicit: Optional[str] = None, *config_keys: str) -> Option
     cfg = config()
     dirs = [explicit] if explicit else \
         [cfg.get(k, "") for k in (*config_keys, "tools_bin", "intron_bin", "trna_bin", "mitos_bin")]
-    if not explicit and name == "mitoz" and cfg.get("conda_env_mitoz"):      # the configured MitoZ environment first
-        dirs = [str(b) for b in env_bins() if b.parent.name == cfg["conda_env_mitoz"]] + dirs
     for d in dirs:
         if not d:
             continue
@@ -156,16 +154,6 @@ def bin_with(*names: str, explicit: Optional[str] = None) -> Optional[str]:
     return None
 
 
-def mitoz_env() -> Optional[str]:
-    """Conda environment name that contains MitoZ (config, else the first environment with bin/mitoz)."""
-    if config().get("conda_env_mitoz"):
-        return config()["conda_env_mitoz"]
-    for b in env_bins():
-        if b.parent.parent.name == "envs" and _exe(b / "mitoz"):
-            return b.parent.name
-    return None
-
-
 def mitos_bin(explicit: Optional[str] = None) -> Optional[str]:
     exe = find("runmitos", explicit, "mitos_bin")
     return str(Path(exe).parent) if exe else None
@@ -185,53 +173,6 @@ def mitos_refdir(explicit: Optional[str] = None, ref: str = MITOS_REF) -> Option
         if c and (Path(c).expanduser() / ref).is_dir():
             return str(Path(c).expanduser())
     return None
-
-
-PCG_NAMES = ("ATP6", "ATP8", "COX1", "COX2", "COX3", "CYTB", "ND1", "ND2", "ND3", "ND4", "ND4L", "ND5", "ND6")
-
-
-def mitoz_profiles(src: Path, db_clade: str, dest_root: Path, as_clade: str = "Arthropoda") -> Path:
-    """MitoZ profiles dir in which clade name `as_clade` uses MitoZ's `db_clade` protein database.
-    MitoZ annotate uses the clade only for MT_database/<clade>_CDS_protein.fa and
-    CDS_HMM/<clade>_CDS_length_list (mitoz/annotate/annotation.py:590-591); rRNA models are global.
-    The length list is a MINIMUM gene length for MitoZ (annotate/script/find_contro_region.py:135-153 counts a
-    PCG only if the list value <= gene length, and skips control-region detection when fewer than 13 pass): the
-    value written is int(0.5 x median protein length x 3) of the database, which stays below the lists MitoZ
-    ships (0.6-1.0 of the median x 3); 0 when a gene is absent (e.g. ATP8 in flatworms)."""
-    import re
-    import statistics
-    fa = Path(src) / "MT_database" / f"{db_clade}_CDS_protein.fa"
-    if not fa.is_file():
-        raise FileNotFoundError(f"MitoZ protein database for clade '{db_clade}' not found: {fa}")
-    d = Path(dest_root) / db_clade
-    (d / "MT_database").mkdir(parents=True, exist_ok=True)
-    (d / "CDS_HMM").mkdir(exist_ok=True)
-    link = d / "MT_database" / f"{as_clade}_CDS_protein.fa"
-    if link.is_symlink() or link.exists():              # a dangling link of an earlier failed run is replaced too
-        link.unlink()
-    link.symlink_to(fa)
-    if not (d / "rRNA_CM").exists():
-        (d / "rRNA_CM").symlink_to(Path(src) / "rRNA_CM", target_is_directory=True)
-    lengths: Dict[str, List[int]] = {}
-    name, n, headers, unparsed = None, 0, 0, 0
-    for line in fa.read_text().splitlines() + [">"]:
-        if line.startswith(">"):
-            if name:
-                lengths.setdefault(name, []).append(n)
-            if line != ">":
-                headers += 1
-            m = re.match(r">gi_\S+?_(ATP6|ATP8|COX[123]|CYTB|ND[1-6]|ND4L)_", line, re.I)
-            if line != ">" and not m:
-                unparsed += 1
-            name, n = (m.group(1).upper() if m else None), 0
-        else:
-            n += len(line.strip())
-    if unparsed:
-        print(f"[mito_env] mitoz_profiles: {unparsed} of {headers} protein headers in {fa.name} do not match "
-              f"'gi_<accession>_<GENE>_' and are not used for the length list", file=sys.stderr)
-    (d / "CDS_HMM" / f"{as_clade}_CDS_length_list").write_text(
-        "".join(f"{g}\t{int(0.5 * statistics.median(lengths[g]) * 3) if g in lengths else 0}\n" for g in PCG_NAMES))
-    return d
 
 
 MITOS_MODES = ("fast", "sensitive", "full")
@@ -260,6 +201,15 @@ def biopython_version() -> Optional[str]:
         return None
 
 
+def matplotlib_version() -> Optional[str]:
+    """Version of matplotlib importable by this interpreter (the genome maps of mito_plot.py), None when missing."""
+    try:
+        import matplotlib
+        return str(matplotlib.__version__)
+    except ImportError:
+        return None
+
+
 def doctor(write: bool = False) -> int:
     print(f"config: {config_path()}{'' if config_path().exists() else ' (not present)'}")
     print(f"conda/mamba: {', '.join(map(str, conda_roots())) or 'not found'}")
@@ -275,6 +225,9 @@ def doctor(write: bool = False) -> int:
     bio = biopython_version()          # required: all MitoM scripts read GenBank files with it
     print(f"  {'OK ' if bio else '!! '}{'Biopython':12} "
           f"{('version ' + bio) if bio else 'not found for ' + sys.executable:60} sequence input / output (all scripts)")
+    mpl = matplotlib_version()         # optional: without it run with --plot no
+    print(f"  {'OK ' if mpl else '-- '}{'matplotlib':12} "
+          f"{('version ' + mpl) if mpl else 'not found for ' + sys.executable:60} genome maps (mito_plot.py, --plot)")
     req = [n for n, _ in missing if n in REQUIRED]
     if req or not ref or not bio:
         envs = sorted({e for n, e in missing if n in REQUIRED})
@@ -287,8 +240,8 @@ def doctor(write: bool = False) -> int:
     if write:
         cfg_file = config_path()
         cfg = dict(config())
-        mb, tb, env = mitos_bin(), bin_with("exonerate", "cmsearch", "blastp", "makeblastdb"), mitoz_env()
-        for k, v in (("conda_env_mitoz", env), ("mitos_bin", mb), ("mitos_refdir", ref), ("tools_bin", tb)):
+        mb, tb = mitos_bin(), bin_with("exonerate", "cmsearch", "blastp", "makeblastdb")
+        for k, v in (("mitos_bin", mb), ("mitos_refdir", ref), ("tools_bin", tb)):
             if v and not cfg.get(k):
                 cfg[k] = v
         cfg_file.parent.mkdir(parents=True, exist_ok=True)

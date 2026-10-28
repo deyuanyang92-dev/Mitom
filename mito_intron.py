@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mito_intron.py - intron-aware re-annotation of mitochondrial protein-coding genes.
 
-MitoZ cannot annotate introns. This script adds them to MitoZ GenBank output with
+The annotation core does not annotate introns. This script adds them to its GenBank output with
 a Python port of the intron workflow of MFannot (Beck & Lang,
 https://github.com/BFL-lab/Mfannot, GPL-2.0; data https://github.com/BFL-lab/MFannot_data,
 GPL-3.0; Lang et al. 2023, Front. Plant Sci., doi:10.3389/fpls.2023.1222186).
@@ -655,9 +655,9 @@ def extend_to_stop(s: str, exons: List[Tuple[int, int]], gencode: int, limit: in
     return (exons), False
 
 
-def mitoz_ends(rec, m: Model, exons_tx: List[Tuple[int, int]], L: int, window: int = 90
+def core_ends(rec, m: Model, exons_tx: List[Tuple[int, int]], L: int, window: int = 90
                ) -> Tuple[Optional[int], Optional[int]]:
-    """5' start / 3' end (transcript coords) of existing CDS features (MitoZ's model) on the
+    """5' start / 3' end (transcript coords) of existing CDS features (the core's model) on the
     same strand that overlap the model and are in frame with its first / last exon."""
     a, b = exons_tx[0][0], exons_tx[-1][1]
     g_span = to_genome([(a, b)], m.strand, L)[0]
@@ -814,7 +814,7 @@ def product_for(gene: str) -> str:
 
 
 def conflicting_genes(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -> List[str]:
-    """Existing CDS (e.g. MitoZ's) of a *different* standard mitochondrial protein gene that the
+    """Existing CDS (e.g. the core's) of a *different* standard mitochondrial protein gene that the
     model's exons overlap by >= 30 nt (intron-encoded ORFs such as heg are not conflicts)."""
     out = []
     for f in rec.features:
@@ -901,7 +901,7 @@ def stop_qualifiers(rec, cds_loc, gencode: int) -> Dict[str, List[str]]:
 
 def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[dict], gencode: int,
                 partial5: bool = False, partial3: bool = False) -> str:
-    """Replace MitoZ gene/CDS features that overlap the exons; add intron features. Returns gene name."""
+    """Replace the gene/CDS features that overlap the exons; add intron features. Returns gene name."""
     strand = m.strand
     hit, keep = [], []
     for ft in rec.features:
@@ -1020,7 +1020,7 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
                                      and not (a.exclude_own_species and v.species == own)][:9]
         adj, tinfo, notes, sscores = add_mini_exons(use, adj, tinfo, notes, sscores, a.genetic_code, refs)
         kinds = [t[0] for t in tinfo]
-        z_start, z_end = mitoz_ends(rec, m, adj, L)
+        z_start, z_end = core_ends(rec, m, adj, L)
         started, partial5 = extend_to_start(use, adj, a.genetic_code, prev_feature_end(rec, m, adj, L), m.qmiss_n)
         fallback, partial3 = extend_to_stop(use, started, a.genetic_code, next_feature_start(rec, m, adj, L),
                                             m.qmiss_c, rule=a.stop_rule)
@@ -1109,7 +1109,7 @@ def find_tool(name: str, bin_dir: Optional[str]) -> Optional[str]:
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("-i", "--input", required=True, help="GenBank file or directory (e.g. MitoZ 04.final_gb)")
+    p.add_argument("-i", "--input", required=True, help="GenBank file or directory (e.g. MitoM 04.final_gb)")
     p.add_argument("-o", "--out", required=True, help="Output directory (may equal input dir to update in place)")
     p.add_argument("--lib", action="append", default=[],
                    help=f"Protein library in MFannot header format (default {DEFAULT_LIB}); repeatable")
@@ -1127,7 +1127,7 @@ def main(argv=None) -> int:
     p.add_argument("--jobs", type=int, default=1, help="GenBank files processed in parallel")
     p.add_argument("--timeout", type=int, default=900, help="Seconds allowed per external program call")
     p.add_argument("--stop_rule", choices=["homolog", "first"], default="first",
-                   help="3' end when no MitoZ end is available: 'homolog' = stop where the homolog ends "
+                   help="3' end when no existing CDS end is available: 'homolog' = stop where the homolog ends "
                         "(complete or T/TA stop there); 'first' = first in-frame complete stop codon")
     p.add_argument("--exclude_own_species", action="store_true",
                    help="Ignore library proteins of the record's own species (benchmarking)")
