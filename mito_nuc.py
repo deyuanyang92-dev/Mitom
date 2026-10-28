@@ -79,6 +79,7 @@ BLAST_TARGETS = 100   # reference units kept per region (blastn; 100 vs 500: sam
 EXTRAP = 30         # projection past an HSP end that still counts as a vote (nt)
 MIN_CHAIN_BITS = 100
 MIN_GENE_OVERLAP = 80   # nt of a reference rRNA an alignment chain must cover for the gene to be reported
+PIECE_MIN_ID = 0.7      # identity of an unaligned, projected piece at a contig end to the reference gene's end
 MAX_ITS = 3000      # spacer between an rRNA and the contig end that is still reported as a partial ITS
 MAX_RESCUE = 3000   # stretch beside an rRNA (or a whole sequence) searched again for a missing 5.8S (blastn word 11)
 CURATED_MIN_ID = 90 # a curated reference decides boundaries only from chains of >= this % identity (close relatives)
@@ -723,14 +724,14 @@ def annotate_rdna(regions: Path, lib: Library, work: Path, threads: int, leave_o
     logging.info(f"[NUC] 5.8S rescue: {time.time() - t0:.0f} s")
     seqs = SeqIO.index(str(regions), "fasta")
     for q, ls in loci.items():
-        _tidy(ls, str(seqs[q].seq).upper(), qlens[q])
+        _tidy(ls, str(seqs[q].seq).upper(), qlens[q], final=not refine, ref_gene=lambda r, g: _ref_gene(lib, r, g))
     if refine:
         rs = {q: seqs[q].seq for q in loci}
         t0 = time.time()
         n = cm_refine(loci, rs, lib.dir, work, threads)
         logging.info(f"[NUC] rRNA ends placed by the Rfam models: {n} ({time.time() - t0:.0f} s)")
         for q, ls in loci.items():
-            _tidy(ls, str(rs[q]).upper(), qlens[q])
+            _tidy(ls, str(rs[q]).upper(), qlens[q], final=True, ref_gene=lambda r, g: _ref_gene(lib, r, g))
     return {q: [L for L in ls if L["feats"]] for q, ls in loci.items()}
 
 
@@ -984,12 +985,39 @@ def _ends(f: dict, st: int) -> Tuple[str, str]:
     return (a, b) if st == 1 else (b, a)
 
 
-def _tidy(loci: List[dict], seq: str, qlen: int) -> None:
-    """(1) no end inside a run of >= 10 N; a projected end does not cross a run of >= 10 N (scaffold gap of unknown length) when no part of the
+def _piece_matches_ref(f: dict, st: int, seq: str, ref_seq: Optional[str], min_id: float = PIECE_MIN_ID) -> bool:
+    """an rRNA piece cut by the contig end is the reference gene's end: >= min_id ungapped identity with the
+    reference's 3' end (5'-partial piece) or 5' end (3'-partial piece)"""
+    if not ref_seq:
+        return False
+    piece = seq[f["lo"] - 1:f["hi"]].upper()
+    if st == -1:
+        piece = str(Seq(piece).reverse_complement())
+    p5, p3 = (f["p_lo"], f["p_hi"]) if st == 1 else (f["p_hi"], f["p_lo"])
+    if p5 == p3 or len(piece) > len(ref_seq):
+        return False
+    other = ref_seq[-len(piece):] if p5 else ref_seq[:len(piece)]
+    return sum(a == b for a, b in zip(piece, other.upper())) >= min_id * len(piece)
+
+
+def _tidy(loci: List[dict], seq: str, qlen: int, final: bool = False, ref_gene=None) -> None:
+    """(0) final pass (after the Rfam models had their chance): an rRNA with no aligned nt inside it and both ends
+    only projected stays only when its sequence is the reference gene's end (_piece_matches_ref; ref_gene(ref, gene)
+    gives it) - MJ20260820041 CHY007: 20 nt of ITS1 at a contig end became a "5'-partial 18S" projected from the
+    5.8S across the reference's shorter ITS1 (no likeness to the conserved 18S 3' end), cutting the sample's
+    519-nt ITS1 to a "complete" 499 nt; a real end too short to align (7 nt of 5.8S) matches and stays;
+    (1) no end inside a run of >= 10 N; a projected end does not cross a run of >= 10 N (scaffold gap of unknown length) when no part of the
     gene beyond the gap aligns: the gene stops at the gap, partial; (2) two different rRNAs never overlap, on either strand (a reverse copy projected over a unit
     is false): the one with fewer aligned bits is dropped when both its ends are projected or it is on the other
     strand, else cut back to the other one (partial on that side)"""
     gaps = [(m.start() + 1, m.end()) for m in re.finditer("N{10,}", seq)]
+    if final:
+        for L in loci:
+            for g in [g for g, f in L["feats"].items() if g in RRNA and not f.get("aligned", 1)
+                      and _ends(f, L["st"]) == ("projected", "projected")]:
+                ref = ref_gene(L.get("ref"), g) if ref_gene and L.get("ref") else None
+                if not _piece_matches_ref(L["feats"][g], L["st"], seq, ref):
+                    del L["feats"][g]
     for L in loci:
         for g, f in L["feats"].items():
             if g not in RRNA:
