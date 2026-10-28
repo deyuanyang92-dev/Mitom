@@ -1,6 +1,6 @@
-"""Tests for mito_plot.py (circular genome map: GC / skew windows, labels, read depth with minimap2, CLI).
+"""Tests for mito_plot.py (circular genome map: GC / skew windows, labels, read depth with minimap2 or bwa mem, CLI).
 
-Run: python3 -m pytest -q tests/test_mito_plot.py   (the depth test needs minimap2)
+Run: python3 -m pytest -q tests/test_mito_plot.py   (the depth tests need minimap2 / bwa)
 """
 import gzip
 import random
@@ -114,8 +114,14 @@ def write_fastq(path, reads):
             fh.write(f"@r{i}\n{s}\n+\n{'I' * len(s)}\n")
 
 
-@pytest.mark.skipif(mito_env.find("minimap2") is None, reason="minimap2 not found")
-def test_depth_from_reads_folds_the_origin(tmp_path):
+@pytest.mark.parametrize("aligner", ["minimap2", "bwa"])
+def test_depth_from_reads_folds_the_origin(tmp_path, monkeypatch, aligner):
+    """Both aligners give the exact depth (minimap2 when installed, else bwa mem)."""
+    if mito_env.find(aligner) is None:
+        pytest.skip(f"{aligner} not found")
+    find = mito_env.find
+    monkeypatch.setattr(mp.mito_env, "find", lambda name, *a: None if name in ("minimap2", "bwa") and name != aligner
+                        else find(name, *a))
     n = 3000
     rec = SeqRecord(Seq(rand(n)), id="T2", annotations={"topology": "circular"})
     s = str(rec.seq)
@@ -173,7 +179,7 @@ def test_run_plots_one_map_per_record_and_switch(tmp_path):
         ["TEST1.1.pdf", "TEST1.1.png", "TEST2.1.pdf", "TEST2.1.png"]
 
 
-@pytest.mark.skipif(mito_env.find("minimap2") is None, reason="minimap2 not found")
+@pytest.mark.skipif(not (mito_env.find("minimap2") or mito_env.find("bwa")), reason="minimap2 / bwa not found")
 def test_run_plots_depth_ring_from_the_samples_reads(tmp_path):
     """--infq: reads found by sample name (here S1 only, single file) add the depth ring to that sample's map."""
     import argparse

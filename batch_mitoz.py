@@ -3448,7 +3448,7 @@ def _plot_file(job: Tuple[Path, Path, List[str], int]) -> Tuple[int, int, List[s
 
 def run_plots(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
     """mito_plot.py: one circular map per final record -> out_root/plots/<record>.png / .pdf (--max_tasks processes,
-    ~1.7 s per record); with --infq the reads of the record's sample add a sequencing-depth ring (minimap2, --threads
+    ~1.7 s per record); with --infq the reads of the record's sample add a sequencing-depth ring (minimap2 when installed, else bwa mem; --threads
     each). Returns the line for the step summary; never raises."""
     if getattr(args, "plot", "yes") == "no":
         return "skipped (--plot no)"
@@ -4210,7 +4210,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Directory containing MITOS2 refseq89m. Default: found automatically.")
         g.add_argument("--plot", choices=["yes", "no"], default="yes",
                        help="Circular genome map per record (mito_plot.py, matplotlib) -> plots/<record>.png and .pdf: "
-                            "genes by strand and type, GC content, GC skew; with --infq also the read depth (minimap2). "
+                            "genes by strand and type, GC content, GC skew; with --infq also the read depth (minimap2 when installed, else bwa mem). "
                             "Default yes (about 2 s per record, --max_tasks in parallel).")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",
                        help="yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and "

@@ -9,9 +9,9 @@ Replaces the MitoZ / circos map. From the outside in:
               across the origin, a frameshift join, the exons of a gene with an intron, linked by a line).
   GC content  deviation of each window from the genome mean (WINDOW nt windows every STEP nt)
   GC skew     (G - C) / (G + C) of the same windows
-  depth       only with reads: minimap2 -x sr -c, start / end of every primary base-level alignment (PAF; without
-              -c PAF ends are approximate); a circular record is mapped as sequence + its first ORIGIN_EXT nt and
-              positions past the end are folded back onto the start
+  depth       only with reads: minimap2 -x sr -c when it is installed (about 8x faster), else bwa mem; the
+              reference span of every primary alignment; a circular record is mapped as sequence + its first
+              ORIGIN_EXT nt and positions past the end are folded back onto the start
   centre      organism, length, topology, accession; a kb ruler runs inside the innermost ring
 Position 1 is at the top and positions run clockwise; a linear record leaves a gap between its end and start.
 
@@ -47,6 +47,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000
+CIGAR = re.compile(r"(\d+)([MIDNSHP=X])")
 # five hues that stay apart pairwise (any two classes can be neighbours: all-pairs normal-vision dE >= 15 in the
 # dataviz reference palette), dark / light neutral for tRNA / other; every gene also carries its name
 COLORS = {"COX": "#e34948", "NADH": "#eda100", "ATP": "#008300", "CYTB": "#1baf7a", "rRNA": "#2a78d6",
@@ -368,14 +369,15 @@ def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = Non
 
 
 def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.ndarray:
-    """Per-position read depth of `rec` from one FASTQ file or a pair (.gz allowed): minimap2 -x sr -c, start / end
-    of every primary alignment. A circular record is mapped as sequence + its first ORIGIN_EXT nt and positions past
-    its end are folded back onto the start, so reads across the origin count. RuntimeError when minimap2 is not
-    found or fails."""
-    exe = mito_env.find("minimap2")
-    if not exe:
-        raise RuntimeError("minimap2 not found (needed for the depth ring): install it (bioconda minimap2) "
-                           "or put it on PATH")
+    """Per-position read depth of `rec` from one FASTQ file or a pair (.gz allowed), from the reference span of every
+    primary alignment: minimap2 -x sr -c when it is installed (PAF; -c for exact ends; about 8x faster), else bwa mem
+    (SAM, CIGAR M / D / N / = / X; bwa is in mitotools, minimap2 is not: its k8 pulls sysroot_linux-64, +0.5 GB on
+    Linux). A circular record is mapped as sequence + its first ORIGIN_EXT nt and positions past its end are folded
+    back onto the start, so reads across the origin count. RuntimeError when neither is found or the aligner fails."""
+    mm2, bwa = mito_env.find("minimap2"), mito_env.find("bwa")
+    if not (mm2 or bwa):
+        raise RuntimeError("neither minimap2 nor bwa found (needed for the depth ring): install one (bioconda) or "
+                           "put it on PATH")
     if not 1 <= len(reads) <= 2:
         raise ValueError(f"depth_from_reads: 1 or 2 FASTQ files, got {len(reads)}")
     seq = str(rec.seq)
@@ -384,18 +386,33 @@ def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.nd
     ref = seq + seq[:ORIGIN_EXT] if circular else seq
     diff = np.zeros(len(ref) + 1, dtype=np.int64)
     with tempfile.TemporaryDirectory(prefix="mito_plot_") as tmp:
-        fa, paf = Path(tmp) / "ref.fa", Path(tmp) / "aln.paf"
+        fa, log = Path(tmp) / "ref.fa", Path(tmp) / "aligner.log"
         fa.write_text(f">ref\n{ref}\n")
-        run = subprocess.run([exe, "-x", "sr", "-c", "--secondary=no", "-t", str(threads), "-o", str(paf), str(fa),
-                              *map(str, reads)], capture_output=True, text=True)
-        if run.returncode:
-            raise RuntimeError(f"minimap2 failed (exit {run.returncode}): {run.stderr.strip()[-1000:]}")
-        with open(paf) as fh:
-            for line in fh:
-                f = line.rstrip("\n").split("\t")
-                if "tp:A:P" in f[12:]:
-                    diff[int(f[7])] += 1
-                    diff[int(f[8])] -= 1
+        with open(log, "w") as err:
+            if mm2:
+                p = subprocess.Popen([mm2, "-x", "sr", "-c", "--secondary=no", "-t", str(threads), str(fa),
+                                      *map(str, reads)], stdout=subprocess.PIPE, stderr=err, text=True)
+                for line in p.stdout:                             # PAF: mapped reads only
+                    f = line.rstrip("\n").split("\t")
+                    if "tp:A:P" in f[12:]:
+                        diff[int(f[7])] += 1
+                        diff[int(f[8])] -= 1
+                rc = p.wait()
+            else:
+                rc = subprocess.run([bwa, "index", str(fa)], stdout=err, stderr=err).returncode
+                if not rc:
+                    p = subprocess.Popen([bwa, "mem", "-t", str(threads), str(fa), *map(str, reads)],
+                                         stdout=subprocess.PIPE, stderr=err, text=True)
+                    for line in p.stdout:                         # SAM: unmapped reads have a line too
+                        f = line.split("\t", 6)
+                        if line[0] == "@" or int(f[1]) & 0x904:   # unmapped, secondary, supplementary
+                            continue
+                        start = int(f[3]) - 1
+                        diff[start] += 1
+                        diff[start + sum(int(k) for k, op in CIGAR.findall(f[5]) if op in "MDN=X")] -= 1
+                    rc = p.wait()
+        if rc:
+            raise RuntimeError(f"{Path(mm2 or bwa).name} failed (exit {rc}): {log.read_text().strip()[-1000:]}")
     cov = np.cumsum(diff[:-1])
     depth = cov[:n].copy()
     if circular:
@@ -409,7 +426,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("-o", "--out_dir", required=True)
     p.add_argument("--fq1", help="reads for the depth ring (FASTQ, .gz allowed); only with a single record")
     p.add_argument("--fq2", help="mates of --fq1")
-    p.add_argument("--threads", type=int, default=1, help="minimap2 threads (default 1)")
+    p.add_argument("--threads", type=int, default=1, help="aligner threads (minimap2, else bwa mem; default 1)")
     p.add_argument("--formats", default="png,pdf", help="comma-separated (default png,pdf)")
     a = p.parse_args(argv)
     src = Path(a.input)

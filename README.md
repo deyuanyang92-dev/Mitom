@@ -62,7 +62,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `original_annotation/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与上面对应，便于前后对比 |
 | `original_vs_mitom.tsv` | 原注释 vs MitoM，每个基因一行：same / ends_differ / only_original / only_mitom … |
 | `summary.tsv` | 每条记录一行：基因数、cox1 起始、用了第几轮注释、是否迁回原 header、NCBI ERROR 数 |
-| `plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：基因按链和类别着色（正链在外、负链在内），向内依次为 GC 含量、GC skew；给出 `--infq` 时再加一圈测序深度（minimap2）；`--plot no` 不画 |
+| `plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：基因按链和类别着色（正链在外、负链在内），向内依次为 GC 含量、GC skew；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot no` 不画 |
 | `ncbi_submission/` | 每条的 NCBI 提交文件 `.fsa/.tbl/.sqn` 与 table2asn 结果；`submission_summary.tsv` ERROR 为 0 的可直接提交 |
 | `reports/` | 各步骤报告：`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
 | `run.log` | 全部过程与调用的命令 |
@@ -131,9 +131,9 @@ On 17 records all four tools finished (8 phyla), protein genes with both ends ex
 
 **第三方软件 / Third-party tools**
 
-注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 minimap2 由 `install.sh` 装入 conda 环境，圈图用的 matplotlib 由 pip 安装，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`install.sh` 另外下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MITOS2（可选）不随本仓库分发；MitoZ 不再需要。
+注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa 由 `install.sh` 装入 conda 环境（装有 minimap2 时自动改用它，快约 8 倍），圈图用的 matplotlib 由 pip 安装，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`install.sh` 另外下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MITOS2（可选）不随本仓库分发；MitoZ 不再需要。
 
-The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and minimap2 (read depth ring) are installed into a conda environment by `install.sh`, matplotlib (genome maps) with pip; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `install.sh` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MITOS2 (optional) is not distributed here; MitoZ is no longer needed.
+The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, about 8x faster) are installed into a conda environment by `install.sh`, matplotlib (genome maps) with pip; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `install.sh` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MITOS2 (optional) is not distributed here; MitoZ is no longer needed.
 
 **致谢 / Acknowledgements**
 
@@ -155,7 +155,7 @@ We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, G
 - 内含子 / introns（`mito_intron.py`）— MFannot: Lang BF, et al. 2023. Front Plant Sci. doi:10.3389/fpls.2023.1222186; Exonerate: Slater GSC, Birney E. 2005. BMC Bioinformatics. doi:10.1186/1471-2105-6-31
 - 端点校正依据 / boundary curation rules（`mito_curate.py`）: Fourdrilis S, et al. 2018. Sci Rep 8:17964. doi:10.1038/s41598-018-36428-7; Ghiselli F, et al. 2021. Phil Trans R Soc B. doi:10.1098/rstb.2020.0159
 - 可选 tRNA 工具 / optional tRNA tools（`mito_trna.py`）: ARWEN doi:10.1093/bioinformatics/btm573; ARAGORN doi:10.1093/nar/gkh152; tRNAscan-SE 2.0 doi:10.1093/nar/gkab688
-- 基因组圈图 / genome maps（`mito_plot.py`）— matplotlib: Hunter JD. 2007. Comput Sci Eng 9:90-95. doi:10.1109/MCSE.2007.55; minimap2（测序深度 / read depth）: Li H. 2018. Bioinformatics 34:3094-3100. doi:10.1093/bioinformatics/bty191
+- 基因组圈图 / genome maps（`mito_plot.py`）— matplotlib: Hunter JD. 2007. Comput Sci Eng 9:90-95. doi:10.1109/MCSE.2007.55; 测序深度 / read depth — BWA-MEM: Li H. 2013. arXiv:1303.3997; minimap2: Li H. 2018. Bioinformatics 34:3094-3100. doi:10.1093/bioinformatics/bty191
 - Biopython: Cock PJA, et al. 2009. Bioinformatics. doi:10.1093/bioinformatics/btp163
 - NCBI table2asn: https://www.ncbi.nlm.nih.gov/genbank/table2asn/
 
@@ -196,7 +196,7 @@ It can:
 一条命令安装全部依赖：`bash install.sh`（见"快速上手"）；`mitom doctor` 检查。下面是各组件：
 
 - 注释核心：exonerate、BLAST、Infernal、HMMER、Java、table2asn、MAFFT（env/mitotools.yml）+ MITOS2 参考数据 refseq89m
-- 基因组圈图：matplotlib；测序深度环另需 minimap2（mitotools 环境）
+- 基因组圈图：matplotlib；测序深度环用 bwa（mitotools 环境）。装有 minimap2 时自动改用它，快约 8 倍：`mamba install -n mitotools -c bioconda minimap2`（Linux 上环境多 0.5 GB）
 - 可选：MITOS2 2.1.10（`--rescue yes` 漏注救回、`mito_trna.py --select mitos2`）
 
 基础依赖：
@@ -290,9 +290,9 @@ By default, multi-record FASTA files are split into individual records. With `--
 
 ### FASTQ 输入 / Optional FASTQ Input
 
-FASTQ 只用于 `annotate` / `run` 的基因组圈图，注释本身不用 reads：给出 `--infq` 时，用 minimap2 把该样本的 reads 比对到最终序列，圈图最内一圈画测序深度（`--plot no` 时不用）。脚本按最终 `sample_name` 查找双端 FASTQ。
+FASTQ 只用于 `annotate` / `run` 的基因组圈图，注释本身不用 reads：给出 `--infq` 时，用 bwa mem（装有 minimap2 时用它，快约 8 倍）把该样本的 reads 比对到最终序列，圈图最内一圈画测序深度（`--plot no` 时不用）。脚本按最终 `sample_name` 查找双端 FASTQ。
 
-FASTQ files are used only for the genome maps of `annotate` / `run`; the annotation itself does not use reads. With `--infq`, the sample's reads are mapped to the final sequence with minimap2 and the read depth is drawn as the innermost ring (not with `--plot no`). Matching is based on the final `sample_name`.
+FASTQ files are used only for the genome maps of `annotate` / `run`; the annotation itself does not use reads. With `--infq`, the sample's reads are mapped to the final sequence with bwa mem (minimap2 when installed, about 8x faster) and the read depth is drawn as the innermost ring (not with `--plot no`). Matching is based on the final `sample_name`.
 
 示例：
 
@@ -397,7 +397,7 @@ Replace `Arthropoda` and `genetic_code` with values appropriate for your dataset
 
 ### 带 FASTQ 的 run 示例 / run With Optional FASTQ
 
-reads 只用于圈图的测序深度环（minimap2）/ reads only add the read depth ring of the genome maps:
+reads 只用于圈图的测序深度环（bwa mem；装有 minimap2 时用它）/ reads only add the read depth ring of the genome maps:
 
 ```bash
 python3 batch_mitoz.py run \
@@ -614,7 +614,7 @@ Outputs and matching:
 | `--intron_fix` | `run`, `annotate` | 内含子（MFannot 方法）：`auto`（默认，找到 exonerate 即运行）/ `yes` / `no` | Introns (MFannot method): `auto` (default) / `yes` / `no` |
 | `--curate`, `--sbt` | `run`, `annotate` | 端点校正 + NCBI 命名 + 提交文件（默认 `yes`）；`--sbt` 为 NCBI 提交者模板 | Curation + NCBI names + submission files (default `yes`); `--sbt` submitter template |
 | `--plot` | `run`, `annotate` | 每条记录的基因组圈图 `plots/<记录>.png`、`.pdf`（`mito_plot.py`）：`yes`（默认，每条约 1 秒）/ `no` | Circular genome map per record (`plots/`): `yes` (default) / `no` |
-| `--infq`, `--fq_position`, `--suffix_fq` | `run`, `annotate` | 可选双端 FASTQ，只用于圈图的测序深度环（minimap2）；`--suffix_fq` 必须有两个逗号分隔后缀 | Optional paired FASTQ, only for the read depth ring of the genome maps (minimap2); suffix list must contain two comma-separated values |
+| `--infq`, `--fq_position`, `--suffix_fq` | `run`, `annotate` | 可选双端 FASTQ，只用于圈图的测序深度环（bwa mem，装有 minimap2 时用它）；`--suffix_fq` 必须有两个逗号分隔后缀 | Optional paired FASTQ, only for the read depth ring of the genome maps (bwa mem, or minimap2 when installed); suffix list must contain two comma-separated values |
 | `--scheduler_backend` | `run`, `annotate` | `auto` / `threads` / `snakemake`，默认 `auto` | Scheduler backend, default `auto` |
 | `--snakemake_bin`, `--smk_cores`, `--smk_mem_mb`, `--smk_latency_wait`, `--smk_extra` | `run`, `annotate` | Snakemake 后端参数；数值项必须为正整数 | Snakemake backend options; numeric values must be positive integers |
 | `--if_reannotation_2` | `run` | 第二轮注释：`auto`（默认；第一轮用灵敏 tRNA 模式，平移后检查——原序列两端 50 nt 内有**看起来被截断**的基因（CDS 长度非 3 的倍数且无 T/TA 终止尾、靠序列端的一侧缺起始/终止密码子，按所用遗传密码判断；tRNA 不在 55–95 nt；s-rRNA < 600 nt、l-rRNA < 900 nt）、缺标准基因（COX1-3、CYTB、ND1-6、ND4L、两个 rRNA；ATP6/ATP8 在整个门中可能缺失，不算）、平移前后基因序列不一致、基因跨新起点——只重注未通过的；决定写 `reannotation_decision.tsv`；6 条 A/B 结果完全一致）/ `yes`（每条都重注）/ `no` | Phase-2 re-annotation: `auto` (default: only records failing the post-shift check: truncated-looking genes at the ends of the round-1 sequence, missing standard genes (not ATP6/ATP8), changed gene sequences, genes across the new origin; decisions in `reannotation_decision.tsv`) / `yes` (every record) / `no` |

@@ -72,6 +72,12 @@ references:
     year: 2007
     doi: 10.1109/MCSE.2007.55
   - type: article
+    title: "Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM"
+    authors: [{family-names: Li, given-names: Heng}]
+    journal: arXiv
+    year: 2013
+    doi: 10.48550/arXiv.1303.3997
+  - type: article
     title: "Minimap2: pairwise alignment for nucleotide sequences"
     authors: [{family-names: Li, given-names: Heng}]
     journal: Bioinformatics

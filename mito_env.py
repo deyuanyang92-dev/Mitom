@@ -46,7 +46,9 @@ TOOLS = {
     "tRNAscan-SE": ("optional extra tRNA method (mito_trna.py)", "mitotools"),
     "blastn":      ("rDNA 18S-28S annotation (mito_nuc.py, mitom nuc)", "mitotools"),
     "tblastn":     ("histone annotation (mito_nuc.py, mitom nuc)", "mitotools"),
-    "minimap2":    ("optional: read depth ring of the genome maps (mito_plot.py, --infq)", "mitotools"),
+    "bwa":         ("optional: read depth ring of the genome maps (mito_plot.py, --infq)", "mitotools"),
+    "minimap2":    ("optional: used instead of bwa for the depth ring when found (about 8x faster; on Linux "
+                    "mamba install -n mitotools -c bioconda minimap2 adds 0.5 GB)", "mitotools"),
 }
 REQUIRED = ("blastx", "exonerate", "cmsearch", "nhmmer", "java", "blastp", "table2asn")   # the native core (default)
 
