@@ -335,3 +335,34 @@ def test_parse_mitfi_keeps_trnas_overlapping_as_mitos2_allows():
         ">X|5|8233|8305|1|1|71|35.7|1.3E-5|0.0|37|29|UAA|L2|trnL2.cm|1|1|l", "SEQ", "STRUCT",
     ])
     assert [f.name for f in mc.parse_mitfi(text, LOG)] == ["trnL2", "trnP"]
+
+
+def test_rrna_method_cm_uses_only_the_mitos2_covariance_models(tmp_path, monkeypatch):
+    """--rrna_method cm: MITOS2's rrnS / rrnL covariance models only (no nhmmer); hmm (default): the per-phylum HMM
+    first. Same accuracy on 450 leave-out records (2026-10-28); hmm is faster."""
+    calls = []
+    monkeypatch.setattr(mc, "rrna_hmm", lambda lib, phylum, model: tmp_path / f"{model}.hmm")
+    monkeypatch.setattr(mc.mito_rrna_hmm, "nhmmer", lambda h, fa: calls.append(("nhmmer", h.name)) or [])
+    monkeypatch.setattr(mc.mito_rrna_hmm, "best_spans", lambda hits, n: (None, None))
+    monkeypatch.setattr(mc.mito_rrna_hmm, "model_len", lambda h: 900)
+    monkeypatch.setattr(mc, "cmsearch", lambda cm, model, fa, out, sensitive, log, rrna=False, z=None:
+                        calls.append(("cmsearch", model.name)) or out)
+    monkeypatch.setattr(mc, "tbl_hits", lambda tbl: [])
+    monkeypatch.setattr(mc, "cm_len", lambda cm: 900)
+    tools = {"cmsearch": "cmsearch"}
+    mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, tools, tmp_path, LOG, "Annelida", None, None, "cm")
+    assert calls == [("cmsearch", "rrnS.cm"), ("cmsearch", "rrnL.cm")]
+    calls.clear()
+    mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, tools, tmp_path, LOG, "Annelida", None, None)
+    assert calls[0] == ("nhmmer", "rrnS.hmm") and ("nhmmer", "rrnL.hmm") in calls
+
+
+def test_pipeline_passes_rrna_method_to_the_core(tmp_path):
+    import argparse
+    import batch_mitoz as bm
+    a = argparse.Namespace(genetic_code=5, threads=2, mitos_refdir=None, mitos_bin=None, phylum=None, rrna_hmm_lib=None,
+                           rrna_method="cm")
+    cmd = bm.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", a)
+    assert cmd[cmd.index("--rrna_method") + 1] == "cm"
+    cmd = bm.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", {"genetic_code": 5, "threads": 2, "rrna_method": "hmm"})
+    assert cmd[cmd.index("--rrna_method") + 1] == "hmm"

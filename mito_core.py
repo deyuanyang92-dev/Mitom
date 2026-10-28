@@ -602,10 +602,12 @@ def rrna_hmm(lib: Path, phylum: Optional[str], model: str) -> Optional[Path]:
 
 
 def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, phylum: Optional[str] = None,
-                   rrna_lib: Optional[Path] = None, n: Optional[int] = None) -> List[Feature]:
-    """12S / 16S: the per-phylum profile HMM (nhmmer, ~0.1 GB, seconds) when the library has the record's phylum,
-    else the MITOS2 covariance model (cmsearch, 0.4-0.6 GB, 10 s). On the 24-record benchmark both find the same
-    genes (leave-out library); R1 of mito_curate.py then fits the ends to the flanking genes. Hits are joined by
+                   rrna_lib: Optional[Path] = None, n: Optional[int] = None, method: str = "hmm") -> List[Feature]:
+    """12S / 16S: method hmm (default) = the per-phylum profile HMM (nhmmer, ~0.1 GB, seconds) when the library has
+    the record's phylum, else the MITOS2 covariance model (cmsearch, 0.4-0.6 GB, 10 s); method cm = the MITOS2
+    covariance model only. Both give the same accuracy (2026-10-28, full pipeline on 300 + 150 leave-out records:
+    found 98.5 / 98.5 % and 99.3 / 99.3 %, both ends exact 47.4 / 47.6 % and 32.3 / 32.3 %); R1 of mito_curate.py
+    then fits the ends to the flanking genes. Hits are joined by
     mito_rrna_hmm's rules (n = record length of a circular record searched with ORIGIN_EXT nt appended); a span over
     less than MIN_COVER of the model is not taken (MitoM's rRNA HMM step looks again). A second copy (best_spans'
     runner-up over the same model columns elsewhere) scoring >= COPY_FRAC of the gene is added too: duplicated rRNAs,
@@ -614,7 +616,7 @@ def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, p
     feats = []
     lib = rrna_lib or mito_rrna_hmm.LIB
     for model in ("rrnS", "rrnL"):
-        hmm = rrna_hmm(lib, phylum, model)
+        hmm = rrna_hmm(lib, phylum, model) if method == "hmm" else None
         cm = refdir / "ncRNA" / f"{model}.cm"
         span, copy, how = None, None, ""
         if hmm is not None:
@@ -948,7 +950,8 @@ def annotate(args) -> int:
             gfa.write_text(f">{rid}\n{searched}\n")
             feats = annotate_pcgs(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
             feats += annotate_rrnas(gfa, refdir, tools, tmp, log, args.phylum,
-                                    Path(args.rrna_lib) if args.rrna_lib else None, n if topology == "circular" else None)
+                                    Path(args.rrna_lib) if args.rrna_lib else None, n if topology == "circular" else None,
+                                    args.rrna_method)
             if not args.no_trna and use_ml:
                 trnas = annotate_trnas_ml(genome, n, code, args.threads, tools, lineage, topology == "circular", log)
                 mitfi = annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum) \
@@ -1008,6 +1011,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                    "models; default Metazoa;<--phylum>")
     a.add_argument("--phylum", default=None, help="phylum of the record: selects the per-phylum rRNA profile HMM")
     a.add_argument("--rrna_lib", default=None, help="rRNA profile HMM library (default models/rrna_hmm)")
+    a.add_argument("--rrna_method", choices=["hmm", "cm"], default="hmm",
+                   help="12S / 16S search: hmm (default) = MitoM's per-phylum profile HMMs (faster), MITOS2's covariance "
+                        "models where no model or hit; cm = MITOS2's covariance models only (same accuracy)")
     a.add_argument("--keep_tmp", action="store_true", help="keep blastx / cmsearch / MiTFi files in <out>/core_tmp")
     a.add_argument("--exonerate_model", default=EXONERATE_MODEL, help="exonerate model (protein2dna, protein2dna:bestfit)")
     a.add_argument("--blastx"), a.add_argument("--exonerate"), a.add_argument("--cmsearch"), a.add_argument("--java")

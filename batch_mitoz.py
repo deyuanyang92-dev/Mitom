@@ -2401,6 +2401,8 @@ def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args, lin
         cmd += ["--phylum", str(g("phylum"))]
     if g("rrna_hmm_lib"):
         cmd += ["--rrna_lib", str(g("rrna_hmm_lib"))]
+    if g("rrna_method"):
+        cmd += ["--rrna_method", str(g("rrna_method"))]
     if lineage:
         cmd += ["--lineage", lineage]
     return cmd
@@ -2637,6 +2639,8 @@ def main():
             cmd += ["--phylum", str(args["phylum"])]
         if args.get("rrna_hmm_lib"):
             cmd += ["--rrna_lib", str(args["rrna_hmm_lib"])]
+        if args.get("rrna_method"):
+            cmd += ["--rrna_method", str(args["rrna_method"])]
         if task.get("lineage"):
             cmd += ["--lineage", str(task["lineage"])]
         fast = None
@@ -2760,6 +2764,7 @@ def run_snakemake_for_annotation_tasks(
         "core": getattr(args, "core", "native"), "mito_core": str(MITO_CORE),
         "mitos_refdir": getattr(args, "mitos_refdir", None), "mitos_bin": getattr(args, "mitos_bin", None),
         "phylum": getattr(args, "phylum", None), "rrna_hmm_lib": getattr(args, "rrna_hmm_lib", None),
+        "rrna_method": getattr(args, "rrna_method", "hmm"),
     }
     args_json.write_text(json.dumps(args_payload, indent=2, ensure_ascii=False) + "\n",
                          encoding="utf-8")
@@ -4483,6 +4488,11 @@ def build_parser() -> argparse.ArgumentParser:
                             "rRNAs are searched). auto = run when the library and nhmmer are found (default).")
         g.add_argument("--rrna_hmm_lib", default=None,
                        help="Per-phylum rRNA HMM library (mito_rrna_hmm.py build). Default: models/rrna_hmm.")
+        g.add_argument("--rrna_method", choices=["hmm", "cm"], default="hmm",
+                       help="12S/16S search of the native core: hmm (default, faster) = per-phylum profile HMMs, "
+                            "MITOS2's covariance models where no model or hit; cm = MITOS2's covariance models only. "
+                            "Same accuracy (2026-10-28, 450 leave-out records: found 98.5 / 98.5 %%, both ends exact "
+                            "47.4 / 47.6 %%); hmm takes seconds and ~0.1 GB, cm ~10 s and ~0.5 GB per gene.")
         g.add_argument("--phylum", default=None,
                        help="Phylum of all input records for --rrna_hmm (default: the phylum found by --clade auto, "
                             "or the phylum of an explicit --clade; with --clade Animal and FASTA input give it here, "
