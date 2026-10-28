@@ -85,6 +85,7 @@ TOPK = 3            # histone proteins tried with exonerate per locus
 INTRON_PEN = 0.9
 MIN_PROT_COVER = 0.3    # histone model must cover this fraction of the protein unless it reaches a contig end
 SEED_COV = 0.1      # consensus seed: fragments with >= this fraction of the best fragment's contig coverage
+END_TOL = 20        # consensus: a copy variant this close (nt) to a contig end does not keep it from joining the next
 PAD = 20000         # flank around prefilter hits taken from long contigs
 STOPS = ("TAA", "TAG", "TGA")
 BAD_HISTONE = re.compile(r"factor|transferase|acetyl|chaperone|binding|kinase|demethylase|ligase|DOT1|lysine|"
@@ -612,21 +613,31 @@ def _rescue_58s(loci: Dict[str, List[dict]], regions: Path, lib: Library, work: 
     if not spacers:
         return
     seqs = SeqIO.index(str(regions), "fasta")
-    fa = work / "rdna_58s.fa"
-    with open(fa, "w") as o:
-        for k, (q, a, b) in spacers.items():
-            o.write(f">{k}\n{seqs[q].seq[a - 1:b]}\n")
+    # one single-threaded blastn per chunk of the stretches, `threads` at a time: one blastn over thousands of
+    # stretches kept few CPUs busy (41 of 57 min on a 475 Mb SPAdes assembly)
+    keys = list(spacers)
+    n = max(1, min(threads, len(keys)))
+    for i in range(n):
+        with open(work / f"rdna_58s{i}.fa", "w") as o:
+            for k in keys[i::n]:
+                q, a, b = spacers[k]
+                o.write(f">{k}\n{seqs[q].seq[a - 1:b]}\n")
+
+    def blast(i: int) -> str:
+        return run([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(work / f"rdna_58s{i}.fa"),
+                    "-db", lib.rdna_db, "-evalue", "1e-5", "-dust", "no", "-num_threads", "1",
+                    "-max_target_seqs", "500",
+                    "-outfmt", "6 qseqid sseqid qstart qend sstart send bitscore qseq sseq"])
     hits: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
-    for line in run([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(fa), "-db", lib.rdna_db,
-                     "-evalue", "1e-5", "-dust", "no", "-num_threads", str(max(1, threads)),
-                     "-max_target_seqs", "500",
-                     "-outfmt", "6 qseqid sseqid qstart qend sstart send bitscore qseq sseq"]).splitlines():
-        k, s, qs, qe, ss, se, bs, qa, sa = line.split("\t")
-        q = spacers[k][0]
-        if leave_out and leave_out.get(_contig(q)) == lib.org[s][1] or _contig(q) == s:
-            continue
-        hits[k][s].append((int(qs), int(qe), int(ss), int(se), float(bs), qa, sa))
-    for k, h in hits.items():
+    with ThreadPoolExecutor(n) as pool:
+        for line in "".join(pool.map(blast, range(n))).splitlines():
+            k, s, qs, qe, ss, se, bs, qa, sa = line.split("\t")
+            q = spacers[k][0]
+            if leave_out and leave_out.get(_contig(q)) == lib.org[s][1] or _contig(q) == s:
+                continue
+            hits[k][s].append((int(qs), int(qe), int(ss), int(se), float(bs), qa, sa))
+    for k in (k for k in keys if k in hits):
+        h = hits[k]
         q, a, b = spacers[k]
         i = int(k.split("|")[1])
         for x in rdna_loci(h, lib, b - a + 1, min_overlap=40, min_bits=50):
@@ -1181,12 +1192,13 @@ def _offset(region_id: str) -> int:
     return int(m.group(1)) - 1 if m else 0
 
 
-def read_input(path: Path, work: Path) -> Tuple[Path, Dict[str, str], int, int]:
+def read_input(path: Path, work: Path) -> Tuple[Path, Dict[str, str], int, int, set]:
     """FASTA or GenBank -> FASTA with unique BLAST-safe ids; returns it, organism by id (GenBank input),
-    number of sequences and of nucleotides. Records are read back on demand (SeqIO.index), so an assembly of
+    number of sequences and of nucleotides, and the ids of circular sequences (GetOrganelle paths named
+    '...(circular)', GenBank topology circular). Records are read back on demand (SeqIO.index), so an assembly of
     millions of contigs is never held in memory."""
     fmt = "genbank" if path.suffix.lower() in (".gb", ".gbk", ".gbf", ".genbank") else "fasta"
-    ids, org, nt = set(), {}, 0
+    ids, org, nt, circ = set(), {}, 0, set()
     fa = work / "input.fa"
     with open(fa, "w") as o:
         for r in SeqIO.parse(str(path), fmt):
@@ -1202,9 +1214,74 @@ def read_input(path: Path, work: Path) -> Tuple[Path, Dict[str, str], int, int]:
             nt += len(r.seq)
             if "organism" in r.annotations:
                 org[rid] = r.annotations["organism"]
+            if r.annotations.get("topology") == "circular" or r.id.endswith("(circular)"):
+                circ.add(rid)
             desc = r.description[len(r.id):].strip() if r.description.startswith(r.id) else r.description
             o.write(f">{rid} {desc}\n{r.seq}\n" if desc else f">{rid}\n{r.seq}\n")
-    return fa, org, len(ids), nt
+    return fa, org, len(ids), nt, circ
+
+
+def _cut(n: int, spans: List[Tuple[int, int]]) -> Optional[int]:
+    """0-based new start of a circular sequence of n nt: the middle of the longest stretch no feature covers.
+    spans: 1-based feature ends, positions taken modulo n (features of the sequence repeated); None without
+    features or without a free stretch."""
+    cov = bytearray(n)
+    for a, b in spans:
+        if b - a + 1 >= n:
+            return None
+        for k in range(a - 1, b):
+            cov[k % n] = 1
+    if not spans or all(cov):
+        return None
+    s0, run, best = cov.index(1), 0, (0, 0)     # best: (length, start) of the longest free run
+    for i in range(1, n + 1):
+        k = (s0 + i) % n
+        run = 0 if cov[k] else run + 1
+        if run > best[0]:
+            best = (run, (k - run + 1) % n)
+    return (best[1] + best[0] // 2) % n
+
+
+def rotate_circular(fa: Path, circ: set, lib: "Library", genes: List[str], work: Path, threads: int,
+                    leave_out: Dict[str, str]) -> None:
+    """A circular sequence (a GetOrganelle rDNA unit) starts anywhere, also inside a gene, which then came out cut
+    in two partial pieces. Each is searched three times over (no gene cut by its ends) and fa rewritten with it
+    turned to start in the middle of its longest stretch without genes (the IGS of an rDNA unit)."""
+    d = work / "circular"
+    d.mkdir()
+    seqs = {r.id: r.seq for r in SeqIO.parse(str(fa), "fasta") if r.id in circ}
+    logging.info(f"[NUC] {len(seqs)} circular sequence(s): genes searched first to start them between genes")
+    with open(d / "x3.fa", "w") as o:
+        for k, s in seqs.items():
+            o.write(f">{k}\n{s * 3}\n")
+    spans: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
+    if "rdna" in genes:
+        loci = annotate_rdna(d / "x3.fa", lib, d, threads, leave_out, {k: 3 * len(s) for k, s in seqs.items()}, False)
+        for q, ls in loci.items():
+            spans[q] += [(f["lo"], f["hi"]) for L in ls for f in L["feats"].values()]
+    if "histone" in genes:
+        hist = annotate_histones(d / "x3.fa", lib, d, threads, leave_out, {k: s * 3 for k, s in seqs.items()})
+        for q, ms in hist.items():
+            spans[q] += [(m["exons"][0][0], m["exons"][-1][1]) for m in ms]
+    cut = {}
+    for k, s in seqs.items():
+        c = _cut(len(s), spans[k])
+        if c is None and spans[k]:
+            logging.warning(f"[NUC] {k}: circular, genes all around it: not turned")
+        elif c:
+            cut[k] = c
+            logging.info(f"[NUC] {k}: circular, turned to start at nt {c + 1}, between genes")
+    if not cut:
+        return
+    tmp = work / "input_turned.fa"
+    with open(tmp, "w") as o:
+        for r in SeqIO.parse(str(fa), "fasta"):
+            if r.id in cut:
+                c = cut[r.id]
+                r = SeqRecord(r.seq[c:] + r.seq[:c], id=r.id,
+                              description=f"{r.description} (circular, starts at nt {c + 1} of the input)")
+            SeqIO.write(r, o, "fasta")
+    tmp.replace(fa)
 
 
 def write_regions(windows: Dict[str, List[Tuple[int, int]]], recs, fa: Path) -> Dict[str, Seq]:
@@ -1536,9 +1613,12 @@ def _pileup(frags: List[str], wt: List[float], backbone: str, work: Path) -> Tup
 
 def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path) -> str:
     """backbone from fragments of one genome: contained fragments are removed and dovetailing ones merged
-    (blastn, >= 98 % identity, >= 40 nt overlap) until nothing changes; several pieces left are ordered on the
-    reference gene; neighbours sharing an exact end overlap of >= 15 nt are joined on it, others with lowercase n
-    for the reference distance between them (a piece placed over a heavier one is dropped). Without a reference only the heaviest piece is kept."""
+    (blastn, >= 98 % identity, >= 40 nt overlap, a copy variant within END_TOL nt of the ends allowed) until nothing
+    changes; a piece end is joined to the best-covered piece that continues it, and only when that piece is best
+    continued by it (where copy variants fork, the better-covered branch is joined); several pieces left are
+    ordered on the reference gene; neighbours sharing an exact end overlap of >= 15 nt are joined on it, others
+    with lowercase n for the reference distance between them (a piece placed over a heavier one is dropped).
+    Without a reference only the heaviest piece is kept."""
     pieces = sorted(zip(frags, wt), key=lambda x: -x[1])
     changed = True
     while changed and len(pieces) > 1:
@@ -1549,18 +1629,33 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
         out = run([tool("blastn"), "-task", "blastn", "-query", str(work / "pc.fa"), "-subject", str(work / "pc.fa"),
                    "-strand", "plus", "-dust", "no", "-perc_identity", "98", "-evalue", "1e-10",
                    "-outfmt", "6 qseqid sseqid qstart qend sstart send length"])
-        # every containment / dovetail between pieces not yet touched in this round is applied (one pair per
+        hsps = [h for h in (tuple(map(int, line.split("\t"))) for line in out.splitlines())
+                if h[0] != h[1] and h[6] >= 40]
+
+        def inside(h) -> bool:          # q inside t (a variant at q's ends allowed where t has sequence opposite it)
+            q, t, qs, qe, ss, se = h[:6]
+            lq, lt = len(pieces[q][0]), len(pieces[t][0])
+            return lq <= lt and qs <= END_TOL + 1 and qe >= lq - END_TOL and ss >= qs and lt - se >= lq - qe
+
+        def dovetail(h) -> bool:        # q's end overlaps t's start
+            q, t, _, qe, ss, se = h[:6]
+            return not inside(h) and qe >= len(pieces[q][0]) - END_TOL and ss <= END_TOL + 1 and \
+                se < len(pieces[t][0]) - 2
+        nxt: Dict[int, int] = {}        # best-covered (lowest index) piece continuing each end
+        prv: Dict[int, int] = {}
+        for h in filter(dovetail, hsps):
+            nxt[h[0]], prv[h[1]] = min(nxt.get(h[0], h[1]), h[1]), min(prv.get(h[1], h[0]), h[0])
+        # every containment / join between pieces not yet touched in this round is applied (one pair per
         # round needed a blastn per fragment: hours for a batch of hundreds of GenBank records)
         used, gone = set(), set()
-        for line in out.splitlines():
-            q, t, qs, qe, ss, se, ln = map(int, line.split("\t"))
-            if q == t or ln < 40 or q in used or t in used:
+        for h in hsps:
+            q, t, qs, qe, ss, se, ln = h
+            if q in used or t in used:
                 continue
-            lq, lt = len(pieces[q][0]), len(pieces[t][0])
-            if qs <= 3 and qe >= lq - 2 and lq <= lt:                  # q inside t
+            if inside(h):
                 pieces[t] = (pieces[t][0], pieces[t][1] + pieces[q][1])
                 gone.add(q)
-            elif qe >= lq - 2 and ss <= 3 and se < lt - 2:               # q's end overlaps t's start
+            elif dovetail(h) and nxt[q] == t and prv[t] == q:
                 pieces[q] = (pieces[q][0][:qe] + pieces[t][0][se:], pieces[q][1] + pieces[t][1])
                 gone.add(t)
             else:
@@ -1588,6 +1683,8 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
         a, b, _ = place[q]
         if all(min(b, place[k][1]) - max(a, place[k][0]) < 50 for k in kept):
             kept.append(q)
+    if not kept:                # pieces too short for blastn to place
+        return pieces[0][0]
     kept.sort(key=lambda q: place[q][0])
     seq = pieces[kept[0]][0]
     for prev, q in zip(kept, kept[1:]):
@@ -1599,14 +1696,15 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
 
 
 def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: float) -> List[dict]:
-    """One sequence per gene from all contigs. rDNA genes / spacers: the fragments with >= SEED_COV of the best
-    contig coverage (contig cov_ of SPAdes names, else 1 = all fragments) are joined into a backbone by their
-    overlaps and ordered on the reference gene of the best fragment (_assemble); every fragment is placed on it
-    and kept when it has >= min_ident over >= 50 nt of backbone sequence; the others (other organisms,
-    contamination) are listed as dropped. Each position takes the coverage-weighted majority of the kept
-    fragments (_pileup); stretches no kept fragment covers are N (ends stripped). Histones: the CDS of the
-    best-covered contig, complete and >= 80 % of the median reference length first (copies are paralogs; a
-    consensus would be a chimera)."""
+    """One sequence per gene from all contigs. rDNA genes / spacers: fragments are cut at scaffold gaps (runs of
+    >= 10 N); the pieces of the fragments with >= SEED_COV of the best contig coverage (contig cov_ of SPAdes names,
+    else 1 = all fragments) are joined into a backbone by their overlaps and ordered on the reference gene of the
+    best fragment (_assemble); a spacer has no reference, so its complete copies among them make the backbone when
+    there are any, ordered on the best copy. Every fragment is placed on it and kept when it has >= min_ident over
+    >= 50 nt of backbone sequence; the others (other organisms, another rDNA type, contamination) are listed as
+    dropped. Each position takes the coverage-weighted majority of the kept fragments (_pileup); stretches no kept
+    fragment covers are N (ends stripped). Histones: the CDS of the best-covered contig, complete and >= 80 % of the
+    median reference length first (copies are paralogs; a consensus would be a chimera)."""
     out = []
     for g in UNIT:
         frags = [r for r in rows if r["gene"] == g]
@@ -1619,13 +1717,27 @@ def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: flo
         if len(frags) == 1:          # one copy (a GenBank record, a PCR product): the copy itself, no alignment
             ident, keep, cons = {0: (1.0, len(seqs[0]))}, [0], seqs[0]
         else:
+            # scaffold gaps are not sequence: SPAdes puts N between contigs that overlap by k as well as over
+            # stretches a short contig of its own holds; the pieces between the N join like contigs
+            parts = [(i, p) for i, s in enumerate(seqs) for p in re.split("N{10,}", s) if p]
             # seed: the well-covered fragments (same genome as the best one in an assembly of mixed samples)
-            seed = [i for i in range(len(frags)) if wt[i] >= SEED_COV * wt[top]]
-            backbone = _assemble([seqs[i] for i in seed], [wt[i] for i in seed], ref, work)
-            _, idt = _pileup(seqs, wt, backbone, work)
-            ident = {i: idt.get(i, (0.0, 0)) for i in range(len(frags))}
-            keep = sorted({i for i in range(len(frags)) if ident[i][0] >= min_ident and ident[i][1] >= 50} | {top})
-            cons, _ = _pileup([seqs[i] for i in keep], [wt[i] for i in keep], backbone, work)
+            seed = {i for i in range(len(frags)) if wt[i] >= SEED_COV * wt[top]}
+            if not ref:
+                seed = {i for i in seed if frags[i]["partial_5"] == frags[i]["partial_3"] == "0"} or seed
+                # the best copy orders the pieces it was cut into at scaffold gaps
+                ref = seqs[max(seed, key=lambda i: (wt[i], len(seqs[i])))]
+            backbone = _assemble([p for i, p in parts if i in seed], [wt[i] for i, _ in parts if i in seed], ref, work)
+            _, idt = _pileup([p for _, p in parts], [wt[i] for i, _ in parts], backbone, work)
+            m, c = defaultdict(float), defaultdict(int)       # identity of each fragment over all its pieces
+            for k, (x, n) in idt.items():
+                m[parts[k][0]] += x * n
+                c[parts[k][0]] += n
+            ident = {i: (m[i] / c[i] if c[i] else 0.0, c[i]) for i in range(len(frags))}
+            # the best-covered fragment only when nothing else qualifies: it may be the other rDNA type of a
+            # mixed sample, and its votes made a chimera of the two
+            keep = [i for i in range(len(frags)) if ident[i][0] >= min_ident and ident[i][1] >= 50] or [top]
+            kept = [(i, p) for i, p in parts if i in keep]
+            cons, _ = _pileup([p for _, p in kept], [wt[i] for i, _ in kept], backbone, work)
         seq = re.sub("[a-z]", "N", cons).strip("N")
         out.append({"gene": g, "length": len(seq), "n_fragments": len(keep), "n_dropped": len(frags) - len(keep),
                     "internal_N": seq.count("N"),
@@ -1674,7 +1786,7 @@ def write_consensus(out: Path, cons: List[dict]) -> None:
 
 
 def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int,
-             leave_out: Optional[Path] = None, consensus_identity: float = 0.97,
+             leave_out: Optional[Path] = None, consensus_identity: float = 0.99,
              organism: Optional[str] = None, src_table: Optional[Path] = None, refine: bool = True) -> List[dict]:
     out.mkdir(parents=True, exist_ok=True)
     work = out / "tmp"
@@ -1688,7 +1800,9 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
                 k, v = line.rstrip("\n").split("\t")[:2]
                 lo[k] = v
     lib = Library(lib_dir, work)
-    fa, org, n_seq, n_nt = read_input(inp, work)
+    fa, org, n_seq, n_nt, circ = read_input(inp, work)
+    if circ:
+        rotate_circular(fa, circ, lib, genes, work, threads, lo)
     recs = SeqIO.index(str(fa), "fasta")
     logging.info(f"[NUC] {n_seq} sequences, {n_nt:,} nt")
     # the prefilter (one reference per genus) only pays off on large assemblies; smaller inputs are searched whole
@@ -1768,8 +1882,8 @@ def main(argv=None) -> int:
     a.add_argument("--lib", type=Path, default=LIB, help="reference library (mitom nuc build)")
     a.add_argument("--genes", default="rdna,histone", help="rdna, histone or both (default)")
     a.add_argument("--threads", type=int, default=8)
-    a.add_argument("--consensus_identity", type=float, default=0.97,
-                   help="fragments below this identity to a gene's consensus are left out of it (default 0.97; "
+    a.add_argument("--consensus_identity", type=float, default=0.99,
+                   help="fragments below this identity to a gene's consensus are left out of it (default 0.99; "
                         "0 = no consensus)")
     a.add_argument("--no_cm", action="store_true",
                    help="rRNA ends from the reference projection only (default: placed with the Rfam models)")

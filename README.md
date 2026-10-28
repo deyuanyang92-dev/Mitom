@@ -908,13 +908,16 @@ python3 -m pytest -q tests          # Metridium / Nematostella / Platynereis，�
 
 ## 核基因标记 / Nuclear markers: rDNA and histones (mito_nuc.py)
 
-`mitom nuc annotate` 在 contig（基因组浅测序 / SPAdes 组装、PCR 片段、GenBank 记录均可）中注释核 rDNA
+`mitom nuc annotate` 在 contig（基因组浅测序 / SPAdes 组装、GetOrganelle 组装的 rDNA 单元、PCR 片段、GenBank 记录均可）中注释核 rDNA
 （18S、ITS1、5.8S、ITS2、28S）和组蛋白（H1、H2A、H2B、H3、H4，核遗传密码 1），思路同 MitoFinder：用 NCBI 完整注释作参考，
 把参考的基因边界通过比对逐列投影到 contig 上。
+环状序列（GetOrganelle 结果中名字以 `(circular)` 结尾的路径、GenBank 中 topology 为 circular 的记录）起点任意，可能落在基因中间：
+先转到最长的无基因区段（rDNA 单元的 IGS）中点开始再注释，`nuc_annotation.gb` 的定义行注明新起点在原序列中的位置。
 
 ```bash
 mitom nuc annotate -i scaffolds.fasta -o nuc_out --threads 32            # 默认 --genes rdna,histone
 mitom nuc annotate -i my_seqs.gb -o nuc_out --genes rdna
+mitom nuc annotate -i get_org_out/anonym.K127.complete.graph1.1.path_sequence.fasta -o nuc_out --genes rdna --organism "Genus species"
 # 参考库（随附 models/nuc/，2026-10-23 NCBI）重建或加入自己的注释（如 Geneious 导出的 GenBank）：
 mitom nuc fetch -o nuc_refs
 mitom nuc build --gb nuc_refs/rdna.gb nuc_refs/histone.gb my_refs.gb -o my_lib
@@ -927,7 +930,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out --lib my_lib
 | `nuc_annotation.gb` | 有特征的 contig 的 GenBank（rRNA / misc_RNA / CDS，不完整端为 `<` `>`，CDS 带 translation、transl_table 1） |
 | `submission/nuc.fsa`、`nuc.tbl`、`nuc.sqn` | NCBI 提交文件：定义行按 NCBI 规范自动生成（如 "... 18S ribosomal RNA gene, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, and internal transcribed spacer 2, complete sequence; and 28S ribosomal RNA gene, partial sequence"），来源信息取自输入 GenBank（voucher、isolate、geo_loc_name、collection_date 等）或 `--organism` / `--src`（NCBI source table TSV）；内部说明不写入；rRNA 在负链的序列翻成正向；≥10 N 在 .sqn 中为缺口（100 N = 长度未知）；内部终止的组蛋白写成 gene /pseudo。装有 table2asn 时自动 `-V vb -Z` 校验，结果在 `validation.txt`、`nuc.val`、`nuc.dr`。提交前需加提交者模板（`table2asn -t template.sbt`），NCBI 要求 collection_date 与 geo_loc_name |
 | `genes/<基因>.fasta` | 每个拷贝的序列（组蛋白另有 `.faa`） |
-| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列（GenBank 输入含多个物种时每个物种一条，`sample` 列为物种名）：多拷贝 rDNA 在组装中散成许多 contig 时，高覆盖片段按重叠拼接、按参考排序，再按覆盖度加权逐位投票；与共识一致度 < 97 %（`--consensus_identity`）的片段（其他物种、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，取覆盖度最高的完整 CDS |
+| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列（GenBank 输入含多个物种时每个物种一条，`sample` 列为物种名）：多拷贝 rDNA 在组装中散成许多 contig 时，片段先在 scaffold 缺口（≥10 N）处切开，高覆盖片段按重叠拼接（拷贝变异分叉处接覆盖度高的一支）、按参考排序（ITS 没有参考，用样本自己的完整拷贝），再按覆盖度加权逐位投票；与共识一致度 < 99 %（`--consensus_identity`）的片段（其他物种、另一种 rDNA、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，取覆盖度最高的完整 CDS |
 
 大组装先用每属一个 rDNA 单元、每门每种组蛋白一个蛋白做快速预筛，只把命中的区域（±20 kb）送入精细注释：
 SRR16188826 SPAdes scaffolds（148 万条、7.2 亿 nt）32 线程 2 分 18 秒。

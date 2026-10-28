@@ -232,6 +232,68 @@ def test_assemble_joins_exact_kmer_overlap(tmp_path, lib):
     assert out == gene
 
 
+@needs_tools
+def test_assemble_joins_the_better_covered_branch(tmp_path, lib):
+    """SRR27947587: copy variants split the 28S into contigs that overlap by k, with two branches over a variable
+    stretch; the weaker branch was joined to one side, the better one to the other, and the gene stayed in two
+    pieces (1097 nt consensus of a 3693 nt 28S)"""
+    gene, k = lib["base"]["28S"], 77
+    branch = gene[1500 - k:1520 + k]
+    other = gene[1500 - k:1500] + rand(20) + gene[1520:1520 + k]
+    out = nuc._assemble([gene[:1500], gene[1520:], branch, other], [100.0, 90.0, 60.0, 30.0], gene.lower(), tmp_path)
+    assert out == gene
+
+
+@needs_tools
+def test_consensus_across_scaffold_gaps(tmp_path, lib):
+    """SRR32909333 / SRR27947580: a SPAdes scaffold joins its contigs with runs of N, once over their k-mer overlap
+    (the 77 nt then stand on both sides of the N), once over 100 nt that a short contig holds; the N were taken
+    for sequence and the 28S consensus had 1653 N or lost 1444 nt"""
+    gene, k = mutate(lib["base"]["28S"], 0.04), 77
+    a, b = 1200, 2400
+    recs = {"NODE_1_length_3577_cov_500.0": gene[:a] + "N" * 100 + gene[a - k:b] + "N" * 100 + gene[b + 100:],
+            "NODE_2_length_254_cov_300.0": gene[b - k:b + 100 + k]}
+    rows = [{"contig": c, "gene": "28S", "exons": f"1-{len(s)}", "strand": "+", "contig_cov": nuc._cov(c),
+             "length": str(len(s)), "best_ref": "REF0", "partial_5": "1" if i else "0", "partial_3": "1" if i else "0"}
+            for i, (c, s) in enumerate(recs.items())]
+    recs = {c: SeqRecord(Seq(s), id=c) for c, s in recs.items()}
+    cons = nuc.consensus(rows, recs, nuc.Library(lib["dir"], tmp_path / "lib"), tmp_path, 0.99)
+    assert (cons[0]["seq"], cons[0]["n_fragments"]) == (gene, 2)
+
+
+@needs_tools
+def test_consensus_spacer_from_its_complete_copy(tmp_path, lib):
+    """SRR27947585: the best-covered contig ends 27 nt into ITS1, a less covered one holds all of it; a spacer has no
+    reference to order its pieces on and the 27 nt piece was the ITS1 consensus"""
+    parts = {g: (mutate(s, 0.04) if not g.startswith("ITS") else rand(len(s))) for g, s in lib["base"].items()}
+    u = "".join(parts[g] for g, _ in UNIT)
+    i1 = len(parts["18S"])
+    i2 = i1 + len(parts["ITS1"]) + len(parts["5.8S"])
+    SeqIO.write([SeqRecord(Seq(u[:i1 + 27]), id=f"NODE_1_length_{i1 + 27}_cov_44.0", description=""),
+                 SeqRecord(Seq(u[i1 - 100:i2 + 91]), id=f"NODE_2_length_{i2 - i1 + 191}_cov_31.0", description="")],
+                str(tmp_path / "in.fa"), "fasta")
+    nuc.annotate(tmp_path / "in.fa", tmp_path / "out", lib["dir"], ["rdna"], 2)
+    assert next(SeqIO.parse(str(tmp_path / "out" / "consensus" / "ITS1.fasta"), "fasta")).seq == parts["ITS1"]
+
+
+@needs_tools
+def test_consensus_keeps_one_of_two_rdna_types(tmp_path, lib):
+    """SRR27947581: two complete 18S 97 % alike at similar coverage (two rDNA types in one sample) and a short contig
+    of one type; the votes of both types were mixed and the 18S consensus was a chimera of them"""
+    parts = {g: (mutate(s, 0.04) if not g.startswith("ITS") else rand(len(s))) for g, s in lib["base"].items()}
+    other = dict(parts, **{"18S": "".join(c if i % 40 else "ACGT"[("ACGT".index(c) + 1) % 4]
+                                          for i, c in enumerate(parts["18S"]))})     # 2.5 % of sites differ
+    ua, ub = ("".join(p[g] for g, _ in UNIT) for p in (parts, other))
+    flank = rand(300)
+    SeqIO.write([SeqRecord(Seq(flank + ua + flank), id="NODE_1_length_6610_cov_195.0", description=""),
+                 SeqRecord(Seq(flank + ub + flank), id="NODE_2_length_6610_cov_164.0", description=""),
+                 SeqRecord(Seq(ub[200:900]), id="NODE_3_length_700_cov_84.0", description="")],
+                str(tmp_path / "in.fa"), "fasta")
+    nuc.annotate(tmp_path / "in.fa", tmp_path / "out", lib["dir"], ["rdna"], 2)
+    s18 = str(next(SeqIO.parse(str(tmp_path / "out" / "consensus" / "18S.fasta"), "fasta")).seq)
+    assert s18 in (parts["18S"], other["18S"])
+
+
 
 @needs_tools
 def test_exonerate_protein2dna_gives_an_intronless_model(tmp_path):
@@ -319,8 +381,48 @@ def test_read_input_skips_records_without_sequence(tmp_path):
     SeqIO.write([SeqRecord(Seq("ACGT" * 30), id="R2", name="R2", description="",
                            annotations={"molecule_type": "DNA"})], str(tmp_path / "r2.gb"), "genbank")
     gb.write_text(gb.read_text() + (tmp_path / "r2.gb").read_text())
-    fa, org, n, nt = nuc.read_input(gb, tmp_path)
-    assert (n, nt) == (1, 120) and [r.id for r in SeqIO.parse(str(fa), "fasta")] == ["R2"]
+    fa, org, n, nt, circ = nuc.read_input(gb, tmp_path)
+    assert (n, nt, circ) == (1, 120, set()) and [r.id for r in SeqIO.parse(str(fa), "fasta")] == ["R2"]
+
+
+def test_cut_circular_in_the_longest_stretch_without_genes():
+    assert nuc._cut(100, [(10, 30), (50, 60)]) == 84       # free 61..100 + 1..9 (49 nt): its middle
+    assert nuc._cut(100, [(90, 110)]) == 49                # a gene across the origin
+    assert nuc._cut(100, [(40, 60), (140, 160)]) == 99     # one gene seen in two turns covers the same nt
+    assert nuc._cut(100, []) is None and nuc._cut(100, [(1, 100)]) is None and nuc._cut(100, [(5, 150)]) is None
+
+
+@needs_tools
+def test_circular_input_turned_to_start_outside_the_genes(tmp_path, lib):
+    """GetOrganelle '(circular)' rDNA unit: the path starts anywhere; SRR27947576 started inside the 28S, which came
+    out 3' partial (3625 of 3694 nt) with its last 69 nt at the other end left unannotated"""
+    parts = {g: (mutate(s, 0.04) if not g.startswith("ITS") else rand(len(s))) for g, s in lib["base"].items()}
+    unit = "".join(parts[g] for g, _ in UNIT)
+    circle = unit + rand(1500)
+    seq = circle[len(unit) - 300:] + circle[:len(unit) - 300]       # starts 300 nt before the end of the 28S
+    for name, d in (("EDGE_1+(circular)", "circ"), ("scaffold_1--5+", "lin")):
+        (tmp_path / "in.fa").write_text(f">{name}\n{seq}\n")
+        nuc.annotate(tmp_path / "in.fa", tmp_path / d, lib["dir"], ["rdna"], 2)
+        rows = read_rows(tmp_path / d)
+        s28 = [r for r in rows if r["gene"] == "28S"]
+        if d == "circ":
+            assert [(r["length"], r["partial_5"], r["partial_3"]) for r in s28] == [(str(len(parts["28S"])), "0", "0")]
+            assert len(rows) == 5 and all(r["partial_5"] == r["partial_3"] == "0" for r in rows)
+            assert next(SeqIO.parse(str(tmp_path / d / "consensus" / "28S.fasta"), "fasta")).seq == parts["28S"]
+        else:                                                       # a linear sequence is never turned
+            assert all("1" in (r["partial_5"], r["partial_3"]) for r in s28)
+
+
+@needs_tools
+def test_circular_genbank_record_turned(tmp_path, lib):
+    parts = {g: (mutate(s, 0.04) if not g.startswith("ITS") else rand(len(s))) for g, s in lib["base"].items()}
+    circle = "".join(parts[g] for g, _ in UNIT) + rand(1500)
+    r = SeqRecord(Seq(circle[1000:] + circle[:1000]), id="C1", name="C1", description="rDNA unit",   # starts in the 18S
+                  annotations={"molecule_type": "DNA", "topology": "circular", "organism": "Query sp"})
+    SeqIO.write([r], str(tmp_path / "in.gb"), "genbank")
+    nuc.annotate(tmp_path / "in.gb", tmp_path / "out", lib["dir"], ["rdna"], 2)
+    s18 = [x for x in read_rows(tmp_path / "out") if x["gene"] == "18S"]
+    assert [(x["length"], x["partial_5"], x["partial_3"]) for x in s18] == [(str(len(parts["18S"])), "0", "0")]
 
 
 @needs_tools
