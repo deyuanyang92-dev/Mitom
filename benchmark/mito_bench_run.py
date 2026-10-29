@@ -23,7 +23,6 @@ import argparse
 import csv
 import json
 import os
-import re
 import signal
 import subprocess
 import sys
@@ -35,7 +34,6 @@ from typing import Dict, List, Optional
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, ExactPosition, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
@@ -43,6 +41,8 @@ PIPE = HERE.parent
 sys.path.insert(0, str(PIPE))
 import mito_env  # noqa: E402
 from mito_rescue import mitos_to_record  # noqa: E402,F401  (used by collect(); tests import it from here)
+# lift_to_ncbi is MitoM's (mito_compare.py); imported from there, names kept for the scripts and tests
+from mito_compare import LiftError, _lift_except, lift_to_ncbi  # noqa: E402,F401
 sys.path.insert(0, str(HERE))
 from mito_names import PCG, gene_name  # noqa: E402
 
@@ -59,91 +59,6 @@ REF_POOL: List[dict] = []                # --ref_pool records: {acc, organism, l
 # MitoM extended clades (mitom_pipeline.EXTRA_CLADES) for phyla MitoZ lacks; any other phylum -> all-animal database
 EXTRA_CLADE = {"Cnidaria": "Cnidaria", "Platyhelminthes": "Platyhelminthes-flatworms",
                "Chaetognatha": "Chaetognatha-arrow-worms"}
-ANCHOR = 50
-
-
-class LiftError(Exception):
-    pass
-
-
-# ── coordinates ──────────────────────────────────────────────────────────────
-def _merge(parts: List[FeatureLocation]) -> List[FeatureLocation]:
-    """Join consecutive parts that touch (an origin split undone by rotation)."""
-    out: List[FeatureLocation] = []
-    for p in parts:
-        if out and out[-1].strand == p.strand:
-            q = out[-1]
-            if p.strand == -1 and int(p.end) == int(q.start):
-                out[-1] = FeatureLocation(p.start, q.end, -1)
-                continue
-            if p.strand != -1 and int(q.end) == int(p.start):
-                out[-1] = FeatureLocation(q.start, p.end, p.strand)
-                continue
-        out.append(p)
-    return out
-
-
-def _shift(part: FeatureLocation, off: int, n: int) -> List[FeatureLocation]:
-    """Move one part by off on a circle of length n; split at the origin (biological order kept). Partial markers
-    (<start, >end) stay on their position: table2asn accepts a 5'- / 3'-partial CDS without start / stop codon."""
-    s = (int(part.start) + off) % n
-    e = s + int(part.end) - int(part.start)
-    sp = BeforePosition if isinstance(part.start, BeforePosition) else ExactPosition
-    ep = AfterPosition if isinstance(part.end, AfterPosition) else ExactPosition
-    if e <= n:
-        return [FeatureLocation(sp(s), ep(e), part.strand)]
-    a, b = FeatureLocation(sp(s), n, part.strand), FeatureLocation(0, ep(e - n), part.strand)
-    return [b, a] if part.strand == -1 else [a, b]
-
-
-def lift_to_ncbi(pred: SeqRecord, ncbi_seq: Seq) -> SeqRecord:
-    """Return pred re-expressed on ncbi_seq (same molecule, possibly rotated and/or reverse-complemented)."""
-    n = len(ncbi_seq)
-    pseq = Seq(str(pred.seq))
-    if len(pseq) != n:
-        raise LiftError(f"length {len(pseq)} != NCBI {n}")
-    ring = str(ncbi_seq).upper() * 2
-    for rc in (False, True):
-        q = str(pseq.reverse_complement() if rc else pseq).upper()
-        hits = [m.start() for m in re.finditer(f"(?={re.escape(q[:ANCHOR])})", ring[:n + ANCHOR - 1])]
-        hits = [h for h in hits if ring[h:h + n] == q]
-        if len(hits) == 1:
-            off = hits[0]
-            break
-    else:
-        raise LiftError("no unique match of the predicted sequence on the NCBI sequence")
-    out = SeqRecord(ncbi_seq, id=pred.id, name=pred.name, description=pred.description)
-    out.annotations = dict(pred.annotations)
-    for f in pred.features:
-        parts = list(f.location.parts)
-        if rc:                                           # a <start becomes a >end and vice versa
-            parts = [FeatureLocation(BeforePosition(n - int(p.end)) if isinstance(p.end, AfterPosition) else n - int(p.end),
-                                     AfterPosition(n - int(p.start)) if isinstance(p.start, BeforePosition) else n - int(p.start),
-                                     -(p.strand or 1)) for p in parts]
-        new = _merge([x for p in parts for x in _shift(p, off, n)])
-        loc = new[0] if len(new) == 1 else CompoundLocation(new)
-        q = dict(f.qualifiers)
-        if "transl_except" in q:                   # positions inside the qualifier move with the feature
-            q["transl_except"] = [_lift_except(t, rc, off, n) for t in q["transl_except"]]
-        out.features.append(SeqFeature(loc, type=f.type, qualifiers=q))
-    return out
-
-
-def _lift_except(text: str, rc: bool, off: int, n: int) -> str:
-    """'(pos:X..Y,aa:TERM)' / '(pos:complement(X),aa:TERM)' re-expressed after reverse-complement and rotation."""
-    m = re.match(r"\(pos:(complement\()?(\d+)(?:\.\.(\d+))?\)?,(.*)$", text)
-    if not m:
-        return text
-    def move(x: int) -> int:
-        i = n - x if rc else x - 1
-        return (i + off) % n + 1
-    a, b = move(int(m[2])), move(int(m[3] or m[2]))
-    lo, hi = (b, a) if rc else (a, b)              # rc reverses the order; lo > hi only when the span wraps
-    if lo <= hi:
-        pos = f"{lo}..{hi}" if lo != hi else f"{lo}"
-    else:                                          # a 2-nt stop split by the origin
-        pos = f"join({lo}{'' if lo == n else f'..{n}'},1{'' if hi == 1 else f'..{hi}'})"
-    return f"(pos:complement({pos}),{m[4]}" if bool(m[1]) != rc else f"(pos:{pos},{m[4]}"
 
 
 # ── MITOS2 output: parser shared with the pipeline (mito_rescue.mitos_to_record) ──

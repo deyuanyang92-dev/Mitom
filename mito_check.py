@@ -44,7 +44,7 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / "benchmark"))
+sys.path.insert(0, str(HERE))
 from mito_names import PCG, gene_name, trna_name  # noqa: E402
 
 GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}

@@ -19,160 +19,26 @@ import subprocess
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, List, NamedTuple
+from typing import Dict, List
 
 from Bio import SeqIO
 from Bio.Data import CodonTable
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-from mito_names import PCG, gene_name, trna_name, trna_number  # noqa: E402
+from mito_names import gene_name  # noqa: E402
+# the matching is MitoM's (mito_compare.py, `mitom compare`); imported from there, names kept for the scripts and tests
+from mito_compare import Feat, _overlap, ls_class, match, norm_features, span  # noqa: E402,F401
 
-MIN_OVERLAP = 0.5
-NEAR = 3
 OBVIOUS_NT = 30
-AMBIGUOUS_AA = {"L", "S"}              # two tRNA genes each; told apart only by anticodon
-# the two Leu / Ser genes by the codon family they read: L1 = CUN, L2 = UUR, S1 = AGN, S2 = UCN
-COMP = str.maketrans("acgtu", "tgcaa")
-
-
-def ls_class(aa: str, triplet: str, number: str, code: int) -> str:
-    """'1' / '2' for the two Leu or Ser tRNA genes, '' when unknown. The triplet from the annotation counts first,
-    read as an anticodon when its codon is Leu / Ser in `code`, else as the codon itself (NCBI records write both,
-    e.g. trnL1(cta) = codon CUA, trnL(tag) = anticodon); the gene number (trnL1, tRNA-Ser2) only when there is no
-    triplet, because submitters number the two genes differently (vertebrate records swap L1 / L2)."""
-    if aa not in AMBIGUOUS_AA:
-        return ""
-    fallback = number if number in ("1", "2") else ""
-    t = (triplet or "").lower().replace("u", "t")
-    if len(t) != 3 or not set(t) <= set("acgt"):
-        return fallback
-    table = CodonTable.unambiguous_dna_by_id[code].forward_table
-    codon = t.translate(COMP)[::-1].upper()           # anticodon -> codon
-    if table.get(codon) != aa:
-        codon = t.upper()                              # not an anticodon of this amino acid: it is the codon
-        if table.get(codon) != aa:
-            return fallback
-    if aa == "L":
-        return "1" if codon.startswith("CT") else "2"
-    return "1" if codon.startswith("AG") else "2"
 FOUND = ("exact", "le3", "gt3", "name_unverifiable")
 
 
 DEFAULT_CUTOFF = "2018-07-09"           # RefSeq release 89 (MITOS2 refseq89m), knowledge/tools/mitos2.md
 
 
-class Feat(NamedTuple):
-    kind: str          # PCG, rRNA, tRNA, intron
-    name: str          # cox1 / rrnL / amino acid letter / intron
-    strand: int
-    start: int         # 0-based; end exclusive and > n when the feature crosses the origin
-    end: int
-    anticodon: str
-    n: int = 0         # sequence length (circular arithmetic)
-
-
-def span(loc, n: int) -> tuple:
-    """(start, end) of a location; parts are in biological order, a wrap past the origin gives end > n."""
-    parts = list(loc.parts)
-    strand = loc.strand or 1
-    wrapped = any((int(b.start) < int(a.start)) if strand != -1 else (int(b.start) > int(a.start))
-                  for a, b in zip(parts, parts[1:]))
-    if not wrapped:
-        return int(loc.start), int(loc.end)
-    if strand != -1:
-        return int(parts[0].start), int(parts[-1].end) + n
-    return int(parts[-1].start), int(parts[0].end) + n
-
-
-def norm_features(rec: SeqRecord, code: int = 5) -> List[Feat]:
-    out = []
-    n = len(rec)
-    for f in rec.features:
-        strand = f.location.strand or 1
-        s, e = span(f.location, n)
-        if f.type in ("CDS", "rRNA"):
-            g = gene_name(f.qualifiers, f.type)
-            if g:
-                out.append(Feat("PCG" if g in PCG else "rRNA", g, strand, s, e, "", n))
-        elif f.type == "tRNA":
-            aa, ac = trna_name(f.qualifiers)
-            if aa:
-                out.append(Feat("tRNA", aa, strand, s, e, ls_class(aa, ac, trna_number(f.qualifiers), code), n))
-        elif f.type == "intron":
-            out.append(Feat("intron", "intron", strand, s, e, "", n))
-    return out
-
-
-def _shifts(a: Feat) -> tuple:
-    return (-a.n, 0, a.n) if a.n else (0,)
-
-
-def _overlap(a: Feat, b: Feat) -> int:
-    """Overlap on the circle (b moved by -n, 0, +n)."""
-    return max(max(0, min(a.end, b.end + k) - max(a.start, b.start + k)) for k in _shifts(a))
-
-
-def _delta(a: Feat, b: Feat) -> int:
-    return min(max(abs(b.start + k - a.start), abs(b.end + k - a.end)) for k in _shifts(a))
-
-
-def _origin_stop(t: Feat, p: Feat) -> bool:
-    """The same stop codon written two ways at the record's origin: the truth ends with T / TA at the last base (or, on
-    the minus strand, the first base) plus /transl_except, the prediction completes the stop 1-2 nt across the origin
-    (a tool that rotated the sequence sees the whole TAA). Same protein, same gene end; only the start is compared."""
-    if t.kind != "PCG" or not t.n or (t.end - t.start) % 3 == 0:
-        return False
-    if t.strand > 0:
-        return t.end == t.n and any(p.end + k - t.n in (1, 2) for k in _shifts(t))
-    return t.start == 0 and any(p.start + k in (-1, -2) for k in _shifts(t))
-
-
-def _same_name(t: Feat, p: Feat) -> str:
-    """'yes', 'no' or 'unverifiable' (tRNA of an ambiguous amino acid without anticodon on one side)."""
-    if t.name != p.name:
-        return "no"
-    if t.kind != "tRNA" or t.name not in AMBIGUOUS_AA:
-        return "yes"
-    if not t.anticodon or not p.anticodon:            # here: the Leu / Ser gene class '1' / '2' (ls_class)
-        return "unverifiable"
-    return "yes" if t.anticodon == p.anticodon else "no"
-
-
-def match(truth: List[Feat], pred: List[Feat]) -> List[dict]:
-    rows, used = [], set()
-    for t in sorted(truth, key=lambda x: (x.kind, x.start)):
-        cands = [(i, p) for i, p in enumerate(pred) if i not in used and p.kind == t.kind
-                 and _overlap(t, p) >= MIN_OVERLAP * (t.end - t.start)]
-        row: dict = {"kind": t.kind, "name": t.name, "truth": f"{t.start + 1}..{t.end}{'+' if t.strand > 0 else '-'}",
-               "pred": "", "delta": "", "class": "missed"}
-        if cands:
-            def rank(c):
-                same = _same_name(t, c[1]) != "no"
-                return (not (same and c[1].strand == t.strand), not same, c[1].strand != t.strand, -_overlap(t, c[1]))
-            i, p = min(cands, key=rank)
-            used.add(i)
-            same = _same_name(t, p)
-            delta = _delta(t, p)
-            if delta and _origin_stop(t, p):                   # only the 5' end can differ
-                k = min(_shifts(t), key=lambda k: abs(p.start + k - t.start) + abs(p.end + k - t.end))
-                delta = abs(p.start + k - t.start) if t.strand > 0 else abs(p.end + k - t.end)
-            row.update(pred=f"{p.start + 1}..{p.end}{'+' if p.strand > 0 else '-'}", delta=delta)
-            if same == "no":
-                row["class"] = "name_error"
-            elif p.strand != t.strand:
-                row["class"] = "strand_error"
-            elif same == "unverifiable":
-                row["class"] = "name_unverifiable"
-            else:
-                row["class"] = "exact" if delta == 0 else "le3" if delta <= NEAR else "gt3"
-        rows.append(row)
-    for i, p in enumerate(pred):
-        if i not in used:
-            rows.append({"kind": p.kind, "name": p.name, "truth": "",
-                         "pred": f"{p.start + 1}..{p.end}{'+' if p.strand > 0 else '-'}", "delta": "", "class": "fp"})
-    return rows
 
 
 def duplicates(pred: List[Feat]) -> List[str]:
