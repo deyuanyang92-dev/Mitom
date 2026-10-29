@@ -649,3 +649,149 @@ def test_single_copy_cov_from_spades_names():
            "NODE_4_length_500_cov_1.0"]
     assert nuc.single_copy_cov(ids) == 12.0
     assert nuc.single_copy_cov(["scaffold_1", "contig2"]) is None
+
+# ── speed: same results from the fast paths (2026-10-29) ───────────────────
+def test_fasta_index_reads_records_as_seqio(tmp_path, monkeypatch):
+    """the index of a FASTA file gives the records of SeqIO.index; blocks smaller than a record (multi-line
+    sequences) and every block edge are handled"""
+    monkeypatch.setattr(nuc.FastaIndex, "BLOCK", 7)
+    recs = [SeqRecord(Seq(rand(n)), id=f"NODE_{i}_length_{n}_cov_1.5", description="") for i, n in enumerate((1, 59, 60, 61, 250))]
+    SeqIO.write(recs, str(tmp_path / "a.fa"), "fasta")         # 60 nt per line
+    idx = nuc.FastaIndex(tmp_path / "a.fa")
+    assert idx.plain and idx.nt == 431 and list(idx.at) == [r.id for r in recs]
+    for r in recs:
+        assert (idx[r.id].seq, idx[r.id].description) == (r.seq, r.id)
+    for text in (">a desc\nACGT\n", ">a\n>b\nAC\n", ">a\nAC\n>b\n", ">a|1\nAC\n", ">a\nAC\n>a\nGG\n", ">a\nA C\n",
+                 ">a\r\nAC\r\n", ">EDGE_1+(circular)\nAC\n", "\n>a\nAC\n", ">a\nAC\n\n>b\nGG\n"):
+        (tmp_path / "b.fa").write_text(text)
+        idx = nuc.FastaIndex(tmp_path / "b.fa")
+        assert not idx.plain, text
+        if not text.startswith("\n"):
+            want = {r.id: (str(r.seq), r.description) for r in SeqIO.parse(str(tmp_path / "b.fa"), "fasta")}
+            assert {k: (str(idx[k].seq), idx[k].description) for k in want} == want, text
+
+
+def test_plain_fasta_is_used_as_it_is(tmp_path):
+    """SPAdes scaffolds need no rewriting; a FASTA file with descriptions or other ids goes through read_input"""
+    (tmp_path / "a.fa").write_text(">NODE_1_length_8_cov_2.5\nACGTAC\nGT\n>NODE_2_length_3_cov_1.0\nTTT\n")
+    fa, recs, org, n, nt, circ = nuc.open_input(tmp_path / "a.fa", tmp_path)
+    assert (fa, n, nt, circ) == (tmp_path / "a.fa", 2, 11, set()) and str(recs["NODE_1_length_8_cov_2.5"].seq) == "ACGTACGT"
+    (tmp_path / "b.fa").write_text(">c1 some text\nACGT\n>EDGE_2+(circular)\nTTT\n")
+    fa, recs, org, n, nt, circ = nuc.open_input(tmp_path / "b.fa", tmp_path)
+    assert (fa, recs, n, nt, circ) == (tmp_path / "input.fa", None, 2, 7, {"EDGE_2__circular_"})
+
+
+@needs_tools
+def test_blast_db_in_pieces_searches_like_one_database(tmp_path, monkeypatch):
+    """makeblastdb on pieces at once, joined by an alias database: the same hits and e-values as one database"""
+    monkeypatch.setattr(nuc, "DB_PIECE", 2000)          # 12 kb: 3 pieces
+    gene = rand(400)
+    contigs = [SeqRecord(Seq(rand(300) + mutate(gene, 0.03 * (i % 4)) + rand(300)), id=f"c{i}", description="")
+               for i in range(12)]
+    SeqIO.write(contigs, str(tmp_path / "in.fa"), "fasta")
+    (tmp_path / "q.fa").write_text(f">g\n{gene}\n")
+    db = nuc.blast_db(tmp_path / "in.fa", tmp_path / "pieces", 3)
+    assert db == str(tmp_path / "pieces") and (tmp_path / "pieces_2.nsq").exists()
+    nuc.run([nuc.tool("makeblastdb"), "-in", str(tmp_path / "in.fa"), "-dbtype", "nucl", "-out", str(tmp_path / "one")])
+    fmt = "6 sseqid sstart send evalue bitscore"
+    hits = [sorted(nuc.run([nuc.tool("blastn"), "-query", str(tmp_path / "q.fa"), "-db", d, "-evalue", "1e-5",
+                            "-outfmt", fmt]).splitlines()) for d in (db, str(tmp_path / "one"))]
+    assert hits[0] == hits[1] and len(hits[0]) == 12
+
+
+@needs_tools
+def test_rdna_prefilter_skips_microsatellite_contigs(tmp_path):
+    """SRR27947581: (CA)n / (CATA)n in the IGS of the reference units hit ~10k contigs, none with an rRNA gene; the
+    rDNA candidates are the contigs that hit outside low-complexity stretches"""
+    base = unit(None)
+    refs = [rdna_record(f"REF{i}", {g: (mutate(s, 0.05) if not g.startswith("ITS") else rand(len(s)))
+                                    for g, s in base.items()}, rand(200) + "CA" * 80 + rand(200), rand(300), f"Genus{i} sp")
+            for i in range(2)]
+    SeqIO.write(refs, str(tmp_path / "refs.gb"), "genbank")
+    nuc.build([tmp_path / "refs.gb"], tmp_path / "lib")
+    parts = {g: (mutate(s, 0.04) if not g.startswith("ITS") else rand(len(s))) for g, s in base.items()}
+    SeqIO.write([SeqRecord(Seq(rand(400) + "CA" * 70 + rand(400)), id="micro", description=""),
+                 SeqRecord(Seq(rand(300) + "".join(parts[g] for g, _ in UNIT) + rand(300)), id="unit", description="")],
+                str(tmp_path / "in.fa"), "fasta")
+    lib = nuc.Library(tmp_path / "lib", tmp_path / "w")
+    win, _ = nuc.prefilter(tmp_path / "in.fa", lib, ["rdna"], tmp_path / "w", 2, 2)
+    assert list(win["rdna"]) == ["unit"]
+
+
+@needs_tools
+def test_tblastn_of_distinct_proteins_gives_the_lines_of_one_run(tmp_path):
+    """each different reference protein is searched once; its lines are repeated for the references sharing it, in
+    the order one tblastn of all proteins writes them"""
+    h4 = "MSGRGKGGKGLGKGGAKRHRKVLRDNIQGITKPAIRRLARRGGVKRISGLIYEETRGVLKVFLENVIRDAVTYTEHAKRKTVTAMDVVYALKRQGRTLYGFGG"
+    recs = [histone_record(f"H{i}", p, f"Genus{i} sp", i) for i, p in enumerate((H3, h4, H3, H3[:-3] + "AAA", h4))]
+    for r, p in zip(recs, (H3, h4, H3, H3[:-3] + "AAA", h4)):
+        if p != H3:
+            r.features[0].qualifiers["product"] = ["histone H4" if p == h4 else "histone H3"]
+    recs.append(rdna_record("R0", unit(None), rand(100), rand(100), "Genus9 sp"))     # a library needs rDNA too
+    SeqIO.write(recs, str(tmp_path / "refs.gb"), "genbank")
+    nuc.build([tmp_path / "refs.gb"], tmp_path / "lib")
+    lib = nuc.Library(tmp_path / "lib", tmp_path / "w")
+    SeqIO.write([SeqRecord(Seq(backtranslate(p, 9 + i) + rand(150)), id=f"t{i}", description="")
+                 for i, p in enumerate((H3, h4, H3))], str(tmp_path / "t.fa"), "fasta")
+    db = str(tmp_path / "t")
+    nuc.run([nuc.tool("makeblastdb"), "-in", str(tmp_path / "t.fa"), "-dbtype", "nucl", "-out", db])
+    one = nuc.run([nuc.tool("tblastn"), "-query", str(lib.hist_faa), "-db", db, "-evalue", "1e-5", "-outfmt",
+                   "6 qseqid sseqid sstart send bitscore", "-max_target_seqs", "100000", "-seg", "no"]).splitlines()
+    assert nuc._tblastn(lib, db, tmp_path, 3) == one and len(one) == 8       # H3 x3 and H4 x2 on their contigs
+
+
+@needs_tools
+def test_exonerate_of_several_proteins_in_one_run(tmp_path):
+    """--bestn 1 counts per query: one run with the different proteins of a locus gives each the model of its own run"""
+    h3b = H3[:30] + "S" + H3[31:]
+    (tmp_path / "t.fa").write_text(f">t\n{rand(300)}{backtranslate(H3, 5)}{rand(300)}\n")
+    for model in ("protein2genome", "protein2dna"):
+        alone = [nuc._exonerate(str(tmp_path / "t.fa"), p, model, tmp_path) for p in (H3, h3b, "MKKLLPP")]
+        assert nuc._exonerate_all(str(tmp_path / "t.fa"), [H3, h3b, "MKKLLPP"], model, tmp_path) == alone
+        assert alone[0] and alone[2] is None
+
+
+@pytest.mark.skipif(not CM, reason="cmsearch / Rfam models not found")
+def test_cmsearch_in_pieces_gives_the_hits_of_one_run(tmp_path):
+    """windows searched in pieces at once with -Z of all of them: the hits (E-values too) of one cmsearch"""
+    g = _curated("NR_003286", "18S")
+    wins = [(f"j{i}", rand(150 + 7 * i) + g[:150 + 5 * i] if i % 2 else g[-150 - 5 * i:] + rand(150 + 7 * i))
+            for i in range(7)] + [("j7", rand(301))]
+    cm = nuc.LIB / "rfam" / "RF01960.cm"
+    for opts, top in ((["-E", "1e-5", "--toponly"], True), (["-E", "1e-3"], False)):
+        res = nuc._cmsearch(cm, wins, tmp_path, "p", 3, opts, align=top, toponly=top)
+        (tmp_path / "all.fa").write_text("".join(f">{k}\n{s}\n" for k, s in wins))
+        nuc.run([nuc.tool("cmsearch"), "--cpu", "1", "--notextw", *opts, "--tblout", str(tmp_path / "all.tbl"),
+                 str(cm), str(tmp_path / "all.fa")])
+        one = sorted(line.split()[:16] for line in open(tmp_path / "all.tbl") if not line.startswith("#"))
+        assert len(res) == 3 and sorted(x[:16] for rows, *_ in res for x in rows) == one and len(one) >= 7
+
+
+def test_best_windows_keep_a_fixed_number_of_regions():
+    """an assembly with more candidates than the cap: the best scored regions go on, the rest are skipped"""
+    win = {"a": [(1, 900), (5000, 9000)], "b": [(1, 700)], "c_cov_9.0": [(1, 800)]}
+    hits = [["a", "100", "200", "9000", "r1", "50"], ["a", "300", "400", "9000", "r1", "60"],
+            ["a", "6000", "6100", "9000", "r2", "70"], ["b", "10", "90", "700", "r1", "300"],
+            ["c_cov_9.0", "10", "90", "800", "r1", "70"]]
+    score = lambda hs: max(float(h[5]) for h in hs)     # noqa: E731
+    assert nuc._best_windows(win, hits, score, 0, "x") is win and nuc._best_windows(win, hits, score, 4, "x") is win
+    # 300 (b) > 70 (c, coverage 9 wins the tie) > 70 (a second window) > 60 (a first window)
+    assert nuc._best_windows(win, hits, score, 2, "x") == {"b": [(1, 700)], "c_cov_9.0": [(1, 800)]}
+    assert nuc._best_windows(win, hits, score, 3, "x") == {"a": [(5000, 9000)], "b": [(1, 700)], "c_cov_9.0": [(1, 800)]}
+
+
+@needs_tools
+def test_partial_h3_far_from_any_reference_is_not_reported(tmp_path, lib):
+    """SRR2006110: 3,688 'H3' were pieces of degenerate retrocopies (61 % median identity, frameshifts, stop codons);
+    a partial H3 / H4 model below MIN_H34_PARTIAL_ID % identity is not reported, a near-identical piece and a
+    complete divergent gene are (MT043459.1: a complete H3 of 50 % identity)"""
+    rr = random.Random(5)
+    far = "".join(a if i < 4 or rr.random() > 0.4 else rr.choice("ACDEFGHIKLMNPQRSTVWY") for i, a in enumerate(H3))
+    cds_far = backtranslate(far, 7)
+    SeqIO.write([SeqRecord(Seq(backtranslate(H3, 6)[150:] + rand(300)), id="near", description=""),
+                 SeqRecord(Seq(cds_far[150:] + rand(300)), id="far", description=""),
+                 SeqRecord(Seq(rand(300) + cds_far + rand(300)), id="whole", description="")],
+                str(tmp_path / "in.fa"), "fasta")
+    nuc.annotate(tmp_path / "in.fa", tmp_path / "out", lib["dir"], ["histone"], 2)
+    got = {r["contig"]: (r["partial_5"], r["partial_3"]) for r in read_rows(tmp_path / "out")}
+    assert got == {"near": ("1", "0"), "whole": ("0", "0")}

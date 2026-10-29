@@ -105,6 +105,15 @@ installed one.
   genes written as partial CDS pieces; partial core genes searched with the core's reference protein; intron ends
   refined independently by the median score over up to five homologs; introns next to an inserted mini-exon placed
   again. Against the gold standard 285 -> 296 of 309 exact on its own.
+- tRNA step: the sensitive pass for MiTFi models without a fast-pass hit runs `cmsearch --nohmm --F6 3e-4 --notrunc`
+  outside the interiors of the core's protein genes / rRNAs instead of `--max` on the whole record: NC_014885.1
+  297 -> 18 s (2 threads), 542 benchmark records 11.9 -> 1.0 h CPU; recall and ends unchanged, 14 weak calls inside
+  genes / rRNAs (none in NCBI) gone.
+- `mitom nuc annotate` on whole-genome assemblies: 6 s - 2.2 min at 8 threads on 30 SPAdes assemblies up to 1.7 Gb
+  (before up to 22 min and 16 GB): low-complexity masking in the prefilter (microsatellites in the reference spacers
+  had selected ~10,000 junk contigs), per-gene candidate regions, parallel BLAST database, indexed FASTA, one tblastn
+  per distinct histone protein, fixed work limits for assemblies; partial H3 / H4 models below 80 % identity are
+  no longer reported (degenerate H3 retrocopies: SRR2006110 3,688 -> 107 H3). The NCBI benchmark is unchanged.
 - After the intron step a circular record is rotated again so that the orientation gene's first exon starts it;
   rotation keeps partial ends (< / >; dropped before, which gave table2asn ERRORs on trans-spliced pieces).
 
