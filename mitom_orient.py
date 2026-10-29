@@ -14,7 +14,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import (feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
+from mito_common import (abbreviated_stop, feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
                          reverse_complement_record, shift_location, write_gb, write_nonempty_table)
 from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
 
@@ -156,7 +156,7 @@ def edge_gene_truncated(f: "SeqFeature", seq: "Seq", total: int, code: int = 5) 
     table = CodonTable.unambiguous_dna_by_id.get(int(code), CodonTable.unambiguous_dna_by_id[5])
     nt = str(f.extract(seq)).upper()
     rem = len(nt) % 3
-    tail = (rem == 1 and nt.endswith("T")) or (rem == 2 and nt.endswith("TA"))
+    tail = abbreviated_stop(nt)
     if rem and not tail:
         return True
     minus = loc.strand == -1

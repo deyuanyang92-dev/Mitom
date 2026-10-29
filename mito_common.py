@@ -212,11 +212,23 @@ def transl_except_term(start: int, end: int, strand: int, tail: int) -> str:
     return f"(pos:{pos},aa:TERM)"
 
 
+def abbreviated_stop(nt: str) -> bool:
+    """The CDS sequence nt ends with an incomplete stop codon, T or TA after its last whole codon (mitochondrial
+    transcripts complete it by polyadenylation)."""
+    tail = len(nt) % 3
+    return bool(tail) and nt[-tail:] in ("T", "TA")
+
+
+def ends_with_stop(nt: str, stops) -> bool:
+    """The CDS sequence nt ends with a stop codon of `stops` in frame, or with an abbreviated stop (T / TA)."""
+    return abbreviated_stop(nt) if len(nt) % 3 else nt[-3:] in stops
+
+
 def stop_qualifiers(rec, loc, code: int) -> Dict[str, List[str]]:
     """Incomplete stop (T / TA completed by polyadenylation): /transl_except and the standard note."""
     nt = str(loc.extract(rec.seq)).upper()
     tail = len(nt) % 3
-    if tail == 0 or nt[-tail:] not in ("T", "TA"):
+    if not abbreviated_stop(nt):
         return {}
     last = loc.parts[-1]
     return {"transl_except": [transl_except_term(int(last.start) + 1, int(last.end), last.strand, tail)],

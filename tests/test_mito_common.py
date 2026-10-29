@@ -130,3 +130,13 @@ def test_run_tool_logs_command_exit_code_time_and_stderr(tmp_path, caplog):
     assert any(m.startswith("[CMD rc=0 ") and f"(in {tmp_path})" in m for m in msgs)
     assert any(m.startswith("[CMD rc=3 ") for m in msgs) and any(m == "[CMD stderr] bad input" for m in msgs)
     assert any(m.startswith("[CMD failed ") and "no_such_program" in m for m in msgs)
+
+
+def test_abbreviated_stop_and_ends_with_stop():
+    stops = {"TAA", "TAG"}
+    cases = {"ATGAAAT": (True, True), "ATGAAATA": (True, True), "ATGAAATG": (False, False), "ATGAAATAA": (False, True),
+             "ATGAAAAAA": (False, False), "": (False, False), "T": (True, True)}
+    for nt, (abbr, stop) in cases.items():
+        old_tail = len(nt) % 3
+        assert mc.abbreviated_stop(nt) == abbr == bool(old_tail and nt[-old_tail:] in ("T", "TA"))
+        assert mc.ends_with_stop(nt, stops) == stop == (nt[-3:] in stops if not old_tail else nt[-old_tail:] in ("T", "TA"))

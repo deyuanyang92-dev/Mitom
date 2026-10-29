@@ -94,7 +94,8 @@ import mito_env  # noqa: E402  (finds external programs: config, PATH, conda env
 # N1: NCBI gene symbols, products and synonyms; tRNA names trnL1/L2, trnS1/S2 by anticodon (mito_names.py)
 from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key as key, trna_symbol  # noqa: E402
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
-from mito_common import POLYA_NOTE, codon_translate, iter_gb_files, transl_except_term  # noqa: E402
+from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
+                         transl_except_term)
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
 NO_START_NOTE = "start codon not determined"
 NO_STOP_NOTE = "stop codon not determined"
@@ -477,7 +478,7 @@ class Curator:
             f.qualifiers.pop(k, None)
         loc = f.location                               # an end left 3'-partial (cut by a linear sequence end) may continue
         cut = isinstance(loc.end, AfterPosition) if loc.strand == 1 else isinstance(loc.start, BeforePosition)
-        if tail and nt[-tail:] in ("T", "TA") and not cut:   # (table2asn PartialProblemHasStop with a T / TA stop)
+        if abbreviated_stop(nt) and not cut:           # (table2asn PartialProblemHasStop with a T / TA stop)
             gs, ge = span(f)
             f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1, tail)]
             notes = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n]
@@ -752,8 +753,7 @@ class Curator:
             f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != PSEUDO_NOTE] + [PSEUDO_NOTE]
             self.log(f, "P10", span(f), span(f), "CDS across the origin with internal stop codons written /pseudo")
             return
-        tail = len(nt) % 3
-        has_stop = nt[-3:] in self.stops if not tail else nt[-tail:] in ("T", "TA")
+        has_stop = ends_with_stop(nt, self.stops)
         if nt[:3] not in self.starts:
             p = parts[0]
             parts[0] = FeatureLocation(p.start, AfterPosition(p.end), -1) if minus else \
@@ -806,7 +806,7 @@ class Curator:
             self.log(f, "P5", span(f), span(f), f"first codon {nt[:3]} is not a start codon of table "
                      f"{self.a.genetic_code}: CDS marked 5'-partial, 'start codon not determined' (NCBI practice)")
         tail = len(nt) % 3
-        has_stop = nt[-3:] in self.stops if not tail else nt[-tail:] in ("T", "TA")   # last 3 nt are out of frame if tail
+        has_stop = ends_with_stop(nt, self.stops)              # (the last 3 nt are out of frame when there is a tail)
         if tail and not has_stop:
             self.log(f, "P4", span(f), span(f), f"length {len(nt)} is not a multiple of 3 and there is no T/TA tail - "
                      "frameshift, wrong end or unannotated intron - check manually")
@@ -871,8 +871,7 @@ class Curator:
             nt = self.tseq(f)[self.tx(f)[0] - 1:self.tx(f)[1]]
             tail = len(nt) % 3
             codons = [nt[i:i + 3] for i in range(0, len(nt) - tail, 3)]
-            complete = codons and codons[0] in self.starts and \
-                (nt[-tail:] in ("T", "TA") if tail else codons[-1] in self.stops)
+            complete = codons and codons[0] in self.starts and ends_with_stop(nt, self.stops)
             internal = any(c in self.stops for c in (codons if tail else codons[:-1]))
             return (bool(complete) and not internal, len(nt), -int(f.location.start))
 
