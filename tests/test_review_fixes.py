@@ -162,6 +162,10 @@ def test_run_log_is_not_appended_across_runs(tmp_path):
         logging.info("[PARAMS] x")
         logging.getLogger().handlers[0].flush()
     assert log.read_text().count("[PARAMS]") == 1
+    logging.getLogger("fontTools.subset").info("Glyph IDs: [0, 1, 2]")     # font subsetting of each PDF map: not logged
+    logging.getLogger("matplotlib.font_manager").warning("findfont: Font family not found")   # a warning still is
+    logging.getLogger().handlers[0].flush()
+    assert "Glyph IDs" not in log.read_text() and "findfont" in log.read_text()
     bm.setup_root_logger(tmp_path / "pipeline.log")
     for h in logging.getLogger().handlers:
         logging.getLogger().removeHandler(h)

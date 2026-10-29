@@ -24,9 +24,13 @@ class _LockedHandler(logging.Handler):
             self._inner.emit(record)
 
 
+# libraries whose INFO lines are noise in run.log (fontTools: ~40 lines on the font subset of every PDF map)
+QUIET_LOGGERS = ("fontTools", "matplotlib", "PIL")
+
+
 def setup_root_logger(log_file: Path, console_level: int = logging.INFO, mode: str = "a") -> None:
     """Everything goes to log_file (mode "w": a new log for this run); the console gets console_level and above
-    (run: WARNING, its steps are printed by Steps / say())."""
+    (run: WARNING, its steps are printed by Steps / say()); QUIET_LOGGERS only from WARNING."""
     log_file.parent.mkdir(parents=True, exist_ok=True)
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -40,6 +44,8 @@ def setup_root_logger(log_file: Path, console_level: int = logging.INFO, mode: s
     sh.setLevel(console_level)
     root.addHandler(_LockedHandler(fh))
     root.addHandler(_LockedHandler(sh))
+    for name in QUIET_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
 
 
 # ── what the user sees on the terminal during `run` (GetOrganelle style: numbered steps, counts, time, files) ──
