@@ -20,9 +20,9 @@ is classed replication-dependent (tandem cluster) / replacement (H3.3, spliced) 
 takes a cluster copy first (pick_histone).
 Massive assemblies: both searches first run with one reference per genus (rDNA; low-complexity stretches do not
 seed) / per gene and phylum (histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go
-to the steps above, each gene set in its own regions. A SPAdes assembly of 460 Mb takes 0.5-1 min on 16 threads
-(2026-10-29: was 4-22 min; barrnap 0.9 45-52 s) with the same features, less calls made of microsatellites only
-(knowledge/topics/nuclear_markers.md section 15).
+to the steps above, each gene set in its own regions, and at most MAX_RDNA_REGIONS rDNA regions and
+MAX_HIST_REGIONS histone regions per gene of them (best first; the time is bounded whatever the assembly). See
+knowledge/topics/nuclear_markers.md section 15 for times (a 460 Mb SPAdes assembly: < 1 min on 8 threads).
 
 Per-gene consensus (multi-copy rDNA split over many contigs of one assembly): see consensus(); output
 consensus/<gene>.fasta and consensus.tsv (which contigs were used, which were dropped and why).
@@ -103,7 +103,7 @@ DB_PIECE = 10_000_000   # FASTA bytes per makeblastdb piece of the prefilter dat
 MAX_RDNA_REGIONS = 300  # rDNA regions annotated, most aligned reference bits first
 MAX_HIST_REGIONS = 1000 # histone regions per gene, closest to a reference protein first
 MAX_CM_JOBS = 300       # rRNA ends per gene placed with the Rfam models, best supported genes first (others: projection)
-MAX_CONS_SEED = 100     # best-covered fragments per gene the consensus backbone is built from
+MAX_CONS_SEED = 30      # best-covered fragments per gene the consensus backbone is built from (real assemblies: <= 8)
 STOPS = ("TAA", "TAG", "TGA")
 BAD_HISTONE = re.compile(r"factor|transferase|acetyl|chaperone|binding|kinase|demethylase|ligase|DOT1|lysine|"
                          r"regulator|interact|domain|methyl", re.I)

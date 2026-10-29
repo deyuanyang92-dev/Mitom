@@ -765,3 +765,33 @@ def test_cmsearch_in_pieces_gives_the_hits_of_one_run(tmp_path):
                  str(cm), str(tmp_path / "all.fa")])
         one = sorted(line.split()[:16] for line in open(tmp_path / "all.tbl") if not line.startswith("#"))
         assert len(res) == 3 and sorted(x[:16] for rows, *_ in res for x in rows) == one and len(one) >= 7
+
+
+def test_best_windows_keep_a_fixed_number_of_regions():
+    """an assembly with more candidates than the cap: the best scored regions go on, the rest are skipped"""
+    win = {"a": [(1, 900), (5000, 9000)], "b": [(1, 700)], "c_cov_9.0": [(1, 800)]}
+    hits = [["a", "100", "200", "9000", "r1", "50"], ["a", "300", "400", "9000", "r1", "60"],
+            ["a", "6000", "6100", "9000", "r2", "70"], ["b", "10", "90", "700", "r1", "300"],
+            ["c_cov_9.0", "10", "90", "800", "r1", "70"]]
+    score = lambda hs: max(float(h[5]) for h in hs)     # noqa: E731
+    assert nuc._best_windows(win, hits, score, 0, "x") is win and nuc._best_windows(win, hits, score, 4, "x") is win
+    # 300 (b) > 70 (c, coverage 9 wins the tie) > 70 (a second window) > 60 (a first window)
+    assert nuc._best_windows(win, hits, score, 2, "x") == {"b": [(1, 700)], "c_cov_9.0": [(1, 800)]}
+    assert nuc._best_windows(win, hits, score, 3, "x") == {"a": [(5000, 9000)], "b": [(1, 700)], "c_cov_9.0": [(1, 800)]}
+
+
+@needs_tools
+def test_partial_h3_far_from_any_reference_is_not_reported(tmp_path, lib):
+    """SRR2006110: 3,688 'H3' were pieces of degenerate retrocopies (61 % median identity, frameshifts, stop codons);
+    a partial H3 / H4 model below MIN_H34_PARTIAL_ID % identity is not reported, a near-identical piece and a
+    complete divergent gene are (MT043459.1: a complete H3 of 50 % identity)"""
+    rr = random.Random(5)
+    far = "".join(a if i < 4 or rr.random() > 0.4 else rr.choice("ACDEFGHIKLMNPQRSTVWY") for i, a in enumerate(H3))
+    cds_far = backtranslate(far, 7)
+    SeqIO.write([SeqRecord(Seq(backtranslate(H3, 6)[150:] + rand(300)), id="near", description=""),
+                 SeqRecord(Seq(cds_far[150:] + rand(300)), id="far", description=""),
+                 SeqRecord(Seq(rand(300) + cds_far + rand(300)), id="whole", description="")],
+                str(tmp_path / "in.fa"), "fasta")
+    nuc.annotate(tmp_path / "in.fa", tmp_path / "out", lib["dir"], ["histone"], 2)
+    got = {r["contig"]: (r["partial_5"], r["partial_3"]) for r in read_rows(tmp_path / "out")}
+    assert got == {"near": ("1", "0"), "whole": ("0", "0")}
