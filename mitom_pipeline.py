@@ -704,7 +704,8 @@ def workflow_run(args: argparse.Namespace) -> int:
     steps.done(run_plots(args, merge_dir, out_root).summary)
 
     steps.start("Organise the output")
-    organize_outputs(out_root, merge_dir, keep=args.keep_intermediate == "yes")
+    organize_outputs(out_root, merge_dir, keep=args.keep_intermediate == "yes",
+                     reports_named=(f"no_{args.which_gene_first}_samples.txt",))
     for name, what in OUTPUT_LAYOUT:
         if (out_root / name).exists():
             steps.info(f"{name:28s} {what}")

@@ -43,3 +43,12 @@ def test_organize_keep_moves_work_dirs(tmp_path):
     bm.organize_outputs(out, final, keep=True)
     assert (out / "work" / "01.anno_round1" / "x.log").is_file() and not (out / "01.anno_round1").exists()
     assert (out / "work" / "05.curated").is_dir()
+
+
+def test_records_without_the_orientation_gene_are_listed_in_reports(tmp_path):
+    """2026-10-30 (integration audit): no_<gene>_samples.txt (records without any orientation gene) stayed at the top
+    of the output folder; it is a report of the run like the others."""
+    out = tmp_path
+    (out / "no_cox1_samples.txt").write_text("# samples where 'cox1' was not found\nS1\n")
+    bm.organize_outputs(out, _fake_run(out, "0"), reports_named=("no_cox1_samples.txt",))
+    assert (out / "reports" / "no_cox1_samples.txt").is_file() and not (out / "no_cox1_samples.txt").exists()

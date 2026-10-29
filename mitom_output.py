@@ -368,6 +368,7 @@ REPORT_NOTES = {
     "intron_ref_report.tsv": "introns placed from the intron sites of annotated relatives (models/intron_sites)",
     "metadata_transfer_log.tsv": "where each record's GenBank header came from",
     "oriented_by_fallback.txt": "records oriented by another gene because cox1 was not found",
+    "no_cox1_samples.txt": "records without cox1 or a fallback gene: not re-oriented",
     "all_problem_samples.txt": "records with any problem during the run",
     "run_params.json": "all options of this run",
 }
@@ -409,11 +410,12 @@ def write_summary(out_root: Path) -> None:
     src.unlink()
 
 
-def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False) -> None:
+def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False, reports_named: tuple = ()) -> None:
     """Put the run's output into the layout of OUTPUT_LAYOUT (final_annotation/, reports/ ...) and write
     README.txt. Intermediate folders go to work/ (keep) or are deleted. Only the files and folders MitoM writes
     are touched (the output folder may hold the user's own files); the results of a previous run into the same
-    folder are replaced."""
+    folder are replaced. reports_named: further report files of this run whose names depend on its options
+    (no_<gene>_samples.txt)."""
     def remove(p: Path) -> None:
         if p.is_dir() and not p.is_symlink():
             shutil.rmtree(p)
@@ -442,7 +444,7 @@ def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False) -> 
     if (out_root / "06.ncbi_submission").is_dir():
         shutil.move(str(out_root / "06.ncbi_submission"), str(out_root / "ncbi_submission"))
     write_summary(out_root)
-    for name in REPORT_FILES:                                  # MitoM's own files only: the folder may hold the user's
+    for name in REPORT_FILES + tuple(reports_named):           # MitoM's own files only: the folder may hold the user's
         if (out_root / name).is_file():
             replace(out_root / name, reports / name)
     if (out_root / "failed_logs").is_dir():
