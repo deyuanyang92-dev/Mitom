@@ -224,7 +224,8 @@ def mitom(seq: str, lineage: str, code: int, b: Dict[str, str], a, preds: List[P
 
 
 def from_input(rec) -> List[Pred]:
-    """tRNA features of the input annotation (amino acid from /product, anticodon from /note or name)."""
+    """tRNA features of the input annotation (amino acid from /product, anticodon from /note or name). One of three
+    readers of a tRNA's amino acid / anticodon, kept apart on purpose (see mito_names.trna_name; mito_curate N1)."""
     out = []
     for f in rec.features:
         if f.type != "tRNA":

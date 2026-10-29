@@ -88,6 +88,10 @@ def gene_name(qualifiers: dict, ftype: str, atp9: bool = False) -> str:
     return g if g in pcg or g in ("rrnS", "rrnL") else ""
 
 
+# One of three readers of a tRNA feature's amino acid / anticodon, kept apart on purpose: mito_curate.Curator.names
+# (rule N1) and mito_trna.from_input are the others. They differ in what they read (e.g. /anticodon, the /note,
+# the gene name), giving other anticodons on 572 of 1,433 real qualifier combinations: making them one would
+# change results (2026-10-30: kept as they are).
 def trna_name(qualifiers: dict) -> tuple:
     """(amino acid one-letter, anticodon or '') of a tRNA feature; ('', '') if unknown."""
     prod = qualifiers.get("product", [""])[0] or ""

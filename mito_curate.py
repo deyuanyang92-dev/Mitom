@@ -1069,6 +1069,7 @@ class Curator:
             if name:
                 q = {"gene": [name], "product": [RRNA_PRODUCT[name]]}
         elif f.type == "tRNA":
+            # one of three readers of a tRNA's amino acid / anticodon, kept apart on purpose (see mito_names.trna_name)
             txt = " ".join(f.qualifiers.get("product", []) + [cur])
             m = re.search(r"tRNA-([A-Z][a-z]{2})", txt)
             aa = AA3.get(m.group(1), "") if m else ""
