@@ -87,7 +87,6 @@ for byte) and out_dir/intron_report.tsv.
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import shutil
 import subprocess
@@ -111,7 +110,8 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_LIB = HERE / "models" / "mfannot_proteins"
 DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
-from mito_common import GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb  # noqa: E402  (CC0)
+from mito_common import (GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb,  # noqa: E402
+                         write_tsv)                                                                       # (CC0)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
 TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII
 II_AA_TOLERANCE = 5                  # homolog score (median, BLOSUM62) a group II placement may lose when none is free
@@ -1595,10 +1595,7 @@ def main(argv=None) -> int:
                 rows += process_file(f)
     cols = ["record", "gene", "strand", "cds", "intron", "intron_start", "intron_end", "intron_len",
             "confidence", "written", "evidence", "note", "homolog", "homolog_coverage", "exonerate_score"]
-    with open(out / "intron_report.tsv", "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", restval="")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(out / "intron_report.tsv", cols, rows)
     w_ = [r for r in rows if r.get("written") == "yes"]
     low = [r for r in rows if r.get("written") == "no"]
     print(f"[mito_intron] {len(files)} file(s), library {len(lib)} proteins; "

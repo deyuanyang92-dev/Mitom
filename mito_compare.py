@@ -20,7 +20,6 @@ Usage:  mitom compare -o original_vs_mitom.tsv --original original_annotation/ -
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import sys
 from collections import Counter
@@ -34,7 +33,7 @@ from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, Exac
 from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from mito_common import iter_gb_files  # noqa: E402
+from mito_common import iter_gb_files, write_tsv  # noqa: E402
 from mito_names import PCG, gene_name, trna_name, trna_number  # noqa: E402
 
 RESULT = {"exact": "same", "le3": "ends_differ", "gt3": "ends_differ", "name_error": "name_differs",
@@ -316,11 +315,7 @@ def compare_dirs(original_dir: Path, mitom_dir: Path, out_tsv: Path, code: int =
         n["records"] += 1
         n.update(r["result"] for r in got)
         rows += got
-    out_tsv.parent.mkdir(parents=True, exist_ok=True)
-    with out_tsv.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=COLUMNS, delimiter="\t")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(out_tsv, COLUMNS, rows)
     return n
 
 

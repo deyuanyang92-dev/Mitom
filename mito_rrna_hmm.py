@@ -68,7 +68,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
-from mito_common import run_tool, write_gb  # noqa: E402
+from mito_common import run_tool, write_gb, write_tsv  # noqa: E402
 
 LIB = Path(__file__).resolve().parent / "models" / "rrna_hmm"
 GENES = {g: CORE_NAMES[g] for g in ("rrnS", "rrnL")}          # the core's /gene and /product
@@ -489,10 +489,7 @@ REPORT = ["file", "record", "phylum", "gene", "location", "status", "coverage", 
 
 
 def write_report(rows: List[dict], path: Path) -> None:
-    with open(path, "w", newline="") as h:
-        w = csv.DictWriter(h, fieldnames=REPORT, delimiter="\t")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(path, REPORT, rows)
 
 
 def main() -> int:

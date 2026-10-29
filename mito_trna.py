@@ -53,7 +53,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import shutil
 import subprocess
@@ -70,7 +69,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
-from mito_common import GB_SUFFIXES, run_tool  # noqa: E402
+from mito_common import GB_SUFFIXES, run_tool, write_tsv  # noqa: E402
 
 GB_EXT = set(GB_SUFFIXES)
 TIMEOUT = 3600
@@ -504,10 +503,7 @@ def main(argv=None) -> int:
             SeqIO.write(recs_out, str(out / sub / f"{f.stem}.gbf"), "genbank")
     cols = ["file", "record", "group", "tRNA", "anticodon", "strand", "start", "end", "boundary_source",
             "n_families", "sources", "coords_by_source", "conflict", "selected"]
-    with open(out / "trna_report.tsv", "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
-        w.writeheader()
-        w.writerows(report)
+    write_tsv(out / "trna_report.tsv", cols, report)
     sel = sum(r["selected"] == "yes" for r in report)
     rule = "MITOS2 tRNAs replace input tRNAs" if a.select == "mitos2" else \
         "MitoM-ML tRNAs replace input tRNAs" if a.select == "mitom" else \

@@ -79,7 +79,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import csv
 import re
 import sys
 from pathlib import Path
@@ -95,7 +94,7 @@ import mito_env  # noqa: E402  (finds external programs: config, PATH, conda env
 from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key as key, trna_symbol  # noqa: E402
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
-                         transl_except_term)
+                         transl_except_term, write_tsv)
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
 NO_START_NOTE = "start codon not determined"
 NO_STOP_NOTE = "stop codon not determined"
@@ -1228,20 +1227,14 @@ def main(argv=None) -> int:
         dest.parent.mkdir(parents=True, exist_ok=True)
         SeqIO.write(recs, str(dest), "genbank")      # always: N1 names / gene ranges change without a report row
     cols = ["record", "feature", "gene", "strand", "rule", "old", "new", "reason"]
-    with open(out / "curation_report.tsv", "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", restval="")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(out / "curation_report.tsv", cols, rows)
     from collections import Counter
     c = Counter(r["rule"] for r in rows)
     print(f"[mito_curate] {len(files)} file(s); changes: " + ", ".join(f"{k} {v}" for k, v in sorted(c.items())))
     if t2a:
         cmp_rows = compare_validation(val_before, val_after)
         vcols = ["record", "severity", "code", "feature", "before", "after", "status"]
-        with open(out / "validation_compare.tsv", "w", newline="", encoding="utf-8") as fh:
-            w = csv.DictWriter(fh, fieldnames=vcols, delimiter="\t")
-            w.writeheader()
-            w.writerows(cmp_rows)
+        write_tsv(out / "validation_compare.tsv", vcols, cmp_rows)
         nb = Counter(r["severity"] for r in val_before)
         na = Counter(r["severity"] for r in val_after)
         st = Counter((r["severity"], r["status"]) for r in cmp_rows)

@@ -540,7 +540,7 @@ def main(argv=None) -> int:
         print("[trna_ml] needs MITOS2 refseq89m (--mitos_refdir), cmsearch and cmalign", file=sys.stderr)
         return 2
     fmt = "fasta" if Path(a.input).suffix.lower() in (".fa", ".fasta", ".fna") else "genbank"
-    w = csv.writer(sys.stdout, delimiter="\t")
+    w = csv.writer(sys.stdout, delimiter="\t", lineterminator="\n")
     w.writerow(["record", "family", "anticodon", "start", "end", "strand", "p", "bound_p"])
     for rec in SeqIO.parse(a.input, fmt):
         lin = a.lineage or ";".join(rec.annotations.get("taxonomy", []))

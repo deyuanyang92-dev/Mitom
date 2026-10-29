@@ -160,3 +160,20 @@ def test_move_position_qualifiers_only_touches_positions():
     out = mc.move_position_qualifiers(q, 100, 5)
     assert out == {"gene": ["ND5"], "transl_except": ["(pos:5,aa:TERM)"], "note": q["note"]} and q["transl_except"] == [
         "(pos:10,aa:TERM)"]
+
+
+def test_write_tsv_lf_header_always_and_csv_quoting(tmp_path):
+    import csv
+    import io
+    rows = [{"a": "1", "b": 'say "x"'}, {"a": "2", "c": "dropped"}, ["3", "tab\there"]]
+    mc.write_tsv(tmp_path / "r.tsv", ["a", "b"], rows)
+    text = (tmp_path / "r.tsv").read_bytes().decode()
+    assert "\r" not in text and text.splitlines()[0] == "a\tb"
+    old = io.StringIO()                                     # what the modules' csv.DictWriter wrote (but with CRLF)
+    w = csv.DictWriter(old, fieldnames=["a", "b"], delimiter="\t", restval="", extrasaction="ignore")
+    w.writeheader()
+    w.writerows([r for r in rows if isinstance(r, dict)])
+    csv.writer(old, delimiter="\t").writerow(rows[2])
+    assert text == old.getvalue().replace("\r\n", "\n")
+    mc.write_tsv(tmp_path / "empty.tsv", ["a", "b"], [])
+    assert (tmp_path / "empty.tsv").read_text() == "a\tb\n"

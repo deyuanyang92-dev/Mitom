@@ -22,7 +22,6 @@ Outputs in -o:  <name>.gb  fetch_report.tsv  query.txt  fetch.log
 from __future__ import annotations
 
 import argparse
-import csv
 import http.client
 import logging
 import os
@@ -37,6 +36,7 @@ from Bio import Entrez, SeqIO
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
+from mito_common import write_tsv  # noqa: E402
 
 ESEARCH_PAGE = 10000          # NCBI maximum retmax of one esearch request
 ACC_BATCH = 500               # UIDs per efetch rettype=acc request
@@ -191,12 +191,8 @@ def write_report(gb_path: Path, report: Path) -> int:
             "definition": rec.description,
         })
     rows.sort(key=lambda r: (r["organism"], r["accession"]))
-    with report.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()) if rows else
-                           ["accession", "refseq", "organism", "length", "topology", "date", "lineage", "definition"],
-                           delimiter="\t")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(report, list(rows[0].keys()) if rows else
+              ["accession", "refseq", "organism", "length", "topology", "date", "lineage", "definition"], rows)
     return len(rows)
 
 

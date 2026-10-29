@@ -15,7 +15,6 @@ and a summary on stdout.
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import sys
 from collections import Counter
@@ -27,7 +26,7 @@ from Bio.SeqFeature import AfterPosition, BeforePosition
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
-from mito_common import iter_gb_files, run_tool  # noqa: E402
+from mito_common import iter_gb_files, run_tool, write_tsv  # noqa: E402
 
 SKIP_QUALS = {"translation", "db_xref", "protein_id", "locus_tag_old"}
 INTERNAL_NOTE = re.compile(r"check .* manually|mito_\w+\.py")   # e.g. mito_rescue.py / mito_intron.py notes
@@ -147,10 +146,7 @@ def main(argv=None) -> int:
         for rec in SeqIO.parse(str(f), "genbank"):
             n += 1
             rows += validate_record(rec, out, exe, nuclear=a.nuclear)
-    with open(out / "validation.tsv", "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=["record", "severity", "code", "ours", "message"], delimiter="\t")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(out / "validation.tsv", ["record", "severity", "code", "ours", "message"], rows)
     focus = re.compile(a.focus, re.I) if a.focus else None
     sel = [r for r in rows if (not focus or focus.search(r["message"])) and (not a.only_ours or r["ours"] == "yes")]
     sev = Counter(r["severity"] for r in sel)

@@ -30,7 +30,6 @@ Outputs in -o:  check_report.tsv (one row per record)  check_details.tsv (one ro
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import sys
 from collections import Counter
@@ -45,7 +44,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from mito_common import iter_gb_files  # noqa: E402
+from mito_common import iter_gb_files, write_tsv  # noqa: E402
 from mito_names import PCG, gene_name, trna_name  # noqa: E402
 
 # usual protein gene lengths (nt, incl. stop) in bilaterian mitogenomes; 60 % / 160 % are the error limits
@@ -251,16 +250,9 @@ def write_reports(rows: List[dict], out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     cols = ["record", "organism", "status", "n_error", "n_warning", "errors", "warnings", "PCG", "tRNA", "rRNA",
             "length", "file"]
-    with (out / "check_report.tsv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", extrasaction="ignore")
-        w.writeheader()
-        w.writerows(rows)
-    with (out / "check_details.tsv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh, delimiter="\t")
-        w.writerow(["record", "severity", "code", "feature", "location", "message"])
-        for r in rows:
-            for i in r["_issues"]:
-                w.writerow([r["record"], i.severity, i.code, i.feature, i.location, i.message])
+    write_tsv(out / "check_report.tsv", cols, rows)
+    write_tsv(out / "check_details.tsv", ["record", "severity", "code", "feature", "location", "message"],
+              [[r["record"], i.severity, i.code, i.feature, i.location, i.message] for r in rows for i in r["_issues"]])
     (out / "check_flagged.txt").write_text("".join(f"{r['record']}\n" for r in rows if r["status"] == "flagged"),
                                            encoding="utf-8")
 

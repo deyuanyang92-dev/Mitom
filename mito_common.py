@@ -2,6 +2,7 @@
 reading, safe file names, report tables, file copies, CDS stop qualifiers and codon translation."""
 from __future__ import annotations
 
+import csv
 import logging
 import os
 import re
@@ -40,7 +41,20 @@ def iter_gb_files(path) -> List[Path]:
     return sorted(x for x in p.rglob("*") if x.is_file() and x.suffix.lower() in GB_SUFFIXES)
 
 
-# reports written only when there is something in them
+def write_tsv(path, columns, rows) -> None:
+    """A report table: tab-separated, LF line ends, the header line always (also without rows). Rows are dicts (a
+    missing key is written empty, a key not in columns is left out) or sequences in column order; fields with a tab,
+    a newline or a double quote are quoted as the csv module quotes them."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
+        w.writerow(columns)
+        for r in rows:
+            w.writerow([r.get(c, "") for c in columns] if isinstance(r, dict) else r)
+
+
+# problem lists: written only when there is something in them
 def write_nonempty_list(out_path: Path, items: List[str], comment: str = "") -> None:
     unique = sorted(set(items))
     if not unique:

@@ -92,7 +92,7 @@ from Bio.Seq import Seq
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_names  # noqa: E402
-from mito_common import codon_translate, iter_gb_files, run_tool, stop_qualifiers, write_gb  # noqa: E402
+from mito_common import codon_translate, iter_gb_files, run_tool, stop_qualifiers, write_gb, write_tsv  # noqa: E402
 
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
 MIN_INTRON = 142        # a CDS gap at least this long is an intron without an intron feature (eval_introns, MFannot)
@@ -2007,11 +2007,7 @@ def main(argv=None) -> int:
     else:
         for f in files:
             rows += _annotate_file(f)
-    import csv
-    with open(Path(a.out) / "intron_ref_report.tsv", "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, REPORT_COLS, delimiter="\t", restval="", extrasaction="ignore")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(Path(a.out) / "intron_ref_report.tsv", REPORT_COLS, rows)
     models = [r for r in rows if r.get("state") == "model"]
     print(f"[mito_intron_ref] {len(files)} file(s), library {len(lib)} genes + {len(own)} own; "
           f"{sum(not r['why'].startswith('low') for r in models)} gene model(s) written, "

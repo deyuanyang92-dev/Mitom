@@ -36,7 +36,6 @@ Writes the GenBank files in place and rescue_report.tsv next to them.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
-import csv
 import shutil
 import sys
 import tempfile
@@ -51,7 +50,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import run_tool, write_gb  # noqa: E402
+from mito_common import run_tool, write_gb, write_tsv  # noqa: E402
 from mito_engines import engine_env, mitos2_command, mitos_to_record  # noqa: E402,F401  (MITOS2: one runner, one parser)
 
 MIN_RRNA = 300
@@ -230,11 +229,7 @@ def main(argv=None) -> int:
         return 2
     rows = rescue_dir(Path(a.input), a.genetic_code, mitos_bin=a.mitos_bin, refdir=a.mitos_refdir)
     rep = Path(a.input) / "rescue_report.tsv"
-    with open(rep, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["file", "record", "gene", "location", "status", "hint"], delimiter="\t",
-                           lineterminator="\n")
-        w.writeheader()
-        w.writerows(rows)
+    write_tsv(rep, ["file", "record", "gene", "location", "status", "hint"], rows)
     n = sum(r["status"] == "added" for r in rows)
     print(f"[mito_rescue] {n} gene(s) added from MITOS2; {sum(r['status'] != 'added' for r in rows)} failure(s) -> {rep}")
     return 0
