@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import safe_copy
+from mito_common import REPORTS, reports_dir, safe_copy
 from mitom_inputs import SampleInfo
 from mitom_metadata import (_sync_organism_qualifier, build_organism_index, gb_file_has_meaningful_metadata,
                             replace_organism_in_gb_file, transfer_gb_metadata_file)
@@ -316,14 +316,9 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
                           problem_samples: List[str]) -> None:
     """Delete internal-ID intermediates once final output is written.
 
-    Kept: 04.final_gb/, all.final.gbf, *.tsv / *.txt reports, pipeline.log,
-    run_params.json.  dedup_report.tsv is moved to out_root; core logs of
-    problem samples are copied to failed_logs/ before deletion. `run` then
-    arranges what is kept into its final layout (organize_outputs).
+    Kept: 04.final_gb/, all.final.gbf, reports/, pipeline.log. The core logs of problem samples are copied to
+    reports/failed_logs/ before deletion. `run` then arranges what is kept into its final layout (organize_outputs).
     """
-    dedup = out_root / "00.gb_converted_fasta" / "dedup_report.tsv"
-    if dedup.is_file():
-        shutil.move(str(dedup), str(out_root / "dedup_report.tsv"))
     problems = set(problem_samples)
     for si in samples:
         if si.sample_name not in problems:
@@ -332,7 +327,7 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
             wd = out_root / phase / si.internal_id
             for log in [wd / "sample.log", *sorted((wd / "logs").glob("*.log"))]:
                 if log.is_file():
-                    dst = out_root / "failed_logs" / f"{si.sample_name}.{phase}.{log.name}"
+                    dst = reports_dir(out_root) / "failed_logs" / f"{si.sample_name}.{phase}.{log.name}"
                     dst.parent.mkdir(exist_ok=True)
                     shutil.copy2(log, dst)
     freed = 0
@@ -410,6 +405,14 @@ def write_summary(out_root: Path) -> None:
     src.unlink()
 
 
+def new_reports(out_root: Path) -> Path:
+    """An empty reports/ folder for a new run into out_root (a previous run's reports are removed)."""
+    d = Path(out_root) / REPORTS
+    if d.is_dir() and not d.is_symlink():
+        shutil.rmtree(d)
+    return reports_dir(out_root)
+
+
 def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False, reports_named: tuple = ()) -> None:
     """Put the run's output into the layout of OUTPUT_LAYOUT (final_annotation/, reports/ ...) and write
     README.txt. Intermediate folders go to work/ (keep) or are deleted. Only the files and folders MitoM writes
@@ -426,18 +429,14 @@ def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False, rep
         remove(dst)
         shutil.move(str(src), str(dst))
 
-    for name in ("final_annotation", "final_annotation_all.gb", "ncbi_submission", "reports", "summary.tsv"):
+    for name in ("final_annotation", "final_annotation_all.gb", "ncbi_submission", "summary.tsv"):
         remove(out_root / name)                                # results of a previous run into the same folder
     fin = out_root / "final_annotation"
     fin.mkdir()
     for f in sorted(final_gb_dir.rglob("*.gbf")):
         shutil.move(str(f), str(fin / f"{f.stem}.gb"))
-    reports = out_root / "reports"
-    reports.mkdir()
-    kept_dedup = out_root / "00.gb_converted_fasta" / "dedup_report.tsv"     # --keep_intermediate yes
-    if kept_dedup.is_file():
-        shutil.copy2(kept_dedup, reports / "dedup_report.tsv")
-    for f in final_gb_dir.glob("*.tsv"):                      # curation_report.tsv
+    reports = reports_dir(out_root)                            # the steps wrote their reports there (new_reports())
+    for f in final_gb_dir.glob("*.tsv"):                      # a report a step left with the GenBank files
         shutil.move(str(f), str(reports / f.name))
     if (out_root / "all.final.gbf").exists():
         shutil.move(str(out_root / "all.final.gbf"), str(out_root / "final_annotation_all.gb"))

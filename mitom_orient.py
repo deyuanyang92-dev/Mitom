@@ -15,8 +15,8 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 from mito_common import (abbreviated_stop, feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
-                         move_position_qualifiers, reverse_complement_record, shift_location, write_gb,
-                         write_nonempty_table)
+                         move_position_qualifiers, reports_dir, reverse_complement_record, shift_location, write_gb,
+                         write_nonempty_table, write_table)
 from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
 
 if TYPE_CHECKING:
@@ -197,7 +197,7 @@ def select_reannotation(samples: List["SampleInfo"], results1: Dict[str, Dict], 
         if probs:
             chosen.append(si)
         rows.append(f"{si.sample_name}\t{'reannotate' if probs else 'shifted_round1'}\t{'; '.join(probs)}")
-    write_nonempty_table(out_root / "reannotation_decision.tsv", "sample_name\tdecision\treasons", rows)
+    write_table(reports_dir(out_root) / "reannotation_decision.tsv", "sample_name\tdecision\treasons", rows)
     logging.info(f"[PHASE2] auto: {len(chosen)} of {len(samples)} sample(s) re-annotated, "
                  f"{len(samples) - len(chosen)} use the shifted round-1 annotation (reannotation_decision.tsv)")
     return chosen
@@ -319,7 +319,7 @@ def write_orientation_fallback(out_root: Path, samples: List["SampleInfo"]) -> N
     """oriented_by_fallback.txt: samples whose first gene was absent and that start at a fallback gene."""
     names = {si.internal_id: si.sample_name for si in samples}
     rows = sorted({f"{names.get(k.split('.')[0], k)}\t{g}" for k, g in ORIENTATION_FALLBACK.items()})
-    write_nonempty_table(out_root / "oriented_by_fallback.txt", "sample_name\tstart_gene", rows)
+    write_nonempty_table(reports_dir(out_root) / "oriented_by_fallback.txt", "sample_name\tstart_gene", rows)
 
 
 def reorient_after_introns(args: argparse.Namespace, final_dir: Path) -> int:

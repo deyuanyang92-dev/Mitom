@@ -57,7 +57,8 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (GB_SUFFIXES, safe_copy, safe_name, write_nonempty_list, write_nonempty_table)  # noqa: E402,F401
+from mito_common import (GB_SUFFIXES, reports_dir, safe_copy, safe_name, write_nonempty_list,  # noqa: E402,F401
+                         write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
                        CLADE_CODES, CLADE_PHYLUM, EXTRA_CLADES, METAZOAN_PHYLA, no_upstream_atg,  # noqa: F401
                        PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS)  # noqa: F401
@@ -94,7 +95,7 @@ from mitom_snakemake import (AnnotTask, int_mem_mb, render_snakemake_snakefile, 
 from mitom_stage import (annotate_one, engine_cmd, ENGINE_LABEL, MITO_CORE, MITO_ENGINES,  # noqa: E402,F401
                          native_core_cmd, run_annotation_stage, run_cmd_capture, run_phase2,  # noqa: F401
                          sample_lineage, STAGE_LABEL, write_input_annotation)  # noqa: F401
-from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_genbank_output,  # noqa: E402,F401
+from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_genbank_output, new_reports,  # noqa: E402,F401
                           INTERMEDIATE_DIRS, _LOCUS_NAME_MAXLEN, merge_gb_files, organize_outputs,  # noqa: F401
                           OUTPUT_LAYOUT, refresh_summary, REPORT_FILES, REPORT_NOTES,  # noqa: F401
                           rewrite_genbank_record_ids, RunSummary, WORK_DIRS, write_summary)  # noqa: F401
@@ -270,6 +271,7 @@ KNOWN_LIMITATION = ("[KNOWN_LIMITATION] the annotation core does not annotate in
 def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
+    new_reports(out_root)
     setup_root_logger(out_root / "pipeline.log")
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
@@ -278,7 +280,8 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     split_dir   = out_root / "00.internal_fasta"
     gb_conv_dir = out_root / "00.gb_converted_fasta"
 
-    in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir)
+    in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
+                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv")
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
@@ -316,11 +319,11 @@ def workflow_annotate(args: argparse.Namespace) -> int:
             logging.error(f"[FINAL_WRITE_FAIL] {si.sample_name}: {exc}")
             summary.final_write_failed.append(si.sample_name)
 
-    write_nonempty_list(out_root / "annotation_failed.txt",
+    write_nonempty_list(reports_dir(out_root) / "annotation_failed.txt",
                         summary.annotation_failed, "# annotation core non-zero exit")
-    write_nonempty_list(out_root / "final_write_failed.txt",
+    write_nonempty_list(reports_dir(out_root) / "final_write_failed.txt",
                         summary.final_write_failed, "# Failed during final write")
-    write_nonempty_table(
+    write_table(
         out_root / "annotation-summary.tsv",
         "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok\tmetadata_mode",
         summary_rows)
@@ -336,7 +339,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     if all_final_gbs:
         merge_gb_files(all_final_gbs, out_root / "all.final.gbf")
     logging.info(f"[PLOT] {run_plots(args, merge_dir, out_root).summary}")
-    (out_root / "run_params.json").write_text(
+    (reports_dir(out_root) / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary.log()
     logging.warning(KNOWN_LIMITATION)
@@ -394,9 +397,8 @@ def workflow_reorient(args: argparse.Namespace) -> int:
                         summary.no_target_gene, f"# samples without {args.which_gene_first}")
     write_nonempty_list(out_root / "failed_samples.txt",
                         summary.all_problem_samples(), "# all problematic samples")
-    write_nonempty_table(out_root / "annotation-summary.tsv",
-                         "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok",
-                         summary_rows)
+    write_table(out_root / "annotation-summary.tsv", "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok",
+                summary_rows)
     summary.log()
     logging.info("[DONE]")
     return 0
@@ -412,6 +414,7 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
+    new_reports(out_root)
     setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w")   # one run, one log
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
@@ -432,7 +435,8 @@ def workflow_run(args: argparse.Namespace) -> int:
 
     steps.start("Read input and remove duplicate records")
     in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
-                                                       orig_dir=out_root / "original_annotation")
+                                                       orig_dir=out_root / "original_annotation",
+                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv")
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
@@ -644,34 +648,34 @@ def workflow_run(args: argparse.Namespace) -> int:
             logging.error(f"[FINAL_WRITE_FAIL] {sample}: {exc}")
             summary.final_write_failed.append(sample)
 
-    write_nonempty_table(
+    write_table(
         out_root / "annotation-summary.tsv",
         "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok\tbody_source\tmetadata_mode",
         summary_rows)
     steps.done(f"{len(summary_rows)} records written"
                + (f", original header restored in {len(summary.metadata_transferred)}" if summary.metadata_transferred else "")
                + (f", {len(summary.final_write_failed)} failed" if summary.final_write_failed else ""))
-    write_nonempty_table(
-        out_root / "metadata_transfer_log.tsv",
+    write_table(
+        reports_dir(out_root) / "metadata_transfer_log.tsv",
         "sample_name\tinternal_id\tmetadata_src\tbody_src\tdest\tmode",
         meta_log_rows)
-    write_nonempty_list(out_root / "annotation_failed.txt",
+    write_nonempty_list(reports_dir(out_root) / "annotation_failed.txt",
                         summary.annotation_failed, "# annotation core returned non-zero exit")
-    write_nonempty_list(out_root / f"no_{args.which_gene_first}_samples.txt",
+    write_nonempty_list(reports_dir(out_root) / f"no_{args.which_gene_first}_samples.txt",
                         summary.no_target_gene,
                         f"# samples where '{args.which_gene_first}' was not found")
-    write_nonempty_list(out_root / "final_write_failed.txt",
+    write_nonempty_list(reports_dir(out_root) / "final_write_failed.txt",
                         summary.final_write_failed, "# failed during final GB write")
-    write_nonempty_list(out_root / "reorient_failed.txt",
+    write_nonempty_list(reports_dir(out_root) / "reorient_failed.txt",
                         summary.reorient_failed, "# failed during reorientation")
-    write_nonempty_list(out_root / "metadata_transfer_failed.txt",
+    write_nonempty_list(reports_dir(out_root) / "metadata_transfer_failed.txt",
                         summary.metadata_transfer_failed, "# metadata transfer failed")
-    write_nonempty_list(out_root / "metadata_key_mismatch.txt",
+    write_nonempty_list(reports_dir(out_root) / "metadata_key_mismatch.txt",
                         summary.metadata_key_mismatch,
                         "# accession key mismatch during metadata transfer")
-    write_nonempty_list(out_root / "all_problem_samples.txt",
+    write_nonempty_list(reports_dir(out_root) / "all_problem_samples.txt",
                         summary.all_problem_samples(), "# all problematic samples")
-    (out_root / "run_params.json").write_text(
+    (reports_dir(out_root) / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
@@ -779,7 +783,7 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
         out_name = getattr(args, "output_name", None) or body_files[0].name
         out_file = body_files[0] if args.overwrite_new_body == "yes" else (out_dir / out_name)
         _process(body_files[0], metadata_files[0], out_file)
-        write_nonempty_table(out_root / "transfer_metadata.tsv",
+        write_table(out_root / "transfer_metadata.tsv",
                              "body_file\tmetadata_file\toutput_file\tstatus\treplaced\tunmatched",
                              log_rows)
         return 0
@@ -812,7 +816,7 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
                 safe_copy(bf, out_file)
             n_fail += 1
             log_rows.append(f"{bf}\t{matched or 'NA'}\t{out_file}\tfail\t0\t0")
-    write_nonempty_table(out_root / "transfer_metadata.tsv",
+    write_table(out_root / "transfer_metadata.tsv",
                          "body_file\tmetadata_file\toutput_file\tstatus\treplaced\tunmatched",
                          log_rows)
     logging.info(f"[SUMMARY] transferred={n_ok}  skipped={n_skip}  failed={n_fail}")
@@ -869,7 +873,7 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
             log_rows.append(f"{bf.name}\t{out_file}\t0\t0\t0\tFAIL: {exc}")
             safe_copy(bf, out_file)
 
-    write_nonempty_table(
+    write_table(
         out_root / "replace_organism.tsv",
         "source_file\toutput_file\treplaced\tnot_found\ttotal\tnote",
         log_rows)
@@ -1022,7 +1026,7 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--keep_intermediate", choices=["yes", "no"], default="no",
                        help="Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run: moved to "
                             "work/). Default no: deleted after the final output is written; core logs of problem "
-                            "samples are always kept (run: reports/failed_logs/, annotate: failed_logs/).")
+                            "samples are always kept (reports/failed_logs/).")
         g.add_argument("--threads",      type=positive_int_arg, default=default_threads(),
                        help="Threads per annotation job (default: min(8, number of CPUs) = %(default)s).")
         g.add_argument("--max_tasks",    type=positive_int_arg, default=default_max_tasks(),

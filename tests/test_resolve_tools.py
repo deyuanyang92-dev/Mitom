@@ -118,7 +118,7 @@ def test_rrna_hmm_warns_when_nothing_could_be_searched(tmp_path, monkeypatch, ca
         bm.run_rrna_hmm(ns(), tmp_path, tmp_path)
     assert any("--phylum" in m and "[RRNA_HMM]" in m for m in caplog.messages)
     assert "--phylum" in capsys.readouterr().err
-    assert (tmp_path / "rrna_hmm_report.tsv").read_text().splitlines()[1].split("\t")[:6][-1] == status
+    assert (tmp_path / "reports" / "rrna_hmm_report.tsv").read_text().splitlines()[1].split("\t")[:6][-1] == status
 
 
 def test_rrna_hmm_no_warning_when_models_were_used(tmp_path, monkeypatch, caplog, capsys):
@@ -139,12 +139,12 @@ def test_report_tables_carry_hint_and_coverage_columns(tmp_path, monkeypatch):
     monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: [
         dict(file="a.gbf", record="S1", gene="ND2", location="1..9", status="added", hint="check start")])
     bm.run_rescue(ns(), tmp_path, tmp_path)
-    assert (tmp_path / "rescue_report.tsv").read_text().splitlines() == [
+    assert (tmp_path / "reports" / "rescue_report.tsv").read_text().splitlines() == [
         "file\trecord\tgene\tlocation\tstatus\thint", "a.gbf\tS1\tND2\t1..9\tadded\tcheck start"]
     monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: [      # an older row without "hint"
         dict(file="a.gbf", record="S1", gene="ND2", location="1..9", status="added")])
     bm.run_rescue(ns(), tmp_path, tmp_path)
-    assert (tmp_path / "rescue_report.tsv").read_text().splitlines()[1] == "a.gbf\tS1\tND2\t1..9\tadded\t"
+    assert (tmp_path / "reports" / "rescue_report.tsv").read_text().splitlines()[1] == "a.gbf\tS1\tND2\t1..9\tadded\t"
     monkeypatch.setattr(mito_rrna_hmm, "read_manifest", lambda lib: {"x": 1})
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
     monkeypatch.setattr(mito_rrna_hmm, "search_dir", lambda *a, **k: [
@@ -152,7 +152,7 @@ def test_report_tables_carry_hint_and_coverage_columns(tmp_path, monkeypatch):
              coverage="0.93", note="check ends"),
         dict(file="a.gbf", record="S2", phylum="Mollusca", gene="l-rRNA", location="1..9", status="added (partial 5')")])
     bm.run_rrna_hmm(ns(), tmp_path, tmp_path)
-    lines = (tmp_path / "rrna_hmm_report.tsv").read_text().splitlines()
+    lines = (tmp_path / "reports" / "rrna_hmm_report.tsv").read_text().splitlines()
     assert lines[0] == "file\trecord\tphylum\tgene\tlocation\tstatus\tcoverage\tnote"
     assert lines[1].endswith("\tadded\t0.93\tcheck ends") and lines[2].endswith("\tadded (partial 5')\t\t")
 

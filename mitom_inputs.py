@@ -393,6 +393,7 @@ def iter_inputs(
     in_path: Path,
     gb_to_fasta_dir: Optional[Path] = None,
     orig_dir: Optional[Path] = None,
+    dedup_report: Optional[Path] = None,
 ) -> Tuple[List[Path], str, Dict[str, Path]]:
     itype = _sniff_input_type(in_path)
     logging.info(f"[INPUT] Detected input type: {itype}  ({in_path})")
@@ -419,7 +420,7 @@ def iter_inputs(
                 "[INPUT] Mixed FASTA+GB directory — only GB files will be used.")
         if gb_to_fasta_dir is None:
             raise RuntimeError("gb_to_fasta_dir required when input is GenBank")
-        dedup_report = gb_to_fasta_dir / "dedup_report.tsv"
+        dedup_report = dedup_report or gb_to_fasta_dir / "dedup_report.tsv"
         fasta_paths, acc_to_orig_gb = convert_gb_to_fasta_for_annotation(
             gb_files, gb_to_fasta_dir, dedup_report_path=dedup_report, orig_dir=orig_dir)
         if not fasta_paths:

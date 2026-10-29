@@ -83,7 +83,7 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
     assert ref[2] == "annotate" and ref[ref.index("-i") + 1] == ref[ref.index("-o") + 1] == str(final)
     assert ref[ref.index("--genetic_code") + 1] == "4" and ref[ref.index("--bin") + 1] == str(bindir)
     assert ref[ref.index("--lineage") + 1] == "Eukaryota;Metazoa;Cnidaria"
-    assert (tmp_path / "intron_report.tsv").exists() and (tmp_path / "intron_ref_report.tsv").exists()
+    assert (tmp_path / "reports" / "intron_report.tsv").exists() and (tmp_path / "reports" / "intron_ref_report.tsv").exists()
     assert "site transfer: 1 file(s)" in line and "1 gene model(s) written" in line
     args.phylum = None
     seen.clear()

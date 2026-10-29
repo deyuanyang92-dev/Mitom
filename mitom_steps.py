@@ -19,7 +19,7 @@ from typing import Any, Callable, List, Optional, Tuple, TypeVar
 
 from Bio import SeqIO
 
-from mito_common import run_tool, write_nonempty_table
+from mito_common import reports_dir, run_tool, write_table
 from mito_taxa import abbreviated_overlap, aggressive_start_genes, no_upstream_atg
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
 
@@ -78,8 +78,11 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
         return StepResult("curation failed (see run.log): the annotation before curation is used", gb_dir=gb_dir,
                           ok=False)
     logging.info(f"[CURATE] {(p.stdout.strip().splitlines() or [''])[-1]}  -> {cur}")
-    return StepResult(f"{count_rows(cur / 'curation_report.tsv')} changes, each with rule and reason in "
-                      f"reports/curation_report.tsv", gb_dir=cur)
+    report = reports_dir(out_root) / "curation_report.tsv"
+    if (cur / "curation_report.tsv").exists():
+        shutil.move(str(cur / "curation_report.tsv"), str(report))
+    return StepResult(f"{count_rows(report)} changes, each with rule and reason in reports/curation_report.tsv",
+                      gb_dir=cur)
 
 
 def _submission_line(out_root: Path) -> str:
@@ -120,8 +123,8 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
                            + "; ".join(sorted({r["code"] for r in rows if r["severity"] == "ERROR"})))
             msgs += [f"{r['record']}\t{r['severity']}\t{r['code']}\t{r['message']}" for r in rows]
     shutil.rmtree(sub / "_work", ignore_errors=True)
-    write_nonempty_table(sub / "submission_summary.tsv", "record\tERROR\tWARNING\terror_codes", summary)
-    write_nonempty_table(sub / "validation_messages.tsv", "record\tseverity\tcode\tmessage", msgs)
+    write_table(sub / "submission_summary.tsv", "record\tERROR\tWARNING\terror_codes", summary)
+    write_table(sub / "validation_messages.tsv", "record\tseverity\tcode\tmessage", msgs)
     bad = [x.split("\t")[0] for x in summary if x.split("\t")[1] != "0"]
     logging.info(f"[SUBMISSION] {len(summary)} record(s) -> {sub}; NCBI ERROR in {len(bad)}: {bad[:10]}"
                  + (" - see validation_messages.tsv" if bad else ""))
@@ -129,7 +132,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
 
 
 def _rescue_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
-    return f"genes added by MITOS2 rescue : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}"
+    return f"genes added by MITOS2 rescue : {count_rows(out_root / 'reports' / 'rescue_report.tsv', 'status', 'added')}"
 
 
 @optional_step("RESCUE", _rescue_line)
@@ -150,7 +153,7 @@ def run_rescue(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
     import mito_rescue
     rows = mito_rescue.rescue_dir(gb_dir, int(args.genetic_code), jobs=int(getattr(args, "max_tasks", 1) or 1),
                                   mitos_bin=args.mitos_bin, refdir=args.mitos_refdir)
-    write_nonempty_table(out_root / "rescue_report.tsv", "file\trecord\tgene\tlocation\tstatus\thint",
+    write_table(reports_dir(out_root) / "rescue_report.tsv", "file\trecord\tgene\tlocation\tstatus\thint",
                          ["\t".join([r[k] for k in ("file", "record", "gene", "location", "status")] + [r.get("hint", "")])
                           for r in rows])
     added = [f"{r['record']}:{r['gene']}" for r in rows if r["status"] == "added"]
@@ -160,7 +163,7 @@ def run_rescue(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
 
 
 def _rrna_hmm_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
-    return f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'rrna_hmm_report.tsv', 'status', 'added')}"
+    return f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'reports' / 'rrna_hmm_report.tsv', 'status', 'added')}"
 
 
 @optional_step("RRNA_HMM", _rrna_hmm_line)
@@ -178,7 +181,7 @@ def run_rrna_hmm(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> Step
         logging.error(msg) if mode == "yes" else logging.info(msg)
         return StepResult(_rrna_hmm_line(args, gb_dir, out_root), ok=mode != "yes")
     rows = mito_rrna_hmm.search_dir(gb_dir, lib, getattr(args, "phylum", None))
-    write_nonempty_table(out_root / "rrna_hmm_report.tsv",
+    write_table(reports_dir(out_root) / "rrna_hmm_report.tsv",
                          "file\trecord\tphylum\tgene\tlocation\tstatus\tcoverage\tnote",
                          ["\t".join([r[k] for k in ("file", "record", "phylum", "gene", "location", "status")]
                                     + [str(r.get(k, "")) for k in ("coverage", "note")]) for r in rows])
@@ -225,11 +228,11 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     proc = run_tool(cmd)
     report = gb_dir / "intron_report.tsv"
     if report.exists():
-        shutil.move(str(report), str(out_root / "intron_report.tsv"))
+        shutil.move(str(report), str(reports_dir(out_root) / "intron_report.tsv"))
     last = (proc.stdout.strip().splitlines() or [f"failed (exit {proc.returncode}), see intron_fix.log"])[-1]
     logging.info(f"[INTRON_FIX] {last}")
     ref, ref_log, ref_ok = run_intron_ref(args, gb_dir, out_root)
-    (out_root / "intron_fix.log").write_text(proc.stdout + proc.stderr + ref_log, encoding="utf-8")
+    (reports_dir(out_root) / "intron_fix.log").write_text(proc.stdout + proc.stderr + ref_log, encoding="utf-8")
     return StepResult(INTRON_LABEL + last.replace("[mito_intron] ", "").split(" -> ")[0] + f"; {ref}; per intron: "
                       "intron_report.tsv, intron_ref_report.tsv", ok=proc.returncode == 0 and ref_ok)
 
@@ -249,7 +252,7 @@ def run_intron_ref(args: argparse.Namespace, final_dir: Path, out_root: Path) ->
     proc = run_tool(cmd)
     report = final_dir / "intron_ref_report.tsv"
     if report.exists():
-        shutil.move(str(report), str(out_root / "intron_ref_report.tsv"))
+        shutil.move(str(report), str(reports_dir(out_root) / "intron_ref_report.tsv"))
     last = (proc.stderr.strip().splitlines() or [f"failed (exit {proc.returncode}), see intron_fix.log"])[-1]
     if proc.returncode:
         logging.warning(f"[INTRON_REF] {last}")

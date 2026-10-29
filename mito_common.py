@@ -54,6 +54,22 @@ def write_tsv(path, columns, rows) -> None:
             w.writerow([r.get(c, "") for c in columns] if isinstance(r, dict) else r)
 
 
+def write_table(out_path: Path, header: str, rows: List[str]) -> None:
+    """A report table from tab-joined lines: the header line always, LF line ends."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text("".join(x + "\n" for x in [header, *rows]), encoding="utf-8")
+
+
+REPORTS = "reports"                  # the folder of a run's reports (run, import, annotate)
+
+
+def reports_dir(out_root: Path) -> Path:
+    """<out_root>/reports, created: every step of a run writes its report there."""
+    d = Path(out_root) / REPORTS
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 # problem lists: written only when there is something in them
 def write_nonempty_list(out_path: Path, items: List[str], comment: str = "") -> None:
     unique = sorted(set(items))
