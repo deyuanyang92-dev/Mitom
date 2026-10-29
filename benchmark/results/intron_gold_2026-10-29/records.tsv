@@ -1,0 +1,194 @@
+accession	phylum	order	organism	length	topology	genetic_code	dev	fragment	intron_genes
+EU293739.1	Annelida	Polychaeta	Nephtys sp. 'San Juan Island' YV-2008	17217	linear	5	yes	no	cox1x1
+FJ975144.1	Annelida	Myzostomida	Endomyzostoma sp. MZ-2009	13190	linear	5	yes	no	cox1x2
+KT989323.1	Annelida	Polychaeta	Glycera fallax	20896	linear	5	yes	no	cox1x2
+KY742027.1	Annelida	Polychaeta	Decemunciger sp. AB-2017	19274	circular	5	yes	no	cox1x1,nad1x1,nad4x1
+KY774370.1	Annelida	Polychaeta	Decemunciger sp. AB-2017	19096	circular	5	yes	no	cox1x1,nad1x1,nad4x1
+KY774371.1	Annelida	Polychaeta	Decemunciger sp. AB-2017	19003	circular	5	yes	no	cox1x1,nad1x1,nad4x1
+LC661358.1	Annelida	Polychaeta	Notomastus sp. GK-2021	15776	circular	5	yes	no	cox1x1
+LC670763.1	Annelida	Polychaeta	Travisia sp. GK623	1523	linear	5	no	yes	cox1x1
+LC677172.1	Annelida	Polychaeta	Travisia sanrikuensis	15854	circular	5	yes	no	cox1x1
+NC_000933.1	Cnidaria	Actiniaria	Metridium senile	17443	circular	4	yes	no	cox1x1,nad5x1
+NC_003522.1	Cnidaria	Scleractinia	Acropora tenuis	18338	circular	4	no	no	nad5x1
+NC_006898.1	Cnidaria	Scleractinia	Anacropora matthai	17888	circular	4	no	no	nad5x1
+NC_006902.1	Cnidaria	Scleractinia	Montipora cactus	17887	circular	4	yes	no	nad5x1
+NC_007224.1	Cnidaria	Scleractinia	Orbicella annularis	16138	circular	4	no	no	nad5x1
+NC_007225.1	Cnidaria	Scleractinia	Orbicella franksi	16137	circular	4	no	no	nad5x1
+NC_007226.1	Cnidaria	Scleractinia	Orbicella faveolata	16138	circular	4	no	no	nad5x1
+NC_008071.1	Cnidaria	Corallimorpharia	Discosoma sp. CASIZ 168915	20908	circular	4	no	no	cox1x1,nad5x1
+NC_008072.1	Cnidaria	Corallimorpharia	Discosoma sp. CASIZ 168916	20912	circular	4	no	no	cox1x1,nad5x1
+NC_008151.3	Placozoa	Trichoplacidae	Trichoplax adhaerens	43079	circular	4	yes	no	cox1x5,nad5x1
+NC_008158.1	Cnidaria	Corallimorpharia	Rhodactis sp. CASIZ 171755	20093	circular	4	no	no	cox1x1,nad5x1
+NC_008159.1	Cnidaria	Corallimorpharia	Ricordea florida	21376	circular	4	no	no	cox1x1,nad5x1
+NC_008160.1	Cnidaria	Scleractinia	Agaricia humilis	18735	circular	4	no	no	nad5x1
+NC_008161.1	Cnidaria	Scleractinia	Astrangia sp. JVK-2006	14853	circular	4	no	no	nad5x1
+NC_008162.1	Cnidaria	Scleractinia	Colpophyllia natans	16906	circular	4	no	no	nad5x1
+NC_008163.1	Cnidaria	Scleractinia	Mussa angulosa	17245	circular	4	no	no	nad5x1
+NC_008164.1	Cnidaria	Actiniaria	Nematostella sp. JVK-2006	16389	circular	4	no	no	nad5x1
+NC_008165.1	Cnidaria	Scleractinia	Pavona clavus	18315	circular	4	no	no	nad5x1
+NC_008166.1	Cnidaria	Scleractinia	Porites porites	18648	circular	4	no	no	cox1x1,nad5x1
+NC_008167.1	Cnidaria	Scleractinia	Siderastrea radians	19387	circular	4	no	no	cox1x1,nad5x1
+NC_008411.1	Cnidaria	Antipatharia	Chrysopathes formosa	18398	circular	4	no	no	nad5x1
+NC_009797.1	Cnidaria	Scleractinia	Pocillopora damicornis	17415	circular	4	no	no	nad5x1
+NC_009798.1	Cnidaria	Scleractinia	Pocillopora grandis	17422	circular	4	no	no	nad5x1
+NC_010217.1	Porifera	Homosclerophorida	Plakinastrella cf. onkodes DVL-2011	19790	circular	4	no	no	cox1x2
+NC_010244.2	Cnidaria	Scleractinia	Seriatopora hystrix	17059	circular	4	no	no	nad5x1
+NC_010245.2	Cnidaria	Scleractinia	Seriatopora caliendrum	17010	circular	4	no	no	nad5x1
+NC_011160.1	Cnidaria	Scleractinia	Madracis myriaster	16951	circular	4	no	no	nad5x1
+NC_011162.1	Cnidaria	Scleractinia	Stylophora pistillata	17177	circular	4	no	no	nad5x1
+NC_014885.1	Porifera	Homosclerophorida	Plakina crypta	20069	circular	4	no	no	cox1x1
+NC_015143.1	Cnidaria	Scleractinia	Desmophyllum pertusum	16150	circular	4	no	no	nad5x1
+NC_015309.1	Placozoa	?	Placozoan sp. 'Shirahama'	36676	circular	4	yes	no	cox1x6,nad5x1
+NC_015640.1	Cnidaria	Scleractinia	Fungiacyathus stephanus	19381	circular	4	no	no	cox1x1,nad5x1
+NC_015641.1	Cnidaria	Scleractinia	Fimbriaphyllia ancora	18875	circular	4	no	no	nad5x1
+NC_015642.1	Cnidaria	Scleractinia	Polycyathus sp. MFL-2011	15357	circular	4	no	no	nad5x1
+NC_015643.1	Cnidaria	Scleractinia	Goniopora columna	18766	circular	4	no	no	cox1x1,nad5x1
+NC_015644.1	Cnidaria	Scleractinia	Porites okinawensis	18647	circular	4	no	no	cox1x1,nad5x1
+NC_018364.1	Cnidaria	Scleractinia	Madrepora oculata	15841	circular	4	no	no	nad5x1
+NC_018377.1	Cnidaria	Antipatharia	Stichopathes luetkeni	20448	circular	4	no	no	cox1x1,nad5x1
+NC_020049.1	Cnidaria	Scleractinia	Platygyra carnosa	16463	circular	4	no	no	nad5x1
+NC_022470.1	Cnidaria	Actiniaria	Bolocera tuediae	19143	circular	4	no	no	cox1x1,nad5x1
+NC_022823.1	Cnidaria	Scleractinia	Acropora humilis	18479	circular	4	no	no	nad5x1
+NC_022824.1	Cnidaria	Scleractinia	Acropora muricata	18481	circular	4	no	no	nad5x1
+NC_022825.1	Cnidaria	Scleractinia	Acropora horrida	18480	circular	4	yes	no	nad5x1
+NC_022826.1	Cnidaria	Scleractinia	Acropora hyacinthus	18566	circular	4	no	no	nad5x1
+NC_022827.1	Cnidaria	Scleractinia	Acropora aspera	18479	circular	4	no	no	nad5x1
+NC_022828.1	Cnidaria	Scleractinia	Acropora florida	18365	circular	4	no	no	nad5x1
+NC_022829.1	Cnidaria	Scleractinia	Acropora yongei	18342	circular	4	yes	no	nad5x1
+NC_022830.1	Cnidaria	Scleractinia	Acropora digitifera	18479	circular	4	no	no	nad5x1
+NC_022831.1	Cnidaria	Scleractinia	Acropora nasuta	18481	circular	4	no	no	nad5x1
+NC_022832.1	Cnidaria	Scleractinia	Acropora divaricata	18481	circular	4	no	no	nad5x1
+NC_022833.1	Cnidaria	Scleractinia	Acropora robusta	18480	circular	4	no	no	nad5x1
+NC_024089.1	Cnidaria	Scleractinia	Isopora togianensis	18637	circular	4	no	no	nad5x1
+NC_024090.1	Cnidaria	Scleractinia	Astreopora explanata	18106	circular	4	no	no	nad5x1
+NC_024091.1	Cnidaria	Scleractinia	Isopora palifera	18725	circular	4	no	no	nad5x1
+NC_024092.1	Cnidaria	Scleractinia	Astreopora myriophthalma	18106	circular	4	no	no	nad5x1
+NC_024182.1	Cnidaria	Scleractinia	Porites panamensis	18628	circular	4	no	no	cox1x1,nad5x1
+NC_024671.1	Cnidaria	Scleractinia	Duncanopsammia peltata	18966	circular	4	no	no	cox1x1,nad5x1
+NC_025472.1	Cnidaria	Scleractinia	Solenosmilia variabilis	15968	circular	4	no	no	nad5x1
+NC_026025.1	Cnidaria	Scleractinia	Tubastraea coccinea	19070	circular	4	no	no	cox1x1,nad5x1
+NC_026026.1	Cnidaria	Scleractinia	Dendrophyllia cribrosa	19072	circular	4	no	no	cox1x1,nad5x1
+NC_026527.1	Cnidaria	Scleractinia	Pavona decussata	18378	circular	4	no	no	nad5x1
+NC_026530.1	Cnidaria	Scleractinia	Pseudosiderastrea formosa	19475	circular	4	no	no	cox1x1,nad5x1
+NC_026531.1	Cnidaria	Scleractinia	Pseudosiderastrea tayamai	19475	circular	4	no	no	cox1x1,nad5x1
+NC_027100.1	Cnidaria	Corallimorpharia	Discosoma nummiforme	20925	circular	4	yes	no	cox1x1,nad5x1
+NC_027101.1	Cnidaria	Corallimorpharia	Amplexidiscus fenestrafer	20188	circular	4	no	no	cox1x1,nad5x1
+NC_027102.1	Cnidaria	Corallimorpharia	Corynactis californica	20715	circular	4	no	no	cox1x1,nad5x1
+NC_027103.1	Cnidaria	Corallimorpharia	Rhodactis indosinensis	20100	circular	4	yes	no	cox1x1,nad5x1
+NC_027104.1	Cnidaria	Corallimorpharia	Platyzoanthus mussoides	20826	circular	4	no	no	cox1x1,nad5x1
+NC_027106.1	Cnidaria	Corallimorpharia	Ricordea yuma	22015	circular	4	yes	no	cox1x1,nad5x1
+NC_027526.1	Cnidaria	Scleractinia	Porites rus	18647	circular	4	no	no	cox1x1,nad5x1
+NC_027590.1	Cnidaria	Scleractinia	Dendrophyllia arbuscula	19069	circular	4	yes	no	cox1x1,nad5x1
+NC_027610.1	Cnidaria	Actiniaria	Alicia sansibarensis	19575	circular	4	no	no	nad5x1
+NC_027611.1	Cnidaria	Actiniaria	Antholoba achates	17816	circular	4	no	no	cox1x1,nad5x1
+NC_027612.1	Cnidaria	Actiniaria	Halcampoides purpureus	18038	circular	4	no	no	cox1x1,nad5x1
+NC_027614.1	Cnidaria	Actiniaria	Phymanthus crucifer	19727	circular	4	no	no	cox1x1,nad5x1
+NC_027615.1	Cnidaria	Actiniaria	Cylista ornata	17446	circular	4	no	no	cox1x1,nad5x1
+NC_027667.1	Cnidaria	Antipatharia	Myriopathes japonica	17733	circular	4	yes	no	cox1x1,nad5x1
+NC_028710.1	Annelida	Polychaeta	Chaetopterus variopedatus	16143	circular	5	yes	no	cox1x1
+NC_029695.1	Cnidaria	Scleractinia	Porites lutea	18646	circular	4	no	no	cox1x1,nad5x1
+NC_029696.1	Cnidaria	Scleractinia	Galaxea fascicularis	18751	circular	4	no	no	nad5x1
+NC_030186.1	Cnidaria	Scleractinia	Porites lobata	18647	circular	4	no	no	cox1x1,nad5x1
+NC_030274.1	Cnidaria	Actiniaria	Anthopleura anjunae	20039	circular	4	no	no	cox1x1,nad5x1
+NC_030352.1	Cnidaria	Scleractinia	Tubastraea tagusensis	19094	circular	4	no	no	cox1x1,nad5x1
+NC_034275.1	Cnidaria	Scleractinia	Desmophyllum dianthus	16310	circular	4	no	no	nad5x1
+NC_034916.1	Cnidaria	Scleractinia	Favites pentagona	18006	circular	4	no	no	nad5x1
+NC_035578.1	Cnidaria	Zoantharia	Zoanthus sansibaricus	20972	circular	4	yes	no	cox1x1,nad5x1
+NC_035579.1	Cnidaria	Zoantharia	Palythoa heliodiscus	20841	circular	4	no	no	cox1x1,nad5x1
+NC_035879.1	Cnidaria	Scleractinia	Favites abdita	17825	circular	4	no	no	nad5x1
+NC_037177.1	Cnidaria	Actiniaria	Anemonia viridis	20108	circular	4	no	no	cox1x1,nad5x1
+NC_037178.1	Cnidaria	Actiniaria	Anemonia manjano	19545	circular	4	no	no	cox1x1,nad5x1
+NC_037359.1	Cnidaria	Scleractinia	Montipora aequituberculata	17886	circular	4	yes	no	nad5x1
+NC_037434.1	Cnidaria	Scleractinia	Porites fontanesii	18658	circular	4	no	no	cox1x1,nad5x1
+NC_037435.1	Cnidaria	Scleractinia	Porites harrisoni	18630	circular	4	no	no	cox1x1,nad5x1
+NC_039929.1	Cnidaria	Actiniaria	Actinia equina	20690	circular	4	no	no	cox1x1,nad5x1
+NC_040136.1	Cnidaria	Scleractinia	Alveopora japonica	18144	circular	4	no	no	nad5x1
+NC_040137.1	Cnidaria	Scleractinia	Montipora efflorescens	17886	circular	4	no	no	nad5x1
+NC_040169.1	Cnidaria	Scleractinia	Echinophyllia aspera	17697	circular	4	no	no	cox1x1,nad5x1
+NC_041549.1	Placozoa	?	Polyplacotoma mediterranea	23462	circular	4	yes	no	cox1x4,rrnLx1
+NC_042481.1	Cnidaria	Scleractinia	Plesiastrea versipora	15320	circular	4	no	no	nad5x1
+NC_042742.1	Cnidaria	Scleractinia	Acropora valida	18385	circular	4	no	no	nad5x1
+NC_042795.1	Cnidaria	Scleractinia	Hydnophora exesa	17790	circular	4	no	no	nad5x1
+NC_044074.1	Cnidaria	Scleractinia	Dipsastraea rotumana	16466	circular	4	no	no	nad5x1
+NC_044902.1	Cnidaria	Actiniaria	Actinia tenebrosa	20691	circular	4	no	no	cox1x1,nad5x1
+NC_045515.1	Cnidaria	Actiniaria	Diadumene lineata	17552	circular	4	no	no	cox1x1,nad5x1
+NC_045931.1	Cnidaria	Scleractinia	Goniopora djiboutiensis	18765	circular	4	no	no	cox1x1,nad5x1
+NC_046400.1	Cnidaria	Zoantharia	Hydrozoanthus gracilis	20689	circular	4	no	no	cox1x1,nad5x1
+NC_046401.1	Cnidaria	Zoantharia	Microzoanthus occultus	21656	circular	4	no	no	nad5x1
+NC_046402.1	Cnidaria	Zoantharia	Nanozoanthus harenaceus	18577	circular	4	no	no	nad5x1
+NC_046403.1	Cnidaria	Zoantharia	Palythoa mizigama	21104	circular	4	no	no	cox1x1,nad5x1
+NC_046404.1	Cnidaria	Zoantharia	Palythoa mutuki	21278	circular	4	no	no	cox1x1,nad5x1
+NC_046405.1	Cnidaria	Zoantharia	Parazoanthus elongatus	21148	circular	4	yes	no	cox1x1,nad5x1
+NC_046406.1	Cnidaria	Zoantharia	Sphenopus marsupialis	21199	circular	4	no	no	cox1x1,nad5x1
+NC_046474.1	Cnidaria	Zoantharia	Epizoanthus illoricatus	20447	circular	4	no	no	cox1x1,nad5x1
+NC_046475.1	Cnidaria	Zoantharia	Parazoanthus swiftii	21499	circular	4	no	no	cox1x1,nad5x1
+NC_046476.1	Cnidaria	Zoantharia	Zoanthus sociatus	21202	circular	4	no	no	cox1x1,nad5x1
+NC_046690.1	Cnidaria	Scleractinia	Dipsastraea favus	17054	circular	4	no	no	nad5x1
+NC_046843.1	Cnidaria	Antipatharia	Tanacetipathes thamnea	17712	circular	4	yes	no	cox1x1,nad5x1
+NC_047217.1	Cnidaria	Actiniaria	Epiactis japonica	18835	circular	4	yes	no	cox1x1,nad5x1
+NC_047218.1	Cnidaria	Actiniaria	Haloclava producta	17416	circular	4	no	no	cox1x1,nad5x1
+NC_047219.1	Cnidaria	Actiniaria	Heteractis aurora	19999	circular	4	no	no	cox1x1,nad5x1
+NC_047220.1	Cnidaria	Actiniaria	Radianthus crispa	18835	circular	4	no	no	cox1x1,nad5x1
+NC_047221.1	Cnidaria	Actiniaria	Liponema brevicorne	19143	circular	4	no	no	cox1x1,nad5x1
+NC_049065.1	Cnidaria	Actiniaria	Anemonia sulcata	20390	circular	4	yes	no	cox1x1,nad5x1
+NC_049066.1	Cnidaria	Actiniaria	Entacmaea quadricolor	20960	circular	4	no	no	cox1x1,nad5x1
+NC_056275.1	Cnidaria	Scleractinia	Paraconotrochus antarcticus	17562	circular	4	no	no	nad5x1
+NC_056290.1	Cnidaria	Scleractinia	Gardineria hawaiiensis	19430	circular	4	no	no	cox1x1,nad5x1
+NC_056771.1	Cnidaria	Actiniaria	Exaiptasia diaphana	19790	circular	4	no	no	cox1x1,nad5x1
+NC_056883.1	Cnidaria	Scleractinia	Tubastraea micranthus	19085	circular	4	no	no	cox1x1,nad5x1
+NC_056884.1	Cnidaria	Scleractinia	Tubastraea diaphana	19093	circular	4	no	no	cox1x1,nad5x1
+NC_060606.1	Cnidaria	Scleractinia	Dendrophyllia minuscula	19054	circular	4	no	no	cox1x1,nad5x1
+NC_060802.1	Cnidaria	Scleractinia	Diploastrea heliopora	18363	circular	4	no	no	cox1x1,nad5x1
+NC_065774.1	Cnidaria	Scleractinia	Heterocyathus sulcatus	18218	circular	4	no	no	nad5x1
+NC_065775.1	Cnidaria	Scleractinia	Trochocyathus caryophylloides	16127	circular	4	no	no	nad5x1
+NC_065776.1	Cnidaria	Scleractinia	Caryophyllia scobinosa	16105	circular	4	no	no	nad5x1
+NC_066051.1	Cnidaria	Actiniaria	Anthopleura xanthogrammica	18511	circular	4	no	no	cox1x1,nad5x1
+NC_066448.1	Cnidaria	Actiniaria	Heteractis doreensis	20720	circular	4	no	no	cox1x1,nad5x1
+NC_068220.1	Cnidaria	Scleractinia	Crispatotrochus rubescens	16536	circular	4	no	no	nad5x1
+NC_068221.1	Cnidaria	Scleractinia	Crispatotrochus rugosus	16536	circular	4	no	no	nad5x1
+NC_069594.1	Cnidaria	Antipatharia	Dendrobathypathes boutillieri	17687	circular	4	no	no	nad5x1
+NC_070437.1	Cnidaria	Scleractinia	Turbinaria bifrons	18880	circular	4	no	no	cox1x1,nad5x1
+NC_071821.1	Cnidaria	Antipatharia	Myriopathes ulex	17711	circular	4	yes	no	cox1x1,nad5x1
+NC_071915.1	Cnidaria	Actiniaria	Paracondylactis sinensis	20786	circular	4	no	no	cox1x1,nad5x1
+NC_072168.1	Cnidaria	Scleractinia	Montipora vietnamensis	17885	circular	4	no	no	nad5x1
+NC_072224.1	Cnidaria	Scleractinia	Acropora intermedia	18482	circular	4	no	no	nad5x1
+NC_072225.1	Cnidaria	Scleractinia	Acropora microphthalma	18480	circular	4	no	no	nad5x1
+NC_077265.1	Cnidaria	Scleractinia	Isopora brueggemanni	18734	circular	4	no	no	nad5x1
+NC_077518.1	Cnidaria	Scleractinia	Homophyllia bowerbanki	18154	circular	4	no	no	nad5x1
+NC_079937.1	Cnidaria	Zoantharia	Bergia puertoricense	21577	circular	4	yes	no	cox1x1,nad5x1
+NC_079938.1	Cnidaria	Zoantharia	Epizoanthus ramosus	19672	circular	4	no	no	cox1x1,nad5x1
+NC_079939.1	Cnidaria	Zoantharia	Epizoanthus rinbou	19386	circular	4	no	no	cox1x1,nad5x1
+NC_079940.1	Cnidaria	Zoantharia	Epizoanthus scotinus	21875	circular	4	no	no	cox1x1,nad5x1
+NC_079941.1	Cnidaria	Zoantharia	Hydrozoanthus antumbrosus	20763	circular	4	no	no	cox1x1,nad5x1
+NC_079942.1	Cnidaria	Zoantharia	Hydrozoanthus sils	20651	circular	4	no	no	cox1x1,nad5x1
+NC_079943.1	Cnidaria	Zoantharia	Hydrozoanthus tunicans	20763	circular	4	no	no	cox1x1,nad5x1
+NC_080205.1	Cnidaria	Zoantharia	Zoanthus pulchellus	21114	circular	4	no	no	cox1x1,nad5x1
+NC_080206.1	Cnidaria	Zoantharia	Zoanthus solanderi	21399	circular	4	no	no	cox1x1,nad5x1
+NC_080207.1	Cnidaria	Zoantharia	Antipathozoanthus remengesaui	20753	circular	4	no	no	cox1x1,nad5x1
+NC_080208.1	Cnidaria	Zoantharia	Antipathozoanthus obscurus	21105	circular	4	no	no	cox1x1,nad5x1
+NC_080209.1	Cnidaria	Zoantharia	Umimayanthus nakama	22654	circular	4	no	no	cox1x1,nad5x1
+NC_080258.1	Cnidaria	Zoantharia	Zoanthus gigantus	21399	circular	4	no	no	cox1x1,nad5x1
+NC_080259.1	Cnidaria	Zoantharia	Umimayanthus parasiticus	23133	circular	4	no	no	cox1x1,nad5x1
+NC_080260.1	Cnidaria	Zoantharia	Palythoa caribaeorum	23035	circular	4	yes	no	cox1x1,nad5x1
+NC_080261.1	Cnidaria	Zoantharia	Palythoa grandiflora	21242	circular	4	yes	no	cox1x1,nad5x1
+NC_080262.1	Cnidaria	Zoantharia	Palythoa grandis	21247	circular	4	no	no	cox1x1,nad5x1
+NC_080263.1	Cnidaria	Zoantharia	Parazoanthus darwini	21519	circular	4	no	no	cox1x1,nad5x1
+NC_081188.1	Cnidaria	Scleractinia	Acropora subulata	18566	circular	4	no	no	nad5x1
+NC_081341.1	Cnidaria	Scleractinia	Acropora nana	18480	circular	4	no	no	nad5x1
+NC_081452.1	Cnidaria	Scleractinia	Acropora cytherea	18566	circular	4	no	no	nad5x1
+NC_081453.1	Cnidaria	Scleractinia	Acropora millepora	18366	circular	4	no	no	nad5x1
+NC_081454.1	Cnidaria	Scleractinia	Acropora pulchra	18481	circular	4	no	no	nad5x1
+NC_081455.1	Cnidaria	Scleractinia	Acropora turaki	18465	circular	4	no	no	nad5x1
+NC_082103.1	Cnidaria	Scleractinia	Polymyces wellsi	19924	circular	4	no	no	cox1x1,nad5x1
+NC_082917.1	Cnidaria	Scleractinia	Galaxea astreata	18481	circular	4	no	no	nad5x1
+NC_082918.1	Cnidaria	Scleractinia	Galaxea paucisepta	18481	circular	4	no	no	nad5x1
+NC_083272.1	Cnidaria	Scleractinia	Acropora cervicornis	18259	circular	4	no	no	nad5x1
+NC_086801.1	Cnidaria	Zoantharia	Parazoanthus axinellae	20979	circular	4	no	no	cox1x1,nad5x1
+NC_087806.1	Annelida	Polychaeta	Synelmis amoureuxi	18460	circular	5	yes	no	cox1x1
+NC_087808.1	Annelida	Polychaeta	Antonbruunia milenae	17540	circular	5	yes	no	cox1x1
+NC_088052.1	Cnidaria	Antipatharia	Antipathes grandis	20484	circular	4	no	no	cox1x1,nad5x1
+NC_088089.1	Cnidaria	Scleractinia	Madrepora piresae	15841	circular	4	no	no	nad5x1
+OR637230.1	Annelida	Polychaeta	Chaetopterus qiani	15903	linear	5	yes	no	cox1x1
+PP895294.1	Annelida	Polychaeta	Chaetopterus sp. j JL-2024	16080	circular	5	yes	no	cox1x1
+PP895295.1	Annelida	Polychaeta	Chaetopterus sp. h JL-2024	17017	circular	5	yes	no	cox1x1
+PP895296.1	Annelida	Polychaeta	Chaetopterus sp. a JL-2024	15970	circular	5	yes	no	cox1x1

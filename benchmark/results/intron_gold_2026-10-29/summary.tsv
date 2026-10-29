@@ -1,0 +1,6 @@
+phylum	A	B	C	consensus	D-corrected	D	E	total	in_gold	excluded_ignore	removed_not_intron	gold_moved_from_ncbi
+Annelida	5	1	0	9	8	0	1	24	24	0	0	15
+Cnidaria	195	36	0	7	28	2	0	268	266	0	2	70
+Placozoa	0	1	0	0	1	0	14	16	16	0	0	5
+Porifera	2	1	0	0	0	0	0	3	3	0	0	1
+all	202	39	0	16	37	2	15	311	309	0	2	91
