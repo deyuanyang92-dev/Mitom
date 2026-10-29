@@ -21,8 +21,8 @@ takes a cluster copy first (pick_histone).
 Massive assemblies: both searches first run with one reference per genus (rDNA; low-complexity stretches do not
 seed) / per gene and phylum (histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go
 to the steps above, each gene set in its own regions, and at most MAX_RDNA_REGIONS rDNA regions and
-MAX_HIST_REGIONS histone regions per gene of them (best first; the time is bounded whatever the assembly). See
-knowledge/topics/nuclear_markers.md section 15 for times (a 460 Mb SPAdes assembly: < 1 min on 8 threads).
+MAX_HIST_REGIONS histone regions per gene of them (best first; the time is bounded whatever the assembly).
+2026-10-29: SPAdes assemblies of 0.03-1.7 Gb took 8 s - 2 min on 8 threads (before: up to 22 min and 16 GB on 16).
 
 Per-gene consensus (multi-copy rDNA split over many contigs of one assembly): see consensus(); output
 consensus/<gene>.fasta and consensus.tsv (which contigs were used, which were dropped and why).
