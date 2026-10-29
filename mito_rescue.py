@@ -37,9 +37,7 @@ Writes the GenBank files in place and rescue_report.tsv next to them.
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import csv
-import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -47,18 +45,15 @@ from typing import Any, Callable, Dict, List, Optional
 
 from Bio import SeqIO
 from Bio.Data import CodonTable
-from Bio.Seq import Seq
-from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
+from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import write_gb  # noqa: E402
+from mito_common import run_tool, write_gb  # noqa: E402
+from mito_engines import engine_env, mitos2_command, mitos_to_record  # noqa: E402,F401  (MITOS2: one runner, one parser)
 
-MITOS_TRNA = re.compile(r"^trn([A-Z])(\d?)(?:_(\d+))?(?:-([a-z]))?\(([a-z-]{3})\)", re.I)
-MITOS_GENE = re.compile(r"^(.+?)(?:_(\d+))?(?:-([a-z]))?$")       # nad5, nad5_1 (2nd copy), cox2-a (fragment)
-MITOS_SKIP = re.compile(r"^(OH|OL)", re.I)
 MIN_RRNA = 300
 
 CORE_NAMES = mito_names.CORE_NAMES      # MITOS2 name -> the core's gene name and product
@@ -69,7 +64,6 @@ MAX_LEN = {
     "nad4": 1450, "nad4l": 320, "nad5": 2000, "nad6": 600, "atp6": 750, "atp8": 250, "rrnS": 1100, "rrnL": 1900,
 }
 CONTAINER_FACTOR = 1.5
-MAX_FRAG_GAP = 3000      # CDS fragments (-a/-b) further apart than this are not joined
 NOTE = "annotated by similarity to a MITOS2 prediction (not found by the primary annotation)"
 HINT = "MITOS2 boundaries are less exact than MitoZ's (52 % vs 80 % both ends exact): check the ends manually"
 _MAX_LEN_BY_NAME = {n.lower(): MAX_LEN[g] for g, (n, _) in CORE_NAMES.items()}
@@ -79,67 +73,6 @@ _MAX_LEN_BY_NAME.update({g.lower(): v for g, v in MAX_LEN.items()})
 def max_len(gene: str) -> Optional[int]:
     """Longest expected length (nt) of a gene given by its core or MITOS2 name; None when unknown."""
     return _MAX_LEN_BY_NAME.get(gene.lower())
-
-
-def _gap(a: FeatureLocation, b: FeatureLocation) -> int:
-    """Nucleotides between two intervals (< 0 when they overlap)."""
-    return max(int(b.start) - int(a.end), int(a.start) - int(b.end))
-
-
-def _chains(frags: List[tuple]) -> List[List[FeatureLocation]]:
-    """Fragments (-a, -b ...) in letter order -> chains of parts to join: only parts on the same strand
-    with a gap of 0..MAX_FRAG_GAP nt to the previous part are joined; others start a new feature."""
-    chains: List[List[FeatureLocation]] = []
-    for _, parts in sorted(frags, key=lambda x: x[0]):
-        last = chains[-1][-1] if chains else None
-        if last is not None and last.strand == parts[0].strand and 0 <= _gap(last, parts[0]) <= MAX_FRAG_GAP:
-            chains[-1].extend(parts)
-        else:
-            chains.append(list(parts))
-    return chains
-
-
-def mitos_to_record(result_dir: Path, seq: Seq, acc: str) -> SeqRecord:
-    """GenBank-like record from MITOS2 result.bed (0-based). Copies (_0, _1) stay separate features of the
-    same gene; CDS fragments (-a, -b) are joined in letter order when on the same strand and at most
-    MAX_FRAG_GAP nt apart (otherwise separate features); rRNA fragments are never joined (rescue then takes
-    the longest piece); start > end wraps the origin; OH/OL skipped."""
-    n = len(seq)
-    groups: Dict[tuple, List[tuple]] = {}
-    for i, line in enumerate((result_dir / "result.bed").read_text().splitlines()):
-        c = line.split("\t")
-        if len(c) < 6 or MITOS_SKIP.match(c[3]):
-            continue
-        strand = -1 if c[5].strip() == "-" else 1
-        m = MITOS_TRNA.match(c[3])
-        if m:
-            key = ("tRNA", f"trn{m.group(1).upper()}{m.group(2)}", m.group(5).lower().strip("-"), m.group(3) or "")
-            frag = m.group(4) or ""
-        else:
-            g = MITOS_GENE.match(c[3])
-            base = g.group(1) if g else c[3]
-            kind = "rRNA" if base.lower().startswith("rrn") else "CDS"
-            # rRNA pieces are separate features: the line number makes each key unique
-            key = (kind, base, "", f"line{i}" if kind == "rRNA" else (g.group(2) or "") if g else "")
-            frag = (g.group(3) or "") if g else ""
-        s0, e0 = int(c[1]), int(c[2])
-        if s0 <= e0:
-            parts = [FeatureLocation(s0, e0, strand)]
-        else:                                    # circular feature across the origin
-            a, b = FeatureLocation(s0, n, strand), FeatureLocation(0, e0, strand)
-            parts = [b, a] if strand == -1 else [a, b]
-        groups.setdefault(key, []).append((frag, parts))
-    r = SeqRecord(seq, id=acc)
-    r.annotations["molecule_type"] = "DNA"
-    for (kind, name, ac, _), frags in groups.items():
-        for parts in _chains(frags):
-            loc = parts[0] if len(parts) == 1 else CompoundLocation(parts)
-            q = {"gene": [name]}
-            if kind == "tRNA":
-                q["anticodon"] = [ac]
-            r.features.append(SeqFeature(loc, type="gene", qualifiers={"gene": [name]}))
-            r.features.append(SeqFeature(loc, type=kind, qualifiers=q))
-    return r
 
 
 def _positions(f: SeqFeature, n: int) -> set:
@@ -232,11 +165,8 @@ def run_mitos(fa: Path, code: int, out: Path, linear: bool, mitos_bin: Optional[
     if not (b and d):
         raise RuntimeError("MITOS2 not found (install.sh, or --mitos_bin / --mitos_refdir)")
     out.mkdir(parents=True, exist_ok=True)
-    cmd = ["env", f"PATH={b}:/usr/bin:/bin", str(Path(b) / "python"),
-           str(Path(__file__).resolve().parent / "scripts" / "runmitos_fast.py"),
-           "-i", str(fa), "-c", str(code), "-o", str(out), "-r", ref, "--refdir", d,
-           "--trna", "0", "--intron", "0", "--oril", "0", "--orih", "0", "--noplots", *(["--linear"] if linear else [])]
-    p = subprocess.run(cmd, capture_output=True, text=True)
+    p = run_tool(mitos2_command(fa, out, code, b, d, ref=ref, mode="sensitive", skip=("trna", "intron", "oril", "orih"),
+                                linear=linear), env=engine_env(b, isolated=True))
     if not (out / "result.bed").exists():
         raise RuntimeError(f"MITOS2 produced no result.bed: {(p.stderr or p.stdout)[-300:]}")
     return out

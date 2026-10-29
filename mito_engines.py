@@ -23,11 +23,11 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation, SeqFeature
+from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -86,6 +86,112 @@ def run_mitoz(fa: Path, workdir: Path, prefix: str, clade: str, code: int, threa
 
 
 # ── MITOS2 ───────────────────────────────────────────────────────────────────
+RUNMITOS_FAST = Path(__file__).resolve().parent / "scripts" / "runmitos_fast.py"
+
+
+def mitos2_command(fa: Path, out: Path, code: int, bin_dir: str, refdir: str, ref: str = mito_env.MITOS_REF,
+                   mode: str = "full", skip: Sequence[str] = (), linear: bool = False, noplots: bool = True) -> List[str]:
+    """The MITOS2 command of every MitoM module (run it with engine_env(bin_dir, isolated=True)): mode full = runmitos
+    as installed; sensitive / fast = scripts/runmitos_fast.py (the Infernal searches in parallel, same results; fast
+    also skips the sensitive re-search of missing tRNAs); skip = MITOS2 parts not annotated (prot, rrna, trna,
+    intron, oril, orih)."""
+    exe = [str(Path(bin_dir) / "runmitos")] if mode == "full" else \
+        [str(Path(bin_dir) / "python"), str(RUNMITOS_FAST), *(["--no_sensitive"] if mode == "fast" else [])]
+    return [*exe, "-i", str(fa), "-c", str(code), "-o", str(out), "-r", ref, "--refdir", str(refdir),
+            *[x for part in skip for x in (f"--{part}", "0")], *(["--noplots"] if noplots else []),
+            *(["--linear"] if linear else [])]
+
+
+class BedRow(NamedTuple):
+    seq: str          # sequence name
+    start: int        # 0-based; start > end for a feature across the origin
+    end: int
+    name: str         # MITOS2 name: nad5, nad5_1 (2nd copy), cox2-a (fragment), trnL1(tag), OH ...
+    score: str
+    strand: int
+
+
+def parse_result_bed(text: str) -> List[BedRow]:
+    """The features of a MITOS2 result.bed text (lines with fewer than 6 columns skipped)."""
+    rows = []
+    for line in text.splitlines():
+        c = line.split("\t")
+        if len(c) >= 6:
+            rows.append(BedRow(c[0], int(c[1]), int(c[2]), c[3], c[4], -1 if c[5].strip() == "-" else 1))
+    return rows
+
+
+def read_result_bed(result_dir: Path) -> List[BedRow]:
+    """The features of result_dir/result.bed (MITOS2's result folder)."""
+    return parse_result_bed((Path(result_dir) / "result.bed").read_text())
+
+
+MITOS_TRNA = re.compile(r"^trn([A-Z])(\d?)(?:_(\d+))?(?:-([a-z]))?\(([a-z-]{3})\)", re.I)
+MITOS_GENE = re.compile(r"^(.+?)(?:_(\d+))?(?:-([a-z]))?$")       # nad5, nad5_1 (2nd copy), cox2-a (fragment)
+MITOS_SKIP = re.compile(r"^(OH|OL)", re.I)
+MAX_FRAG_GAP = 3000      # CDS fragments (-a/-b) further apart than this are not joined
+
+
+def _gap(a: FeatureLocation, b: FeatureLocation) -> int:
+    """Nucleotides between two intervals (< 0 when they overlap)."""
+    return max(int(b.start) - int(a.end), int(a.start) - int(b.end))
+
+
+def _chains(frags: List[tuple]) -> List[List[FeatureLocation]]:
+    """Fragments (-a, -b ...) in letter order -> chains of parts to join: only parts on the same strand
+    with a gap of 0..MAX_FRAG_GAP nt to the previous part are joined; others start a new feature."""
+    chains: List[List[FeatureLocation]] = []
+    for _, parts in sorted(frags, key=lambda x: x[0]):
+        last = chains[-1][-1] if chains else None
+        if last is not None and last.strand == parts[0].strand and 0 <= _gap(last, parts[0]) <= MAX_FRAG_GAP:
+            chains[-1].extend(parts)
+        else:
+            chains.append(list(parts))
+    return chains
+
+
+def mitos_to_record(result_dir: Path, seq: Seq, acc: str) -> SeqRecord:
+    """GenBank-like record from MITOS2 result.bed (0-based). Copies (_0, _1) stay separate features of the
+    same gene; CDS fragments (-a, -b) are joined in letter order when on the same strand and at most
+    MAX_FRAG_GAP nt apart (otherwise separate features); rRNA fragments are never joined (rescue then takes
+    the longest piece); start > end wraps the origin; OH/OL skipped."""
+    n = len(seq)
+    groups: Dict[tuple, List[tuple]] = {}
+    for i, row in enumerate(read_result_bed(result_dir)):
+        if MITOS_SKIP.match(row.name):
+            continue
+        strand = row.strand
+        m = MITOS_TRNA.match(row.name)
+        if m:
+            key = ("tRNA", f"trn{m.group(1).upper()}{m.group(2)}", m.group(5).lower().strip("-"), m.group(3) or "")
+            frag = m.group(4) or ""
+        else:
+            g = MITOS_GENE.match(row.name)
+            base = g.group(1) if g else row.name
+            kind = "rRNA" if base.lower().startswith("rrn") else "CDS"
+            # rRNA pieces are separate features: the row number makes each key unique
+            key = (kind, base, "", f"line{i}" if kind == "rRNA" else (g.group(2) or "") if g else "")
+            frag = (g.group(3) or "") if g else ""
+        s0, e0 = row.start, row.end
+        if s0 <= e0:
+            parts = [FeatureLocation(s0, e0, strand)]
+        else:                                    # circular feature across the origin
+            a, b = FeatureLocation(s0, n, strand), FeatureLocation(0, e0, strand)
+            parts = [b, a] if strand == -1 else [a, b]
+        groups.setdefault(key, []).append((frag, parts))
+    r = SeqRecord(seq, id=acc)
+    r.annotations["molecule_type"] = "DNA"
+    for (kind, name, ac, _), frags in groups.items():
+        for parts in _chains(frags):
+            loc = parts[0] if len(parts) == 1 else CompoundLocation(parts)
+            q = {"gene": [name]}
+            if kind == "tRNA":
+                q["anticodon"] = [ac]
+            r.features.append(SeqFeature(loc, type="gene", qualifiers={"gene": [name]}))
+            r.features.append(SeqFeature(loc, type=kind, qualifiers=q))
+    return r
+
+
 def run_mitos2(fa: Path, workdir: Path, prefix: str, code: int, refdir: Optional[str] = None,
                bin_dir: Optional[str] = None) -> List[SeqRecord]:
     """MITOS2 runmitos (unchanged, refseq89m) on each sequence of one sample (in workdir/mitos2/<record>)."""
@@ -101,8 +207,7 @@ def run_mitos2(fa: Path, workdir: Path, prefix: str, code: int, refdir: Optional
         out = workdir / "mitos2" / rid
         (out / "result").mkdir(parents=True, exist_ok=True)       # runmitos refuses a missing -o folder
         (out / "in.fa").write_text(f">{rid}\n{seq}\n")
-        cmd = [str(Path(b) / "runmitos"), "-i", str(out / "in.fa"), "-c", str(code), "-o", str(out / "result"),
-               "-r", mito_env.MITOS_REF, "--refdir", d, "--noplots", *(["--linear"] if topology == "linear" else [])]
+        cmd = mitos2_command(out / "in.fa", out / "result", code, b, d, linear=topology == "linear")
         print("[engine] " + " ".join(cmd), file=sys.stderr, flush=True)
         rc = run_tool(cmd, cwd=out, env=engine_env(b, isolated=True), capture=False).returncode
         if rc or not (out / "result" / "result.bed").is_file():
@@ -116,8 +221,7 @@ def mitos2_record(result_dir: Path, seq: str, rid: str, code: Optional[int], top
     /transl_table, tRNA /product and `anticodon: XXX` note), a gene feature before each; fragments of a gene joined
     and features across the origin written as joins (mito_rescue.mitos_to_record); OH / OL and names without a core
     name (introns) left out."""
-    import mito_rescue
-    mitos = mito_rescue.mitos_to_record(Path(result_dir), Seq(seq), rid)
+    mitos = mitos_to_record(Path(result_dir), Seq(seq), rid)
     rec = SeqRecord(Seq(seq), id=rid, name=rid[:16], description="")
     rec.annotations.update(molecule_type="DNA", topology=topology, data_file_division="INV")
     rec.features.append(SeqFeature(FeatureLocation(0, len(seq), 1), type="source",
@@ -154,8 +258,7 @@ def mitos2_topology(result_dir: Path) -> Optional[str]:
 
 def mitos2_seq_ids(result_dir: Path) -> List[str]:
     """Sequence names in MITOS2's result.bed (first column)."""
-    return sorted({line.split("\t")[0] for line in (Path(result_dir) / "result.bed").read_text().splitlines()
-                   if line.strip()})
+    return sorted({row.seq for row in read_result_bed(result_dir)})
 
 
 # ── existing results (mitom import) ───────────────────────────────────────────

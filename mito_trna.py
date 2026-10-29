@@ -93,9 +93,9 @@ class Pred:
         return self.end - self.start + 1
 
 
-def run(cmd: List[str], cwd: Optional[Path] = None) -> str:
+def run(cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
     try:
-        return run_tool(cmd, timeout=TIMEOUT, cwd=cwd).stdout
+        return run_tool(cmd, timeout=TIMEOUT, cwd=cwd, env=env).stdout
     except (subprocess.TimeoutExpired, OSError) as exc:
         print(f"[mito_trna] {cmd[0]} failed: {exc}", file=sys.stderr)
         return ""
@@ -159,16 +159,14 @@ def mitos2(fa: Path, code: int, b: Dict[str, str], tmp: Path, a) -> List[Pred]:
     """MITOS2, tRNA prediction only (proteins, rRNA, introns and OL skipped for speed)."""
     if a.mitos_mode not in ("fast", "sensitive", "full"):          # any other value used to act as 'sensitive'
         raise ValueError(f"mitos_mode must be fast, sensitive or full, not {a.mitos_mode!r}")
+    import mito_engines
     od = tmp / "mitos"
     shutil.rmtree(od, ignore_errors=True)
     od.mkdir()
     env_bin = str(Path(b["runmitos"]).parent)
-    exe = [b["runmitos"]] if a.mitos_mode == "full" else \
-        [str(Path(env_bin) / "python"), str(Path(__file__).resolve().parent / "scripts" / "runmitos_fast.py"),
-         *(["--no_sensitive"] if a.mitos_mode == "fast" else [])]
-    cmd = ["env", f"PATH={env_bin}:/usr/bin:/bin", *exe, "-i", str(fa), "-c", str(code), "-o", str(od),
-           "-r", a.mitos_ref, "--refdir", a.mitos_refdir, "--prot", "0", "--rrna", "0", "--intron", "0", "--oril", "0"]
-    run(cmd)
+    run(mito_engines.mitos2_command(fa, od, code, env_bin, a.mitos_refdir, ref=a.mitos_ref, mode=a.mitos_mode,
+                                    skip=("prot", "rrna", "intron", "oril"), noplots=False),
+        env=mito_engines.engine_env(env_bin, isolated=True))
     bed = od / "result.bed"
     if not bed.exists():                              # failed run, not "no tRNA found"
         raise RuntimeError("MITOS2 produced no result.bed")
@@ -176,16 +174,14 @@ def mitos2(fa: Path, code: int, b: Dict[str, str], tmp: Path, a) -> List[Pred]:
 
 
 def parse_mitos_bed(text: str) -> List[Pred]:
-    """tRNA lines of MITOS2 result.bed (0-based start)."""
+    """tRNA lines of MITOS2 result.bed (mito_engines.parse_result_bed; 0-based start)."""
+    import mito_engines
     out = []
-    for line in text.splitlines():
-        c = line.split("\t")
-        if len(c) < 6:
-            continue
-        m = MITOS_NAME.match(c[3])
+    for row in mito_engines.parse_result_bed(text):
+        m = MITOS_NAME.match(row.name)
         if m:
-            out.append(Pred("MITOS2", int(c[1]) + 1, int(c[2]), -1 if c[5].strip() == "-" else 1, m.group(1).upper(),
-                            m.group(2).lower().replace("u", "t").strip("-"), c[4], extra={"mitos_name": c[3]}))
+            out.append(Pred("MITOS2", row.start + 1, row.end, row.strand, m.group(1).upper(),
+                            m.group(2).lower().replace("u", "t").strip("-"), row.score, extra={"mitos_name": row.name}))
     return out
 
 

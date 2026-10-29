@@ -175,3 +175,29 @@ def test_setup_downloads_checks_and_writes_the_config(tmp_path, monkeypatch):
         assert mito_env.setup(str(tmp_path / "other")) == 1               # checksum mismatch
     finally:
         mito_env.config.cache_clear()
+
+
+def test_one_mitos2_command_for_engine_rescue_and_trna():
+    """mito_engines.mitos2_command gives the command lines the engine, mito_rescue and mito_trna used to build
+    themselves (they ran it as `env PATH=<bin>:/usr/bin:/bin ...`; the environment is now engine_env(bin, isolated))."""
+    b, d, fa, out = "/m/bin", "/refs", Path("/w/in.fa"), Path("/w/res")
+    assert me.mitos2_command(fa, out, 5, b, d, linear=True) == [
+        "/m/bin/runmitos", "-i", "/w/in.fa", "-c", "5", "-o", "/w/res", "-r", "refseq89m", "--refdir", "/refs",
+        "--noplots", "--linear"]
+    fast = str(me.RUNMITOS_FAST)
+    assert fast.endswith("scripts/runmitos_fast.py")
+    assert me.mitos2_command(fa, out, 5, b, d, mode="sensitive", skip=("trna", "intron", "oril", "orih")) == [
+        "/m/bin/python", fast, "-i", "/w/in.fa", "-c", "5", "-o", "/w/res", "-r", "refseq89m", "--refdir", "/refs",
+        "--trna", "0", "--intron", "0", "--oril", "0", "--orih", "0", "--noplots"]
+    assert me.mitos2_command(fa, out, 9, b, d, ref="r1", mode="fast", skip=("prot", "rrna", "intron", "oril"),
+                             noplots=False) == [
+        "/m/bin/python", fast, "--no_sensitive", "-i", "/w/in.fa", "-c", "9", "-o", "/w/res", "-r", "r1", "--refdir",
+        "/refs", "--prot", "0", "--rrna", "0", "--intron", "0", "--oril", "0"]
+    assert me.engine_env(b, isolated=True)["PATH"] == "/m/bin:/usr/bin:/bin"
+
+
+def test_result_bed_reader(tmp_path):
+    (tmp_path / "result.bed").write_text("s1\t10\t80\ttrnL1(tag)\t1e-9\t+\nbad line\ns1\t15000\t20\tcox1\t0\t-\n")
+    rows = me.read_result_bed(tmp_path)
+    assert rows == [me.BedRow("s1", 10, 80, "trnL1(tag)", "1e-9", 1), me.BedRow("s1", 15000, 20, "cox1", "0", -1)]
+    assert me.mitos2_seq_ids(tmp_path) == ["s1"]
