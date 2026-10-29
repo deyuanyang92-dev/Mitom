@@ -1150,8 +1150,10 @@ def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[d
         name = ft.qualifiers.get("gene", [""])[0]
         if any(ft is x for x in hit_cds) or (
                 ft.type == "gene" and ft.location.strand == strand and (name in hit_names or name not in cds_names)
-                and shared(ft) >= 30):
-            hit.append(ft)
+                and shared(ft) >= 30) or (
+                ft.type == "intron" and ft.location.strand == strand and (name in hit_names or not name)
+                and exons[0][0] - 1 <= int(ft.location.start) and int(ft.location.end) <= exons[-1][1]):
+            hit.append(ft)              # an intron of the replaced gene (record annotated already): no second copy
         else:
             keep.append(ft)
     names = [f.qualifiers.get("gene", [""])[0] for f in hit if f.type == "CDS" and f.qualifiers.get("gene")]

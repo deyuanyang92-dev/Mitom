@@ -74,6 +74,20 @@ def test_metridium_introns_recovered_from_mitoz_like_input(tmp_path):
     assert all("group I intron" in n for _, _, n in introns)
 
 
+def test_record_with_introns_gets_no_second_copy(tmp_path):
+    """A record whose introns are annotated already (an NCBI record, MitoM output run again): the model replaces the
+    gene's intron features with its own - one intron feature per intron (before: the old ones were kept too)."""
+    (tmp_path / "in").mkdir()
+    shutil.copy(DATA / "NC_000933.gb", tmp_path / "in" / "NC_000933.gbf")
+    run(tmp_path / "in", tmp_path / "out", 4)
+    rec = SeqIO.read(str(tmp_path / "out" / "NC_000933.gbf"), "genbank")
+    introns = [f for f in rec.features if f.type == "intron"]
+    assert [(int(f.location.start) + 1, int(f.location.end)) for f in introns] == [(4156, 5008), (7744, 9424)]
+    assert all("MFannot method" in f.qualifiers.get("note", [""])[0] for f in introns)
+    cds, _ = intron_models(tmp_path / "out" / "NC_000933.gbf")
+    assert cds["COX1"] == ncbi_cds("NC_000933")["COX1"] and cds["ND5"] == ncbi_cds("NC_000933")["ND5"]
+
+
 def test_nematostella_missing_intron_added(tmp_path):
     (tmp_path / "in").mkdir()
     shutil.copy(DATA / "NC_008164.gb", tmp_path / "in" / "NC_008164.gbf")
