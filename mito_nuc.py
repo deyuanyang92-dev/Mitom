@@ -101,8 +101,9 @@ DB_PIECE = 1_000_000    # min. FASTA bytes per makeblastdb piece of the prefilte
 # <= 3,737 histone regions, 2026-10-29); only where the candidates are < 10 % of the input sequences (an assembly,
 # not a batch of records)
 MAX_RDNA_REGIONS = 1000 # rDNA regions annotated, most aligned reference bits first
-MAX_HIST_REGIONS = 1000 # histone regions per gene, closest to a reference protein first
-MAX_CM_JOBS = 300       # rRNA ends per gene placed with the Rfam models, best supported genes first (others: projection)
+MAX_HIST_REGIONS = 500  # histone regions per gene, closest to a reference protein first
+MAX_CM_JOBS = 100       # rRNA ends per gene the covariance model places (+-150 nt), best supported genes first; the
+                        # others and the +-600 nt windows (~45 s each for an 18S end) keep the HMM / projection
 MAX_CONS_SEED = 30      # best-covered fragments per gene the consensus backbone is built from (real assemblies: <= 8)
 STOPS = ("TAA", "TAG", "TGA")
 BAD_HISTONE = re.compile(r"factor|transferase|acetyl|chaperone|binding|kinase|demethylase|ligase|DOT1|lysine|"
@@ -1020,7 +1021,8 @@ def cm_refine(loci: Dict[str, List[dict]], seqs, lib_dir: Path, work: Path, thre
               bounded: bool = False) -> int:
     """move every complete rRNA end to the position homologous to the curated mature end (Rfam CM); ends the model
     does not place confidently keep the reference projection. Returns the number of ends placed by the model.
-    bounded (assembly): the covariance model searches only the MAX_CM_JOBS best supported ends per gene"""
+    bounded (assembly): the covariance model searches only the MAX_CM_JOBS best supported ends per gene, in +-150 nt
+    windows"""
     d = lib_dir / "rfam"
     if not d.is_dir():
         d = LIB / "rfam"
@@ -1061,9 +1063,9 @@ def cm_refine(loci: Dict[str, List[dict]], seqs, lib_dir: Path, work: Path, thre
                         ("cm", dict(win=150)), ("cm", dict(win=CM_WIN))):
             if kw["win"] == CM_WIN:          # the wide window only where the hit ran out of the narrow one
                 todo = [i for i in todo if i in cut]
-            # a covariance model search takes ~0.5 s per +-150 nt window and ~12 s per +-600 nt window (28S): the
-            # ends of the best supported genes only (others keep the projection)
-            cap = MAX_CM_JOBS if kw["win"] < CM_WIN else MAX_CM_JOBS // 20
+            # assembly: a covariance model search takes 0.5-4 s per +-150 nt window and 15-45 s per +-600 nt window
+            # (which placed 1 end in 30 assemblies): the narrow windows of the best supported genes only
+            cap = MAX_CM_JOBS if kw["win"] < CM_WIN else 0
             if bounded and how == "cm" and len(todo) > cap:
                 log.append(f"{len(todo) - cap} of {len(todo)} not searched")
                 todo = sorted(sorted(todo, key=lambda i: -where[i][0].get("sup", 0))[:cap])
