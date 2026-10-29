@@ -92,7 +92,7 @@ from Bio.Seq import Seq
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_names  # noqa: E402
-from mito_common import codon_translate, iter_gb_files, stop_qualifiers, write_gb  # noqa: E402
+from mito_common import codon_translate, iter_gb_files, run_tool, stop_qualifiers, write_gb  # noqa: E402
 
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
 MIN_INTRON = 142        # a CDS gap at least this long is an intron without an intron feature (eval_introns, MFannot)
@@ -459,7 +459,6 @@ def type_introns(genes: List[RefGene], cmsearch: Optional[str], cm: Path = DEFAU
     """Group I / II of every library intron without an annotated type, by Infernal cmsearch with the Rfam models
     (RF00028 group I; RF00029 and the group II D1-D4 models), as mito_intron.py types introns; the type drives the
     splice rules when a site is transferred. Returns the number typed."""
-    import subprocess
     import tempfile
     todo = {f"i{n}": j for n, (g, j) in enumerate((g, j) for g in genes for j in g.junctions) if j.iseq and not j.itype}
     if not todo or not cmsearch or not cm.exists():
@@ -468,8 +467,7 @@ def type_introns(genes: List[RefGene], cmsearch: Optional[str], cm: Path = DEFAU
     with tempfile.TemporaryDirectory() as td:
         fa, tbl = Path(td) / "introns.fa", Path(td) / "hits.tbl"
         fa.write_text("".join(f">{k}\n{j.iseq}\n" for k, j in todo.items()))
-        subprocess.run([cmsearch, "--noali", "--toponly", "--rfam", "--cpu", str(cpu), "--tblout", str(tbl), str(cm),
-                        str(fa)], capture_output=True, text=True, check=False)
+        run_tool([cmsearch, "--noali", "--toponly", "--rfam", "--cpu", cpu, "--tblout", tbl, cm, fa])
         for line in tbl.read_text().splitlines() if tbl.exists() else []:
             if line.startswith("#"):
                 continue
@@ -552,7 +550,7 @@ def _blast(exe: str, query: Path, subject: Path, extra: List[str]) -> List[List[
     cmd = [exe, "-query", str(query), "-subject", str(subject), "-outfmt",
            "6 qseqid qstart qend sstart send sframe bitscore evalue qseq sseq", *extra]
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT).stdout
+        out = run_tool(cmd, timeout=TIMEOUT).stdout
     except (subprocess.TimeoutExpired, OSError) as exc:
         print(f"[mito_intron_ref] {Path(exe).name} failed: {exc}", file=sys.stderr)
         return []

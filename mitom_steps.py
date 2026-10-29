@@ -12,7 +12,6 @@ import argparse
 import functools
 import logging
 import shutil
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,7 +19,7 @@ from typing import Any, Callable, List, Optional, Tuple, TypeVar
 
 from Bio import SeqIO
 
-from mito_common import write_nonempty_table
+from mito_common import run_tool, write_nonempty_table
 from mito_taxa import abbreviated_overlap, aggressive_start_genes, no_upstream_atg
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
 
@@ -69,12 +68,11 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
         return StepResult("skipped (--curate no)", gb_dir=gb_dir)
     here = Path(__file__).resolve().parent
     cur = out_root / "05.curated"
-    p = subprocess.run([sys.executable, "-W", "ignore", str(here / "mito_curate.py"), "-i", str(gb_dir), "-o", str(cur),
-                        "--genetic_code", str(int(args.genetic_code)), "--no_validate",
-                        "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None)),
-                        *abbreviated_overlap(getattr(args, "clade", None)),
-                        *no_upstream_atg(getattr(args, "clade", None))],
-                       capture_output=True, text=True)
+    p = run_tool([sys.executable, "-W", "ignore", str(here / "mito_curate.py"), "-i", str(gb_dir), "-o", str(cur),
+                  "--genetic_code", str(int(args.genetic_code)), "--no_validate",
+                  "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None)),
+                  *abbreviated_overlap(getattr(args, "clade", None)),
+                  *no_upstream_atg(getattr(args, "clade", None))])
     if p.returncode:
         logging.error(f"[CURATE] failed (exit {p.returncode}): {p.stderr[-300:]} - final files left uncurated")
         return StepResult("curation failed (see run.log): the annotation before curation is used", gb_dir=gb_dir,
@@ -224,7 +222,7 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
         cmd += ["--ref_gb", ref]
     if args.intron_bin:
         cmd += ["--bin", args.intron_bin]
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    proc = run_tool(cmd)
     report = gb_dir / "intron_report.tsv"
     if report.exists():
         shutil.move(str(report), str(out_root / "intron_report.tsv"))
@@ -248,7 +246,7 @@ def run_intron_ref(args: argparse.Namespace, final_dir: Path, out_root: Path) ->
         cmd += ["--bin", args.intron_bin]
     if getattr(args, "phylum", None):
         cmd += ["--lineage", f"Eukaryota;Metazoa;{args.phylum}"]
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    proc = run_tool(cmd)
     report = final_dir / "intron_ref_report.tsv"
     if report.exists():
         shutil.move(str(report), str(out_root / "intron_ref_report.tsv"))

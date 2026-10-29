@@ -33,7 +33,6 @@ import json
 import math
 import pickle   # models trained locally from the shipped tables and read back by this module only
 import statistics
-import subprocess
 import sys
 import tarfile
 import tempfile
@@ -68,7 +67,8 @@ def rc(s: str) -> str:
 
 
 def sh(cmd: List[str]) -> None:
-    subprocess.run(cmd, capture_output=True, text=True, check=False)
+    from mito_common import run_tool
+    run_tool(cmd)
 
 
 # ── models ───────────────────────────────────────────────────────────────────

@@ -70,7 +70,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
-from mito_common import GB_SUFFIXES  # noqa: E402
+from mito_common import GB_SUFFIXES, run_tool  # noqa: E402
 
 GB_EXT = set(GB_SUFFIXES)
 TIMEOUT = 3600
@@ -95,7 +95,7 @@ class Pred:
 
 def run(cmd: List[str], cwd: Optional[Path] = None) -> str:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=TIMEOUT, cwd=cwd).stdout
+        return run_tool(cmd, timeout=TIMEOUT, cwd=cwd).stdout
     except (subprocess.TimeoutExpired, OSError) as exc:
         print(f"[mito_trna] {cmd[0]} failed: {exc}", file=sys.stderr)
         return ""

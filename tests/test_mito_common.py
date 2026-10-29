@@ -112,3 +112,21 @@ def test_codon_translate():
     for nt in ("ATGAAATAGT", "ATGAAATAGTA", "ATG", "AT", ""):
         assert mc.codon_translate(nt, 5) == str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=5))
         assert mc.codon_translate(Seq(nt), 2) == str(Seq(nt)[: len(nt) - len(nt) % 3].translate(table=2))
+
+
+def test_run_tool_logs_command_exit_code_time_and_stderr(tmp_path, caplog):
+    import logging
+    import subprocess
+    with caplog.at_level(logging.DEBUG, logger="mitom.tools"):
+        p = mc.run_tool([sys.executable, "-c", "import sys; print('out'); sys.exit(0)"], cwd=tmp_path)
+        assert p.returncode == 0 and p.stdout == "out\n"
+        q = mc.run_tool([sys.executable, "-c", "import sys; print('bad input', file=sys.stderr); sys.exit(3)"])
+        assert q.returncode == 3 and "bad input" in q.stderr
+        with pytest.raises(subprocess.CalledProcessError):
+            mc.run_tool([sys.executable, "-c", "import sys; sys.exit(2)"], check=True)
+        with pytest.raises(OSError):
+            mc.run_tool([str(tmp_path / "no_such_program")])
+    msgs = [r.getMessage() for r in caplog.records if r.name == "mitom.tools"]
+    assert any(m.startswith("[CMD rc=0 ") and f"(in {tmp_path})" in m for m in msgs)
+    assert any(m.startswith("[CMD rc=3 ") for m in msgs) and any(m == "[CMD stderr] bad input" for m in msgs)
+    assert any(m.startswith("[CMD failed ") and "no_such_program" in m for m in msgs)

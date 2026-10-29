@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -34,7 +33,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import GB_SUFFIXES, contig_record_id, topology_from_header  # noqa: E402
+from mito_common import GB_SUFFIXES, contig_record_id, run_tool, topology_from_header  # noqa: E402
 from mito_common import read_fasta as _read_fasta  # noqa: E402
 
 FA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
@@ -72,7 +71,7 @@ def run_mitoz(fa: Path, workdir: Path, prefix: str, clade: str, code: int, threa
     if species:
         cmd += ["--species_name", species]
     print("[engine] " + " ".join(cmd), file=sys.stderr, flush=True)
-    rc = subprocess.run(cmd, cwd=str(wd), env=engine_env(str(Path(exe).parent))).returncode
+    rc = run_tool(cmd, cwd=wd, env=engine_env(str(Path(exe).parent)), capture=False).returncode
     if rc:
         raise RuntimeError(f"MitoZ failed (exit {rc})")
     gbfs = sorted(wd.glob("*.result/*.gbf"))
@@ -105,7 +104,7 @@ def run_mitos2(fa: Path, workdir: Path, prefix: str, code: int, refdir: Optional
         cmd = [str(Path(b) / "runmitos"), "-i", str(out / "in.fa"), "-c", str(code), "-o", str(out / "result"),
                "-r", mito_env.MITOS_REF, "--refdir", d, "--noplots", *(["--linear"] if topology == "linear" else [])]
         print("[engine] " + " ".join(cmd), file=sys.stderr, flush=True)
-        rc = subprocess.run(cmd, cwd=str(out), env=engine_env(b, isolated=True)).returncode
+        rc = run_tool(cmd, cwd=out, env=engine_env(b, isolated=True), capture=False).returncode
         if rc or not (out / "result" / "result.bed").is_file():
             raise RuntimeError(f"MITOS2 failed for {rid} (exit {rc}, no result.bed)")
         recs.append(mitos2_record(out / "result", seq, rid, code, topology))

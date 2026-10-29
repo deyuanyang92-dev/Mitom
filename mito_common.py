@@ -2,10 +2,14 @@
 reading, safe file names, report tables, file copies, CDS stop qualifiers and codon translation."""
 from __future__ import annotations
 
+import logging
 import os
 import re
+import shlex
 import shutil
+import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Dict, Iterator, List
 
@@ -222,6 +226,44 @@ def stop_qualifiers(rec, loc, code: int) -> Dict[str, List[str]]:
 def codon_translate(nt, code: int) -> str:
     """Translation of the whole codons of nt (a str or Seq) with genetic code `code`."""
     return str(Seq(str(nt)[: len(nt) - len(nt) % 3]).translate(table=code))
+
+
+# ── external programs ─────────────────────────────────────────────────────────────────────────────────────────────
+TOOL_LOG = logging.getLogger("mitom.tools")
+STDERR_TAIL = 20                     # lines of a failed program's stderr in the log
+
+
+def command_line(cmd) -> str:
+    """The command as one shell-quoted line (logs, reproduction)."""
+    return " ".join(shlex.quote(str(x)) for x in cmd)
+
+
+def run_tool(cmd, *, cwd=None, env=None, timeout=None, check: bool = False, capture: bool = True,
+             stdout=None, stderr=None) -> subprocess.CompletedProcess:
+    """Run an external program: the one way the MitoM modules run programs. Output is captured as text unless
+    capture=False (it then goes where this process's output goes) or stdout / stderr are given. Logged at DEBUG level
+    on the 'mitom.tools' logger: '[CMD rc=<exit> <seconds>s] <command line>' (and the folder), with the last
+    STDERR_TAIL lines of stderr when the program failed. Exceptions as subprocess.run (OSError: program not found,
+    TimeoutExpired; CalledProcessError when check=True), each logged before it is raised."""
+    args = [str(x) for x in cmd]
+    kw = {"cwd": str(cwd) if cwd else None, "env": env, "timeout": timeout, "text": True, "errors": "replace"}
+    if stdout is not None or stderr is not None:
+        kw.update(stdout=stdout, stderr=stderr)
+    elif capture:
+        kw.update(stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    where = f"  (in {cwd})" if cwd else ""
+    t0 = time.time()
+    try:
+        p = subprocess.run(args, **kw)
+    except (OSError, subprocess.SubprocessError) as exc:
+        TOOL_LOG.debug(f"[CMD failed {time.time() - t0:.1f}s] {command_line(args)}{where}: {exc!r}")
+        raise
+    TOOL_LOG.debug(f"[CMD rc={p.returncode} {time.time() - t0:.1f}s] {command_line(args)}{where}")
+    if p.returncode and isinstance(p.stderr, str) and p.stderr.strip():
+        TOOL_LOG.debug("[CMD stderr] " + "\n".join(p.stderr.strip().splitlines()[-STDERR_TAIL:]))
+    if check and p.returncode:
+        raise subprocess.CalledProcessError(p.returncode, args, p.stdout, p.stderr)
+    return p
 
 
 def safe_copy(src: Path, dst: Path) -> None:

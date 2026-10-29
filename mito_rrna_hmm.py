@@ -68,7 +68,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
-from mito_common import write_gb  # noqa: E402
+from mito_common import run_tool, write_gb  # noqa: E402
 
 LIB = Path(__file__).resolve().parent / "models" / "rrna_hmm"
 GENES = {g: CORE_NAMES[g] for g in ("rrnS", "rrnL")}          # the core's /gene and /product
@@ -231,8 +231,8 @@ def nhmmer(hmm: Path, fa: Path) -> List[Hit]:
         raise RuntimeError("nhmmer not found (HMMER 3; conda env mitotools)")
     with tempfile.TemporaryDirectory() as td:
         tbl = Path(td) / "hits.tbl"
-        p = subprocess.run([exe, "--dna", "--cpu", "2", "-E", str(EVALUE), "--tblout", str(tbl), "-o", "/dev/null",
-                            str(hmm), str(fa)], capture_output=True, text=True)
+        p = run_tool([exe, "--dna", "--cpu", "2", "-E", str(EVALUE), "--tblout", str(tbl), "-o", "/dev/null",
+                      str(hmm), str(fa)])
         if p.returncode:
             raise RuntimeError(f"nhmmer failed (exit {p.returncode}): {' '.join(p.stderr.split()[-60:])}")
         out = []
@@ -423,8 +423,7 @@ def _sense(seqs: List[str], gene: str, cpu: int) -> Tuple[List[str], int]:
     with tempfile.TemporaryDirectory() as td:
         fa, tbl = Path(td) / "in.fa", Path(td) / "hits.tbl"
         fa.write_text("".join(f">r{i}\n{s}\n" for i, s in enumerate(seqs)))
-        subprocess.run([str(cmsearch), "--hmmonly", "--notextw", "--cpu", str(cpu), "-E", "1", "--tblout", str(tbl),
-                        str(cm), str(fa)], capture_output=True, check=True)
+        run_tool([cmsearch, "--hmmonly", "--notextw", "--cpu", cpu, "-E", "1", "--tblout", tbl, cm, fa], check=True)
         for line in tbl.read_text().splitlines():
             c = line.split()
             if line.startswith("#") or len(c) < 15:
@@ -469,10 +468,8 @@ def build(gbs: List[Path], out: Path, exclude: Optional[Set[str]] = None, cpu: i
                 with tempfile.TemporaryDirectory() as td:
                     fa, aln = Path(td) / "in.fa", Path(td) / "aln.fa"
                     fa.write_text("".join(f">r{i}\n{s}\n" for i, s in enumerate(sub)))
-                    aln.write_text(subprocess.run([str(mafft), "--auto", "--thread", str(cpu), "--quiet", str(fa)],
-                                                  capture_output=True, text=True, check=True).stdout)
-                    subprocess.run([str(hmmbuild), "--dna", "--cpu", str(cpu), "-n", f"{gb.stem}.{g}", str(hmm), str(aln)],
-                                   capture_output=True, check=True)
+                    aln.write_text(run_tool([mafft, "--auto", "--thread", cpu, "--quiet", fa], check=True).stdout)
+                    run_tool([hmmbuild, "--dna", "--cpu", cpu, "-n", f"{gb.stem}.{g}", hmm, aln], check=True)
             lens = [len(s) for s in seqs]
             rows.append({"phylum": gb.stem, "gene": g, "n_ref": len(seqs), "n_used": n_used,
                          "median_len": int(statistics.median(lens)), "p5_len": _pct(lens, 0.05), "p95_len": _pct(lens, 0.95),

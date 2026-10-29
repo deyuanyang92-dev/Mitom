@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as cf
 import logging
-import subprocess
 import sys
 import threading
 import time
@@ -16,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import safe_name
+from mito_common import run_tool, safe_name
 from mitom_inputs import SampleInfo
 from mitom_log import Progress, close_sample_logger, get_sample_logger, tail_text
 from mitom_snakemake import AnnotTask, run_snakemake_for_annotation_tasks, snakemake_available
@@ -36,8 +35,7 @@ def run_cmd_capture(
 ) -> Tuple[int, float]:
     stdout_path.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    p  = subprocess.run(cmd, cwd=str(cwd) if cwd else None,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    p  = run_tool(cmd, cwd=cwd)
     dt = time.time() - t0
     if p.stdout:
         stdout_path.write_text(p.stdout, encoding="utf-8", errors="ignore")

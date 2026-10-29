@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import csv
 import re
-import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -28,7 +27,7 @@ from Bio.SeqFeature import AfterPosition, BeforePosition
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
-from mito_common import iter_gb_files  # noqa: E402
+from mito_common import iter_gb_files, run_tool  # noqa: E402
 
 SKIP_QUALS = {"translation", "db_xref", "protein_id", "locus_tag_old"}
 INTERNAL_NOTE = re.compile(r"check .* manually|mito_\w+\.py")   # e.g. mito_rescue.py / mito_intron.py notes
@@ -102,9 +101,7 @@ def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
     base = d / "rec"
     (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
     (d / "rec.tbl").write_text("\n".join(feature_lines(rec)) + "\n")
-    subprocess.run([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn",
-                    *(["-t", sbt] if sbt else [])],
-                   capture_output=True, text=True, check=False)
+    run_tool([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn", *(["-t", sbt] if sbt else [])])
     rows = []
     val = d / "rec.val"
     for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
