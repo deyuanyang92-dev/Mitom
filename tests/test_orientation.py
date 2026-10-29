@@ -107,3 +107,23 @@ def test_rotation_keeps_partial_ends():
     cut = bm.rotate_record(r, 1600)                                            # the 3'-partial piece spans the origin
     c = next(f for f in cut.features if int(f.location.parts[0].start) == 1900)
     assert isinstance(c.location.parts[-1].end, AfterPosition) and int(c.location.parts[-1].end) == 200
+
+
+def test_reverse_complement_keeps_and_swaps_partial_ends():
+    """2026-10-30 (integration audit): turning a record to the plus strand (cox1 on the minus strand) dropped the
+    partial ends < / > of genes cut by the ends of a linear record; the 5' end of a gene stays its 5' end."""
+    from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation
+    r = rec_with([])
+    L = len(r.seq)
+    five = FeatureLocation(BeforePosition(0), 200, strand=1)                      # 5'-partial, plus strand
+    three = FeatureLocation(1500, AfterPosition(L), strand=-1)                   # 5'-partial on the minus strand
+    joined = CompoundLocation([FeatureLocation(BeforePosition(300), 400, 1), FeatureLocation(500, AfterPosition(700), 1)])
+    r.features = [SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"]}) for loc in (five, three, joined)]
+    rc = bm.reverse_complement_record(r)
+    a, b, c = (f.location for f in rc.features)
+    assert (int(a.start), int(a.end), a.strand) == (L - 200, L, -1) and isinstance(a.end, AfterPosition)
+    assert (int(b.start), int(b.end), b.strand) == (0, L - 1500, 1) and isinstance(b.start, BeforePosition)
+    # minus-strand join in transcript order: the 3'-partial piece first (its 3' end is its start), the 5'-partial last
+    assert isinstance(c.parts[0].start, BeforePosition) and isinstance(c.parts[-1].end, AfterPosition)
+    back = bm.reverse_complement_record(rc)
+    assert [str(f.location) for f in back.features] == [str(f.location) for f in r.features]

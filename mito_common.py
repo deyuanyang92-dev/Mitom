@@ -112,12 +112,16 @@ def contig_record_id(prefix: str, seq_id: str, k: int, n_seqs: int) -> str:
 
 # ── locations on a circular sequence: rotation, reverse complement ─────────────────────────────────────────────────
 def rc_location(loc, seq_len: int):
+    """loc on the reverse complement of a sequence of length seq_len; partial ends stay partial and change sides
+    (a 5'-partial plus-strand start <s becomes a 5'-partial minus-strand end >)."""
     if isinstance(loc, CompoundLocation):
         return CompoundLocation(
             [rc_location(p, seq_len) for p in loc.parts][::-1], operator=loc.operator)
     start, end = int(loc.start), int(loc.end)
     new_strand  = None if loc.strand is None else (-loc.strand)
-    return FeatureLocation(seq_len - end, seq_len - start, strand=new_strand)
+    new_start = BeforePosition(seq_len - end) if isinstance(loc.end, AfterPosition) else seq_len - end
+    new_end = AfterPosition(seq_len - start) if isinstance(loc.start, BeforePosition) else seq_len - start
+    return FeatureLocation(new_start, new_end, strand=new_strand)
 
 
 def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
