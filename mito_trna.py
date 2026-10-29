@@ -383,10 +383,10 @@ def main(argv=None) -> int:
             want.remove(t)
     if a.select == "mitos2" and "mitos2" not in want:
         print("[mito_trna] --select mitos2 needs MITOS2 (runmitos via --mitos_bin, and --mitos_refdir)", file=sys.stderr)
-        return 2
+        return 1
     if a.select == "mitom" and "mitom" not in want:
         print("[mito_trna] --select mitom needs MitoM-ML (models/trna_ml, cmsearch, cmalign, refseq89m)", file=sys.stderr)
-        return 2
+        return 1
     b: Dict[str, str] = {k: v for k, v in found.items() if v}
     src, out = Path(a.input), Path(a.out)
     files = sorted(x for x in src.rglob("*") if x.is_file() and x.suffix.lower() in GB_EXT | {".fa", ".fasta", ".fna"}) \

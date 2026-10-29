@@ -99,7 +99,7 @@ def main(argv):
         if argv[0] not in ("doctor", "setup"):        # doctor reports the missing Biopython itself
             print(f"Biopython not found for {sys.executable}; install MitoM with install.sh (one conda environment)",
                   file=sys.stderr)
-            return 2
+            return 1
         py = sys.executable
     os.environ["MITOM_LAUNCHER"] = "1"                 # mitom_pipeline.py then calls itself `mitom <command>`
     os.execv(py, [py, str(HERE / script), *pre, *argv[1:]])

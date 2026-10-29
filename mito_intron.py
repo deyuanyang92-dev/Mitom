@@ -1561,7 +1561,7 @@ def main(argv=None) -> int:
     if missing:
         print(f"[mito_intron] missing {', '.join(missing)} "
               "(conda install -c bioconda exonerate blast infernal; or --bin)", file=sys.stderr)
-        return 2
+        return 1
     if not tools["cmsearch"]:
         print("[mito_intron] cmsearch not found: intron type will not be identified", file=sys.stderr)
     a.cm_files = [Path(a.cm)] + ([] if a.no_subtype_cms else subtype_cms())

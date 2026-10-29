@@ -221,3 +221,19 @@ def test_rescue_auto_skipped_for_native_core(tmp_path, monkeypatch):
     a.rescue = "yes"
     bm.run_rescue(a, tmp_path, tmp_path)
     assert called
+
+
+def test_exit_codes_failure_1_usage_2(tmp_path, monkeypatch):
+    """MitoM's exit codes: 0 done, 1 failure (a program or the reference data missing, every record failed),
+    2 usage (wrong command line or input)."""
+    assert bm.error_exit_code("ERROR: --engine mitoz: MitoZ not found (install: mamba ...)") == 1
+    assert bm.error_exit_code("ERROR: --clade 'Cnidarians' is not a supported clade.") == 2
+    monkeypatch.setattr(mitom_stage, "MITO_CORE", fake_core(tmp_path, 3))
+    monkeypatch.setenv("YZZ_MITO_NO_SCAN", "1")
+    inp = tmp_path / "in.fa"
+    inp.write_text(">rec1 topology=circular\n" + "ACGT" * 4000 + "\n")
+    a = bm.build_parser().parse_args(["annotate", "-i", str(inp), "-o", str(tmp_path / "out"), "--clade", "Mollusca",
+                                      "--genetic_code", "5", "--rescue", "no", "--rrna_hmm", "no", "--intron_fix", "no",
+                                      "--curate", "no", "--plot", "no", "--scheduler_backend", "threads"])
+    assert bm.resolve_tools(a) == ""
+    assert bm.workflow_annotate(a) == 1                       # every record failed: annotate fails as run does

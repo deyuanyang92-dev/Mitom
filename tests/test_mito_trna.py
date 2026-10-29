@@ -108,7 +108,7 @@ def test_mitos2_failure_keeps_input_trnas(tmp_path):
 def test_select_mitos2_without_mitos2_refuses(tmp_path):
     r = subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "mito_trna.py"), "-i", str(HERE / "data" / "KY753833_mitoz.gbf"),
                         "-o", str(tmp_path / "out"), "--select", "mitos2", "--mitos_bin", str(tmp_path)], capture_output=True)
-    assert r.returncode == 2 and not (tmp_path / "out").exists()
+    assert r.returncode == 1 and not (tmp_path / "out").exists()          # a missing program: failure, not usage
 
 
 @pytest.mark.skipif(not ((MITOS_BIN / "runmitos").exists() and MITOS_REF), reason="MITOS2 / MITOS_REFDIR not available")
@@ -195,7 +195,7 @@ def test_select_auto_falls_back_without_models(tmp_path, monkeypatch):
     assert not mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))
     r = subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "mito_trna.py"), "-i", str(HERE / "data" / "KY753833_mitoz.gbf"),
                         "-o", str(tmp_path / "out"), "--select", "mitom", "--tools", "input"], capture_output=True, text=True)
-    assert r.returncode == 2 and "needs MitoM-ML" in r.stderr
+    assert r.returncode == 1 and "needs MitoM-ML" in r.stderr
 
 
 @pytest.mark.skipif(not ML_OK, reason="MitoM-ML models / cmsearch / refseq89m not available")

@@ -1984,7 +1984,7 @@ def main(argv=None) -> int:
     tools = find_tools(a.bin)
     if not tools.get("tblastn") or not tools.get("blastn"):
         print("[mito_intron_ref] tblastn / blastn not found (conda install -c bioconda blast; or --bin)", file=sys.stderr)
-        return 2
+        return 1
     lib = [] if a.own_only else load_library(Path(a.lib))
     own: List[RefGene] = []
     if a.ref_gb:

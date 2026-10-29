@@ -77,11 +77,11 @@ def venv_without_bio(tmp_path):
 
 
 def test_launcher_without_biopython_gives_hint(venv_without_bio):
-    """B1/B18 review: Biopython missing and no conda env offers it -> one clear message, exit 2 (not a
-    traceback or `ERROR: Biopython not installed` from deep inside mitom_pipeline.py)."""
+    """B1/B18 review: Biopython missing and no conda env offers it -> one clear message, exit 1 (a failure, not a
+    usage error; not a traceback or `ERROR: Biopython not installed` from deep inside mitom_pipeline.py)."""
     env = dict(os.environ, YZZ_MITO_NO_SCAN="1")
     p = run("run", "-h", py=venv_without_bio, env=env)
-    assert p.returncode == 2
+    assert p.returncode == 1
     assert f"Biopython not found for {venv_without_bio}" in p.stderr and "install.sh" in p.stderr
 
 

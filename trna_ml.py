@@ -538,7 +538,7 @@ def main(argv=None) -> int:
     cms, cma = mito_env.find("cmsearch"), mito_env.find("cmalign")
     if not ref or not cms or not cma:
         print("[trna_ml] needs MITOS2 refseq89m (--mitos_refdir), cmsearch and cmalign", file=sys.stderr)
-        return 2
+        return 1
     fmt = "fasta" if Path(a.input).suffix.lower() in (".fa", ".fasta", ".fna") else "genbank"
     w = csv.writer(sys.stdout, delimiter="\t", lineterminator="\n")
     w.writerow(["record", "family", "anticodon", "start", "end", "strand", "p", "bound_p"])

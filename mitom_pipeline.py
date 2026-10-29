@@ -347,6 +347,9 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
     logging.info("[DONE]")
+    if samples and len(summary.annotation_failed) == len(samples):
+        logging.warning(f"[FAIL] every record failed in the annotation core ({len(samples)}): see reports/failed_logs/")
+        return 1
     return 0
 
 
@@ -1177,6 +1180,12 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def error_exit_code(message: str) -> int:
+    """Exit code of a refused run: 1 when a program or the reference data is missing (the run cannot be done here),
+    2 when the command line or the input is wrong (MitoM's exit codes: 0 done, 1 failure, 2 usage)."""
+    return 1 if "not found" in message else 2
+
+
 def main() -> int:
     args = build_parser().parse_args()
 
@@ -1184,12 +1193,12 @@ def main() -> int:
         err = prepare_import(args)
         if err:
             print(err, file=sys.stderr)
-            return 2
+            return error_exit_code(err)
     if args.cmd in ("annotate", "run", "import"):
         err = resolve_tools(args)
         if err:
             print(err, file=sys.stderr)
-            return 2
+            return error_exit_code(err)
 
     if getattr(args, "suffix_fq", None):
         parse_suffix_fq(args.suffix_fq)

@@ -135,7 +135,7 @@ def main(argv=None) -> int:
     exe = mito_env.find("table2asn", a.table2asn)
     if not exe:
         print("[ncbi_validate] table2asn not found (conda install -c bioconda table2asn)", file=sys.stderr)
-        return 2
+        return 1
     src = Path(a.input)
     files = iter_gb_files(src) if src.is_dir() else [src]
     out = Path(a.out)

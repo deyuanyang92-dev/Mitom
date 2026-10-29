@@ -36,7 +36,6 @@ Writes the GenBank files in place and rescue_report.tsv next to them.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
-import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -224,9 +223,6 @@ def main(argv=None) -> int:
     p.add_argument("--mitos_bin")
     p.add_argument("--mitos_refdir")
     a = p.parse_args(argv)
-    if not shutil.which("env"):
-        print("[mito_rescue] 'env' not found", file=sys.stderr)
-        return 2
     rows = rescue_dir(Path(a.input), a.genetic_code, mitos_bin=a.mitos_bin, refdir=a.mitos_refdir)
     rep = Path(a.input) / "rescue_report.tsv"
     write_tsv(rep, ["file", "record", "gene", "location", "status", "hint"], rows)
