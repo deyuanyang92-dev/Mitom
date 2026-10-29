@@ -150,9 +150,10 @@ def main(argv=None) -> int:
     focus = re.compile(a.focus, re.I) if a.focus else None
     sel = [r for r in rows if (not focus or focus.search(r["message"])) and (not a.only_ours or r["ours"] == "yes")]
     sev = Counter(r["severity"] for r in sel)
-    print(f"[ncbi_validate] {n} record(s); messages: " + ", ".join(f"{k} {v}" for k, v in sev.most_common()))
+    print(f"[ncbi_validate] {n} record(s); messages: " + ", ".join(f"{k} {v}" for k, v in sev.most_common()),
+          file=sys.stderr)
     for (s, c), k in Counter((r["severity"], r["code"]) for r in sel if r["severity"] in ("ERROR", "REJECT", "FATAL")).most_common(15):
-        print(f"   {s:6s} {c:40s} {k}")
+        print(f"   {s:6s} {c:40s} {k}", file=sys.stderr)
     return 0
 
 

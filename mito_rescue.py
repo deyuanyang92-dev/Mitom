@@ -231,7 +231,8 @@ def main(argv=None) -> int:
     rep = Path(a.input) / "rescue_report.tsv"
     write_tsv(rep, ["file", "record", "gene", "location", "status", "hint"], rows)
     n = sum(r["status"] == "added" for r in rows)
-    print(f"[mito_rescue] {n} gene(s) added from MITOS2; {sum(r['status'] != 'added' for r in rows)} failure(s) -> {rep}")
+    print(f"[mito_rescue] {n} gene(s) added from MITOS2; {sum(r['status'] != 'added' for r in rows)} failure(s) -> {rep}",
+          file=sys.stderr)
     return 0
 
 

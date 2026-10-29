@@ -510,7 +510,8 @@ def main(argv=None) -> int:
         ("found by MITOS2 or " if a.select == "mitos2_or_support" else "") + \
         f">= {a.min_support} independent method families"
     print(f"[mito_trna] {len(files)} file(s); tools {', '.join(want)}; {len(report)} tRNA loci, {sel} selected "
-          f"({rule}{'' if a.select in ('mitos2', 'mitom') else '; conflicts -> stronger evidence'}) -> {out}")
+          f"({rule}{'' if a.select in ('mitos2', 'mitom') else '; conflicts -> stronger evidence'}) -> {out}",
+          file=sys.stderr)
     return 0
 
 

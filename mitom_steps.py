@@ -24,6 +24,12 @@ from mito_taxa import abbreviated_overlap, aggressive_start_genes, no_upstream_a
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
 
 
+def summary_line(text: str, prefix: str, default: str) -> str:
+    """The last line of a step script's stderr that starts with its prefix ('[mito_curate] ...'), else default (the
+    scripts print their one-line summary there)."""
+    return next((ln for ln in reversed((text or "").splitlines()) if ln.startswith(prefix)), default)
+
+
 @dataclass
 class StepResult:
     """What one step after the annotation did. summary: its line in the step summary of `run` (terminal and run.log);
@@ -77,7 +83,7 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
         logging.error(f"[CURATE] failed (exit {p.returncode}): {p.stderr[-300:]} - final files left uncurated")
         return StepResult("curation failed (see run.log): the annotation before curation is used", gb_dir=gb_dir,
                           ok=False)
-    logging.info(f"[CURATE] {(p.stdout.strip().splitlines() or [''])[-1]}  -> {cur}")
+    logging.info(f"[CURATE] {summary_line(p.stderr, '[mito_curate]', '')}  -> {cur}")
     report = reports_dir(out_root) / "curation_report.tsv"
     if (cur / "curation_report.tsv").exists():
         shutil.move(str(cur / "curation_report.tsv"), str(report))
@@ -229,7 +235,7 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     report = gb_dir / "intron_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_report.tsv"))
-    last = (proc.stdout.strip().splitlines() or [f"failed (exit {proc.returncode}), see intron_fix.log"])[-1]
+    last = summary_line(proc.stderr, "[mito_intron]", f"failed (exit {proc.returncode}), see intron_fix.log")
     logging.info(f"[INTRON_FIX] {last}")
     ref, ref_log, ref_ok = run_intron_ref(args, gb_dir, out_root)
     (reports_dir(out_root) / "intron_fix.log").write_text(proc.stdout + proc.stderr + ref_log, encoding="utf-8")
@@ -253,7 +259,7 @@ def run_intron_ref(args: argparse.Namespace, final_dir: Path, out_root: Path) ->
     report = final_dir / "intron_ref_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_ref_report.tsv"))
-    last = (proc.stderr.strip().splitlines() or [f"failed (exit {proc.returncode}), see intron_fix.log"])[-1]
+    last = summary_line(proc.stderr, "[mito_intron_ref]", f"failed (exit {proc.returncode}), see intron_fix.log")
     if proc.returncode:
         logging.warning(f"[INTRON_REF] {last}")
         return f"site transfer failed (exit {proc.returncode}), see intron_fix.log", proc.stdout + proc.stderr, False

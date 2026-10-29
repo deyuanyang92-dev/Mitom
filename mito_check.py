@@ -279,8 +279,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
     rows = check_files(files, args.genetic_code, args.min_trna)
     write_reports(rows, Path(args.out_dir))
-    print(summary_line(rows))
-    print(f"reports: {Path(args.out_dir) / 'check_report.tsv'}, check_details.tsv, check_flagged.txt")
+    print(summary_line(rows), file=sys.stderr)
+    print(f"reports: {Path(args.out_dir) / 'check_report.tsv'}, check_details.tsv, check_flagged.txt", file=sys.stderr)
     return 0
 
 

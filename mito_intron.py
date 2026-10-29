@@ -1600,7 +1600,7 @@ def main(argv=None) -> int:
     low = [r for r in rows if r.get("written") == "no"]
     print(f"[mito_intron] {len(files)} file(s), library {len(lib)} proteins; "
           f"{len(w_)} intron(s) written in {len({(r['record'], r['gene']) for r in w_})} gene(s); "
-          f"{len(low)} low-confidence not written -> {out / 'intron_report.tsv'}")
+          f"{len(low)} low-confidence not written -> {out / 'intron_report.tsv'}", file=sys.stderr)
     return 0
 
 

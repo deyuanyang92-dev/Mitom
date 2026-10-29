@@ -104,7 +104,7 @@ def test_check_files_reports_and_cli(tmp_path):
     out = tmp_path / "out"
     r = subprocess.run([sys.executable, str(HERE.parent / "mito_check.py"), "-i", str(gb), "-o", str(out)],
                        capture_output=True, text=True)
-    assert r.returncode == 0 and "2 record(s): 1 ok, 1 flagged" in r.stdout, r.stdout + r.stderr
+    assert r.returncode == 0 and "2 record(s): 1 ok, 1 flagged" in r.stderr, r.stdout + r.stderr   # summary: stderr
     rows = [l.split("\t") for l in (out / "check_report.tsv").read_text().splitlines()]
     assert rows[0][:3] == ["record", "organism", "status"]
     status = {r[0]: r[2] for r in rows[1:]}

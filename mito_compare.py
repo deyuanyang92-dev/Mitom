@@ -337,8 +337,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--genetic_code", type=int, default=5)
     a = ap.parse_args(argv)
     n = compare_dirs(Path(a.original), Path(a.mitom), Path(a.out), a.genetic_code)
-    print(summary_text(n))
-    print(f"table: {a.out}")
+    print(f"[mito_compare] {summary_text(n)}", file=sys.stderr)
+    print(f"table: {a.out}", file=sys.stderr)
     return 0
 
 

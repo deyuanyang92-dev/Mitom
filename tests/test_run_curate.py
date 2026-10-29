@@ -69,7 +69,7 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
         seen.append(cmd)
         if Path(cmd[1]).name == "mito_intron.py":
             (final / "intron_report.tsv").write_text("record\n")
-            return subprocess.CompletedProcess(cmd, 0, "[mito_intron] 1 file(s); 2 intron(s) written -> x\n", "")
+            return subprocess.CompletedProcess(cmd, 0, "", "[mito_intron] 1 file(s); 2 intron(s) written -> x\n")
         (final / "intron_ref_report.tsv").write_text("record\n")
         return subprocess.CompletedProcess(cmd, 0, "", "[mito_intron_ref] 1 file(s), library 297 genes + 0 own; "
                                                         "1 gene model(s) written, 0 low-confidence not written -> y\n")

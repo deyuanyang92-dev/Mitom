@@ -514,7 +514,8 @@ def main() -> int:
         return 0
     rows = search_dir(a.input, a.lib, a.phylum)
     write_report(rows, a.input / "rrna_hmm_report.tsv")
-    print(f"{sum(r['status'].startswith('added') for r in rows)} rRNA(s) added; report {a.input / 'rrna_hmm_report.tsv'}")
+    print(f"[mito_rrna_hmm] {sum(r['status'].startswith('added') for r in rows)} rRNA(s) added; report "
+          f"{a.input / 'rrna_hmm_report.tsv'}", file=sys.stderr)
     return 0
 
 

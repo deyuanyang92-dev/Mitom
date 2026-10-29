@@ -1230,7 +1230,8 @@ def main(argv=None) -> int:
     write_tsv(out / "curation_report.tsv", cols, rows)
     from collections import Counter
     c = Counter(r["rule"] for r in rows)
-    print(f"[mito_curate] {len(files)} file(s); changes: " + ", ".join(f"{k} {v}" for k, v in sorted(c.items())))
+    print(f"[mito_curate] {len(files)} file(s); changes: " + ", ".join(f"{k} {v}" for k, v in sorted(c.items())),
+          file=sys.stderr)
     if t2a:
         cmp_rows = compare_validation(val_before, val_after)
         vcols = ["record", "severity", "code", "feature", "before", "after", "status"]
@@ -1240,7 +1241,8 @@ def main(argv=None) -> int:
         st = Counter((r["severity"], r["status"]) for r in cmp_rows)
         print(f"[mito_curate] NCBI table2asn before -> after: ERROR {nb['ERROR']} -> {na['ERROR']}, "
               f"WARNING {nb['WARNING']} -> {na['WARNING']}; ERROR types fixed {st[('ERROR', 'fixed')]}, "
-              f"remaining {st[('ERROR', 'remaining')]}, new {st[('ERROR', 'new')]} -> {out / 'validation_compare.tsv'}")
+              f"remaining {st[('ERROR', 'remaining')]}, new {st[('ERROR', 'new')]} -> {out / 'validation_compare.tsv'}",
+              file=sys.stderr)
     return 0
 
 
