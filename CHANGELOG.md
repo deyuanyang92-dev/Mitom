@@ -3,6 +3,61 @@
 Notable changes of MitoM. Versions follow semantic versioning (major.minor.patch); `mitom --version` prints the
 installed one.
 
+## Unreleased
+
+### Added
+- `mitom plot`: the circular genome maps of `run` as a command of their own (`mito_plot.py`); a folder input now
+  includes its subfolders and every GenBank suffix (.gb .gbk .gbf .genbank .gbff), as the other step commands.
+- `mitom intron --method both | denovo | ref`: `mitom intron` now adds introns as `run` does, de novo
+  (`mito_intron.py`) and then at the intron sites of annotated relatives (`mito_intron_ref.py`, report
+  `intron_ref_report.tsv`); `--method denovo` is the former `mitom intron`; options of `mito_intron.py` (`--lib`,
+  `--ref_gb`, `--maxintron` ...) are passed on.
+
+### Changed
+- One spelling per option, the old one still accepted: `-o / --out` (was `--out_root`, `--out_dir`), `--jobs` (was
+  `--max_tasks`), `--refdir` (was `--mitos_refdir`), `--threads` (was `--cpu`), `--manifest_only` (was
+  `--manifest-only`).
+- Exit codes: 0 done, 1 failure (a program, the reference data or a Python package missing; every record failed),
+  2 wrong command line or input. `mitom annotate` exits 1 when every record failed, as `run` does.
+- The step commands (`curate`, `check`, `compare`, `trna`, `validate`, `rescue`, `rrna-hmm search`) print their
+  one-line summary on stderr; stdout holds data only.
+- Report tables have LF line ends (the module reports had CRLF) and always a header line. `run` / `import` /
+  `annotate` write every report into `reports/` when the step runs; `reports/rrna_hmm_report.tsv` and
+  `ncbi_submission/validation_messages.tsv` exist (header only) also when nothing was added or reported; `mitom
+  annotate` now keeps `intron_report.tsv`, `intron_ref_report.tsv`, `intron_fix.log`, `run_params.json`,
+  `curation_report.tsv` and `failed_logs/` in `reports/`; `no_<gene>_samples.txt` is in `reports/` (it was left at
+  the top of the output folder).
+- `mitom doctor` lists every program each step needs (new rows cmalign, makeblastdb, hmmbuild; tblastn / blastn for
+  the intron-site transfer); the check before a run covers the steps the run will do and names the step.
+- MitoM-ML unpacks its clade models and trains its classifiers in a user data folder (`$MITOM_DATA`, else
+  `$XDG_DATA_HOME/mitom`, else `~/.local/share/mitom`), prepared by `mitom setup`, instead of the install folder.
+- GenBank files rewritten in place (rescue, introns, rotation after the intron step) are written atomically.
+- run.log no longer holds the INFO lines of fontTools / matplotlib (about 40 per genome map).
+- The hint of `rescue_report.tsv` no longer compares MITOS2 with MitoZ.
+- Every external program is run through one function that logs it at DEBUG level (command, folder, exit code,
+  seconds, end of stderr on failure); the foundation of a debug mode.
+- Code layout: `mitom_pipeline.py` is split into `mitom_inputs.py`, `mitom_stage.py`, `mitom_snakemake.py`,
+  `mitom_orient.py`, `mitom_metadata.py`, `mitom_output.py`, `mitom_steps.py`, `mitom_log.py`, `mito_taxa.py`
+  (every name still importable from `mitom_pipeline`); gene names in one module (`mito_names.py`); shared helpers in
+  `mito_common.py`; one MITOS2 command builder and result.bed reader (`mito_engines.py`).
+
+### Fixed
+- `mitom compare` and `mitom check` crashed in the bioconda package and the Docker image (they imported from
+  `benchmark/`, which is not shipped), and step 9 of `run` (original vs MitoM) then failed silently.
+- A record turned to the plus strand (orientation gene on the minus strand) lost the partial ends (< / >) of its
+  genes (table2asn StartCodon / NoStop errors).
+- `/transl_except` and `/anticodon` positions did not follow a rotated or reverse-complemented record (intron
+  CDS, NCBI records given to `mitom import`).
+- MitoM-ML wrote into the install folder at its first run (a read-only install failed; parallel first runs wrote
+  the same files); standalone `trna_ml.py` did not find refseq89m given the folder that holds it.
+- `ncbi_validate` (`validation.tsv` column `ours`, `--only_ours`) did not count messages on the intron steps'
+  features as MitoM's.
+- `mitom doctor` said "All required programs found" without cmalign (MitoM-ML tRNAs) or makeblastdb (introns).
+- `mito_intron.py` on a record whose introns were annotated already (an NCBI record, MitoM output) wrote a second
+  intron feature for each intron.
+- A folder whose name ends in .gb was taken for a GenBank file by compare / curate / validate / the intron-site
+  transfer.
+
 ## 1.0.0 - 2026-10-28
 
 ### Added
