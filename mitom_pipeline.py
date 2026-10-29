@@ -1,170 +1,25 @@
 #!/usr/bin/env python3
-# DESC: MitoM - batch mitochondrial genome annotation workflow (MitoM's own annotation core)
-# VERSION: v4 (Added: 20260325_1556)
 # -*- coding: utf-8 -*-
-"""
-MitoM - batch mitochondrial genome annotation workflow; the annotation core is MitoM's own mito_core.py.
+"""mitom_pipeline.py - the MitoM workflow: `mitom run`, `import`, `annotate`, `reorient`, `transfer_metadata`,
+`replace_organism` and `dedup` (`mitom <command> -h` lists the options; batch_mitoz.py is the old name).
 
-v0.28 over v0.27:
-  BUG-V0.28-A  _acc_variants: return type changed from List[str] to
-               Tuple[str, ...] so the object stored by lru_cache is
-               immutable.  The previous List was safe only by convention
-               ("callers must not mutate the result"); any accidental
-               append/clear/sort would silently corrupt the cache and cause
-               spurious lookup failures.  All call-sites only iterate over
-               the result, so this is a safe drop-in fix.
-  BUG-V0.28-B  workflow_replace_organism TSV column mismatch fixed.
-               The header previously declared 5 columns but exception rows
-               wrote 6 (the FAIL message was appended to the numeric
-               ``total`` column, breaking downstream TSV parsers).  A
-               dedicated ``note`` column is now declared in both header and
-               all data rows; normal rows carry an empty note field.
-  BUG-V0.28-C  rewrite_genbank_record_ids: replaced ``rr = r[:]``
-               slice-copy with a direct SeqRecord construction (same
-               pattern as BUG-NEW-E in v0.27).  The slice triggered
-               Biopython's __getitem__, which clones every feature location,
-               only for the result to be discarded when .id / .name /
-               .annotations were immediately overwritten.
-  BUG-V0.28-D  find_any_summary_txt: sort key changed from
-               ``len(str(p))`` (raw string length) to ``len(p.parts)``
-               (actual directory depth).  String length is not a reliable
-               proxy for depth when parent directory names differ in length.
-  BUG-V0.28-F  RunSummary: added ``reorient_failed`` field.
-               workflow_reorient was appending to ``annotation_failed``,
-               which is semantically wrong (no MitoZ annotation step exists
-               in the reorient workflow).  ``reorient_failed`` is included
-               in all_problem_samples() and log().
-  NOTE         BUG-V0.28-E (interactive_resolve KeyError) was assessed as
-               a false positive: the existing ``exact_dict.get(chosen)``
-               call already handles the case correctly.
+run      GenBank input: records deduplicated (RefSeq NC_ kept), the original annotation saved for the comparison;
+         FASTA input: one sample per record -> round-1 annotation (MitoM's core mito_core.py, or --engine mitoz /
+         mitos2 via mito_engines.py) -> re-orientation (plus strand, cox1 first) -> round 2 only for the records
+         whose annotation the shift breaks (--if_reannotation_2 auto) -> final GenBank with the original header and
+         /organism -> MITOS2 rescue (optional), rRNA HMM fallback, introns (mito_intron.py de novo, then
+         mito_intron_ref.py site transfer) -> boundary rules and NCBI names (mito_curate.py) -> NCBI submission files
+         (ncbi_validate.py, table2asn) -> original vs MitoM (mito_compare.py) -> genome maps (mito_plot.py) -> the
+         output layout of OUTPUT_LAYOUT (README.txt in the output folder).
+import   the same steps on existing MitoZ / MITOS2 results or any annotated GenBank, without annotating again.
+annotate one round of annotation and the steps after it, in the work layout (04.final_gb/, 05.curated/ ...).
 
-v0.27 over v0.26:
-  BUG-NEW-A  _safe_copy: promoted from a nested closure inside
-             workflow_transfer_metadata to a module-level utility.  All
-             shutil.copy2 call-sites that could theoretically receive the
-             same src/dst path (e.g. when --out_root == input dir) are now
-             protected against shutil.SameFileError uniformly.
-  BUG-NEW-B  build_organism_index: removed the redundant
-             ``index.setdefault(norm, entry)`` executed after the
-             ``_acc_variants`` loop.  _acc_variants already registers the
-             normalised form; the extra call was dead code and could mask
-             later entries with the wrong value when the same norm key
-             appeared under multiple accessions.
-  BUG-NEW-C  _split_gb_records: filter out empty / whitespace-only
-             pseudo-records produced when a GenBank file ends with trailing
-             newlines after the final ``//`` terminator.  Previously those
-             empty strings propagated into replace_metadata_in_text,
-             incrementing stats["total_new"] and stats["no_accession"]
-             by one phantom record each, causing misleading summary counts.
-  BUG-NEW-D  workflow_annotate / workflow_run merge consistency: both
-             workflows now use rglob("*.gbf") when building all.final.gbf
-             so that no_{gene}_gene/ subdirectory records are included in
-             both cases.  Previous behaviour (glob in annotate, rglob in
-             run) was documented but confusing; the NOTE at the rglob call
-             is retained to make the intentional include explicit.
-  BUG-NEW-E  replace_organism_in_record / _sync_organism_qualifier:
-             eliminated the wasteful rec[:] slice-copy whose only output
-             (the feature list with original locations) was immediately
-             discarded when new_rec.features = new_features was assigned.
-             The SeqRecord is now built directly from its constituent parts,
-             saving one full feature-copy per record.
-  BUG-NEW-F  finalize_genbank_output Steps 3 / 3.5: replaced bare
-             shutil.copy2 calls with the module-level _safe_copy so that
-             SameFileError is silently ignored if the caller happens to
-             point dest_gb at the same path as working_gb (edge case when
-             out_root == annotation workdir).
-  OPT-1      replace_metadata_in_text: pre-compile the LOCUS bp-count
-             substitution regex once per call rather than once per record.
-  OPT-2      _acc_variants: added @functools.lru_cache so repeated calls
-             with the same accession string (common during index building)
-             are free after the first computation.
-  NOTE       Snakemake support: the --scheduler_backend argument controls
-             dispatch.  Use ``--scheduler_backend snakemake`` (or ``auto``
-             which picks Snakemake when available, threads otherwise).
-             The embedded worker script (_mitoz_worker.py) runs MitoZ
-             annotation only; finalize_genbank_output / organism-sync are
-             always executed in the main process after all workers finish,
-             so all v0.26 / v0.27 bug fixes apply regardless of scheduler.
+The annotation runs --max_tasks samples at a time with --threads each, in threads or with Snakemake
+(--scheduler_backend snakemake / auto; Snakemake is optional and not installed with MitoM); everything after the
+annotation runs in this process.
 
-v0.26 over v0.25:
-  BUG-10 build_organism_index: now returns Dict[str, Tuple[str, str]]
-  BUG-11 replace_organism_in_record: removed erroneous ≤8-word heuristic
-  BUG-12 finalize_genbank_output: added Step 3.5 — sync /organism=
-  NEW    _sync_organism_qualifier helper
-  BUG-13 lookup_organism: return type Optional[Tuple[str, str]]
-  BUG-14 workflow_replace_organism: updated for Tuple return values
-  BUG-A  replace_organism_in_record: removed "organism" in new_quals guard
-  BUG-B  _sync_organism_qualifier: same guard removed
-
-v0.25 over v0.24:
-  NEW    replace_organism subcommand
-
-v0.24 over v0.23:
-  HOLE-1 gb_to_internal_fasta: write all contigs
-  HOLE-2 workflow_run Phase-1b: only blacklist when ALL contigs lack gene
-  HOLE-3 split_or_sanitize_fastas: global seen-set deduplication
-
-v0.23 over v0.22:
-  BUG-8  rewrite_genbank_record_ids: force-update annotations['accessions']
-  BUG-9  finalize_genbank_output Step 2: merge reoriented + un-reoriented
-
-v0.22 over v0.21:
-  BUG-6  _get_record_accession: scan VERSION > ACCESSION > LOCUS
-  BUG-7  shift_location: zero-length point feature fix (start <= end)
-  OPT-1  LOCUS-line bp-count regex broadened
-
-v0.21 over v0.20:
-  BUG-5a/b/c shift_location / workflow_transfer_metadata fixes
-
-v0.20 over v0.19:
-  BUG-1..4
-
-Features
---------
-1. annotate          — batch annotation (mito_core.py) with internal short IDs
-2. reorient          — reorient existing .gbf to start at a target gene
-3. run               — annotate → reorient → optional re-annotation →
-                       guaranteed final reorientation → metadata transfer
-                       → organism/source qualifier sync (Step 3.5)
-4. transfer_metadata — standalone GenBank header-transfer tool
-5. replace_organism  — restore /organism= in FEATURES source from original GB
-
-Scheduler backends
-------------------
-``--scheduler_backend auto``      (default) use Snakemake if available,
-                                   else ThreadPoolExecutor.
-``--scheduler_backend snakemake`` always use Snakemake.
-``--scheduler_backend threads``   always use ThreadPoolExecutor.
-
-The Snakemake path generates:
-  _snakemake_{phase}/Snakefile
-  _snakemake_{phase}/_worker.py        (self-contained worker; annotation only)
-  _snakemake_{phase}/{id}.json         (per-sample task payloads)
-Finalization (ID-rewrite, reorientation, metadata overlay, organism sync)
-is executed in the main process after all Snakemake jobs complete, so all
-pipeline bug-fixes apply regardless of backend.
-
-Metadata preservation guarantee (v0.27)
-----------------------------------------
-When GenBank files are used as input and --preserve_phase1_metadata yes
-(the default for 'run'), the final output records are guaranteed to have:
-  • All header fields (LOCUS bp-count, DEFINITION, ACCESSION, VERSION,
-    KEYWORDS, SOURCE line, ORGANISM + taxonomy lineage, REFERENCE,
-    COMMENT, DBLINK) — from the original input GenBank.
-  • Re-annotated gene features (CDS / tRNA / rRNA) — from the annotation core.
-  • /organism= qualifier inside FEATURES source — from the original input
-    GenBank (synced in Step 3.5).
-  • /source= and all other source-feature qualifiers — from the annotation core.
-
-Requirements
-------------
-Python ≥ 3.8, biopython, matplotlib; the programs of the mitotools conda environment (install.sh);
-snakemake (optional).
-
-Citation
---------
-Snakemake:  Mölder et al. (2021) F1000Res doi:10.12688/f1000research.29032.2
-Biopython:  Cock et al. (2009) Bioinformatics doi:10.1093/bioinformatics/btp163
+Biopython: Cock et al. (2009) Bioinformatics doi:10.1093/bioinformatics/btp163
+Snakemake: Mölder et al. (2021) F1000Res doi:10.12688/f1000research.29032.2
 """
 
 from __future__ import annotations
@@ -559,16 +414,8 @@ def id_maxlen_arg(x: str) -> int:
     return v
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Module-level _safe_copy  (BUG-NEW-A v0.27)
-# ─────────────────────────────────────────────────────────────────────────────
 def _safe_copy(src: Path, dst: Path) -> None:
-    """Copy *src* → *dst*, silently ignoring shutil.SameFileError.
-
-    BUG-NEW-A (v0.27): promoted from a nested closure in
-    workflow_transfer_metadata to a module-level utility so that all
-    shutil.copy2 call-sites gain SameFileError protection uniformly.
-    """
+    """Copy *src* -> *dst*; src and dst being the same file is not an error (e.g. --out_root = the input folder)."""
     try:
         shutil.copy2(str(src), str(dst))
     except shutil.SameFileError:
@@ -938,18 +785,13 @@ class RunSummary:
     metadata_key_mismatch:    List[str] = field(default_factory=list)
     metadata_skipped:         List[str] = field(default_factory=list)
     metadata_transfer_failed: List[str] = field(default_factory=list)
-    # BUG-V0.28-F: dedicated field for reorientation failures so that
-    # workflow_reorient does not misuse annotation_failed (which implies a
-    # MitoZ annotation step, absent in the reorient workflow).
-    reorient_failed:          List[str] = field(default_factory=list)
+    reorient_failed:          List[str] = field(default_factory=list)       # reorient workflow (nothing annotated)
 
     def all_problem_samples(self) -> List[str]:
         return sorted(set(
             self.annotation_failed + self.final_write_failed
             + self.no_target_gene  + self.metadata_transfer_failed
-            # BUG-V0.29-I: compat/key-mismatch metadata transfers are audit
-            # problems too; the old list omitted them from all_problem_samples.
-            + self.metadata_key_mismatch
+            + self.metadata_key_mismatch                           # header matched only by a compatible accession
             + self.reorient_failed
         ))
 
@@ -1129,33 +971,6 @@ def merge_gb_files(gb_files: List[Path], merged_out: Path) -> int:
     return n
 
 
-def find_genbank_like_files(root: Path, preferred_prefix: Optional[str] = None) -> List[Path]:
-    out = [p for p in root.rglob("*")
-           if p.is_file() and _is_gb_file(p)]
-    if preferred_prefix:
-        preferred = sorted([p for p in out if p.stem.startswith(preferred_prefix)],
-                           key=lambda x: x.stat().st_size if x.exists() else 0, reverse=True)
-        others    = sorted([p for p in out if not p.stem.startswith(preferred_prefix)],
-                           key=lambda x: x.stat().st_size if x.exists() else 0, reverse=True)
-        return preferred + others
-    return sorted(out, key=lambda x: x.stat().st_size if x.exists() else 0, reverse=True)
-
-
-def find_any_summary_txt(sample_dir: Path) -> Optional[Path]:
-    cands = list(sample_dir.rglob("summary.txt"))
-    if not cands:
-        return None
-    # BUG-V0.28-D: sort by actual directory depth (len(p.parts)) rather than
-    # raw string length.  String length can be misleading when parent directory
-    # names differ in length (e.g. a long flat name beating a deeply nested
-    # short name), causing the wrong summary.txt to be selected.  MitoZ
-    # always writes its summary.txt into a sub-subdirectory, so the deepest
-    # file by parts count is the correct one; str(p) is used as a stable
-    # tiebreak when two candidates share the same depth.
-    cands.sort(key=lambda p: (len(p.parts), str(p)), reverse=True)
-    return cands[0]
-
-
 def refresh_summary(out_root: Path, gb_dir: Path) -> None:
     """Recount PCG / tRNA / rRNA of annotation-summary.tsv from the final GenBank files (after rescue, rRNA
     HMM fallback and curation); rows without a final file are kept unchanged."""
@@ -1171,16 +986,6 @@ def refresh_summary(out_root: Path, gb_dir: Path) -> None:
             c[1:4] = [str(x) for x in counts_from_genbank(finals[c[0]])]
         out.append("\t".join(c))
     f.write_text("\n".join(out) + "\n", encoding="utf-8")
-
-
-def parse_counts_from_summary_txt(summary_txt: Path) -> Optional[Tuple[int, int, int]]:
-    txt = summary_txt.read_text(encoding="utf-8", errors="ignore")
-    m1  = re.search(r"Protein\s+coding\s+genes\s+totally\s+found:\s*(\d+)", txt, re.I)
-    m2  = re.search(r"tRNA\s+genes\s+totally\s+found:\s*(\d+)",            txt, re.I)
-    m3  = re.search(r"rRNA\s+genes\s+totally\s+found:\s*(\d+)",            txt, re.I)
-    if m1 and m2 and m3:
-        return int(m1.group(1)), int(m2.group(1)), int(m3.group(1))
-    return None
 
 
 def counts_from_genbank(gb_path: Path) -> Tuple[int, int, int]:
@@ -1207,12 +1012,7 @@ def rewrite_genbank_record_ids(gb_in: Path, gb_out: Path, new_base_id: str) -> T
     out_recs: List["SeqRecord"] = []
     for i, r in enumerate(recs, start=1):
         rid = new_base_id if i == 1 else f"{new_base_id}_{i}"
-        # BUG-V0.28-C: r[:] triggers Biopython's __getitem__ which clones all
-        # feature locations — wasteful because we immediately overwrite .id /
-        # .name / .annotations anyway.  Build the new SeqRecord directly from
-        # its constituent parts, mirroring the pattern in replace_organism_in_record
-        # (BUG-NEW-E, v0.27).
-        locus = rid[:_LOCUS_NAME_MAXLEN]
+        locus = rid[:_LOCUS_NAME_MAXLEN]                  # a new record, not r[:] (which copies every feature)
         if len(rid) > _LOCUS_NAME_MAXLEN:
             logging.info(
                 f"[LOCUS_TRUNCATE] '{rid}' ({len(rid)} chars) truncated to '{locus}' "
@@ -1244,11 +1044,8 @@ def rewrite_genbank_record_ids(gb_in: Path, gb_out: Path, new_base_id: str) -> T
 
 
 def gb_to_internal_fasta(gb_in: Path, fasta_out: Path, internal_id: str) -> None:
-    """Convert a GenBank file to FASTA for Phase-2 re-annotation input.
-
-    All records are written (not just recs[0]); secondary contigs get
-    suffixes _2, _3, … appended to internal_id (v0.24 / Hole-1).
-    """
+    """Convert a GenBank file to FASTA for Phase-2 re-annotation input: all records, the second contig as
+    <internal_id>_2 and so on."""
     recs = list(SeqIO.parse(str(gb_in), "genbank"))
     if not recs:
         raise ValueError(f"No records in {gb_in}")
@@ -1324,17 +1121,6 @@ def feature_gene_names(feature: "SeqFeature") -> List[str]:
     return names
 
 
-def find_gene_feature(record: "SeqRecord", target_gene: str) -> Optional["SeqFeature"]:
-    aliases = set(gene_aliases(target_gene))
-    for feat in record.features:
-        if feat.type not in {"gene", "CDS", "tRNA", "rRNA"}:
-            continue
-        for nm in feature_gene_names(feat):
-            if normalize_gene_key(nm) in aliases:
-                return feat
-    return None
-
-
 def _rc_location(loc, seq_len: int):
     if isinstance(loc, CompoundLocation):
         return CompoundLocation(
@@ -1380,14 +1166,9 @@ def merge_abutting_parts(parts: List, operator: str = "join"):
 
 
 def shift_location(location, shift: int, seq_len: int):
-    """Shift all feature coordinates by -shift (mod seq_len).
-
-    BUG-FIX (v0.20): Flatten nested CompoundLocations.
-    BUG-FIX (v0.21a): Ghost zero-length feature at cut-point.
-    BUG-FIX (v0.21b): Genome-spanning source feature shattering.
-    BUG-FIX (v0.22): Use <= for zero-length point features.
-    BUG-FIX (2026-10-29): Partial ends (< >) stay partial (trans-spliced placozoan cox1 pieces).
-    """
+    """Shift all feature coordinates by -shift (mod seq_len). Nested joins are flattened, parts that meet at the old
+    origin merged; a whole-sequence feature (source) stays whole; a zero-length point stays a point; partial ends
+    (< >) stay partial (trans-spliced placozoan cox1 pieces, 2026-10-29)."""
     if isinstance(location, CompoundLocation):
         flat_parts: List = []
         for p in location.parts:
@@ -1433,11 +1214,7 @@ def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
             f"[LINEAR_REORIENT_SKIP] record={record.id}: target start={start_pos}; "
             "linear topology cannot be circularly rotated, sequence left unchanged.")
         _LINEAR_SKIP_SEEN.add(key)
-        # BUG-V0.29-M: never circularly rotate a linear contig.  The previous
-        # implementation preserved topology but still moved the sequence tail
-        # before the head, which corrupts incomplete linear contigs.
-        # new_seq = record.seq[start_pos:] + record.seq[:start_pos]
-        return SeqRecord(
+        return SeqRecord(                     # moving a linear contig's tail before its head would corrupt it
             record.seq,
             id=record.id, name=record.name, description=record.description,
             dbxrefs=list(getattr(record, "dbxrefs", [])),
@@ -1449,9 +1226,6 @@ def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
         Seq(str(new_seq)),
         id=record.id, name=record.name, description=record.description,
         dbxrefs=list(getattr(record, "dbxrefs", [])),
-        # BUG-V0.29-B: the old line forced every reoriented record to
-        # circular, which changed true linear contigs into circular records.
-        # annotations={**record.annotations, "topology": "circular"},
         annotations={**record.annotations, "topology": topology},
     )
     new_features: List["SeqFeature"] = []
@@ -1656,12 +1430,9 @@ def reorient_one_gb(
 # Metadata transfer engine
 # ─────────────────────────────────────────────────────────────────────────────
 _REFSEQ_PREFIX_PAT = re.compile(r"^([A-Z]{2}_)")
-# BUG-V0.29-A: Only accession-shaped IDs should have a trailing version
-# stripped.  Local sample names such as B64_2 are distinct samples, not
-# accession versions.
+# only accession-shaped IDs lose a trailing version: local sample names such as B64_2 are distinct samples
 _NON_REFSEQ_VERSION_PAT = re.compile(r"^[A-Z]{1,4}\d{5,}[._]\d+$", re.I)
-# Pre-compiled regex for LOCUS bp-count substitution (OPT-1 v0.27)
-_LOCUS_BPCOUNT_RE  = re.compile(r"(LOCUS\s+\S+\s+)\d+(\s+[a-zA-Z]+)")
+_LOCUS_BPCOUNT_RE  = re.compile(r"(LOCUS\s+\S+\s+)\d+(\s+[a-zA-Z]+)")      # LOCUS bp count
 
 
 def _clean_acc(acc: Optional[str]) -> Optional[str]:
@@ -1680,9 +1451,6 @@ def _normalize_acc(acc: Optional[str]) -> Optional[str]:
         body   = re.sub(r"[._]\d+$", "", s[len(prefix):])
         s      = prefix + body
     else:
-        # BUG-V0.29-A: the old broad substitution below collapsed local IDs
-        # such as B64_2 -> B64.  Keep it as a comment for auditability.
-        # s = re.sub(r"[._]\d+$", "", s)
         if _NON_REFSEQ_VERSION_PAT.match(s):
             s = re.sub(r"[._]\d+$", "", s)
     return s.rstrip(";").strip() or None
@@ -1690,19 +1458,8 @@ def _normalize_acc(acc: Optional[str]) -> Optional[str]:
 
 @functools.lru_cache(maxsize=4096)
 def _acc_variants(acc: Optional[str]) -> Tuple[str, ...]:
-    """Return all meaningful accession variants for lookup matching.
-
-    OPT-2 (v0.27): cached with lru_cache — repeated calls with the same
-    accession string (common during index building) are free after the
-    first computation.
-
-    BUG-V0.28-A: return type changed from List[str] to Tuple[str, ...] so
-    the cached object is immutable.  The previous List was safe only by
-    convention ("callers must not mutate the result"), which is fragile;
-    any accidental append/clear/sort on the returned list would silently
-    corrupt the cache.  All call-sites iterate over the result, so the
-    change is fully backward-compatible.
-    """
+    """All meaningful accession variants for lookup matching (cached; a tuple, so the cached value cannot be
+    changed by a caller)."""
     clean = _clean_acc(acc)
     if not clean:
         return ()
@@ -1716,11 +1473,7 @@ def _acc_variants(acc: Optional[str]) -> Tuple[str, ...]:
     _add(clean)
     _add(norm)
     m = re.search(r"[._](\d+)$", clean)
-    # BUG-V0.29-A: only add version-style alternatives when normalisation
-    # actually removed a version suffix.  Otherwise B64_2 would gain B64 as
-    # an alias and collide with the real B64 sample.
-    # if m and norm:
-    if m and norm and norm != clean:
+    if m and norm and norm != clean:             # a version was removed (B64_2 must not gain B64 as an alias)
         ver = m.group(1)
         _add(f"{norm}.{ver}")
         _add(f"{norm}_{ver}")
@@ -1728,13 +1481,8 @@ def _acc_variants(acc: Optional[str]) -> Tuple[str, ...]:
 
 
 def _split_gb_records(text: str) -> List[str]:
-    """Split a multi-record GenBank text into individual record strings.
-
-    BUG-NEW-C (v0.27): empty / whitespace-only pseudo-records that result
-    from trailing newlines after the final ``//`` terminator are now
-    filtered out, preventing phantom entries in replace_metadata_in_text
-    stats counters.
-    """
+    """Split a multi-record GenBank text into individual record strings (no empty pseudo-record from newlines after
+    the last //)."""
     records: List[str] = []
     buf: List[str] = []
     for line in text.splitlines(keepends=True):
@@ -1764,11 +1512,8 @@ def _split_meta_body(record: str) -> Tuple[str, str]:
 
 
 def _get_record_accession(record: str) -> Optional[str]:
-    """Extract accession from GB text — VERSION first, then ACCESSION, then LOCUS.
-
-    BUG-FIX (v0.22): Biopython truncates LOCUS name to 16 chars; scanning
-    VERSION / ACCESSION first avoids silently returning a truncated key.
-    """
+    """Accession from GB text: VERSION first, then ACCESSION, then LOCUS (Biopython truncates the LOCUS name to 16
+    characters)."""
     for prefix in ("VERSION", "ACCESSION", "LOCUS"):
         for line in record.splitlines():
             if line.startswith(prefix):
@@ -1912,11 +1657,7 @@ def replace_metadata_in_text(
     new_gb_text: str, exact_dict, clean_dict, norm_dict,
     smart: bool = False, auto_accept: bool = False,
 ) -> Tuple[str, Dict]:
-    """Replace GB header sections in *new_gb_text* using the metadata index.
-
-    OPT-1 (v0.27): the LOCUS bp-count substitution regex is pre-compiled
-    at module level (_LOCUS_BPCOUNT_RE) rather than recompiled per record.
-    """
+    """Replace GB header sections in *new_gb_text* using the metadata index."""
     stats: Dict = {
         "total_new": 0, "no_accession": 0,
         "exact": 0, "compat": 0, "smart_resolved": 0, "not_found": 0,
@@ -1933,8 +1674,7 @@ def replace_metadata_in_text(
         meta, match_type = find_metadata_from_index(acc, exact_dict, clean_dict, norm_dict)
         if meta is not None:
             _, body = _split_meta_body(rec)
-            # Fix the bp count in the source metadata's LOCUS line to match
-            # the actual (re-annotated) sequence length (BUG-3 v0.20).
+            # the bp count of the source metadata's LOCUS line: the length of the re-annotated sequence
             new_locus_m = re.search(r"LOCUS\s+\S+\s+(\d+)\s+[a-zA-Z]+", rec)
             if new_locus_m:
                 real_len = new_locus_m.group(1)
@@ -1987,17 +1727,11 @@ def transfer_gb_metadata_file(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Organism / SOURCE replacement helpers  (v0.25 / v0.26 / v0.27)
+# Organism / SOURCE replacement helpers
 # ─────────────────────────────────────────────────────────────────────────────
 def build_organism_index(gb_files: List[Path]) -> Dict[str, Tuple[str, str]]:
-    """Build accession → (organism_name, source_line_text) lookup.
-
-    BUG-NEW-B (v0.27): removed the redundant ``index.setdefault(norm,
-    entry)`` executed after the _acc_variants loop.  _acc_variants already
-    registers the normalised form as one of its variants; the extra call
-    was dead code and could inadvertently mask a later (higher-priority)
-    entry under the same norm key.
-    """
+    """Accession -> (organism_name, source_line_text) lookup, under every accession variant (_acc_variants, which
+    include the normalised form)."""
     index: Dict[str, Tuple[str, str]] = {}
     for gb_path in gb_files:
         try:
@@ -2026,16 +1760,8 @@ def build_organism_index(gb_files: List[Path]) -> Dict[str, Tuple[str, str]]:
 
             entry: Tuple[str, str] = (organism, source_text)
 
-            # Register under all accession variants for robust matching.
-            # _acc_variants already includes the normalised form, so no
-            # additional setdefault(norm, entry) call is needed here.
             for variant in _acc_variants(acc):
-                # BUG-V0.29-K: old setdefault silently kept the first
-                # organism/source when two metadata records normalised to the
-                # same accession variant.  Preserve first-wins behaviour but
-                # make the conflict visible.
-                # index.setdefault(variant, entry)
-                if variant in index and index[variant] != entry:
+                if variant in index and index[variant] != entry:      # first wins, the conflict is logged
                     logging.warning(
                         f"[ORG_INDEX_CONFLICT] {variant}: keeping first "
                         f"{index[variant]!r}, ignoring {entry!r} from {gb_path.name}")
@@ -2063,21 +1789,9 @@ def replace_organism_in_record(
     new_organism: str,
     new_source: Optional[str] = None,
 ) -> "SeqRecord":
-    """Return a copy of *rec* with the organism name replaced throughout.
-
-    BUG-NEW-E (v0.27): eliminated the wasteful rec[:] slice-copy.  The
-    old code created a full Biopython slice (copying all features with
-    original locations) only to immediately overwrite new_rec.features
-    with the reprocessed list.  The SeqRecord is now built directly from
-    its constituent parts.
-
-    Updates:
-      • rec.annotations["organism"]  — always set when new_organism is non-empty.
-      • rec.annotations["source"]    — set only when new_source is explicitly
-                                       provided and non-empty (BUG-11 v0.26).
-      • /organism= qualifier on every ``source`` feature — unconditionally
-                                       set (BUG-A v0.26).
-    """
+    """A copy of *rec* with the organism name replaced throughout: rec.annotations["organism"] when new_organism is
+    non-empty, rec.annotations["source"] only when new_source is given and non-empty, /organism= on every source
+    feature (added when absent)."""
     new_annotations = dict(rec.annotations)
     if new_organism:
         new_annotations["organism"] = new_organism
@@ -2144,12 +1858,7 @@ def replace_organism_in_gb_file(
 
 
 def _sync_organism_qualifier(gb_in: Path, gb_out: Path) -> int:
-    """Sync /organism= in FEATURES source to match rec.annotations["organism"].
-
-    BUG-NEW-E (v0.27): same rec[:] waste removed as in
-    replace_organism_in_record — SeqRecord built directly.
-    BUG-B (v0.26): qualifier is added even when previously absent.
-    """
+    """Sync /organism= in FEATURES source to match rec.annotations["organism"] (added when absent)."""
     recs = list(SeqIO.parse(str(gb_in), "genbank"))
     out_recs: List["SeqRecord"] = []
     n_fixed = 0
@@ -2351,7 +2060,9 @@ def write_input_annotation(si: SampleInfo, dest: Path) -> str:
 def annotate_one(
     si: SampleInfo, fasta_file: Path, out_root: Path, phase_dirname: str,
     args: argparse.Namespace, total: int = 0, done_counter: Optional[List] = None,
-) -> Tuple[str, bool, Path, Optional[Path], Optional[Path], Tuple[int, int, int]]:
+) -> Tuple[str, bool, Path, Optional[Path]]:
+    """Annotate one sample (engine_cmd, or the input record for `mitom import`): (internal_id, ok, workdir, the
+    <workdir>/<internal_id>.gbf the engine wrote or None)."""
     internal_id = si.internal_id
     workdir     = out_root / phase_dirname / internal_id
     workdir.mkdir(parents=True, exist_ok=True)
@@ -2392,25 +2103,11 @@ def annotate_one(
         last = next((x.strip() for x in reversed(err_tail.splitlines()) if x.strip()), "no stderr")
         logging.warning(f"[FAIL] {si.sample_name}: annotation core exit {rc}: {last}  (sample log: {workdir / 'sample.log'})")
         close_sample_logger(log_name)
-        return internal_id, False, workdir, None, None, (0, 0, 0)
+        return internal_id, False, workdir, None
 
-    own         = workdir / f"{internal_id}.gbf"                 # what the core and mito_engines.py write
-    gb_files    = [own] if own.is_file() else find_genbank_like_files(workdir, preferred_prefix=internal_id)
-    best_gb     = gb_files[0] if gb_files else None
-    summary_txt = find_any_summary_txt(workdir)
-
-    counts: Optional[Tuple[int, int, int]] = None
-    if summary_txt:
-        counts = parse_counts_from_summary_txt(summary_txt)
-    if counts is None and best_gb:
-        try:
-            counts = counts_from_genbank(best_gb)
-        except Exception:
-            counts = (0, 0, 0)
-    counts = counts or (0, 0, 0)
-
+    own = workdir / f"{internal_id}.gbf"                 # what the core and mito_engines.py write (exit 0 = written)
     close_sample_logger(log_name)
-    return internal_id, True, workdir, best_gb, summary_txt, counts
+    return internal_id, True, workdir, own if own.is_file() else None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2434,14 +2131,8 @@ class AnnotTask:
 
 
 def render_snakemake_worker_script(out_dir: Path) -> Path:
-    """Generate the self-contained annotation worker script (runs the task's engine command, engine_cmd()).
-
-    NOTE (v0.27): This worker handles annotation only.
-    finalize_genbank_output (ID-rewrite, reorientation, metadata overlay,
-    /organism= sync) is always executed in the main process after all
-    Snakemake jobs complete, so all pipeline bug-fixes are applied
-    regardless of the scheduler backend.
-    """
+    """Generate the self-contained annotation worker script (runs the task's engine command, engine_cmd()). The
+    worker annotates only; finalize_genbank_output and every later step run in the main process."""
     fp   = out_dir / "_worker.py"
     code = r'''#!/usr/bin/env python3
 """Self-contained annotation worker invoked by Snakemake: runs the task's command (the annotation engine).
@@ -2450,52 +2141,10 @@ This script handles annotation only.  Finalization steps
 (ID-rewrite, reorientation, metadata overlay, organism sync) are
 executed in the main pipeline process after all workers finish.
 """
-import json, re, shlex, shutil, subprocess, sys, time
+import json, subprocess, sys, time
 from pathlib import Path
 
 def tail_text(s, n=120): return "\n".join((s or "").splitlines()[-n:])
-
-def _is_gb_file(p):
-    return p.suffix.lower() in {".gb", ".gbk", ".genbank", ".gbf"}
-
-def find_genbank_like_files(root, preferred_prefix=None):
-    out = [p for p in Path(root).rglob("*") if p.is_file() and _is_gb_file(p)]
-    if preferred_prefix:
-        pref = sorted([p for p in out if p.stem.startswith(preferred_prefix)],
-                      key=lambda x: x.stat().st_size if x.exists() else 0, reverse=True)
-        rest = sorted([p for p in out if not p.stem.startswith(preferred_prefix)],
-                      key=lambda x: x.stat().st_size if x.exists() else 0, reverse=True)
-        return pref + rest
-    return sorted(out, key=lambda x: x.stat().st_size if x.exists() else 0, reverse=True)
-
-def find_any_summary_txt(d):
-    cands = list(Path(d).rglob("summary.txt"))
-    if not cands: return None
-    # BUG-V0.29-F: keep worker logic consistent with the main helper.  The
-    # old len(str(p)) sort could choose a shallow file with a long path.
-    # cands.sort(key=lambda p: (len(str(p)), str(p)), reverse=True)
-    cands.sort(key=lambda p: (len(p.parts), str(p)), reverse=True)
-    return cands[0]
-
-def parse_counts(f):
-    txt = Path(f).read_text(encoding="utf-8", errors="ignore")
-    m1 = re.search(r"Protein\s+coding\s+genes\s+totally\s+found:\s*(\d+)", txt, re.I)
-    m2 = re.search(r"tRNA\s+genes\s+totally\s+found:\s*(\d+)",             txt, re.I)
-    m3 = re.search(r"rRNA\s+genes\s+totally\s+found:\s*(\d+)",             txt, re.I)
-    # BUG-V0.29-F: old worker returned (0,0,0) on parse miss, preventing the
-    # GenBank-count fallback used by the threads backend.
-    # return (int(m1.group(1)), int(m2.group(1)), int(m3.group(1))) if m1 and m2 and m3 else (0,0,0)
-    return (int(m1.group(1)), int(m2.group(1)), int(m3.group(1))) if m1 and m2 and m3 else None
-
-def counts_from_gb(gb):
-    from Bio import SeqIO as BIO
-    pcg = trna = rrna = 0
-    for rec in BIO.parse(str(gb), "genbank"):
-        for feat in rec.features:
-            if feat.type == "CDS":    pcg  += 1
-            elif feat.type == "tRNA": trna += 1
-            elif feat.type == "rRNA": rrna += 1
-    return pcg, trna, rrna
 
 def main():
     task = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
@@ -2530,26 +2179,12 @@ def main():
     result = {
         "internal_id": internal_id,
         "sample_name": task.get("sample_name", internal_id),
-        "ok": False, "workdir": str(workdir),
-        "best_gb": None, "summary_txt": None, "counts": [0,0,0],
+        "ok": False, "workdir": str(workdir), "best_gb": None,
         "returncode": int(p.returncode),
     }
     if p.returncode == 0:
-        own      = workdir / (internal_id + ".gbf")
-        gb_files = [own] if own.is_file() else find_genbank_like_files(workdir, preferred_prefix=internal_id)
-        best_gb  = str(gb_files[0]) if gb_files else None
-        summ     = find_any_summary_txt(workdir)
-        # BUG-V0.29-F: keep fallback active when summary.txt exists but cannot
-        # be parsed.
-        # counts   = list(parse_counts(summ)) if summ else None
-        parsed   = parse_counts(summ) if summ else None
-        counts   = list(parsed) if parsed is not None else None
-        if counts is None and best_gb:
-            try: counts = list(counts_from_gb(Path(best_gb)))
-            except: counts = [0,0,0]
-        result.update({"ok": best_gb is not None, "best_gb": best_gb,
-                        "summary_txt": str(summ) if summ else None,
-                        "counts": counts or [0,0,0]})
+        own = workdir / (internal_id + ".gbf")          # what the engine writes (exit 0 = written)
+        result.update({"ok": own.is_file(), "best_gb": str(own) if own.is_file() else None})
     else:
         result["stderr_tail"] = tail_text(p.stderr or "")
 
@@ -2565,7 +2200,7 @@ if __name__ == "__main__":
 
 
 def render_snakemake_snakefile(
-    workdir: Path, task_jsons: List[Path], worker_script: Path, args_json: Path,
+    workdir: Path, task_jsons: List[Path], worker_script: Path,
     python_exe: str = sys.executable or "python3",
     job_threads: int = 1,
     job_mem_mb: int = 128,
@@ -2577,22 +2212,14 @@ def render_snakemake_snakefile(
         done_s  = str(tp.with_suffix(".done"))
         rule_id = re.sub(r"[^A-Za-z0-9_]", "_", tp.stem)
         all_done.append(done_s)
-        cmdline = " ".join(shlex.quote(x) for x in [
-            python_exe, str(worker_script), str(tp), str(args_json)
-        ])
+        cmdline = " ".join(shlex.quote(x) for x in [python_exe, str(worker_script), str(tp)])
+        # threads / mem_mb per job: what the engine gets (--threads), so that Snakemake schedules the real load
         rule_lines.append(f"""
 rule task_{rule_id}:
     input:  task={json.dumps(str(tp), ensure_ascii=False)}
     output: done={json.dumps(done_s, ensure_ascii=False)}
-    # BUG-V0.29-G: old code declared threads: 1 while the core receives
-    # --thread_number, causing Snakemake to over-schedule CPU.
-    # threads: 1
     threads: {max(1, int(job_threads))}
-    # BUG-V0.29-G: --resources mem_mb was previously global only; each rule
-    # must request memory for Snakemake to enforce the pool.
     resources: mem_mb={int_mem_mb(job_mem_mb)}
-    # BUG-V0.29-H: old shell used bare python and unquoted paths:
-    # shell:  "python '{{worker_script}}' '{{tp}}' '{{args_json}}'"
     shell:  {json.dumps(cmdline, ensure_ascii=False)}
 """)
     header = f"rule all:\n    input: {json.dumps(all_done, ensure_ascii=False)}\n"
@@ -2606,17 +2233,6 @@ def run_snakemake_for_annotation_tasks(
     snk_work = out_root / f"_snakemake_{phase_name}"
     snk_work.mkdir(parents=True, exist_ok=True)
     worker_script = render_snakemake_worker_script(snk_work)
-    args_json     = snk_work / "args.json"
-    args_payload  = {
-        "threads": int(args.threads), "clade": args.clade,
-        "genetic_code": int(args.genetic_code),
-        "mito_core": str(MITO_CORE),
-        "mitos_refdir": getattr(args, "mitos_refdir", None), "mitos_bin": getattr(args, "mitos_bin", None),
-        "phylum": getattr(args, "phylum", None), "rrna_hmm_lib": getattr(args, "rrna_hmm_lib", None),
-        "rrna_method": getattr(args, "rrna_method", "hmm"), "engine": getattr(args, "engine", "native"),
-    }                                                          # for the record: the worker runs task["cmd"]
-    args_json.write_text(json.dumps(args_payload, indent=2, ensure_ascii=False) + "\n",
-                         encoding="utf-8")
     task_jsons: List[Path] = []
     for t in tasks:
         tp = snk_work / f"{t.internal_id}.json"
@@ -2624,11 +2240,8 @@ def run_snakemake_for_annotation_tasks(
                       encoding="utf-8")
         task_jsons.append(tp)
     per_job_mem_mb = max(128, int_mem_mb(args.smk_mem_mb) // max(1, int(args.max_tasks)))
-    # BUG-V0.29-G/H: pass the real per-job CPU/memory requirements and the
-    # current interpreter into the generated Snakefile.
-    # snakefile = render_snakemake_snakefile(snk_work, task_jsons, worker_script, args_json)
     snakefile = render_snakemake_snakefile(
-        snk_work, task_jsons, worker_script, args_json,
+        snk_work, task_jsons, worker_script,
         python_exe=sys.executable or "python3",
         job_threads=int(args.threads),
         job_mem_mb=per_job_mem_mb)
@@ -2703,8 +2316,7 @@ def run_snakemake_for_annotation_tasks(
             logging.warning(f"[SNAKEMAKE_RESULT_MISSING] {rp} not found for task {iid}")
             results[iid] = {
                 "internal_id": iid, "sample_name": iid, "ok": False,
-                "workdir": str(out_root / phase_name / iid),
-                "best_gb": None, "summary_txt": None, "counts": [0, 0, 0],
+                "workdir": str(out_root / phase_name / iid), "best_gb": None,
             }
     return results
 
@@ -2753,19 +2365,13 @@ def run_annotation_stage(
         for fut in cf.as_completed(futs):
             si = futs[fut]
             try:
-                internal_id, ok, workdir, best_gb, summary_txt, counts = fut.result()
+                internal_id, ok, workdir, best_gb = fut.result()
             except Exception as exc:
                 logging.error(f"[TASK_EXCEPTION] {si.sample_name}: {exc}")
-                internal_id, ok, workdir, best_gb, summary_txt, counts = (
-                    si.internal_id, False,
-                    out_root / phase_dirname / si.internal_id,
-                    None, None, (0, 0, 0))
+                internal_id, ok, workdir, best_gb = si.internal_id, False, out_root / phase_dirname / si.internal_id, None
             results[internal_id] = {
                 "internal_id": internal_id, "sample_name": si.sample_name,
-                "ok": ok, "workdir": str(workdir),
-                "best_gb":      str(best_gb)     if best_gb     else None,
-                "summary_txt":  str(summary_txt) if summary_txt else None,
-                "counts": counts,
+                "ok": ok, "workdir": str(workdir), "best_gb": str(best_gb) if best_gb else None,
             }
     return results
 
@@ -2808,7 +2414,8 @@ def finalize_genbank_output(
     3.5 Organism sync  — fix /organism= inside the FEATURES source feature.
     4. Recount         — recount PCG / tRNA / rRNA from the definitive file.
 
-    BUG-NEW-F (v0.27): bare shutil.copy2 calls replaced with _safe_copy.
+    Every step writes a draft next to dest_gb that replaces it only at the end: a failure never leaves a half-final
+    file at the final path.
     """
     pcg = trna = rrna = 0
     orientation_ok = False
@@ -2855,10 +2462,6 @@ def finalize_genbank_output(
             working_gb = id_gb
 
         # ── Step 3: Optional metadata overlay (header section, text-level) ──
-        # BUG-V0.29-L: old code copied each intermediate directly to dest_gb.
-        # If a later step failed, a half-final file could remain at the final
-        # path.  Write a same-directory draft and replace dest_gb at the end.
-        # dest_gb.parent.mkdir(parents=True, exist_ok=True)
         metadata_mode = "rewritten_no_metadata"
 
         if preserve_metadata and metadata_src_gb and metadata_src_gb.exists():
@@ -2872,8 +2475,7 @@ def finalize_genbank_output(
                     auto_accept=auto_accept,
                 )
                 if ok and n_replaced > 0:
-                    # _safe_copy(meta_out, dest_gb)          # BUG-NEW-F
-                    _safe_copy(meta_out, draft_gb)         # BUG-V0.29-L
+                    _safe_copy(meta_out, draft_gb)
                     metadata_mode = "metadata_transferred"
                     if compat:
                         metadata_mode += "+compat"
@@ -2882,26 +2484,22 @@ def finalize_genbank_output(
                             f"[META_UNMATCHED] {sample_name}: {len(unmatched)} record(s) "
                             f"unmatched: {unmatched}")
                 elif ok and n_replaced == 0:
-                    # _safe_copy(working_gb, dest_gb)        # BUG-NEW-F
-                    _safe_copy(working_gb, draft_gb)       # BUG-V0.29-L
+                    _safe_copy(working_gb, draft_gb)
                     metadata_mode = "metadata_no_match"
                     logging.info(
                         f"[META_NO_MATCH] {sample_name}: 0 records matched in "
                         f"{metadata_src_gb.name}; using ID-rewritten GB.")
                 else:
-                    # _safe_copy(working_gb, dest_gb)        # BUG-NEW-F
-                    _safe_copy(working_gb, draft_gb)       # BUG-V0.29-L
+                    _safe_copy(working_gb, draft_gb)
                     metadata_mode = "metadata_failed"
                     logging.warning(f"[META_FAIL] {sample_name}: {reason}")
             else:
-                # _safe_copy(working_gb, dest_gb)            # BUG-NEW-F
-                _safe_copy(working_gb, draft_gb)           # BUG-V0.29-L
+                _safe_copy(working_gb, draft_gb)
                 metadata_mode = "metadata_src_not_usable"
         else:
-            # _safe_copy(working_gb, dest_gb)                # BUG-NEW-F
-            _safe_copy(working_gb, draft_gb)               # BUG-V0.29-L
+            _safe_copy(working_gb, draft_gb)
 
-        # ── Step 3.5: Sync /organism= in FEATURES source (BUG-12 fix) ──
+        # ── Step 3.5: Sync /organism= in FEATURES source ──
         try:
             org_fixed = td / "org_fixed.gbf"
             applied = False
@@ -2909,12 +2507,9 @@ def finalize_genbank_output(
             if metadata_src_gb and metadata_src_gb.exists():
                 org_index = build_organism_index([metadata_src_gb])
                 if org_index:
-                    n_rep, n_nf, n_tot = replace_organism_in_gb_file(
-                        # dest_gb, org_fixed, org_index)
-                        draft_gb, org_fixed, org_index)
+                    n_rep, n_nf, n_tot = replace_organism_in_gb_file(draft_gb, org_fixed, org_index)
                     if n_rep > 0:
-                        # _safe_copy(org_fixed, dest_gb)     # BUG-NEW-F
-                        _safe_copy(org_fixed, draft_gb)    # BUG-V0.29-L
+                        _safe_copy(org_fixed, draft_gb)
                         applied = True
                         logging.info(
                             f"[ORG_SYNC] {sample_name}: /organism= restored in "
@@ -2922,11 +2517,9 @@ def finalize_genbank_output(
                             + (f" ({n_nf} not matched)" if n_nf else ""))
 
             if not applied:
-                # n_synced = _sync_organism_qualifier(dest_gb, org_fixed)
                 n_synced = _sync_organism_qualifier(draft_gb, org_fixed)
                 if n_synced > 0:
-                    # _safe_copy(org_fixed, dest_gb)         # BUG-NEW-F
-                    _safe_copy(org_fixed, draft_gb)        # BUG-V0.29-L
+                    _safe_copy(org_fixed, draft_gb)
                     logging.info(
                         f"[ORG_SYNC] {sample_name}: /organism= synced from header "
                         f"in {n_synced} record(s)")
@@ -2937,7 +2530,6 @@ def finalize_genbank_output(
 
         # ── Step 4: recount from definitive file ──────────────────────
         try:
-            # pcg, trna, rrna = counts_from_genbank(dest_gb)
             pcg, trna, rrna = counts_from_genbank(draft_gb)
             # cox1_first from the file itself: a linear record is never rotated (rotate_record), whatever
             # reorient_one_gb counted
@@ -2961,6 +2553,12 @@ def finalize_genbank_output(
 # ─────────────────────────────────────────────────────────────────────────────
 # Workflows
 # ─────────────────────────────────────────────────────────────────────────────
+KNOWN_LIMITATION = ("[KNOWN_LIMITATION] the annotation core does not annotate introns (group I/II); they are added "
+                    "afterwards by mito_intron.py (MFannot method) and mito_intron_ref.py (intron sites of "
+                    "annotated relatives; --intron_fix) when exonerate is available - check intron_report.tsv "
+                    "and intron_ref_report.tsv.")
+
+
 def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
@@ -3018,17 +2616,13 @@ def workflow_annotate(args: argparse.Namespace) -> int:
         out_root / "annotation-summary.tsv",
         "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok\tmetadata_mode",
         summary_rows)
-    # BUG-NEW-D (v0.27): use rglob consistently with workflow_run so that
-    # no_{gene}_gene/ subdirectory records are also included in the merged
-    # archive.  Use final_dir.glob("*.gbf") if you want only the top-level
-    # (successfully-oriented) records.
     run_rescue(args, final_dir, out_root)
     run_rrna_hmm(args, final_dir, out_root)
-    run_intron_fix(args, in_path, final_dir, out_root)
+    run_intron_fix(args, final_dir, out_root)
     reorient_after_introns(args, final_dir)
     merge_dir = run_curate_and_submit(args, final_dir, out_root)
     refresh_summary(out_root, merge_dir)
-    all_final_gbs = sorted(
+    all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
         p for p in merge_dir.rglob("*.gbf")
         if p.is_file() and p.stat().st_size > 0)
     if all_final_gbs:
@@ -3037,10 +2631,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     (out_root / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary.log()
-    logging.warning("[KNOWN_LIMITATION] the annotation core does not annotate introns (group I/II); they are added "
-                    "afterwards by mito_intron.py (MFannot method) and mito_intron_ref.py (intron sites of "
-                    "annotated relatives; --intron_fix) when exonerate is available - check intron_report.tsv "
-                    "and intron_ref_report.tsv.")
+    logging.warning(KNOWN_LIMITATION)
     write_orientation_fallback(out_root, samples)
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
@@ -3089,9 +2680,6 @@ def workflow_reorient(args: argparse.Namespace) -> int:
                 logging.warning(f"[FALLBACK_COPY] '{sample}': original copied unchanged")
         except Exception as exc:
             logging.error(f"[FAIL] {sample}: {exc}")
-            # BUG-V0.28-F: use reorient_failed — annotation_failed is
-            # semantically incorrect here (no MitoZ annotation is performed
-            # in the reorient workflow).
             summary.reorient_failed.append(sample)
 
     write_nonempty_list(out_root / "no_target_gene_samples.txt",
@@ -3352,10 +2940,10 @@ def run_rrna_hmm(args: argparse.Namespace, final_dir: Path, out_root: Path) -> N
 
 
 
-def run_intron_fix(args: argparse.Namespace, in_path: Path, final_dir: Path, out_root: Path) -> str:
-    """Add introns to final GenBank files in place with mito_intron.py (de novo), then mito_intron_ref.py (intron sites
-    of annotated relatives, run_intron_ref); returns the line for the step summary. in_path is kept for the call
-    signature; the protein library is MFannot's (--intron_lib)."""
+def run_intron_fix(args: argparse.Namespace, final_dir: Path, out_root: Path) -> str:
+    """Add introns to final GenBank files in place with mito_intron.py (de novo; protein library MFannot's, or
+    --intron_lib), then mito_intron_ref.py (intron sites of annotated relatives, run_intron_ref); returns the line for
+    the step summary."""
     if args.intron_fix == "no":
         return "skipped (--intron_fix no)"
     script = Path(__file__).resolve().with_name("mito_intron.py")
@@ -3531,7 +3119,6 @@ REPORT_NOTES = {
     "dedup_report.tsv": "deduplication: one row per input record with a sequence, kept / dropped and why",
     "reannotation_decision.tsv": "after re-orientation: round 2 or not, and why",
     "curation_report.tsv": "every boundary / name change: rule, old and new location, reason",
-    "validation_compare.tsv": "NCBI messages before / after curation",
     "rescue_report.tsv": "genes added from MITOS2",
     "rrna_hmm_report.tsv": "rRNAs searched / added by the per-phylum rRNA HMMs",
     "intron_report.tsv": "introns found",
@@ -3656,16 +3243,13 @@ def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False) -> 
     kept_dedup = out_root / "00.gb_converted_fasta" / "dedup_report.tsv"     # --keep_intermediate yes
     if kept_dedup.is_file():
         shutil.copy2(kept_dedup, reports / "dedup_report.tsv")
-    for f in final_gb_dir.glob("*.tsv"):                      # curation_report.tsv, validation_compare.tsv
+    for f in final_gb_dir.glob("*.tsv"):                      # curation_report.tsv
         shutil.move(str(f), str(reports / f.name))
     if (out_root / "all.final.gbf").exists():
         shutil.move(str(out_root / "all.final.gbf"), str(out_root / "final_annotation_all.gb"))
     if (out_root / "06.ncbi_submission").is_dir():
         shutil.move(str(out_root / "06.ncbi_submission"), str(out_root / "ncbi_submission"))
     write_summary(out_root)
-    wrap = out_root / "trna_wrap.tsv"
-    if wrap.exists() and not wrap.read_text().strip():
-        wrap.unlink()
     for name in REPORT_FILES:                                  # MitoM's own files only: the folder may hold the user's
         if (out_root / name).is_file():
             replace(out_root / name, reports / name)
@@ -3787,10 +3371,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     reor_fasta_dir.mkdir(parents=True, exist_ok=True)
     reor_ok_ids:    List[str]        = []
     no_gene_iids:   set              = set()
-    # BUG-V0.29-C: keep partial no-gene contigs so they can be merged back
-    # into the final body.  The old workflow used only gb_reor downstream and
-    # silently dropped these records.
-    partial_no_gene_gb: Dict[str, Path] = {}
+    partial_no_gene_gb: Dict[str, Path] = {}     # contigs without the gene: merged back into the final record
 
     for si in samples:
         r1      = results1.get(si.internal_id, {})
@@ -3823,11 +3404,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                                      si.internal_id)
         except Exception as exc:
             logging.error(f"[REORIENT_FAIL] {si.sample_name} ({si.internal_id}): {exc}")
-            # BUG-V0.29-D: a reorientation exception is not the same as a
-            # biological no-target-gene case.  Keep the old line commented for
-            # traceability and record it in reorient_failed instead.
-            # summary.no_target_gene.append(si.sample_name)
-            summary.reorient_failed.append(si.sample_name)
+            summary.reorient_failed.append(si.sample_name)      # an error, not a record without the gene
             no_gene_iids.add(si.internal_id)
 
     fallback_used = sum(1 for si in samples if si.internal_id in reor_ok_ids
@@ -3875,7 +3452,6 @@ def workflow_run(args: argparse.Namespace) -> int:
 
     summary_rows:    List[str] = []
     meta_log_rows:   List[str] = []
-    finalised:       List[Tuple[Path, str]] = []      # (final file, body_source) for the sensitive tRNA pass
 
     for si in samples:
         sample      = si.sample_name
@@ -3933,10 +3509,7 @@ def workflow_run(args: argparse.Namespace) -> int:
         try:
             pcg, trna, rrna, meta_mode, orient_ok = finalize_genbank_output(
                 sample_name=sample,
-                # BUG-V0.29-C: old code passed chosen_gb directly, dropping
-                # partial no-gene contigs created during Phase-1b.
-                # body_src_gb=chosen_gb,
-                body_src_gb=body_for_final,
+                body_src_gb=body_for_final,                          # with the contigs without the gene
                 metadata_src_gb=metadata_src,
                 dest_gb=dest,
                 which_gene_first=orientation_genes(args),
@@ -3947,20 +3520,13 @@ def workflow_run(args: argparse.Namespace) -> int:
             )
             summary_rows.append(
                 f"{sample}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{src_tag}\t{meta_mode}")
-            finalised.append((dest, src_tag))
             meta_log_rows.append(
-                # BUG-V0.29-C: log the actual final body source after partial
-                # no-gene contigs are merged back.
-                # f"{sample}\t{iid}\t{metadata_src or 'NA'}\t{chosen_gb}\t{dest}\t{meta_mode}")
                 f"{sample}\t{iid}\t{metadata_src or 'NA'}\t{body_for_final}\t{dest}\t{meta_mode}")
 
             if "transferred" in meta_mode:
                 summary.metadata_transferred.append(sample)
                 if "compat" in meta_mode:
                     summary.metadata_compat_match.append(sample)
-                    # BUG-V0.29-I: old code counted compat matches but never
-                    # filled metadata_key_mismatch, so the audit file stayed
-                    # empty even when metadata keys differed.
                     summary.metadata_key_mismatch.append(sample)
             elif meta_mode in ("metadata_no_match", "metadata_src_not_usable"):
                 summary.metadata_skipped.append(sample)
@@ -4001,14 +3567,12 @@ def workflow_run(args: argparse.Namespace) -> int:
     (out_root / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    # Merge all final GBs including no_{gene}_gene/ subdirectory.
-    # Use final_dir.glob("*.gbf") if you want only successfully-oriented records.
     steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
     run_rescue(args, final_dir, out_root)
     steps.info(f"genes added by MITOS2 rescue : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}")
     run_rrna_hmm(args, final_dir, out_root)
     steps.info(f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'rrna_hmm_report.tsv', 'status', 'added')}")
-    steps.info(f"introns                      : {run_intron_fix(args, in_path, final_dir, out_root)}")
+    steps.info(f"introns                      : {run_intron_fix(args, final_dir, out_root)}")
     n_rot = reorient_after_introns(args, final_dir)
     if n_rot:
         steps.info(f"re-oriented to the first exon : {n_rot} record(s) whose {args.which_gene_first} gained an exon upstream")
@@ -4034,7 +3598,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     else:
         steps.done(curate_skipped)
     refresh_summary(out_root, merge_dir)
-    all_final_gbs = sorted(
+    all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
         p for p in merge_dir.rglob("*.gbf")
         if p.is_file() and p.stat().st_size > 0
     )
@@ -4049,10 +3613,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     logging.info(f"[OUTPUT_COUNT] {n_ok}/{total}")
     logging.info(f"[METADATA_MODE] preserve={args.preserve_phase1_metadata}")
     summary.log()
-    logging.info("[KNOWN_LIMITATION] the annotation core does not annotate introns (group I/II); they are added "
-                 "afterwards by mito_intron.py (MFannot method) and mito_intron_ref.py (intron sites of "
-                 "annotated relatives; --intron_fix) when exonerate is available - check intron_report.tsv "
-                 "and intron_ref_report.tsv.")
+    logging.info(KNOWN_LIMITATION)
     write_orientation_fallback(out_root, samples)
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
@@ -4143,11 +3704,7 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
                              log_rows)
         return 0
 
-    # BUG-V0.29-J: old dict comprehension silently overwrote duplicate stems
-    # from different subdirectories, causing body files to receive the wrong
-    # header.  Keep the old line commented for auditability.
-    # meta_by_stem = {p.stem: p for p in metadata_files}
-    meta_by_stem: Dict[str, Path] = {}
+    meta_by_stem: Dict[str, Path] = {}           # the same stem in two folders is an error, never a silent choice
     dup_stems: Dict[str, List[Path]] = {}
     for mf in metadata_files:
         if mf.stem in meta_by_stem:
@@ -4183,15 +3740,11 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Standalone replace_organism workflow  (v0.25 / v0.26 / v0.27)
+# Standalone replace_organism workflow
 # ─────────────────────────────────────────────────────────────────────────────
 def workflow_replace_organism(args: argparse.Namespace) -> int:
-    """Replace /organism= qualifiers in FEATURES source blocks.
-
-    See module docstring and argument help for full description.
-    When using the 'run' subcommand this fix is applied automatically as
-    Step 3.5 of finalize_genbank_output.
-    """
+    """Replace /organism= qualifiers in FEATURES source blocks (`run` does this in step 3.5 of
+    finalize_genbank_output)."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     setup_root_logger(out_root / "replace_organism.log")
@@ -4223,8 +3776,7 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
         out_file = bf if args.overwrite_new_body == "yes" else (out_dir / bf.name)
         try:
             n_rep, n_nf, n_tot = replace_organism_in_gb_file(bf, out_file, org_index)
-            # BUG-V0.28-B: append empty note column so all rows have 6 fields
-            log_rows.append(f"{bf.name}\t{out_file}\t{n_rep}\t{n_nf}\t{n_tot}\t")
+            log_rows.append(f"{bf.name}\t{out_file}\t{n_rep}\t{n_nf}\t{n_tot}\t")         # note column empty
             if n_rep > 0:
                 n_ok += 1
                 logging.info(
@@ -4237,14 +3789,11 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
         except Exception as exc:
             n_fail += 1
             logging.error(f"[FAIL] {bf.name}: {exc}")
-            # BUG-V0.28-B: FAIL message goes in the dedicated note column (col 6),
-            # not appended to the total column (col 5) which must remain numeric.
             log_rows.append(f"{bf.name}\t{out_file}\t0\t0\t0\tFAIL: {exc}")
             _safe_copy(bf, out_file)
 
     write_nonempty_table(
         out_root / "replace_organism.tsv",
-        # BUG-V0.28-B: header now declares 6 columns, matching all data rows
         "source_file\toutput_file\treplaced\tnot_found\ttotal\tnote",
         log_rows)
     logging.info(
@@ -4273,40 +3822,17 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mitom" if os.environ.get("MITOM_LAUNCHER") else "mitom_pipeline.py",   # sub-commands show `mitom run`
         description=(
-            "MitoM - batch mitochondrial genome annotation workflow with MitoM's own annotation core\n"
-            "(mito_core.py); reorientation, metadata transfer, introns, curation, NCBI files, genome maps\n\n"
-            "  annotate          — batch annotation (one round)\n"
-            "  reorient          — reorient .gbf to start at a target gene\n"
-            "  run               — full pipeline (annotate → reorient → reanno → final GB)\n"
-            "  transfer_metadata — standalone header-transfer between .gb files\n"
-            "  replace_organism  — restore /organism= in FEATURES source from original GB\n\n"
-            "Snakemake support\n"
-            "  Use --scheduler_backend snakemake (or auto, which auto-detects).\n"
-            "  Snakemake parallelises the annotation phase; all post-\n"
-            "  processing (reorientation, metadata overlay, organism sync) runs\n"
-            "  in the main process, so all bug-fixes apply regardless of backend.\n"
-            "  Cluster submission: --smk_extra '--profile slurm'\n\n"
-            "Output files (non-empty only):\n"
-            "  04.final_gb/*.gbf         — guaranteed cox1-first records\n"
-            "  annotation-summary.tsv    — PCG / tRNA / rRNA counts (final GB)\n"
-            "  metadata_transfer_log.tsv — metadata substitution audit log\n"
-            "  all.final.gbf              — merged archive of all final records\n"
-            "  *_failed.txt / *_mismatch.txt — problem-sample lists\n\n"
-            "Metadata preservation (v0.27)\n"
-            "  When GenBank files are supplied as input and\n"
-            "  --preserve_phase1_metadata yes (default for 'run'), the final\n"
-            "  output records carry the original header (SOURCE, ORGANISM,\n"
-            "  DEFINITION, REFERENCE …) AND have the /organism= qualifier\n"
-            "  inside FEATURES source restored from the original file.\n\n"
-            "Introns (group I/II):\n"
-            "  after annotation,\n"
-            "  mito_intron.py (Python port of MFannot's intron method: Exonerate\n"
-            "  protein2genome + MFannot boundary rules + Rfam intron type) adds them\n"
-            "  when exonerate is available (--intron_fix auto|yes|no, --intron_bin);\n"
-            "  mito_intron_ref.py then places introns at the intron sites of annotated\n"
-            "  relatives (models/intron_sites: 193 NCBI records, verified).\n"
-            "  Results: intron_report.tsv, intron_ref_report.tsv. Intron models need\n"
-            "  expert review.\n\n"
+            "MitoM - annotation workflow for animal mitochondrial genomes (MitoM's own annotation core, mito_core.py)\n\n"
+            "  run               - full workflow: annotate -> re-orient -> round 2 where needed -> final GenBank ->\n"
+            "                      rRNA HMM fallback, introns, curation, NCBI submission files, comparison, genome maps\n"
+            "  import            - the same steps on existing MitoZ / MITOS2 results or any annotated GenBank\n"
+            "  annotate          - one round of annotation and the steps after it (work layout: 04.final_gb/ ...)\n"
+            "  reorient          - re-orient GenBank files to start at a target gene\n"
+            "  transfer_metadata - copy GenBank headers from the original records\n"
+            "  replace_organism  - restore /organism= of the FEATURES source from the original records\n"
+            "  dedup             - deduplicate GenBank records (RefSeq NC_ kept)\n\n"
+            "The annotation runs in threads or with Snakemake (--scheduler_backend; cluster: --smk_extra '--profile\n"
+            "slurm'); everything after it runs in this process. `mitom <command> -h` lists the options.\n\n"
             "Citation:\n"
             "  Snakemake:  Mölder et al. (2021) F1000Res doi:10.12688/f1000research.29032.2\n"
             "  Biopython:  Cock et al. (2009) Bioinformatics doi:10.1093/bioinformatics/btp163\n"
@@ -4321,9 +3847,6 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("-o", "--out_root", default="mitom_out",
                         help="Output root directory (default: mitom_out).")
         sp.add_argument("--if_split_fasta", choices=["yes", "no"], default="yes")
-        # BUG-V0.29-E: old parser accepted id_maxlen < 6, which makes S00001
-        # style internal IDs collide after truncation.
-        # sp.add_argument("--id_maxlen", type=int, default=15,
         sp.add_argument("--id_maxlen", type=id_maxlen_arg, default=15,
                         help="Max length of internal sample IDs (default: 15).")
         sp.add_argument("--which_gene_first", default="cox1",
@@ -4391,12 +3914,8 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run: moved to "
                             "work/). Default no: deleted after the final output is written; core logs of problem "
                             "samples are always kept (run: reports/failed_logs/, annotate: failed_logs/).")
-        # BUG-V0.29-E: old parser accepted zero/negative values and passed
-        # invalid thread counts to the core or ThreadPoolExecutor.
-        # g.add_argument("--threads",      type=int, default=16,
         g.add_argument("--threads",      type=positive_int_arg, default=default_threads(),
                        help="Threads per annotation job (default: min(8, number of CPUs) = %(default)s).")
-        # g.add_argument("--max_tasks",    type=int, default=16,
         g.add_argument("--max_tasks",    type=positive_int_arg, default=default_max_tasks(),
                        help="Max concurrent annotation jobs (default: CPUs // threads = %(default)s).")
         g.add_argument("--clade",        default=_CLADE_DEFAULT,
@@ -4411,7 +3930,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Genetic code (default with --clade auto: the CDS transl_table of the input, else the "
                             "phylum's usual code; otherwise the code of the clade - 2 Chordata, 9 Echinodermata, "
                             "4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal).")
-        g.add_argument("--species_name", default=None, help=argparse.SUPPRESS)   # old scripts (was passed to MitoZ)
+        g.add_argument("--species_name", default=None, help=argparse.SUPPRESS)   # hidden; passed to MitoZ (--engine mitoz)
 
         fq = sp.add_argument_group("FASTQ (optional - read depth ring of the genome maps, --plot)")
         fq.add_argument("--infq", default=None,
@@ -4431,11 +3950,6 @@ def build_parser() -> argparse.ArgumentParser:
                              "in the main process regardless of backend."
                          ))
         sch.add_argument("--snakemake_bin",    default=None)
-        # BUG-V0.29-E: keep scheduler numeric options positive for predictable
-        # Snakemake command generation.
-        # sch.add_argument("--smk_cores",        type=int, default=64)
-        # sch.add_argument("--smk_mem_mb",       type=int, default=256000)
-        # sch.add_argument("--smk_latency_wait", type=int, default=60)
         sch.add_argument("--smk_cores",        type=positive_int_arg, default=64)
         sch.add_argument("--smk_mem_mb",       type=positive_int_arg, default=256000)
         sch.add_argument("--smk_latency_wait", type=positive_int_arg, default=60)
@@ -4485,8 +3999,8 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Phase-2 re-annotation of the reoriented sequences. auto (default): round 1 runs in "
                             "full and only samples that fail the check after the cox1 shift (gene at the original "
                             "sequence ends, standard gene missing, gene changed by the shift, gene across the new "
-                            "origin) are re-annotated, decisions in reannotation_decision.tsv; yes: every sample "
-                            "(round 1 uses the fast tRNA mode); no: never.")
+                            "origin) are re-annotated, decisions in reannotation_decision.tsv; yes: every sample; "
+                            "no: never.")
     add_metadata(run_p)
 
     # ── import ────────────────────────────────────────────────────────────
@@ -4520,7 +4034,7 @@ def build_parser() -> argparse.ArgumentParser:
     tm.add_argument("--smart_metadata",       choices=["yes", "no"], default="no")
     tm.add_argument("--auto_accept_metadata", choices=["yes", "no"], default="no")
 
-    # ── replace_organism  (v0.25 / v0.26 / v0.27) ────────────────────────
+    # ── replace_organism ──────────────────────────────────────────────────
     ro = sub.add_parser(
         "replace_organism",
         help=(

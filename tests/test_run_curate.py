@@ -77,7 +77,7 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
     monkeypatch.setattr(bm.subprocess, "run", fake_run)
     args = argparse.Namespace(intron_fix="auto", intron_bin=str(bindir), genetic_code=4, threads=2, max_tasks=3,
                               intron_lib=[], intron_ref_gb=[], phylum="Cnidaria")
-    line = bm.run_intron_fix(args, tmp_path, final, tmp_path)
+    line = bm.run_intron_fix(args, final, tmp_path)
     assert [Path(c[1]).name for c in seen] == ["mito_intron.py", "mito_intron_ref.py"]
     ref = seen[1]
     assert ref[2] == "annotate" and ref[ref.index("-i") + 1] == ref[ref.index("-o") + 1] == str(final)
@@ -87,5 +87,5 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
     assert "site transfer: 1 file(s)" in line and "1 gene model(s) written" in line
     args.phylum = None
     seen.clear()
-    bm.run_intron_fix(args, tmp_path, final, tmp_path)
+    bm.run_intron_fix(args, final, tmp_path)
     assert "--lineage" not in seen[1]

@@ -61,17 +61,6 @@ def test_wrong_clade_rejected_before_any_job(tmp_path):
     assert r.returncode == 2 and "not a supported clade" in r.stderr and not (tmp_path / "out").exists()
 
 
-def test_mitos_mode_is_lowercased_and_validated(capsys):
-    """C18 (scripts/mitoz_fast.py:54): YZZ_MITOS_MODE=Fast was treated as 'sensitive' without a word."""
-    assert mito_env.mitos_mode("Fast") == "fast" and mito_env.mitos_mode(" FULL ") == "full"
-    assert mito_env.mitos_mode("sensitive") == "sensitive" and mito_env.mitos_mode(None) == "sensitive"
-    assert mito_env.mitos_mode("") == "sensitive"
-    assert capsys.readouterr().err == ""
-    assert mito_env.mitos_mode("sensetive") == "sensitive"            # unknown -> warning + sensitive
-    err = capsys.readouterr().err
-    assert "YZZ_MITOS_MODE" in err and "sensetive" in err and "sensitive" in err
-
-
 def test_mito_trna_rejects_unknown_mitos_mode(tmp_path):
     """C18: any unknown mode silently behaved as 'sensitive'."""
     import types

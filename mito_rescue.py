@@ -2,12 +2,13 @@
 """mito_rescue.py - add genes the annotation core missed, taken from a MITOS2 annotation of the same sequence
 (optional: --rescue yes; needs the MITOS2 installation).
 
-MitoZ gives the most exact protein-gene boundaries, but misses some short or divergent genes that
-MITOS2 finds. 2026-10-20 dev benchmark (NCBI NC_ annotation as reference, offline simulation):
+The primary annotation can miss short or divergent genes that MITOS2 finds. 2026-10-20 dev benchmark, with MitoZ as
+the primary annotator then (NCBI NC_ annotation as reference, offline simulation):
   MitoZ-supported phyla (45 records): protein genes found 579 -> 580 (atp8), rRNA 81 -> 87, no new FP.
   Other phyla (48 records, MitoZ with a borrowed protein database): protein genes 525 -> 548, rRNA 75 -> 82.
-MITOS2 boundaries are less exact (52 % vs 80 % both ends exact), so nothing MitoZ annotated is changed:
-only genes absent from the record are added (each listed in rescue_report.tsv with a hint to check it).
+MITOS2 boundaries were less exact (52 % vs MitoZ's 80 % both ends exact), so nothing annotated is changed: only
+genes absent from the record are added (each listed in rescue_report.tsv with a hint to check it). `mitom run`
+runs this step only with --rescue yes (MITOS2 is not installed with MitoM).
 
 Rules (each from the benchmark and from the 2026-10-21 review):
   - protein gene: added when no CDS of that gene exists and the MITOS2 gene does not lie mostly
@@ -23,7 +24,7 @@ Rules (each from the benchmark and from the 2026-10-21 review):
     on the other phyla). CDS fragments (-a/-b) are joined only on the same strand with a gap of 0-3000 nt.
   - /translation of a rescued CDS: trimmed to whole codons, first codon M if it is a start codon of the
     table, trailing stop removed; omitted when an internal stop remains.
-  - tRNAs are not handled here (MITOS2 already annotates them in the default pipeline).
+  - tRNAs are not handled here (the annotation core's tRNA step).
   - The feature /note is neutral (NOTE); the advice to check the boundaries is the "hint" column of
     rescue_report.tsv.
 

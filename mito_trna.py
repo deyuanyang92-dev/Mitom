@@ -36,12 +36,11 @@ Selection --select mitos2_or_support (default otherwise): a group is selected wh
 the input tRNAs stay visible in the review GenBank). Boundaries otherwise come from the first source
 in --priority (MITOS2 first: most exact boundaries vs NCBI).
 
-MITOS2 runs in fast mode by default when this script is run on its own (scripts/runmitos_fast.py): runmitos
-re-searches every tRNA model it did not find with a sensitive cmsearch (--max, E 0.1, single CPU): 640 s vs
-8 s on one anthozoan (Metridium), plus spurious tRNAs; fast mode skips that pass (--mitos_mode sensitive runs
-it in parallel, --mitos_mode full is the unmodified runmitos). The MitoM pipeline (mitom_pipeline.py)
-defaults to sensitive: fast mode missed 28/28 of the weak tRNAs found only by that pass (2026-10-20 dev
-benchmark), and it is used only for round 1 when round 2 re-annotates the sequence.
+MITOS2 runs in fast mode by default (scripts/runmitos_fast.py): runmitos re-searches every tRNA model it did not
+find with a sensitive cmsearch (--max, E 0.1, single CPU): 640 s vs 8 s on one anthozoan (Metridium), plus spurious
+tRNAs; fast mode skips that pass, --mitos_mode sensitive runs it in parallel (fast mode missed 28/28 of the weak tRNAs
+found only by that pass, 2026-10-20 dev benchmark), --mitos_mode full is the unmodified runmitos. `mitom run` does
+not run this script: its tRNAs come from the annotation core (mito_core.py, MitoM-ML with MiTFi).
 
 Outputs per input file: review/<name>.gbf (all predictions; /note = source, score, anticodon,
 group, support), selected/<name>.gbf (selected tRNAs only; input for mito_curate.py -i out/selected),

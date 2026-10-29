@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""trna_ml.py - learned mitochondrial tRNA caller for invertebrates (MitoM-ML), used by mito_trna.py --tools mitom.
+"""trna_ml.py - learned mitochondrial tRNA caller for invertebrates (MitoM-ML), used by MitoM's annotation core
+(mito_core.py) and by mito_trna.py --tools mitom.
 
 Built and benchmarked in projects/invert_trna (REQUIREMENTS #53). For one sequence:
   1. scan   cmsearch with the 22 MITOS2 refseq89m tRNA CMs (MiTFi models, Juhling 2012 NAR 40:2833) plus the

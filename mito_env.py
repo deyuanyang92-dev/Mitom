@@ -189,22 +189,6 @@ def mitos_refdir(explicit: Optional[str] = None, ref: str = MITOS_REF) -> Option
     return None
 
 
-MITOS_MODES = ("fast", "sensitive", "full")
-
-
-def mitos_mode(value: Optional[str], default: str = "sensitive") -> str:
-    """YZZ_MITOS_MODE: case-insensitive; an unknown value is reported on stderr and replaced by `default`
-    (it used to behave as 'sensitive' silently)."""
-    v = (value or "").strip().lower()
-    if not v:
-        return default
-    if v not in MITOS_MODES:
-        print(f"[mito_env] YZZ_MITOS_MODE='{value}' is not one of {', '.join(MITOS_MODES)}; using {default}",
-              file=sys.stderr)
-        return default
-    return v
-
-
 def biopython_version() -> Optional[str]:
     """Version of Biopython importable by this interpreter, None when it cannot be imported (every MitoM
     script needs it)."""
