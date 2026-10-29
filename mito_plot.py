@@ -16,10 +16,10 @@ Replaces the MitoZ / circos map. From the outside in:
 Position 1 is at the top and positions run clockwise; a linear record leaves a gap between its end and start.
 
 Usage:
-  python3 mito_plot.py -i <GenBank file or directory> -o <out_dir> [--fq1 R1.fq.gz [--fq2 R2.fq.gz]]
-                       [--threads N] [--formats png,pdf]
-Every record of every *.gb / *.gbk / *.gbf file (directory: top level only) becomes <out_dir>/<record id>.png
-(300 dpi) and .pdf; reads are used only when the input holds one record.
+  mitom plot -i <GenBank file or folder> -o <out_dir> [--fq1 R1.fq.gz [--fq2 R2.fq.gz]] [--threads N]
+             [--formats png,pdf]                                 (= python3 mito_plot.py ...)
+Every record of the GenBank file, or of every GenBank file in the folder and its subfolders (.gb .gbk .gbf .genbank
+.gbff), becomes <out_dir>/<record id>.png (300 dpi) and .pdf; reads are used only when the input holds one record.
 """
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ from matplotlib.textpath import TextPath
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import old_spelling  # noqa: E402
+from mito_common import iter_gb_files, old_spelling  # noqa: E402
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000
 CIGAR = re.compile(r"(\d+)([MIDNSHP=X])")
@@ -422,7 +422,7 @@ def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.nd
 
 def main(argv: Optional[List[str]] = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("-i", "--input", required=True, help="GenBank file, or a directory of *.gb / *.gbk / *.gbf files")
+    p.add_argument("-i", "--input", required=True, help="GenBank file, or a folder of GenBank files (subfolders included)")
     p.add_argument("-o", "--out", dest="out_dir", metavar="OUT", required=True, help="folder for the maps")
     old_spelling(p, "--out_dir", "out_dir")
     p.add_argument("--fq1", help="reads for the depth ring (FASTQ, .gz allowed); only with a single record")
@@ -433,8 +433,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     src = Path(a.input)
     if not src.exists():
         p.error(f"{src} not found")
-    files = sorted(f for f in src.iterdir() if f.suffix in (".gb", ".gbk", ".gbf")) if src.is_dir() else [src]
-    recs = [r for f in files for r in SeqIO.parse(str(f), "genbank")]
+    recs = [r for f in iter_gb_files(src) for r in SeqIO.parse(str(f), "genbank")]
     if not recs:
         p.error(f"no GenBank records in {src}")
     if a.fq2 and not a.fq1:

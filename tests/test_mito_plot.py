@@ -156,6 +156,15 @@ def test_cli_writes_files(tmp_path, capsys):
     assert "one record" in capsys.readouterr().err
 
 
+def test_cli_reads_every_genbank_file_below_the_folder(tmp_path):
+    """`mitom plot` lists its input as the other step commands do (mito_common.iter_gb_files): subfolders and every
+    GenBank suffix (before: *.gb / *.gbk / *.gbf at the top level only)."""
+    (tmp_path / "in" / "sub").mkdir(parents=True)
+    SeqIO.write([genome()], tmp_path / "in" / "sub" / "x.gbff", "genbank")
+    assert mp.main(["-i", str(tmp_path / "in"), "-o", str(tmp_path / "out"), "--formats", "png"]) == 0
+    assert [p.name for p in (tmp_path / "out").iterdir()] == ["TEST1.1.png"]
+
+
 # ── mitom_pipeline.run_plots: the genome-map step of `run` / `annotate` ─────────
 def final_dir(tmp_path):
     d = tmp_path / "final"

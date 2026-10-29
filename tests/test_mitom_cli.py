@@ -28,7 +28,7 @@ def _tools_present():
 def test_help_lists_commands():
     p = run("-h")
     assert p.returncode == 0
-    for c in ("run", "doctor", "curate", "intron", "trna", "rescue", "rrna-hmm", "validate"):
+    for c in ("run", "doctor", "curate", "intron", "trna", "rescue", "rrna-hmm", "validate", "plot"):
         assert c in p.stdout, c
 
 
@@ -40,6 +40,7 @@ def test_run_help_is_the_workflow():
 def test_step_help_forwarded():
     assert "build" in run("rrna-hmm", "-h").stdout
     assert run("curate", "-h").returncode == 0
+    assert "--fq1" in run("plot", "-h").stdout and "--method" in run("intron", "-h").stdout
 
 
 def test_unknown_command():
