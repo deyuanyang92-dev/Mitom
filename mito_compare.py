@@ -34,9 +34,9 @@ from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, Exac
 from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from mito_common import iter_gb_files  # noqa: E402
 from mito_names import PCG, gene_name, trna_name, trna_number  # noqa: E402
 
-GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
 RESULT = {"exact": "same", "le3": "ends_differ", "gt3": "ends_differ", "name_error": "name_differs",
           "strand_error": "strand_differs", "missed": "only_original", "fp": "only_mitom",
           "name_unverifiable": "same_place"}
@@ -290,8 +290,7 @@ def compare_record(original, mitom, code: int = 5) -> List[dict]:
 
 
 def gb_by_stem(path: Path) -> Dict[str, Path]:
-    files = [path] if path.is_file() else [p for p in path.rglob("*") if p.suffix.lower() in GB_EXT]
-    return {p.stem: p for p in sorted(files)}
+    return {p.stem: p for p in iter_gb_files(path)}
 
 
 def compare_dirs(original_dir: Path, mitom_dir: Path, out_tsv: Path, code: int = 5) -> Counter:

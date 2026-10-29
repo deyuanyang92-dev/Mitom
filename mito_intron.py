@@ -111,7 +111,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_LIB = HERE / "models" / "mfannot_proteins"
 DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
-GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
+from mito_common import GB_SUFFIXES as GB_EXT, stop_qualifiers, write_gb  # noqa: E402  (CC0 helper module)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
 TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII
 II_AA_TOLERANCE = 5                  # homolog score (median, BLOSUM62) a group II placement may lose when none is free
@@ -1132,24 +1132,6 @@ def realign_masked(rec, seq: str, prot_id: str, gene: str, groups: List[List[Rep
     return m
 
 
-def stop_qualifiers(rec, cds_loc, gencode: int) -> Dict[str, List[str]]:
-    """Incomplete stop codon (T / TA completed by polyadenylation): NCBI wants
-    /transl_except=(pos:..,aa:TERM) and the standard note."""
-    nt = str(cds_loc.extract(rec.seq)).upper()
-    tail = len(nt) % 3
-    if tail == 0 or nt[-tail:] not in ("T", "TA"):
-        return {}                         # complete codon, or not a polyadenylation-completed stop
-    last = cds_loc.parts[-1]
-    if last.strand == -1:
-        a = int(last.start) + 1
-        pos = f"complement({a}..{a + tail - 1})" if tail > 1 else f"complement({a})"
-    else:
-        b = int(last.end)
-        pos = f"{b - tail + 1}..{b}" if tail > 1 else f"{b}"
-    return {"transl_except": [f"(pos:{pos},aa:TERM)"],
-            "note": ["TAA stop codon is completed by the addition of 3' A residues to the mRNA"]}
-
-
 def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[dict], gencode: int,
                 partial5: bool = False, partial3: bool = False) -> str:
     """Replace the gene/CDS features that overlap the exons; add intron features. Returns gene name."""
@@ -1534,7 +1516,7 @@ def process_file(f: Path) -> List[dict]:
         dest = out / f.relative_to(src_root)
         dest.parent.mkdir(parents=True, exist_ok=True)
         if any(r.get("written") == "yes" for r in rows):
-            SeqIO.write(recs, str(dest), "genbank")
+            write_gb(recs, dest)
         elif dest.resolve() != f.resolve():
             shutil.copy2(f, dest)
     return rows

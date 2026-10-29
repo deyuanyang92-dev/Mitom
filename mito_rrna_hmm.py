@@ -54,7 +54,6 @@ import csv
 import os
 import random
 import re
-import shutil
 import statistics
 import subprocess
 import sys
@@ -69,6 +68,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
+from mito_common import write_gb  # noqa: E402
 
 LIB = Path(__file__).resolve().parent / "models" / "rrna_hmm"
 GENES = {g: CORE_NAMES[g] for g in ("rrnS", "rrnL")}          # the core's /gene and /product
@@ -355,18 +355,7 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
     return rows
 
 
-def _write_gb(recs: List[SeqRecord], path: Path) -> None:
-    """Write a GenBank file atomically: temp file in the same directory, then os.replace()."""
-    from Bio import SeqIO
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w") as h:
-            SeqIO.write(recs, h, "genbank")
-        shutil.copymode(path, tmp)
-        os.replace(tmp, path)
-    except BaseException:
-        Path(tmp).unlink(missing_ok=True)
-        raise
+_write_gb = write_gb                  # atomic GenBank write (mito_common)
 
 
 def search_dir(final_dir: Path, lib: Path = LIB, phylum: Optional[str] = None,

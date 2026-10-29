@@ -45,9 +45,9 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+from mito_common import iter_gb_files  # noqa: E402
 from mito_names import PCG, gene_name, trna_name  # noqa: E402
 
-GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
 # usual protein gene lengths (nt, incl. stop) in bilaterian mitogenomes; 60 % / 160 % are the error limits
 TYPICAL_LEN = {"cox1": 1536, "cox2": 690, "cox3": 780, "cob": 1140, "nad1": 930, "nad2": 1000, "nad3": 350,
                "nad4": 1350, "nad4l": 290, "nad5": 1750, "nad6": 480, "atp6": 700, "atp8": 160}
@@ -225,9 +225,7 @@ def counts(rec: SeqRecord) -> Tuple[int, int, int]:
 
 
 def gb_files(path: Path) -> List[Path]:
-    if path.is_file():
-        return [path]
-    return sorted(p for p in path.rglob("*") if p.is_file() and p.suffix.lower() in GB_EXT)
+    return iter_gb_files(path)
 
 
 def check_files(paths: Iterable[Path], code: Optional[int] = None, min_trna: int = 22) -> List[dict]:

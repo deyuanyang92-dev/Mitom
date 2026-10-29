@@ -28,8 +28,8 @@ from Bio.SeqFeature import AfterPosition, BeforePosition
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
+from mito_common import iter_gb_files  # noqa: E402
 
-GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
 SKIP_QUALS = {"translation", "db_xref", "protein_id", "locus_tag_old"}
 INTERNAL_NOTE = re.compile(r"check .* manually|mito_\w+\.py")   # e.g. mito_rescue.py / mito_intron.py notes
 IGNORE_CODES =re.compile(r"SEQ_DESCR\.(NoPubFound|NoSourceDescriptor|MissingLineage|NoTaxonID|BadOrgMod)|"
@@ -88,11 +88,16 @@ def our_intervals(rec, tag: str) -> List[str]:
     return out
 
 
+def record_dir(out: Path, rec_id: str) -> Path:
+    """Folder of one record's submission files (rec.fsa, rec.tbl, rec.sqn, rec.val) below `out`."""
+    return out / re.sub(r"[^\w.]+", "_", rec_id)
+
+
 def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
                     nuclear: bool = False) -> List[Dict[str, str]]:
     """Write rec as NCBI submission inputs (rec.fsa + rec.tbl) and run table2asn on them (rec.sqn, rec.val);
     sbt = submitter template from https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ (optional)."""
-    d = out / re.sub(r"[^\w.]+", "_", rec.id)
+    d = record_dir(out, rec.id)
     d.mkdir(parents=True, exist_ok=True)
     base = d / "rec"
     (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
@@ -129,7 +134,7 @@ def main(argv=None) -> int:
         print("[ncbi_validate] table2asn not found (conda install -c bioconda table2asn)", file=sys.stderr)
         return 2
     src = Path(a.input)
-    files = sorted(x for x in src.rglob("*") if x.suffix.lower() in GB_EXT) if src.is_dir() else [src]
+    files = iter_gb_files(src) if src.is_dir() else [src]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, str]] = []

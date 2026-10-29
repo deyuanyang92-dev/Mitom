@@ -54,6 +54,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
+from mito_common import write_gb  # noqa: E402
 
 MITOS_TRNA = re.compile(r"^trn([A-Z])(\d?)(?:_(\d+))?(?:-([a-z]))?\(([a-z-]{3})\)", re.I)
 MITOS_GENE = re.compile(r"^(.+?)(?:_(\d+))?(?:-([a-z]))?$")       # nad5, nad5_1 (2nd copy), cox2-a (fragment)
@@ -279,7 +280,7 @@ def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, jobs:
                              "hint": HINT})
             changed = changed or bool(added)
         if changed:
-            SeqIO.write(recs, str(gbf), "genbank")
+            write_gb(recs, gbf)
         return rows
 
     files = sorted(Path(final_dir).rglob("*.gbf"))

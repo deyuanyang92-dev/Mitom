@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import functools
 import logging
-import re
 import shutil
 import subprocess
 import sys
@@ -114,7 +113,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     for gbf in sorted(gb_dir.rglob("*.gbf")):
         for rec in SeqIO.parse(str(gbf), "genbank"):
             rows = nv.validate_record(rec, sub / "_work", t2a, getattr(args, "sbt", None))
-            d = sub / "_work" / re.sub(r"[^\w.]+", "_", rec.id)
+            d = nv.record_dir(sub / "_work", rec.id)
             for ext in (".fsa", ".tbl", ".sqn", ".val"):
                 if (d / f"rec{ext}").exists():
                     shutil.copy2(d / f"rec{ext}", sub / f"{d.name}{ext}")

@@ -92,9 +92,9 @@ from Bio.Seq import Seq
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_names  # noqa: E402
+from mito_common import codon_translate, iter_gb_files, stop_qualifiers, write_gb  # noqa: E402
 
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
-GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
 MIN_INTRON = 142        # a CDS gap at least this long is an intron without an intron feature (eval_introns, MFannot)
 PROBE = 30              # nt of exon / intron sequence kept on each side of an intron end
 
@@ -148,7 +148,7 @@ class RefGene:
 def iter_records(paths: Iterable[str]) -> Iterator:
     """GenBank records from files / folders (multi-record files allowed); text pre-filter on joins / introns."""
     for p in map(Path, paths):
-        files = sorted(x for x in p.rglob("*") if x.suffix.lower() in GB_EXT and x.is_file()) if p.is_dir() else [p]
+        files = iter_gb_files(p) if p.is_dir() else [p]
         for f in files:
             buf: List[str] = []
             with open(f, errors="ignore") as fh:
@@ -223,7 +223,7 @@ def ref_genes(rec) -> List[RefGene]:
         prot = ""
         if f.type == "CDS":
             cod = nt[cs:]
-            own = str(Seq(cod[: len(cod) - len(cod) % 3]).translate(table=code or 1)).rstrip("*")
+            own = codon_translate(cod, code or 1).rstrip("*")
             prot = (f.qualifiers.get("translation", [""])[0] or "").upper() or own
             if len(own) < 0.9 * len(prot) or sum(a == b for a, b in zip(own[1:], prot[1:])) < 0.9 * (len(prot) - 1):
                 continue                                  # join does not encode its /translation (misordered parts)
@@ -1359,7 +1359,7 @@ def gold_shift(G: Genome, exons: List[Tuple[int, int, int]], k: int, allowed: se
 
         def prot(e):
             nt = "".join(G.sub(*y) for y in e)
-            return str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=code))
+            return codon_translate(nt, code)
         if prot0 is None:
             prot0 = prot(exons)
         p2 = prot(ex)
@@ -1447,7 +1447,7 @@ def gene_model(G: Genome, gene: str, kind: str, chain: List[JCall], lib: Dict[st
                                             note + "; 3' part of a trans-spliced intron", "3", fixed=True))
     if unit == 3:
         nt = "".join(G.sub(st, a, b) for st, a, b in exons)
-        prot = str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=code))
+        prot = codon_translate(nt, code)
         m.protein = prot.rstrip("*")
         starts, _ = _codons(code)
         if "*" in m.protein:
@@ -1625,23 +1625,6 @@ def _overlaps(loc, parts: List[Tuple[int, int]]) -> int:
     return sum(max(0, min(int(p.end), b) - max(int(p.start), a)) for p in loc.parts for a, b in parts)
 
 
-def stop_qualifiers(rec, loc, code: int) -> Dict[str, List[str]]:
-    """Incomplete stop (T / TA completed by polyadenylation): /transl_except and the standard note."""
-    nt = str(loc.extract(rec.seq)).upper()
-    tail = len(nt) % 3
-    if tail == 0 or nt[-tail:] not in ("T", "TA"):
-        return {}
-    last = loc.parts[-1]
-    if last.strand == -1:
-        a = int(last.start) + 1
-        pos = f"complement({a}..{a + tail - 1})" if tail > 1 else f"complement({a})"
-    else:
-        b = int(last.end)
-        pos = f"{b - tail + 1}..{b}" if tail > 1 else f"{b}"
-    return {"transl_except": [f"(pos:{pos},aa:TERM)"],
-            "note": ["TAA stop codon is completed by the addition of 3' A residues to the mRNA"]}
-
-
 def _spans_of(G: Genome, exons: List[Tuple[int, int, int]]) -> List[Tuple[int, int, int]]:
     """One span per run of exons on one strand (the gene feature; NCBI style for trans-spliced genes)."""
     spans: List[Tuple[int, int, int]] = []
@@ -1813,7 +1796,7 @@ def merge_existing(G: Genome, rec, m: GeneModel, code: int) -> str:
         msg = f"transferred model (a site outside the de novo model), {len(kept)} de novo intron(s) kept inside it"
     if m.kind == "CDS":
         nt = "".join(G.sub(st, a, b) for st, a, b in exons)
-        prot = str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=code)).rstrip("*")
+        prot = codon_translate(nt, code).rstrip("*")
         if "*" in prot:
             return "not merged with the de novo model: internal stop codon"
         m.protein = prot
@@ -1870,7 +1853,7 @@ def _apply_model(rec, G: Genome, m: GeneModel, code: int, origin_introns: bool) 
     place_introns(G, m, code)
     if ftype == "CDS":
         nt = "".join(G.sub(st, a, b) for st, a, b in m.exons)
-        m.protein = str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=code)).rstrip("*")
+        m.protein = codon_translate(nt, code).rstrip("*")
     loc = _location(G, m.exons, m.partial5, m.partial3)
     gparts = [(int(p.start), int(p.end)) for p in loc.parts]
     spans = _spans_of(G, m.exons)
@@ -1944,7 +1927,7 @@ def _annotate_file(f: Path) -> List[dict]:
     dest = Path(a.out) / f.relative_to(src_root)
     dest.parent.mkdir(parents=True, exist_ok=True)
     if changed:
-        SeqIO.write(recs, str(dest), "genbank")
+        write_gb(recs, dest)
     elif dest.resolve() != f.resolve():
         shutil.copy2(f, dest)
     return rows
@@ -2009,12 +1992,12 @@ def main(argv=None) -> int:
     if a.ref_gb:
         ids = set()
         src = Path(a.input)
-        for f in ([src] if src.is_file() else sorted(x for x in src.rglob("*") if x.suffix.lower() in GB_EXT)):
+        for f in iter_gb_files(src):
             ids |= {_base(r.id) for r in SeqIO.parse(str(f), "genbank")}
         for g in build_library(a.ref_gb):
             (own if _base(g.acc) in ids else lib).append(g)
     src = Path(a.input)
-    files = [src] if src.is_file() else sorted(x for x in src.rglob("*") if x.suffix.lower() in GB_EXT and x.is_file())
+    files = iter_gb_files(src)
     _JOB.update(a=a, lib=lib, own=own, tools=tools, root=src.parent if src.is_file() else src)
     Path(a.out).mkdir(parents=True, exist_ok=True)
     rows: List[dict] = []

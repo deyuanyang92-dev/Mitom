@@ -34,8 +34,9 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
+from mito_common import GB_SUFFIXES, contig_record_id, topology_from_header  # noqa: E402
+from mito_common import read_fasta as _read_fasta  # noqa: E402
 
-GB_SUFFIXES = (".gb", ".gbk", ".gbf", ".gbff", ".genbank")
 FA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
 MITOZ_INSTALL = "mamba create -n mitoz -c bioconda -c conda-forge mitoz=3.6"
 MITOS2_INSTALL = "mamba create -n mitos -c bioconda -c conda-forge mitos=2.1.10"
@@ -43,13 +44,10 @@ MITOS2_INSTALL = "mamba create -n mitos -c bioconda -c conda-forge mitos=2.1.10"
 
 def read_fasta(fa: Path) -> List[Tuple[str, str, str]]:
     """(id, sequence, topology) of every sequence: topology=linear in the header, else circular (as mito_core.py)."""
-    return [(r.id, str(r.seq).upper(), "linear" if re.search(r"topology\s*=\s*linear", r.description, re.I)
-             else "circular") for r in SeqIO.parse(str(fa), "fasta")]
+    return [(r.id, str(r.seq).upper(), topology_from_header(r.description)) for r in _read_fasta(fa)]
 
 
-def record_id(prefix: str, seq_id: str, k: int, n_seqs: int) -> str:
-    """Record name as mito_core.py gives it: the prefix for one sequence, else the sequence's own (cleaned) name."""
-    return prefix if n_seqs == 1 else (re.sub(r"[^A-Za-z0-9_.-]", "_", seq_id)[:16] or f"{prefix}_{k + 1}")
+record_id = contig_record_id            # record name as mito_core.py gives it (mito_common)
 
 
 def engine_env(bin_dir: str, isolated: bool = False) -> Dict[str, str]:

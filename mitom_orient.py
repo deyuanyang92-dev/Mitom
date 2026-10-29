@@ -14,7 +14,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import write_nonempty_table
+from mito_common import write_gb, write_nonempty_table
 from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
 
 if TYPE_CHECKING:
@@ -427,5 +427,5 @@ def reorient_after_introns(args: argparse.Namespace, final_dir: Path) -> int:
                 logging.info(f"[REORIENT_INTRON] {rec.id}: {feat.qualifiers.get('gene', ['?'])[0]} starts at {pos + 1} "
                              "after the intron step: rotated to its first exon")
         if changed:
-            SeqIO.write(recs, str(gbf), "genbank")
+            write_gb(recs, gbf)
     return n

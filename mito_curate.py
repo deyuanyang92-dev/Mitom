@@ -94,8 +94,7 @@ import mito_env  # noqa: E402  (finds external programs: config, PATH, conda env
 # N1: NCBI gene symbols, products and synonyms; tRNA names trnL1/L2, trnS1/S2 by anticodon (mito_names.py)
 from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key as key, trna_symbol  # noqa: E402
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
-
-GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
+from mito_common import POLYA_NOTE, codon_translate, iter_gb_files, transl_except_term  # noqa: E402
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
 NO_START_NOTE = "start codon not determined"
 NO_STOP_NOTE = "stop codon not determined"
@@ -118,7 +117,6 @@ MAX_PCG_OVERLAP = 30        # P3: a complete stop may reach this far into the ne
                             # truth: 11-30 nt inside, complete stop 17 vs T/TA 6; 31-50 nt 6 vs 6; deeper T/TA) (NCBI annelid
                             # records: cox1-cox2, nad6-cob end with T/TA instead; atp8-atp6 / nad4L-nad4 overlap by design)
 BICISTRONIC = {("ATP8", "ATP6"), ("ND4L", "ND4")}
-POLYA_NOTE = "TAA stop codon is completed by the addition of 3' A residues to the mRNA"
 FRAMESHIFT_WINDOW = 30      # P9: nt around the annotated start / end searched for the start / stop codon of the join
 FRAMESHIFT_MAX_TRIM = 0.85  # P9 only when no single-frame repair (P7 / P8) keeps this fraction of the CDS (2026-10 runs, 162 CDS
                             # with internal stops: the 107 bird / turtle nad3 and 5 other NCBI joins all lie below, one at
@@ -481,9 +479,7 @@ class Curator:
         cut = isinstance(loc.end, AfterPosition) if loc.strand == 1 else isinstance(loc.start, BeforePosition)
         if tail and nt[-tail:] in ("T", "TA") and not cut:   # (table2asn PartialProblemHasStop with a T / TA stop)
             gs, ge = span(f)
-            pos = (f"{ge - tail + 1}..{ge}" if tail > 1 else f"{ge}") if f.location.strand == 1 else \
-                (f"complement({gs}..{gs + tail - 1})" if tail > 1 else f"complement({gs})")
-            f.qualifiers["transl_except"] = [f"(pos:{pos},aa:TERM)"]
+            f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1, tail)]
             notes = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n]
             f.qualifiers["note"] = notes + [POLYA_NOTE]
         f.qualifiers.pop("translation", None)          # stale after coordinate changes
@@ -527,9 +523,8 @@ class Curator:
                     if g is not None and simple(g):
                         set_span(g, gs, ge)
                     f.qualifiers.pop("translation", None)
-                    pos = (f"{ge - tail + 1}..{ge}" if tail > 1 else f"{ge}") if f.location.strand == 1 else \
-                        (f"complement({gs}..{gs + tail - 1})" if tail > 1 else f"complement({gs})")
-                    f.qualifiers["transl_except"] = [f"(pos:{pos},aa:TERM)"]
+                    f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1,
+                                                                        tail)]
                     f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n] \
                         + [POLYA_NOTE]
                     self.log(f, "O1", old, (gs, ge), f"abbreviated stop {('T', 'TA')[tail - 1]} at the sequence end "
@@ -711,9 +706,7 @@ class Curator:
         notes.append(ND3_NOTE if name == "ND3" and self.code == 2 and abs(p - S + 1 - ND3_EXTRA) <= 10 else FRAMESHIFT_NOTE)
         if tail:
             gs, ge = span(f)
-            pos = (f"{ge - tail + 1}..{ge}" if tail > 1 else f"{ge}") if f.location.strand == 1 else \
-                (f"complement({gs}..{gs + tail - 1})" if tail > 1 else f"complement({gs})")
-            f.qualifiers["transl_except"] = [f"(pos:{pos},aa:TERM)"]
+            f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1, tail)]
             notes.append(POLYA_NOTE)
         f.qualifiers["note"] = notes
         self.joined.add(id(f))
@@ -749,7 +742,7 @@ class Curator:
         origin on -, NC_023783.1 cox3; table2asn NoStop): the joined sequence is checked like a single interval -
         internal stops /pseudo, no start codon 5'-partial, no stop 3'-partial with the NCBI notes."""
         nt = str(f.extract(self.rec.seq)).upper()
-        prot = str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=self.code))
+        prot = codon_translate(nt, self.code)
         parts = list(f.location.parts)
         minus = f.location.strand == -1
         if prot.rstrip("*").count("*"):
@@ -792,8 +785,7 @@ class Curator:
         s = self.tseq(f)
         a, b = self.tx(f)
         nt = s[a - 1:b]
-        prot = str(__import__("Bio.Seq", fromlist=["Seq"]).Seq(nt[: len(nt) - len(nt) % 3]).translate(
-            table=self.a.genetic_code))
+        prot = codon_translate(nt, self.a.genetic_code)
         n_stop = prot.rstrip("*").count("*")
         if n_stop:
             self.log(f, "P4", span(f), span(f), f"{n_stop} internal stop codon(s): wrong frame, frameshift "
@@ -1216,7 +1208,7 @@ def main(argv=None) -> int:
         import ncbi_validate as nv
     val_before: List[Dict[str, str]] = []
     val_after: List[Dict[str, str]] = []
-    files = sorted(x for x in src.rglob("*") if x.suffix.lower() in GB_EXT) if src.is_dir() else [src]
+    files = iter_gb_files(src) if src.is_dir() else [src]
     out.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, str]] = []
     for f in files:
