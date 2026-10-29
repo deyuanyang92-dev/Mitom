@@ -89,3 +89,41 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
     seen.clear()
     bm.run_intron_fix(args, final, tmp_path)
     assert "--lineage" not in seen[1]
+
+
+def test_mitom_intron_runs_both_methods(tmp_path, monkeypatch):
+    """`mitom intron` adds introns as `run` does: de novo -> OUT, then the site transfer on OUT in place; --method
+    denovo / ref runs one script, options the command does not know are passed on to it; a failed de novo run stops
+    the command with its exit code; other commands still refuse options they do not know."""
+    import pytest
+    seen, rc = [], {"mito_intron.py": 0, "mito_intron_ref.py": 0}
+
+    def fake_run(cmd, **kw):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, rc[Path(cmd[1]).name], None, None)
+
+    def main(*argv):
+        seen.clear()
+        monkeypatch.setattr(sys, "argv", ["mitom_pipeline.py", *argv])
+        return bm.main()
+
+    monkeypatch.setattr(bm.subprocess, "run", fake_run)
+    assert main("intron", "-i", "in", "-o", "out", "--genetic_code", "4", "--bin", "B", "--maxintron", "5000",
+                "--lineage", "Eukaryota;Metazoa;Cnidaria") == 0
+    denovo, ref = seen
+    assert Path(denovo[1]).name == "mito_intron.py" and denovo[denovo.index("-i") + 1] == "in"
+    assert denovo[denovo.index("-o") + 1] == "out" and denovo[denovo.index("--genetic_code") + 1] == "4"
+    assert denovo[-2:] == ["--maxintron", "5000"] and "--lineage" not in denovo
+    assert ref[2] == "annotate" and ref[ref.index("-i") + 1] == ref[ref.index("-o") + 1] == "out"
+    assert ref[ref.index("--lineage") + 1] == "Eukaryota;Metazoa;Cnidaria" and ref[ref.index("--bin") + 1] == "B"
+    assert "--maxintron" not in ref
+    assert main("intron", "-i", "in", "-o", "out", "--method", "denovo", "--lib", "x.faa") == 0
+    assert len(seen) == 1 and seen[0][-2:] == ["--lib", "x.faa"]
+    assert main("intron", "-i", "in", "-o", "out", "--method", "ref", "--own_only") == 0
+    assert len(seen) == 1 and Path(seen[0][1]).name == "mito_intron_ref.py"
+    assert seen[0][seen[0].index("-i") + 1] == "in" and seen[0][-1] == "--own_only"
+    rc["mito_intron.py"] = 1
+    assert main("intron", "-i", "in", "-o", "out") == 1 and len(seen) == 1
+    with pytest.raises(SystemExit) as e:
+        main("dedup", "-i", "x", "--maxintron", "5")
+    assert e.value.code == 2

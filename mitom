@@ -14,7 +14,8 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
                      single parts of the workflow                                      = mitom_pipeline.py <cmd>
   doctor             which external programs are found; --write-config saves them      = mito_env.py doctor
   curate             boundary rules + NCBI names on GenBank files                     = mito_curate.py
-  intron             introns (MFannot method)                                         = mito_intron.py
+  intron             introns as run adds them: de novo (MFannot method), then the intron sites of annotated
+                     relatives (--method denovo | ref: one of them)                    = mitom_pipeline.py intron
   trna               multi-method tRNA annotation                                     = mito_trna.py
   rescue             add genes the core missed from MITOS2                              = mito_rescue.py
   rrna-hmm           per-phylum 12S/16S HMMs: build / search                           = mito_rrna_hmm.py
@@ -43,7 +44,7 @@ COMMANDS = {
     "setup": ("mito_env.py", ["setup"]),
     "doctor": ("mito_env.py", ["doctor"]),
     "curate": ("mito_curate.py", []),
-    "intron": ("mito_intron.py", []),
+    "intron": ("mitom_pipeline.py", ["intron"]),
     "trna": ("mito_trna.py", []),
     "rescue": ("mito_rescue.py", []),
     "rrna-hmm": ("mito_rrna_hmm.py", []),

@@ -207,6 +207,24 @@ def run_rrna_hmm(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> Step
 INTRON_LABEL = "introns                      : "
 
 
+def intron_denovo_cmd(gb_in: Path, gb_out: Path, code: int, threads: int, jobs: int, libs=(), ref_gbs=(),
+                      bin_dir: Optional[str] = None) -> List[str]:
+    """mito_intron.py (de novo introns, MFannot method) on the GenBank files of gb_in -> gb_out (may be gb_in)."""
+    return [sys.executable, str(Path(__file__).resolve().with_name("mito_intron.py")), "-i", str(gb_in), "-o", str(gb_out),
+            "--genetic_code", str(int(code)), "--threads", str(int(threads)), "--jobs", str(int(jobs)),
+            *[x for lib in libs for x in ("--lib", lib)], *[x for ref in ref_gbs for x in ("--ref_gb", ref)],
+            *(["--bin", bin_dir] if bin_dir else [])]
+
+
+def intron_ref_cmd(gb_in: Path, gb_out: Path, code: int, jobs: int, bin_dir: Optional[str] = None,
+                   lineage: str = "") -> List[str]:
+    """mito_intron_ref.py annotate (introns at the sites of annotated relatives) on gb_in -> gb_out (may be gb_in);
+    lineage: for records without their own taxonomy."""
+    return [sys.executable, str(Path(__file__).resolve().with_name("mito_intron_ref.py")), "annotate", "-i", str(gb_in),
+            "-o", str(gb_out), "--genetic_code", str(int(code)), "--jobs", str(int(jobs)),
+            *(["--bin", bin_dir] if bin_dir else []), *(["--lineage", lineage] if lineage else [])]
+
+
 def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
     """Add introns to the GenBank files in place with mito_intron.py (de novo; protein library MFannot's, or
     --intron_lib), then mito_intron_ref.py (intron sites of annotated relatives, run_intron_ref); reports
@@ -222,16 +240,9 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
         logging.error(msg) if args.intron_fix == "yes" else logging.warning(msg)
         return StepResult(INTRON_LABEL + "skipped: exonerate / blastp not found (--intron_bin)",
                           ok=args.intron_fix != "yes")
-    cmd = [sys.executable, str(script), "-i", str(gb_dir), "-o", str(gb_dir),
-           "--genetic_code", str(int(args.genetic_code)), "--threads", str(int(args.threads)),
-           "--jobs", str(int(getattr(args, "max_tasks", 1) or 1))]
-    for lib in args.intron_lib:
-        cmd += ["--lib", lib]
-    for ref in args.intron_ref_gb:
-        cmd += ["--ref_gb", ref]
-    if args.intron_bin:
-        cmd += ["--bin", args.intron_bin]
-    proc = run_tool(cmd)
+    proc = run_tool(intron_denovo_cmd(gb_dir, gb_dir, args.genetic_code, args.threads,
+                                      getattr(args, "max_tasks", 1) or 1, args.intron_lib, args.intron_ref_gb,
+                                      args.intron_bin))
     report = gb_dir / "intron_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_report.tsv"))
@@ -248,14 +259,9 @@ def run_intron_ref(args: argparse.Namespace, final_dir: Path, out_root: Path) ->
     (193 NCBI records, verified gold standard 2026-10-29) re-place de novo boundaries and add introns de novo misses
     (mini-exons, trans-spliced pieces, rRNA introns). --phylum gives the lineage of records without a taxonomy.
     Returns (summary, log text, ok)."""
-    script = Path(__file__).resolve().with_name("mito_intron_ref.py")
-    cmd = [sys.executable, str(script), "annotate", "-i", str(final_dir), "-o", str(final_dir),
-           "--genetic_code", str(int(args.genetic_code)), "--jobs", str(int(getattr(args, "max_tasks", 1) or 1))]
-    if args.intron_bin:
-        cmd += ["--bin", args.intron_bin]
-    if getattr(args, "phylum", None):
-        cmd += ["--lineage", f"Eukaryota;Metazoa;{args.phylum}"]
-    proc = run_tool(cmd)
+    proc = run_tool(intron_ref_cmd(final_dir, final_dir, args.genetic_code, getattr(args, "max_tasks", 1) or 1,
+                                   args.intron_bin,
+                                   f"Eukaryota;Metazoa;{args.phylum}" if getattr(args, "phylum", None) else ""))
     report = final_dir / "intron_ref_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_ref_report.tsv"))

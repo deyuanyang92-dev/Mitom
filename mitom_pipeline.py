@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """mitom_pipeline.py - the MitoM workflow: `mitom run`, `import`, `annotate`, `reorient`, `transfer_metadata`,
-`replace_organism` and `dedup` (`mitom <command> -h` lists the options; batch_mitoz.py is the old name).
+`replace_organism`, `dedup` and `intron` (`mitom <command> -h` lists the options; batch_mitoz.py is the old name).
 
 run      GenBank input: records deduplicated (RefSeq NC_ kept), the original annotation saved for the comparison;
          FASTA input: one sample per record -> round-1 annotation (MitoM's core mito_core.py, or --engine mitoz /
@@ -57,8 +57,8 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (GB_SUFFIXES, old_spelling, reports_dir, safe_copy, safe_name, write_nonempty_list,  # noqa: E402,F401
-                         write_nonempty_table, write_table)  # noqa: F401
+from mito_common import (GB_SUFFIXES, old_spelling, reports_dir, run_tool, safe_copy, safe_name,  # noqa: E402,F401
+                         write_nonempty_list, write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
                        CLADE_CODES, CLADE_PHYLUM, EXTRA_CLADES, METAZOAN_PHYLA, no_upstream_atg,  # noqa: F401
                        PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS)  # noqa: F401
@@ -99,9 +99,9 @@ from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_g
                           INTERMEDIATE_DIRS, _LOCUS_NAME_MAXLEN, merge_gb_files, organize_outputs,  # noqa: F401
                           OUTPUT_LAYOUT, refresh_summary, REPORT_FILES, REPORT_NOTES,  # noqa: F401
                           rewrite_genbank_record_ids, RunSummary, WORK_DIRS, write_summary)  # noqa: F401
-from mitom_steps import (count_rows, INTRON_LABEL, optional_step, _plot_file, run_compare,  # noqa: E402,F401
-                         run_curate, run_curate_and_submit, run_intron_fix, run_intron_ref, run_plots,  # noqa: F401
-                         run_rescue, run_rrna_hmm, run_submission, StepResult)  # noqa: F401
+from mitom_steps import (count_rows, intron_denovo_cmd, INTRON_LABEL, intron_ref_cmd, optional_step,  # noqa: E402,F401
+                         _plot_file, run_compare, run_curate, run_curate_and_submit, run_intron_fix,  # noqa: F401
+                         run_intron_ref, run_plots, run_rescue, run_rrna_hmm, run_submission, StepResult)  # noqa: F401
 
 
 # ── environment preflight ────────────────────────────────────────────────────────────────────────────────────────────
@@ -902,6 +902,22 @@ def workflow_dedup(args: argparse.Namespace) -> int:
     return 0
 
 
+def workflow_intron(args: argparse.Namespace) -> int:
+    """`mitom intron`: introns as `run` adds them - mito_intron.py (de novo, MFannot method) -> OUT, then
+    mito_intron_ref.py (intron sites of annotated relatives) on OUT in place; --method denovo / ref runs one of them.
+    Options this command does not know (args.extra) go to mito_intron.py, or to mito_intron_ref.py with --method ref.
+    Returns the exit code of the first script that failed (the site transfer does not run after a failed de novo run)."""
+    out = Path(args.out_root)
+    if args.method != "ref":
+        rc = run_tool(intron_denovo_cmd(args.input, out, args.genetic_code, args.threads, args.jobs, bin_dir=args.bin)
+                      + args.extra, capture=False).returncode
+        if rc or args.method == "denovo":
+            return rc
+    src, extra = (args.input, args.extra) if args.method == "ref" else (out, [])
+    return run_tool(intron_ref_cmd(src, out, args.genetic_code, args.jobs, args.bin, args.lineage) + extra,
+                    capture=False).returncode
+
+
 # ── command line ─────────────────────────────────────────────────────────────────────────────────────────────────────
 def positive_int_arg(x: str) -> int:
     try:
@@ -946,7 +962,9 @@ def build_parser() -> argparse.ArgumentParser:
             "  reorient          - re-orient GenBank files to start at a target gene\n"
             "  transfer_metadata - copy GenBank headers from the original records\n"
             "  replace_organism  - restore /organism= of the FEATURES source from the original records\n"
-            "  dedup             - deduplicate GenBank records (RefSeq NC_ kept)\n\n"
+            "  dedup             - deduplicate GenBank records (RefSeq NC_ kept)\n"
+            "  intron            - introns as `run` adds them: de novo (MFannot method), then the intron sites of\n"
+            "                      annotated relatives\n\n"
             "The annotation runs in threads or with Snakemake (--scheduler_backend; cluster: --smk_extra '--profile\n"
             "slurm'); everything after it runs in this process. `mitom <command> -h` lists the options.\n\n"
             "Citation:\n"
@@ -1183,6 +1201,31 @@ def build_parser() -> argparse.ArgumentParser:
     dd.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="dedup_out", help="Output folder (default: dedup_out).")
     old_spelling(dd, "--out_root", "out_root")
 
+    # ── intron ────────────────────────────────────────────────────────────
+    it = sub.add_parser(
+        "intron", allow_abbrev=False, formatter_class=argparse.RawDescriptionHelpFormatter,
+        help="Introns as `run` adds them: mito_intron.py (de novo, MFannot method), then mito_intron_ref.py (intron "
+             "sites of annotated relatives) on its output.",
+        description="Introns as `run` adds them: mito_intron.py (de novo, MFannot method) -> OUT, then "
+                    "mito_intron_ref.py (intron\nsites of annotated relatives) on OUT in place. Reports: "
+                    "OUT/intron_report.tsv, OUT/intron_ref_report.tsv.",
+        epilog="Other options go to mito_intron.py (python mito_intron.py -h: --lib, --ref_gb, --maxintron, "
+               "--timeout ...),\nwith --method ref to mito_intron_ref.py (python mito_intron_ref.py annotate -h).")
+    it.add_argument("-i", "--input", required=True, help="GenBank file or folder.")
+    it.add_argument("-o", "--out", dest="out_root", metavar="OUT", required=True,
+                    help="Output folder (may be the input folder: updated in place).")
+    it.add_argument("--method", choices=["both", "denovo", "ref"], default="both",
+                    help="both (default): de novo, then the site transfer; denovo: mito_intron.py only (the "
+                         "`mitom intron` of MitoM <= 1.0.0); ref: mito_intron_ref.py only.")
+    it.add_argument("--genetic_code", type=int, default=5, help="Default 5.")
+    it.add_argument("--threads", type=int, default=1, help="Threads for blastp (de novo). Default 1.")
+    it.add_argument("--jobs", type=int, default=1, help="GenBank files processed in parallel. Default 1.")
+    it.add_argument("--bin", default=None, help="Folder with exonerate, blastp, tblastn, blastn, cmsearch. "
+                                                "Default: found automatically.")
+    it.add_argument("--lineage", default="",
+                    help="NCBI lineage of records without their own taxonomy, for the site transfer "
+                         "(e.g. 'Eukaryota;Metazoa;Cnidaria').")
+
     return p
 
 
@@ -1193,7 +1236,12 @@ def error_exit_code(message: str) -> int:
 
 
 def main() -> int:
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args, extra = parser.parse_known_args()
+    if args.cmd == "intron":
+        args.extra = extra                       # options of mito_intron.py / mito_intron_ref.py, passed on
+    elif extra:
+        parser.error("unrecognized arguments: " + " ".join(extra))
 
     if args.cmd == "import":
         err = prepare_import(args)
@@ -1223,6 +1271,7 @@ def main() -> int:
         "transfer_metadata": workflow_transfer_metadata,
         "replace_organism":  workflow_replace_organism,
         "dedup":             workflow_dedup,
+        "intron":            workflow_intron,
     }
     fn = dispatch.get(args.cmd)
     if fn is None:
