@@ -700,7 +700,7 @@ def test_blast_db_in_pieces_searches_like_one_database(tmp_path, monkeypatch):
 
 
 @needs_tools
-def test_rdna_prefilter_skips_microsatellite_contigs(tmp_path, monkeypatch):
+def test_rdna_prefilter_skips_microsatellite_contigs(tmp_path):
     """SRR27947581: (CA)n / (CATA)n in the IGS of the reference units hit ~10k contigs, none with an rRNA gene; the
     rDNA candidates are the contigs that hit outside low-complexity stretches"""
     base = unit(None)
