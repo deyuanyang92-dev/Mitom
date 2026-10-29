@@ -822,7 +822,7 @@ mitom trna -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen,aragorn,t
 
 单用 ARWEN/ARAGORN 在 tRNA 少的类群假阳性极多，故只放 review 文件。刺胞的 FP 多来自 MITOS2，是否为 NCBI 漏注未确证。
 
-**原生核心的 tRNA 与 MITOS2 对比（2026-10-27）**：MitoM-ML（MITOS2 tRNA 模型 + 220 个分支协方差模型，ARWEN/ARAGORN 作证据，学习的判别器与端点）＋ MiTFi 二次确认（p < 0.9 的调用须 MiTFi 也调用；同家族较弱的第二个调用须 p ≥ 0.9）＋ 它没调用的 tRNA 家族由 MiTFi 补 ＋ 脊椎动物取 MiTFi 端点。MiTFi 完全按 MITOS2 的方式运行（E 值按记录长度计算、tRNA 重叠上限 50 nt，与 MITOS2 自己的 MiTFi 输出逐行一致）。所用记录都没有参与训练（无脊椎动物：所在科未参与训练且不在 refseq89m；脊椎动物：模型从未见过；环节动物：只在 GenBank、不在 RefSeq 的记录）；规则在调参的一半上按事先定的标准选定（精确率比 MITOS2 高 ≥ 0.1 个百分点，再取召回最高），另一半只用来检验。召回率 / 精确率 / 两端与 NCBI 完全一致：
+**原生核心的 tRNA 与 MITOS2 对比（2026-10-27）**：MitoM-ML（MITOS2 tRNA 模型 + 220 个分支协方差模型，ARWEN/ARAGORN 作证据，学习的判别器与端点）＋ MiTFi 二次确认（p < 0.9 的调用须 MiTFi 也调用；同家族较弱的第二个调用须 p ≥ 0.9）＋ 它没调用的 tRNA 家族由 MiTFi 补 ＋ 脊椎动物取 MiTFi 端点。MiTFi 按 MITOS2 的方式运行（E 值按记录长度计算、tRNA 重叠上限 50 nt，与 MITOS2 自己的 MiTFi 输出逐行一致）；唯一不同：快速搜索未找到的 tRNA 模型的灵敏补搜，MITOS2 用 cmsearch `--max` 搜整条序列（每条几分钟），MitoM 用 `--nohmm --F6 3e-4` 只搜蛋白基因 / rRNA 内部以外的区段（基因两端各 100 nt 仍搜）：542 条需补搜的基准记录 CPU 11.9 → 1.0 小时，同骨海绵 NC_014885.1 297 → 18 s（2 线程），召回率和端点不变，只去掉 14 个落在基因 / rRNA 内的弱 MiTFi 调用（NCBI 均无）。所用记录都没有参与训练（无脊椎动物：所在科未参与训练且不在 refseq89m；脊椎动物：模型从未见过；环节动物：只在 GenBank、不在 RefSeq 的记录）；规则在调参的一半上按事先定的标准选定（精确率比 MITOS2 高 ≥ 0.1 个百分点，再取召回最高），另一半只用来检验。召回率 / 精确率 / 两端与 NCBI 完全一致：
 
 | 记录 | MitoM | MITOS2 |
 |---|---|---|

@@ -19,7 +19,8 @@ below) gives a second opinion: calls with p < 0.9 need its call of the same tRNA
 needs p >= 0.9 (trna_second_opinion), the families MitoM-ML does not call are taken from it (rescue_trnas), and
 vertebrates take its ends (mitfi_ends); else, or
 with --trna mitfi: cmsearch with the MiTFi tRNA models (refseq89m/ncRNA/trn*.cm; a sensitive pass for models without a
-hit) and MiTFi (mitfi_import.jar of the mitos package) for hit selection and anticodons - the programs MITOS2 runs.
+hit, between the protein genes / rRNAs) and MiTFi (mitfi_import.jar of the mitos package) for hit selection and
+anticodons - the programs MITOS2 runs.
 
 Circular records are searched as sequence + its first ORIGIN_EXT nt, so genes across the origin are found whole and
 written as joins (MITOS2 searches two rotations for the same reason). Several FASTA sequences = contigs of one sample.
@@ -104,11 +105,19 @@ NO_START_DOWN = {"echinodermata": {"nad4l"}}   # phylum -> genes left 5'-partial
                            # 27 nt downstream; for all genes of all phyla the fallback is right more often)
 START_EXPECTED_MIN = 2     # residues missing from the alignment from which the start is sought at the expected position
 CM_EVALUE = 0.01           # cmsearch fast pass and MiTFi threshold of that pass (MITOS2 runmitos default --ncev)
-NO_SENSITIVE_TRNA = {"cnidaria"}   # phyla whose missing tRNA models are not searched again with cmsearch --max:
+NO_SENSITIVE_TRNA = {"cnidaria"}   # phyla whose missing tRNA models are not searched again (sensitive pass):
                            # cnidarian mitogenomes encode 1-6 tRNAs, the ~20-model --max pass found junk (18 records,
                            # leave-out: 13 of 17 extra tRNAs, 2 real ones; 344 -> 50 s median; a false trnE inside nad5
                            # was an NCBI error in the stress test)
-CM_EVALUE_SENSITIVE = 0.1  # cmsearch --max pass for models without a hit (MITOS2 sensitive pass)
+CM_EVALUE_SENSITIVE = 0.1  # cmsearch pass for models without a hit (MITOS2 sensitive pass)
+CM_SENSITIVE = ["--nohmm", "--F6", "3e-4", "--notrunc"]   # ... run without the HMM filters, as MITOS2's --max, but
+                           # with the CM's own CYK filter (P <= 3e-4), outside the protein gene / rRNA interiors
+                           # (gene_free): MITOS2's --max on the whole record took minutes (NC_014885.1, 17 models, 2
+                           # threads: 297 s, now 18 s; 542 benchmark records: 11.9 -> 1.0 h CPU; final tRNAs the same
+                           # except 14 weak MiTFi calls inside genes / rRNAs, none in NCBI, and 2 other wrong ones). HMM
+                           # filters (--mid) lost degenerate tRNAs: recall 95.6 -> 94.5 % on the 187 unseen-family
+                           # records that have this pass
+TRNA_SENSITIVE_FLANK = 100  # nt at each end of a protein gene / rRNA still searched (a tRNA plus 30 nt)
 TRNA_NAMES = ["trn" + f for f in "A C D E F G H I K L1 L2 M N P Q R S1 S2 T V W Y".split()]
 TRNA_RESCUE_OVL = 10       # a MiTFi tRNA of a family MitoM-ML did not call is added when it overlaps no call by more
                            # than this many nt (rescue_trnas)
@@ -579,20 +588,62 @@ def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.C
 def cmsearch(cm: str, model: Path, genome_fa: Path, out: Path, sensitive: bool, log, rrna: bool = False,
              z: Optional[float] = None) -> Path:
     """cmsearch as MITOS2 runs it (local mode, --cpu 1 --notextw --smxsize 80000); fast pass --noF4b -E 0.01,
-    sensitive pass --max -E 0.1 (rRNA: --nohmm). Local mode finds the truncated tRNAs of nematodes. z = search space
-    (Mb) for the E-values: a circular record is searched with ORIGIN_EXT nt appended, MITOS2 searches it at its length."""
+    sensitive pass -E 0.1 with CM_SENSITIVE (rRNA: --nohmm). Local mode finds the truncated tRNAs of nematodes. z =
+    search space (Mb) for the E-values: a circular record is searched with ORIGIN_EXT nt appended, MITOS2 searches it at
+    its length."""
     cmd = [cm, "--cpu", "1", "--notextw", "--smxsize", "80000", "--tblout", str(out.with_suffix(".tbl"))]
     if z:
         cmd += ["-Z", f"{z:.6f}"]
     if rrna:                                   # same rrnL hit, 536 -> 463 MB, 3.8 -> 2.7 s (alignment matrix cap)
         cmd += ["--mxsize", "128"]
     if sensitive:
-        cmd += ["--nohmm" if rrna else "--max", "-E", str(CM_EVALUE_SENSITIVE)]
+        cmd += (["--nohmm"] if rrna else CM_SENSITIVE) + ["-E", str(CM_EVALUE_SENSITIVE)]
     else:
         cmd += ["--noF4b", "-E", str(CM_EVALUE)]
     p = run(cmd + [str(model), str(genome_fa)], log)
     out.write_text(p.stdout)
     return out
+
+
+def gene_free(genes: List[Feature], n: int, length: int, flank: int = TRNA_SENSITIVE_FLANK) -> List[Tuple[int, int]]:
+    """Stretches (0-based, half-open) of the searched sequence of this length outside the interiors of the protein genes
+    / rRNAs (a gene minus `flank` nt at each end: the core's gene ends may cover a tRNA, also where two genes abut);
+    n = record length (a circular record carries its first nt again after n)."""
+    cov = bytearray(length)
+    for f in genes:
+        for k in (-n, 0, n):
+            a, b = max(0, f.start + k + flank), min(length, f.end + k - flank)
+            if a < b:
+                cov[a:b] = b"\x01" * (b - a)
+    return [(m.start(), m.end()) for m in re.finditer(b"\x00+", bytes(cov))]
+
+
+CM_ROW = re.compile(r"^(\s+\(\d+\)\s+[!?](?:\s+\S+){3}\s+)s(\d+)(\s+)(\d+)(\s+)(\d+)(\s.*)$")        # hit table
+CM_HIT = re.compile(r"^(\s+\(\d+\)\s+[!?](?:\s+\S+){3}\s+cm(?:\s+\S+){3}\s+)(\d+)(\s+)(\d+)(\s.*)$")  # alignment header
+CM_ALN = re.compile(r"^(\s+)s(\d+)(\s+)(\d+)(\s.*\s)(\d+)(\s*)$")                                     # alignment row
+
+
+def shift_cmout(text: str, name: str) -> str:
+    """cmsearch output for stretches named s<offset> (gene_free) rewritten as a search of the whole sequence `name`
+    (what MiTFi reads): target name and coordinates of each hit in the hit table, in its alignment header and in its
+    alignment row."""
+    out, off = [], 0
+    for line in text.splitlines():
+        row, hit, aln = CM_ROW.match(line), CM_HIT.match(line), CM_ALN.match(line)
+        if line.startswith(">> s"):
+            off = int(line.split()[1][1:])
+            line = f">> {name}" + line[len(f">> s{off}"):]
+        elif row:
+            o = int(row.group(2))
+            line = (f"{row.group(1)}{name}{row.group(3)}{int(row.group(4)) + o}{row.group(5)}{int(row.group(6)) + o}"
+                    f"{row.group(7)}")
+        elif hit:
+            line = f"{hit.group(1)}{int(hit.group(2)) + off}{hit.group(3)}{int(hit.group(4)) + off}{hit.group(5)}"
+        elif aln and int(aln.group(2)) == off:
+            line = (f"{aln.group(1)}{name}{aln.group(3)}{int(aln.group(4)) + off}{aln.group(5)}{int(aln.group(6)) + off}"
+                    f"{aln.group(7)}")
+        out.append(line)
+    return "\n".join(out) + "\n"
 
 
 def tbl_hits(tbl: Path) -> List["mito_rrna_hmm.Hit"]:
@@ -682,19 +733,21 @@ def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, p
 
 
 def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, threads: int, tools: dict, tmp: Path, log,
-                   n: Optional[int] = None, phylum: Optional[str] = None) -> List[Feature]:
-    """MITOS2's tRNA step: cmsearch per MiTFi model (fast pass, then --max for the tRNA names without a hit), MiTFi
-    for selection, structure and anticodon. genome / genome_fa = the searched sequence, n = record length (circular
-    records carry ORIGIN_EXT appended nt; positions are mapped back modulo n)."""
+                   n: Optional[int] = None, phylum: Optional[str] = None,
+                   genes: Optional[List[Feature]] = None) -> List[Feature]:
+    """MITOS2's tRNA step: cmsearch per MiTFi model (fast pass, then a sensitive pass for the tRNA names without a hit,
+    CM_SENSITIVE outside the interiors of the protein genes / rRNAs `genes`), MiTFi for selection, structure and
+    anticodon. genome / genome_fa = the searched sequence, n = record length (circular records carry ORIGIN_EXT appended
+    nt; positions are mapped back modulo n)."""
     n = n or len(genome)
     models = sorted((refdir / "ncRNA").glob("trn*.cm"))
     seqname = genome_fa.name
 
-    def search(model: Path, sensitive: bool) -> Path:
+    def search(model: Path, sensitive: bool, fa: Path = genome_fa) -> Path:
         # E-values for the record's length on both strands, as MITOS2 (which searches rotations of the record, not the
         # record + ORIGIN_EXT): the 3,000 appended nt made every E ~1.2x larger on a 15-kb record, so hits MITOS2 keeps
         # at E 0.08-0.1 were lost (NC_060482.1 / NC_060708.1 acanthocephalan trnD, E 0.096 -> 0.12)
-        return cmsearch(tools["cmsearch"], model, genome_fa, tmp / f"{seqname}_{model.stem}.cmout", sensitive, log,
+        return cmsearch(tools["cmsearch"], model, fa, tmp / f"{seqname}_{model.stem}.cmout", sensitive, log,
                         z=2 * n / 1e6)
 
     jar, codes = tools["mitfi"]
@@ -708,7 +761,7 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
         return parse_mitfi(run(cmd, log).stdout, log, n)
 
     # MITOS2's procedure (runmitos.py): fast pass judged at E <= 0.001 - a model whose only hits are weaker counts
-    # as empty and is searched again with --max; the final MiTFi run accepts E <= 0.1
+    # as empty and is searched again (MITOS2: --max on the whole record); the final MiTFi run accepts E <= 0.1
     with ThreadPoolExecutor(max(1, threads)) as ex:
         outs = list(ex.map(lambda m: search(m, False), models))
     feats = mitfi(outs, CM_EVALUE)
@@ -717,10 +770,20 @@ def annotate_trnas(genome: str, genome_fa: Path, refdir: Path, code: int, thread
     if (phylum or "").lower() in NO_SENSITIVE_TRNA:
         log.info(f"[core] tRNA sensitive pass skipped for {phylum}")
         missing = []
-    if missing:
-        log.info(f"[core] tRNA sensitive pass for {len(missing)} model(s): " + " ".join(m.stem for m in missing))
+    free = gene_free(genes or [], n, len(genome))
+    if missing and free:
+        with open(genome_fa) as fh:
+            name = fh.readline()[1:].split()[0]
+        free_fa = tmp / f"{seqname}.free.fa"
+        free_fa.write_text("".join(f">s{s}\n{genome[s:e]}\n" for s, e in free))
+        log.info(f"[core] tRNA sensitive pass for {len(missing)} model(s) on {sum(e - s for s, e in free)} of "
+                 f"{len(genome)} nt (outside protein gene / rRNA interiors): " + " ".join(m.stem for m in missing))
+
+        def sensitive(model: Path) -> None:
+            out = search(model, True, free_fa)
+            out.write_text(shift_cmout(out.read_text(), name))
         with ThreadPoolExecutor(max(1, threads)) as ex:
-            list(ex.map(lambda m: search(m, True), missing))
+            list(ex.map(sensitive, missing))
         feats = mitfi(outs, CM_EVALUE_SENSITIVE)
     log.info(f"[core] tRNAs: {len(feats)}")
     return feats
@@ -980,8 +1043,8 @@ def annotate(args) -> int:
                                     args.rrna_method)
             if not args.no_trna and use_ml:
                 trnas = annotate_trnas_ml(genome, n, code, args.threads, tools, lineage, topology == "circular", log)
-                mitfi = annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum) \
-                    if tools.get("mitfi") else None
+                mitfi = annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum,
+                                       genes=feats) if tools.get("mitfi") else None
                 kept = trna_second_opinion(trnas, mitfi, n)
                 if len(kept) < len(trnas):
                     log.info(f"[core] MitoM-ML calls not sure enough without MiTFi: "
@@ -999,7 +1062,8 @@ def annotate(args) -> int:
                         trnas = found
                 feats += trnas
             elif not args.no_trna:
-                feats += annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum)
+                feats += annotate_trnas(searched, gfa, refdir, code, args.threads, tools, tmp, log, n, args.phylum,
+                                        genes=feats)
             if args.keep_tmp:
                 shutil.copytree(tmp, out / "core_tmp" / rid, dirs_exist_ok=True)
         recs.append(genbank_record(genome, feats, code, rid, topology))

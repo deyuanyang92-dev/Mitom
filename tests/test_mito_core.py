@@ -328,6 +328,94 @@ def test_mitfi_path_runs_cmsearch_and_mitfi_as_mitos2(tmp_path, monkeypatch):
     assert java and all(c[c.index("-overlap") + 1] == "50" and c[c.index("-method") + 1] == "l" for c in java)
 
 
+def test_gene_free_leaves_out_gene_interiors_only():
+    """The sensitive pass searches all but the gene interiors: the core's gene ends may cover a tRNA (arthropod trnH
+    inside the core's nad4 end, abutting nad5: NC_069264.1, NC_073524.1)."""
+    genes = [mc.Feature("CDS", "cox1", 100, 1000, 1), mc.Feature("rRNA", "rrnL", 1200, 2500, 1)]
+    # 3,000-nt circular record searched with 500 nt appended: cox1 covers 3100..3500 again
+    assert mc.gene_free(genes, 3000, 3500, 60) == [(0, 160), (940, 1260), (2440, 3160)]
+    abutting = [mc.Feature("CDS", "nad5", 100, 1000, -1), mc.Feature("CDS", "nad4", 1000, 2000, -1)]
+    assert mc.gene_free(abutting, 3000, 3000, 60) == [(0, 160), (940, 1060), (1940, 3000)]
+    short = [mc.Feature("CDS", "nad6", 100, 200, 1), mc.Feature("CDS", "cob", 250, 1000, -1)]   # nad6 < 2 x 60 nt
+    assert mc.gene_free(short, 3000, 3000, 60) == [(0, 310), (940, 3000)]
+    assert mc.gene_free([], 3000, 3500) == [(0, 3500)]
+
+
+CMOUT = """Hit scores:
+ rank     E-value  score  bias  sequence  start    end   mdl trunc   gc  description
+ ----   --------- ------ -----  -------- ------ ------   --- ----- ----  -----------
+  (1) !   3.5e-05   38.9   0.0  s15364      124     72 -  cm    no 0.43  -
+ ------ inclusion threshold ------
+  (2) ?     0.033   22.1   0.0  s1473        72    124 +  cm    no 0.43  -
+
+
+Hit alignments:
+>> s15364
+ rank     E-value  score  bias mdl mdl from   mdl to       seq from      seq to       cyksc trunc   gc
+ ----   --------- ------ ----- --- -------- --------    ----------- -----------      ------ ----- ----
+  (1) !   3.5e-05   38.9   0.0  cm        1       68 []         124          72 - ..   36.4    no 0.43
+
+             (((((((,,<<<<_____>>>>,<<<<<_______>>>>>,,,~~~~~~))))))): CS
+    trnG   1 auuuuuuUAGUAuAAuuAgUACAuuUGaCUUCCAAuCAaaaAG*[17]*aaaaaauA 68
+             A: U::  AGUAU  +  GUACA: ::A+UUCCA U:: :A+G       ::A :UA
+  s15364 124 AGUUAGGCAGUAU-UAGGGUACAGGCAAUUUCCAUUUGUCAGG*[ 3]*ACUAGCUA 72
+
+>> s1473
+ rank     E-value  score  bias mdl mdl from   mdl to       seq from      seq to       cyksc trunc   gc
+ ----   --------- ------ ----- --- -------- --------    ----------- -----------      ------ ----- ----
+  (2) ?     0.033   22.1   0.0  cm        1       68 []          72         124 + ..   19.4    no 0.43
+
+            (((((((,,<<<<_____>>>>,<<<<<_______>>>>>,,,~~~~~~))))))): CS
+   trnG   1 auuuuuuUAGUAuAAuuAgUACAuuUGaCUUCCAAuCAaaaAG*[17]*aaaaaauA 68
+            A: U::  AGUAU  +  GUACA: ::A+UUCCA U:: :A+G       ::A :UA
+  s1473  72 AGUUAGGCAGUAU-UAGGGUACAGGCAAUUUCCAUUUGUCAGG*[ 3]*ACUAGCUA 124
+"""
+
+
+def test_shift_cmout_moves_stretch_hits_to_genome_coordinates():
+    """MiTFi reads the hit table, the alignment headers and the alignment rows; after the shift a stretch search reads
+    like a search of the whole sequence (NC_060482.1: trnG 1545..1597 as NCBI, found in stretch s1473 at 72..124)."""
+    out = mc.shift_cmout(CMOUT, "S00001").splitlines()
+    rows = [line.split() for line in out if line.startswith("  (")]
+    assert [r[5:9] for r in rows[:2]] == [["S00001", "15488", "15436", "-"], ["S00001", "1545", "1597", "+"]]  # table
+    assert [r[9:12] for r in rows[2:]] == [["15488", "15436", "-"], ["1545", "1597", "+"]]          # alignment headers
+    assert [line.split()[:2] for line in out if line.startswith(">>")] == [[">>", "S00001"], [">>", "S00001"]]
+    aln = [line.split() for line in out if line.lstrip().startswith("S00001")]
+    assert [(a[1], a[-1]) for a in aln] == [("15488", "15436"), ("1545", "1597")]
+    model = [line for line in CMOUT.splitlines() if "trnG   1" in line or line.endswith(": CS")]
+    assert [line for line in out if "trnG   1" in line or line.endswith(": CS")] == model    # the rest untouched
+
+
+def test_trna_sensitive_pass_searches_the_gene_free_stretches_with_the_cm_filter(tmp_path, monkeypatch):
+    """--max on the whole record took minutes (NC_014885.1: 17 models, 297 s with 2 threads); the sensitive pass now
+    runs cmsearch --nohmm outside the protein gene / rRNA interiors, E-values still for the whole record."""
+    calls, fastas = [], {}
+
+    class P:
+        stdout = ""
+
+    def fake_run(cmd, log):
+        calls.append(cmd)
+        if cmd[0] == "cmsearch":
+            fastas[cmd[-1]] = Path(cmd[-1]).read_text()
+        return P()
+    monkeypatch.setattr(mc, "run", fake_run)
+    (tmp_path / "ncRNA").mkdir()
+    (tmp_path / "ncRNA" / "trnD.cm").write_text("")
+    genome = "A" * 3500                                   # 3,000-nt circular record + 500 nt appended
+    fa = tmp_path / "S00001.fa"
+    fa.write_text(f">S00001\n{genome}\n")
+    tools = {"cmsearch": "cmsearch", "java": "java", "mitfi": (Path("mitfi_import.jar"), Path("codes"))}
+    genes = [mc.Feature("CDS", "cox1", 100, 1000, 1), mc.Feature("rRNA", "rrnL", 1200, 2500, 1)]
+    mc.annotate_trnas(genome, fa, tmp_path, 5, 1, tools, tmp_path, LOG, n=3000, genes=genes)
+    fast, sens = [c for c in calls if c[0] == "cmsearch"]
+    assert "--noF4b" in fast and fast[-1] == str(fa)
+    assert "--nohmm" in sens and "--notrunc" in sens and "--max" not in sens
+    assert sens[sens.index("-Z") + 1] == f"{2 * 3000 / 1e6:.6f}" == fast[fast.index("-Z") + 1]
+    stretches = fastas[sens[-1]].split()                  # all but the gene interiors (100 nt of each end searched)
+    assert stretches[0::2] == [">s0", ">s900", ">s2400"] and [len(s) for s in stretches[1::2]] == [200, 400, 800]
+
+
 def test_parse_mitfi_keeps_trnas_overlapping_as_mitos2_allows():
     """NC_060484.1: trnL2 8233..8305 and trnP 8294..8357 overlap by 12 nt, both top hits; MITOS2 keeps both."""
     text = "\n".join([
