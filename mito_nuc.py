@@ -22,7 +22,8 @@ Massive assemblies: both searches first run with one reference per genus (rDNA; 
 seed) / per gene and phylum (histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go
 to the steps above, each gene set in its own regions, and at most MAX_RDNA_REGIONS rDNA regions and
 MAX_HIST_REGIONS histone regions per gene of them (best first; the time is bounded whatever the assembly).
-2026-10-29: SPAdes assemblies of 0.03-1.7 Gb took 8 s - 2 min on 8 threads (before: up to 22 min and 16 GB on 16).
+2026-10-30: 30 SPAdes assemblies of 0.005-1.7 Gb took 6 s - 2.2 min on 8 threads, <= 1.6 GB (before: up to 20 min
+and 16 GB on 16 threads; barrnap 0.9 on 8 threads 2 s - 4.6 min).
 
 Per-gene consensus (multi-copy rDNA split over many contigs of one assembly): see consensus(); output
 consensus/<gene>.fasta and consensus.tsv (which contigs were used, which were dropped and why).
