@@ -75,3 +75,24 @@ def test_tbl_skips_internal_review_notes():
     r.features = [f]
     notes = [ln for ln in nv.feature_lines(r) if "\tnote\t" in ln]
     assert notes == ["\t\t\tnote\tstart codon not determined"]
+
+
+def test_messages_on_features_of_the_intron_steps_are_marked_ours(tmp_path):
+    """2026-10-30 (integration audit): the 'ours' column (--only_ours) looked for 'mito_intron' in the notes, which the
+    de novo step no longer writes ('... MFannot method') and the site transfer writes only on its CDS: messages on
+    their introns were not counted as MitoM's."""
+    import sys as _sys
+    r = _rec()
+    r.features = [SeqFeature(FeatureLocation(100, 200, 1), type="intron", qualifiers={
+                      "note": ["group II intron (Rfam RF00029, E 1e-10); MFannot method"]}),
+                  SeqFeature(FeatureLocation(300, 400, 1), type="intron", qualifiers={
+                      "note": ["group I intron; site transferred from NC_000933.1"]}),
+                  SeqFeature(FeatureLocation(450, 500, 1), type="misc_feature", qualifiers={"note": ["submitter's"]})]
+    fake = tmp_path / "table2asn"
+    fake.write_text(f"#!{_sys.executable}\nimport sys\nout = sys.argv[sys.argv.index('-o') + 1]\n"
+                    "open(out[:-4] + '.val', 'w').write(''.join(f'ERROR: valid [SEQ_FEAT.Test] intron {iv} odd\\n' "
+                    "for iv in ('101-200', '301-400', '451-500')))\n")
+    fake.chmod(0o755)
+    rows = nv.validate_record(r, tmp_path / "out", str(fake))
+    assert [(row["message"].split()[1], row["ours"]) for row in rows] == [("101-200", "yes"), ("301-400", "yes"),
+                                                                          ("451-500", "no")]

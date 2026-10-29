@@ -78,11 +78,18 @@ def record_gencode(rec) -> Optional[int]:
     return max(set(codes), key=codes.count) if codes else None
 
 
-def our_intervals(rec, tag: str) -> List[str]:
-    """'a-b' strings of every interval of features whose /note contains tag."""
+# notes of the features the intron steps write: mito_intron.py ('... MFannot method'), mito_intron_ref.py (CDS: 'known
+# intron sites (...; mito_intron_ref)', introns: 'site transferred from <accession>'), older runs ('mito_intron')
+INTRON_STEP_NOTE = re.compile(r"MFannot method|mito_intron|site transferred from")
+
+
+def our_intervals(rec, tag=INTRON_STEP_NOTE) -> List[str]:
+    """'a-b' strings of every interval of features whose /note matches tag (a regex or a text; default: the features
+    written by MitoM's intron steps)."""
+    rx = re.compile(re.escape(tag)) if isinstance(tag, str) else tag
     out = []
     for f in rec.features:
-        if any(tag in n for n in f.qualifiers.get("note", [])):
+        if any(rx.search(n) for n in f.qualifiers.get("note", [])):
             out += [f"{int(p.start) + 1}-{int(p.end)}" for p in f.location.parts]
     return out
 
@@ -104,11 +111,11 @@ def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
     run_tool([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn", *(["-t", sbt] if sbt else [])])
     rows = []
     val = d / "rec.val"
+    mine = our_intervals(rec)
     for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
         m = MSG_RE.match(line.strip())
         if not m or IGNORE_CODES.search(m.group(2)):
             continue
-        mine = our_intervals(rec, "mito_intron")
         msg = m.group(3)
         rows.append({"record": rec.id, "severity": m.group(1).upper(), "code": m.group(2),
                      "ours": "yes" if any(re.search(rf"\b{re.escape(iv)}\b", msg) for iv in mine) else "no",
@@ -123,7 +130,7 @@ def main(argv=None) -> int:
     p.add_argument("--table2asn", default=None, help="table2asn executable (default: found by mito_env.py)")
     p.add_argument("--focus", default="", help="Only count messages whose text matches this regex (e.g. intron|CDS)")
     p.add_argument("--only_ours", action="store_true",
-                   help="Only count messages on features written by mito_intron.py")
+                   help="Only count messages on features written by MitoM's intron steps (mito_intron.py, mito_intron_ref.py)")
     p.add_argument("--nuclear", action="store_true", help="nuclear sequences (mitom nuc): no location, [gcode=]")
     a = p.parse_args(argv)
     exe = mito_env.find("table2asn", a.table2asn)
