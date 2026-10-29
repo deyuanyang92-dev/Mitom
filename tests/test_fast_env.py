@@ -141,3 +141,22 @@ def test_prog_name_follows_the_launcher(monkeypatch):
     assert bm.build_parser().prog == "mitom_pipeline.py"
     monkeypatch.setenv("MITOM_LAUNCHER", "1")
     assert bm.build_parser().prog == "mitom"
+
+
+def test_doctor_and_preflight_check_every_program_a_step_needs(capsys, monkeypatch, tmp_path):
+    """2026-10-30 (integration audit): doctor said 'All required programs found' without cmalign (MitoM-ML: the core
+    then used MiTFi only) or makeblastdb (the intron step failed); doctor and the run's preflight now use one table
+    of the programs each step needs (mito_env.REQUIRES)."""
+    import argparse
+    real = mito_env.find
+    monkeypatch.setattr(mito_env, "find", lambda name, *a: None if name in ("cmalign", "makeblastdb") else real(name, *a))
+    assert {"cmalign", "makeblastdb", "tblastn", "blastn"} <= set(mito_env.REQUIRED)
+    rc = mito_env.doctor()
+    out = capsys.readouterr().out
+    assert rc == 1 and "!! cmalign" in out and "!! makeblastdb" in out
+    a = argparse.Namespace(cmd="run", engine="native", intron_fix="auto", curate="yes", rrna_hmm="auto",
+                           mitos_refdir=None, scheduler_backend="threads", input=str(tmp_path))
+    probs = bm.check_environment(a)
+    assert any("makeblastdb for the intron step" in p for p in probs) and any("cmalign for MitoM-ML" in p for p in probs)
+    a.intron_fix = "no"
+    assert not any("makeblastdb" in p for p in bm.check_environment(a))

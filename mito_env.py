@@ -42,22 +42,45 @@ TOOLS = {
     "runmitos":    ("optional: MITOS2 rescue of missed genes (mito_rescue.py, --rescue yes), mito_trna.py", "mitos"),
     "exonerate":   ("protein gene boundaries (mito_core.py); intron models (mito_intron.py)", "mitotools"),
     "cmsearch":    ("tRNA / rRNA covariance models (mito_core.py); intron typing (mito_intron.py)", "mitotools"),
+    "cmalign":     ("MitoM-ML tRNAs, the default tRNA caller (trna_ml.py; without it MiTFi only)", "mitotools"),
     "blastx":      ("protein gene search (mito_core.py)", "mitotools"),
     "java":        ("MiTFi tRNA selection (mito_core.py, the default core); any Java >= 8", "mitotools"),
     "blastp":      ("intron homolog search (mito_intron.py)", "mitotools"),
+    "makeblastdb": ("intron homolog library (mito_intron.py); nuclear marker references (mitom nuc)", "mitotools"),
     "table2asn":   ("NCBI validation (mito_curate.py, ncbi_validate.py)", "mitotools"),
     "nhmmer":      ("per-phylum rRNA profile HMMs (mito_core.py, mito_rrna_hmm.py)", "mitotools"),
     "mafft":       ("optional: rebuild the rRNA HMM library (mito_rrna_hmm.py build)", "mitotools"),
-    "arwen":       ("optional extra tRNA method (mito_trna.py)", "mitotools"),
-    "aragorn":     ("optional extra tRNA method (mito_trna.py)", "mitotools"),
+    "hmmbuild":    ("optional: rebuild the rRNA HMM library (mito_rrna_hmm.py build)", "mitotools"),
+    "arwen":       ("optional extra tRNA method (mito_trna.py; extra evidence of MitoM-ML)", "mitotools"),
+    "aragorn":     ("optional extra tRNA method (mito_trna.py; extra evidence of MitoM-ML)", "mitotools"),
     "tRNAscan-SE": ("optional extra tRNA method (mito_trna.py)", "mitotools"),
-    "blastn":      ("rDNA 18S-28S annotation (mito_nuc.py, mitom nuc)", "mitotools"),
-    "tblastn":     ("histone annotation (mito_nuc.py, mitom nuc)", "mitotools"),
+    "blastn":      ("intron site probes (mito_intron_ref.py); rDNA 18S-28S (mitom nuc)", "mitotools"),
+    "tblastn":     ("intron site anchors (mito_intron_ref.py); histones (mitom nuc)", "mitotools"),
     "bwa":         ("optional: read depth ring of the genome maps (mito_plot.py, --infq)", "mitotools"),
     "minimap2":    ("optional: used instead of bwa for the depth ring when found (about 8x faster; on Linux "
                     "mamba install -n mitotools -c bioconda minimap2 adds 0.5 GB)", "mitotools"),
 }
-REQUIRED = ("blastx", "exonerate", "cmsearch", "nhmmer", "java", "blastp", "table2asn")   # the native core (default)
+# the programs each step of `mitom run` needs: doctor checks every one, the preflight of a run the steps it will do
+REQUIRES = {
+    "core": ("blastx", "exonerate", "cmsearch", "nhmmer", "java"),            # java: MiTFi
+    "trna_ml": ("cmsearch", "cmalign"),                                       # MitoM-ML tRNAs (else MiTFi only)
+    "introns": ("exonerate", "blastp", "makeblastdb", "cmsearch", "tblastn", "blastn"),
+    "submission": ("table2asn",),
+    "rrna_hmm": ("nhmmer",),
+}
+STEP_NAMES = {"core": "the annotation core", "trna_ml": "MitoM-ML tRNAs", "introns": "the intron step (--intron_fix)",
+              "submission": "the NCBI submission files", "rrna_hmm": "the rRNA HMM step (--rrna_hmm)"}
+REQUIRED = tuple(dict.fromkeys(p for progs in REQUIRES.values() for p in progs))   # the default `mitom run`
+
+
+def missing_programs(steps) -> List[str]:
+    """'<program> (for <step>)' for every program the given REQUIRES steps need and find() does not find."""
+    out = []
+    for step in steps:
+        for prog in REQUIRES[step]:
+            if not find(prog):
+                out.append(f"{prog} (for {STEP_NAMES[step]})")
+    return list(dict.fromkeys(out))
 
 
 def config_path() -> Path:

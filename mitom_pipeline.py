@@ -118,12 +118,17 @@ def check_environment(args: argparse.Namespace) -> List[str]:
 
     if getattr(args, "cmd", None) in ("annotate", "run"):
         import mito_env
-        for prog in ("blastx", "exonerate", "cmsearch", "java"):
-            found = mito_env.find(prog, None)
-            if found:
-                logging.info(f"[ENV] {prog} ✔  {found}")
-            else:
-                problems.append(f"[ENV] MitoM needs {prog} (install.sh; mito_env.py doctor)")
+        seen = set()
+        for step in run_steps(args):                       # the programs of the steps this run does (mito_env.REQUIRES)
+            for prog in mito_env.REQUIRES[step]:
+                if prog in seen:
+                    continue
+                seen.add(prog)
+                found = mito_env.find(prog, None)
+                if found:
+                    logging.info(f"[ENV] {prog} ✔  {found}")
+                else:
+                    problems.append(f"[ENV] MitoM needs {prog} for {mito_env.STEP_NAMES[step]} (install.sh; mitom doctor)")
         if not mito_env.mitos_refdir(getattr(args, "mitos_refdir", None)):
             problems.append("[ENV] MitoM needs the MITOS2 reference data refseq89m (--mitos_refdir; install.sh)")
 
@@ -159,6 +164,15 @@ def check_environment(args: argparse.Namespace) -> List[str]:
             logging.info(f"[ENV] FASTQ dir exists ✔  ({fq_p})")
 
     return problems
+
+
+def run_steps(args: argparse.Namespace) -> List[str]:
+    """The steps of mito_env.REQUIRES this run does (the core only with --engine native)."""
+    steps = ["core", "trna_ml"] if getattr(args, "engine", "native") == "native" else []
+    steps += ["introns"] if getattr(args, "intron_fix", "no") != "no" else []
+    steps += ["submission"] if getattr(args, "curate", "no") != "no" else []
+    steps += ["rrna_hmm"] if getattr(args, "rrna_hmm", "no") != "no" else []
+    return steps
 
 
 def preflight(args: argparse.Namespace) -> None:
