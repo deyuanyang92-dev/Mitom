@@ -584,10 +584,10 @@ def test_fetch_main_writes_gb_accession_list_and_log(tmp_path, monkeypatch):
     assert log[0].split("\t")[:3] == ["phylum", "query", "date"] and len(log) == 3
 
 
-def test_fetch_metazoan_phyla_list_matches_batch_mitoz():
-    """The script keeps its own copy (it must not import batch_mitoz); the copy must not go stale."""
-    import batch_mitoz
-    assert set(fr.METAZOAN_PHYLA) == set(batch_mitoz.METAZOAN_PHYLA)
+def test_fetch_metazoan_phyla_list_matches_mitom_pipeline():
+    """The script keeps its own copy (it must not import mitom_pipeline); the copy must not go stale."""
+    import mitom_pipeline
+    assert set(fr.METAZOAN_PHYLA) == set(mitom_pipeline.METAZOAN_PHYLA)
 
 
 def test_references_on_the_wrong_strand_are_reverse_complemented(tmp_path, monkeypatch):

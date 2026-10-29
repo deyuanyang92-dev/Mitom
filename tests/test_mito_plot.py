@@ -156,7 +156,7 @@ def test_cli_writes_files(tmp_path, capsys):
     assert "one record" in capsys.readouterr().err
 
 
-# ── batch_mitoz.run_plots: the genome-map step of `run` / `annotate` ─────────
+# ── mitom_pipeline.run_plots: the genome-map step of `run` / `annotate` ─────────
 def final_dir(tmp_path):
     d = tmp_path / "final"
     d.mkdir()
@@ -169,7 +169,7 @@ def final_dir(tmp_path):
 
 def test_run_plots_one_map_per_record_and_switch(tmp_path):
     import argparse
-    import batch_mitoz as bm
+    import mitom_pipeline as bm
     d, _ = final_dir(tmp_path)
     args = argparse.Namespace(plot="no", infq=None, threads=1, max_tasks=2)
     assert bm.run_plots(args, d, tmp_path) == "skipped (--plot no)" and not (tmp_path / "plots").exists()
@@ -183,7 +183,7 @@ def test_run_plots_one_map_per_record_and_switch(tmp_path):
 def test_run_plots_depth_ring_from_the_samples_reads(tmp_path):
     """--infq: reads found by sample name (here S1 only, single file) add the depth ring to that sample's map."""
     import argparse
-    import batch_mitoz as bm
+    import mitom_pipeline as bm
     d, a = final_dir(tmp_path)
     (tmp_path / "fq").mkdir()
     s = str(a.seq)

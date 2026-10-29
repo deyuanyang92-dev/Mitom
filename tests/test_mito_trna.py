@@ -208,8 +208,9 @@ def test_mitom_orbicella_only_ncbi_trnas(tmp_path):
     assert sorted(f.qualifiers["gene"][0] for f in sel.features if f.type == "tRNA") == ["trnM(cau)", "trnW(uca)"]
     rows = list(csv.DictReader((tmp_path / "trna_report.tsv").open(), delimiter="\t"))
     assert {r["boundary_source"] for r in rows if r["selected"] == "yes"} == {"MitoM-ML"}
-    rev = SeqIO.read(str(tmp_path / "review" / "NC_007224_bare.gbf"), "genbank")
-    assert any("source: ARWEN" in f.qualifiers["note"][0] for f in rev.features if f.type == "tRNA")
+    if mito_env.find("arwen"):          # optional method (mito_env.py); skipped by mito_trna.py when absent
+        rev = SeqIO.read(str(tmp_path / "review" / "NC_007224_bare.gbf"), "genbank")
+        assert any("source: ARWEN" in f.qualifiers["note"][0] for f in rev.features if f.type == "tRNA")
 
 
 @pytest.mark.skipif(not ML_OK, reason="MitoM-ML models / cmsearch / refseq89m not available")

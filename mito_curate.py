@@ -887,7 +887,10 @@ class Curator:
                              f"same-strand same-frame overlap with {g.qualifiers.get('gene', ['?'])[0]} - check manually")
 
     def duplicates(self) -> None:
-        """D1: keep one copy of a protein gene annotated at several non-overlapping places."""
+        """D1: keep one copy of a protein gene annotated at several non-overlapping places, unless the other copy is
+        complete and >= 95 % identical to it (length within 3 nt): a real gene copy, which NCBI annotates too (1,050
+        records 2026-10-29: 30 of 38 identical protein-gene copies; heron / cormorant / turaco nad6, Hexamermis atp6).
+        An antisense copy next to a complete gene that is incomplete or has internal stops is a spurious hit."""
         by: Dict[str, List[SeqFeature]] = {}
         for f in self.rec.features:
             if f.type == "CDS" and simple(f):
@@ -903,13 +906,19 @@ class Curator:
             internal = any(c in self.stops for c in (codons if tail else codons[:-1]))
             return (bool(complete) and not internal, len(nt), -int(f.location.start))
 
+        def sound(f: SeqFeature) -> bool:
+            """A start codon and no stop inside: the stop may still be missing, as the core ends a gene at its last
+            aligned codon and the stop rules (P3) run later (NC_044480.1 cob, NC_010636.1 cox2 copies)."""
+            nt = self.tseq(f)[self.tx(f)[0] - 1:self.tx(f)[1]]
+            codons = [nt[i:i + 3] for i in range(0, len(nt) - len(nt) % 3, 3)]
+            return bool(codons) and codons[0] in self.starts and not any(c in self.stops for c in codons[:-1])
+
         def true_copy(f: SeqFeature, keep: SeqFeature) -> bool:
             fn, kn = (self.tseq(x)[self.tx(x)[0] - 1:self.tx(x)[1]] for x in (f, keep))
-            return quality(keep)[0] and quality(f)[0] and abs(len(fn) - len(kn)) <= 3 and \
+            return sound(keep) and sound(f) and abs(len(fn) - len(kn)) <= 3 and \
                 sum(x == y for x, y in zip(fn, kn)) >= 0.95 * max(len(fn), len(kn))
 
         keeps = {name: max(fs, key=quality) for name, fs in by.items() if len(fs) >= 2}
-        block = sum(any(f is not k and true_copy(f, k) for f in by[name]) for name, k in keeps.items()) >= 2
         for name, fs in by.items():
             if len(fs) < 2:
                 continue
@@ -917,8 +926,8 @@ class Curator:
             for f in fs:
                 if f is keep or any(a <= d and c <= b for a, b in spans(f) for c, d in spans(keep)):
                     continue                            # overlapping copies are the P2 case, not duplicates
-                if block and true_copy(f, keep):
-                    continue                            # a second copy in a duplicated block
+                if true_copy(f, keep):
+                    continue                            # a complete, near-identical second copy: a real gene copy
                 self.log(f, "D1", span(f), span(keep), f"duplicate {name}: second copy removed, {span(keep)[0]}..{span(keep)[1]} kept")
                 g = gene_feature(self.rec, f)
                 self.rec.features = [x for x in self.rec.features if x is not f and x is not g]

@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# install.sh - one command installs everything the mitogenome annotation workflow needs:
-#   the conda environment mitotools (BLAST, exonerate, Infernal, HMMER, Java for MiTFi, table2asn, ARAGORN,
-#   tRNAscan-SE, MAFFT) - all the native core (mito_core.py, the default) and the MitoM steps use - the MITOS2
-#   reference data refseq89m (Zenodo 4284483, md5 checked: protein sets, rRNA and tRNA models), Biopython and
-#   scikit-learn (MitoM-ML tRNAs) and matplotlib (genome maps) for the system python3, the `mitom` command
-#   (~/.local/bin/mitom), then mito_env.py doctor --write-config so no tool path has to be typed.
-#   `--envs "mitotools mitos"` also installs MITOS2 2.1.10 (optional: --rescue yes, mito_trna.py review).
+# install.sh - one command installs everything MitoM needs into ONE conda environment, mitotools (env/mitotools.yml):
+#   Python with Biopython, scikit-learn (MitoM-ML tRNAs) and matplotlib (genome maps) - the `mitom` command runs on
+#   this Python, nothing is installed into the system Python - and the programs (BLAST, exonerate, Infernal, HMMER,
+#   table2asn, ARAGORN, tRNAscan-SE, MAFFT, bwa). Java for MiTFi: the system Java when there is one, else openjdk 8
+#   is added to the environment. Then the `mitom` command (in the environment and
+#   in ~/.local/bin) and `mitom setup`: the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked) and the
+#   config file, so no tool path has to be typed.
+#   `--envs "mitotools mitos"` also installs MITOS2 2.1.10 (optional: --engine mitos2, --rescue yes, mito_trna.py).
+#   MitoZ is never installed (optional --engine mitoz: install it yourself, see mito_engines.py).
 # Existing environments are kept (--force recreates them). Safe to run again.
 #
 # Platforms (checked with mamba solves, 2026-10-20):
@@ -21,8 +23,6 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REFDIR="${MITOS_REFDIR:-$HOME/mitos_refs}"
 ENVS="mitotools"            # MitoM needs only this one; --envs "mitotools mitos" adds the optional MITOS2
 FORCE=0
-REF_URL="https://zenodo.org/records/4284483/files/refseq89m.tar.bz2"
-REF_MD5="bb6325e27612e61a6995e88e8ffcecf8"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -90,51 +90,29 @@ for e in $ENVS; do
   "$SOLVER" env create -y -n "$e" -f "$HERE/env/$e.yml" 2>/dev/null || "$SOLVER" env create -n "$e" -f "$HERE/env/$e.yml"
 done
 
-# ── MITOS2 reference data (refseq89m: the protein sets, rRNA and tRNA models of the native core) ──
-if true; then
-  if [ -d "$REFDIR/refseq89m" ]; then
-    say "MITOS2 reference data present: $REFDIR/refseq89m"
-  else
-    say "downloading MITOS2 reference data refseq89m (19.6 MB) to $REFDIR"
-    mkdir -p "$REFDIR"
-    curl -fL --retry 3 -o "$REFDIR/refseq89m.tar.bz2" "$REF_URL"
-    sum="$( (md5sum "$REFDIR/refseq89m.tar.bz2" 2>/dev/null || md5 -r "$REFDIR/refseq89m.tar.bz2") | awk '{print $1}')"
-    if [ "$sum" != "$REF_MD5" ]; then
-      echo "checksum mismatch for refseq89m.tar.bz2 ($sum, expected $REF_MD5) - download again" >&2
-      rm -f "$REFDIR/refseq89m.tar.bz2"; exit 1
-    fi
-    tar -xjf "$REFDIR/refseq89m.tar.bz2" -C "$REFDIR"
-  fi
+# ── Java for MiTFi (its classes are Java 5: any Java runs it): the system one, else openjdk 8 in the environment ──
+if command -v java >/dev/null 2>&1 && java -version >/dev/null 2>&1; then
+  say "Java found ($(command -v java)): used for MiTFi"
+else
+  say "no Java found: adding openjdk 8 to mitotools (MiTFi)"
+  "$SOLVER" install -y -n mitotools -c conda-forge "openjdk=8"
 fi
 
-# ── Biopython for the system python3 (runs batch_mitoz.py and the other scripts) ─
-if ! python3 -c "import Bio" 2>/dev/null; then
-  say "installing Biopython for $(command -v python3)"
-  python3 -m pip install --user biopython 2>/dev/null || python3 -m pip install --user --break-system-packages biopython \
-    || echo "could not install Biopython; run the scripts with: $SOLVER run -n mitotools python3 ..." >&2
-fi
-# scikit-learn for the MitoM-ML tRNA caller (trna_ml.py; without it mito_core falls back to MiTFi)
-if ! python3 -c "import sklearn" 2>/dev/null; then
-  say "installing scikit-learn for $(command -v python3)"
-  python3 -m pip install --user scikit-learn 2>/dev/null || python3 -m pip install --user --break-system-packages scikit-learn \
-    || echo "could not install scikit-learn: tRNAs will be annotated by MiTFi (the MITOS2 method)" >&2
-fi
-# matplotlib >= 3.6 for the genome maps (mito_plot.py; --plot no works without it)
-if ! python3 -c "import sys, matplotlib as m; sys.exit(tuple(int(x) for x in m.__version__.split('.')[:2]) < (3, 6))" 2>/dev/null; then
-  say "installing matplotlib for $(command -v python3)"
-  python3 -m pip install --user "matplotlib>=3.6" 2>/dev/null || python3 -m pip install --user --break-system-packages "matplotlib>=3.6" \
-    || echo "could not install matplotlib: run with --plot no" >&2
-fi
-
-# ── the mitom command ────────────────────────────────────────────────────────
-mkdir -p "$HOME/.local/bin"
-ln -sf "$HERE/mitom" "$HOME/.local/bin/mitom"
+# ── the mitom command: runs on the environment's Python (in the environment's bin/ and in ~/.local/bin) ──
+ENV_PREFIX="$("$SOLVER" run -n mitotools python -c 'import sys; print(sys.prefix)' | tail -n 1)"
+PY="$ENV_PREFIX/bin/python"
 chmod +x "$HERE/mitom"
+for d in "$ENV_PREFIX/bin" "$HOME/.local/bin"; do
+  mkdir -p "$d"
+  rm -f "$d/mitom"                       # an older install left a symlink to $HERE/mitom: never write through it
+  printf '#!/usr/bin/env bash\nexec "%s" "%s/mitom" "$@"\n' "$PY" "$HERE" > "$d/mitom"
+  chmod +x "$d/mitom"
+done
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) say "command installed: mitom" ;;
   *) say "command installed: $HOME/.local/bin/mitom - add it to PATH: echo 'export PATH=\$HOME/.local/bin:\$PATH' >> ~/.bashrc   (zsh, the macOS default shell: ~/.zshrc instead of ~/.bashrc)" ;;
 esac
 
-# ── record what was found ────────────────────────────────────────────────────
-say "checking"
-MITOS_REFDIR="$REFDIR" python3 "$HERE/mito_env.py" doctor --write-config
+# ── MITOS2 reference data and the config file (what was found): mitom setup ──
+say "mitom setup: MITOS2 reference data in $REFDIR, config file"
+"$PY" "$HERE/mito_env.py" setup --refdir "$REFDIR"

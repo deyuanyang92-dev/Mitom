@@ -39,7 +39,7 @@ in --priority (MITOS2 first: most exact boundaries vs NCBI).
 MITOS2 runs in fast mode by default when this script is run on its own (scripts/runmitos_fast.py): runmitos
 re-searches every tRNA model it did not find with a sensitive cmsearch (--max, E 0.1, single CPU): 640 s vs
 8 s on one anthozoan (Metridium), plus spurious tRNAs; fast mode skips that pass (--mitos_mode sensitive runs
-it in parallel, --mitos_mode full is the unmodified runmitos). The MitoM pipeline (batch_mitoz.py)
+it in parallel, --mitos_mode full is the unmodified runmitos). The MitoM pipeline (mitom_pipeline.py)
 defaults to sensitive: fast mode missed 28/28 of the weak tRNAs found only by that pass (2026-10-20 dev
 benchmark), and it is used only for round 1 when round 2 re-annotates the sequence.
 
@@ -410,7 +410,7 @@ def main(argv=None) -> int:
         if src.is_dir() else [src]
     if a.select == "mitos2":
         # MITOS2 runs on the sequence of each input GenBank record, so its coordinates always match that
-        # record; the input must therefore be the final, reoriented annotation (batch_mitoz 04.final_gb),
+        # record; the input must therefore be the final, reoriented annotation (mitom_pipeline 04.final_gb),
         # never a FASTA or the round-1 output from before reorientation
         bad = [x for x in files if x.suffix.lower() not in GB_EXT or any(
             part.startswith(("00.", "01.anno_round1", "01.mitoz_anno1")) for part in x.parts)]   # (01.mitoz_anno1: older runs)

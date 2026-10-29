@@ -477,6 +477,40 @@ def test_tidy_end_inside_gap_moves_to_its_edge():
     assert (L["feats"]["28S"]["lo"], L["feats"]["28S"]["p_lo"]) == (2133, True)
 
 
+def test_tidy_final_drops_rrna_placed_by_nothing():
+    """MJ20260820041 CHY007 (GetOrganelle rDNA, minus strand): the contig ends 20 nt into ITS1; an 18S was projected
+    there from the 5.8S across the reference's shorter ITS1 (0 nt aligned, no model hit) and cut the ITS1 to a
+    'complete' 499 nt. In the final pass it goes and the ITS1 runs 5'-partial to the contig end (519 nt)."""
+    seq = "A" * 4669
+    def locus():
+        f58 = _feat(3993, 4150, "hmm/hmm", range(3994, 4150), 300)
+        s18 = dict(_feat(4650, 4669, "projected/projected", [], 0), p_hi=True)
+        return {"st": -1, "feats": {"5.8S": f58, "18S": s18}}
+    L = locus()
+    nuc._tidy([L], seq, len(seq))                     # first pass: the Rfam models may still place it
+    assert "18S" in L["feats"]
+    L = locus()
+    nuc._tidy([L], seq, len(seq), final=True)
+    assert "18S" not in L["feats"]
+    its1 = L["feats"]["ITS1"]
+    assert (its1["lo"], its1["hi"], its1["p_hi"]) == (4151, 4669, True)   # minus strand: 5' end = high end
+    L = locus()
+    L["feats"]["18S"]["aligned"] = 15                 # some alignment inside: a real piece, kept
+    nuc._tidy([L], seq, len(seq), final=True)
+    assert "18S" in L["feats"]
+    end18 = "GTAGGTGAACCTGCGGAAGGATCATTA"[-20:]       # the piece is the reference 18S 3' end: kept
+    s2 = "A" * 4649 + str(Seq(end18).reverse_complement())
+    L = locus()
+    L["ref"] = "R1"
+    nuc._tidy([L], s2, len(s2), final=True, ref_gene=lambda r, g: "C" * 1797 + end18 if g == "18S" else None)
+    assert "18S" in L["feats"]
+    L = locus()
+    L["ref"] = "R1"                                   # CHY007's piece (ITS1 sequence) against the same reference
+    s3 = "A" * 4649 + str(Seq("GAGAGCGATCGAGTCGGCGG").reverse_complement())
+    nuc._tidy([L], s3, len(s3), final=True, ref_gene=lambda r, g: "C" * 1797 + end18 if g == "18S" else None)
+    assert "18S" not in L["feats"]
+
+
 def test_definition_line_follows_ncbi_grouping():
     """NCBI wording, e.g. KY753840.1 / MW412252.1 / PP239203.1 titles"""
     def f(g, a, b, p5=False, p3=False):
@@ -564,6 +598,57 @@ def test_cm_refine_hmm_first_then_partial_when_unconfirmed(tmp_path):
     nuc.cm_refine({"c": [L]}, {"c": cut}, nuc.LIB, tmp_path, 2)
     assert f["p_lo"] and f["lo"] == 1 and not f["p_hi"]
 
+
+def _h3(sites):
+    """H3 test protein with residues 31/87/89/90 set (numbered without Met)"""
+    p = list(H3)
+    for pos, aa in zip(nuc.H3_SITES, sites):
+        p[pos] = aa                               # index pos = residue pos (H3 starts with Met)
+    return "".join(p)
+
+
+def test_histone_class_h3_signatures():
+    """MJ20260820041: the H3 consensus was H3.3 (S31 A87 I89 G90) in 3 annelid assemblies, canonical in 2"""
+    assert nuc.histone_class("H3", _h3("ASVM"), 1, None)[0] == "replication-dependent"
+    cls, why = nuc.histone_class("H3", _h3("SAIG"), 1, None)
+    assert cls == "replacement" and "H3.3" in why
+    assert nuc.histone_class("H3", _h3("SAIM"), 1, None)[0] == "replacement"       # 3 of 4 sites decide
+    assert nuc.histone_class("H3", _h3("ASIG"), 1, None)[0] == ""                    # 2 vs 2: undecided
+    assert nuc.histone_class("H3", H3[:60], 1, None)[0] == ""                       # fragment: sites not reached
+    assert nuc.histone_class("H3", H3, 1, None)[0] == "replication-dependent"       # test protein is canonical
+
+
+def test_histone_class_introns_copy_ratio_h2ax():
+    assert nuc.histone_class("H4", "MSGRGKGG", 2, 300.0)[0] == "replacement"        # spliced: never a cluster gene
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, 300.0)[0] == "replication-dependent"
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, 1.2)[0] == "single-copy"
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, 3.0)[0] == ""                     # between: undecided
+    assert nuc.histone_class("H4", "MSGRGKGG", 1, None)[0] == ""                    # no coverage: undecided
+    assert nuc.histone_class("H3", _h3("SAIG"), 1, 300.0)[0] == "replacement"       # residues outrank coverage
+    assert "H2A.X" in nuc.histone_class("H2A", "MSGRGKTGGKARAKAKSRSSRAGLQFPVGRVHRLLRKGNYSQEY", 1, None)[1]
+
+
+def test_pick_histone_prefers_cluster_copy():
+    """a complete single-copy H3.3 (14x) must not stand for H3 when cluster copies (4000x) are fragments"""
+    rows = [{"contig": "h33", "contig_cov": "14", "partial_5": "0", "partial_3": "0", "length": "411",
+             "class": "replacement"},
+            {"contig": "frag", "contig_cov": "4000", "partial_5": "1", "partial_3": "0", "length": "300",
+             "class": "replication-dependent"},
+            {"contig": "unk", "contig_cov": "", "partial_5": "0", "partial_3": "0", "length": "411", "class": ""}]
+    assert nuc.pick_histone(rows, 411)["contig"] == "frag"
+    assert nuc.pick_histone(rows[::2], 411)["contig"] == "unk"     # undecided before replacement
+    assert nuc.pick_histone(rows[:1], 411)["contig"] == "h33"      # only a variant: still reported
+    h2ax = {"contig": "h2ax", "contig_cov": "15", "partial_5": "0", "partial_3": "0", "length": "402",
+            "class": "single-copy"}
+    assert nuc.pick_histone([h2ax, rows[0]], 375)["contig"] == "h2ax"   # single-copy before replacement
+    assert nuc.pick_histone([h2ax, rows[1]], 375)["contig"] == "frag"   # cluster fragment before single copy
+
+
+def test_single_copy_cov_from_spades_names():
+    ids = ["NODE_1_length_50000_cov_12.0", "NODE_2_length_40000_cov_14.0", "NODE_3_length_2000_cov_4000.0",
+           "NODE_4_length_500_cov_1.0"]
+    assert nuc.single_copy_cov(ids) == 12.0
+    assert nuc.single_copy_cov(["scaffold_1", "contig2"]) is None
 
 # ── speed: same results from the fast paths (2026-10-29) ───────────────────
 def test_fasta_index_reads_records_as_seqio(tmp_path, monkeypatch):

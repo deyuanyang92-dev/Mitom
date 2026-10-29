@@ -1,4 +1,4 @@
-"""--clade auto: clade, genetic code and phylum from the GenBank input (batch_mitoz.auto_clade).
+"""--clade auto: clade, genetic code and phylum from the GenBank input (mitom_pipeline.auto_clade).
 
 Run: python3 -m pytest -q tests/test_auto_clade.py
 """
@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 
 
 def gb(path, phylum_lineage, code=None, n=1, empty_taxonomy=False):

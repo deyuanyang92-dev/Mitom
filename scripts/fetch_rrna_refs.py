@@ -43,7 +43,7 @@ from typing import AbstractSet, Callable, Dict, List, Optional, Set, Tuple
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 QUERY = ("{}[Organism] AND mitochondrion[Filter] AND (complete genome[Title] OR complete sequence[Title]) "
          "AND 5000:60000[SLEN]")
-# Metazoan phyla of the pipeline: copy of batch_mitoz.METAZOAN_PHYLA (kept separate on purpose; a test compares them)
+# Metazoan phyla of the pipeline: copy of mitom_pipeline.METAZOAN_PHYLA (kept separate on purpose; a test compares them)
 METAZOAN_PHYLA = (
     "Chordata", "Arthropoda", "Echinodermata", "Annelida", "Bryozoa", "Mollusca", "Nematoda", "Nemertea", "Porifera",
     "Cnidaria", "Platyhelminthes", "Chaetognatha", "Hemichordata", "Xenacoelomorpha", "Ctenophora", "Placozoa",

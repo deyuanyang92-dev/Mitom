@@ -1,0 +1,313 @@
+set	accession	group	organism	class	gene	strand	truth_class	truth	truth_len	truth_source	truth_note	pred	pred_len	d_start	d_end	pred_type	pred_gene	report
+mitom_lo_vs_ncbi	EU293739.1	Annelida	Nephtys sp. 'San Juan Island' YV-2008	exact	cox1	+		12177..13995	1819	cds_join		12177..13995	1819	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	FJ975144.1	Annelida	Endomyzostoma sp. MZ-2009	exact	cox1	+		610..2033	1424	intron_feature	mintron 1; group II intron	610..2033	1424	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	FJ975144.1	Annelida	Endomyzostoma sp. MZ-2009	exact	cox1	+		2439..2822	384	intron_feature	mintron 2; group II intron	2439..2822	384	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	KT989323.1	Annelida	Glycera fallax	exact	cox1	+		4052..6519	2468	cds_join		4052..6519	2468	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	KT989323.1	Annelida	Glycera fallax	exact	cox1	+		7036..9381	2346	cds_join		7036..9381	2346	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	KY742027.1	Annelida	Decemunciger sp. AB-2017	gt6	nad1	+		3178..3567	390	cds_join		3220..3555	336	42	-12	group II (?)	nad1	
+mitom_lo_vs_ncbi	KY742027.1	Annelida	Decemunciger sp. AB-2017	le6	cox1	+		6177..7823	1647	intron_feature		6175..7822	1648	-2	-1		cox1	
+mitom_lo_vs_ncbi	KY742027.1	Annelida	Decemunciger sp. AB-2017	exact	nad4	+		18130..18394	265	cds_join		18130..18394	265	0	0	group II (?)	nad4	
+mitom_lo_vs_ncbi	KY774370.1	Annelida	Decemunciger sp. AB-2017	gt6	nad1	+		3173..3562	390	cds_join		3215..3550	336	42	-12	group II (?)	nad1	
+mitom_lo_vs_ncbi	KY774370.1	Annelida	Decemunciger sp. AB-2017	le6	cox1	+		6172..7819	1648	cds_join		6170..7817	1648	-2	-2		cox1	
+mitom_lo_vs_ncbi	KY774370.1	Annelida	Decemunciger sp. AB-2017	exact	nad4	+		18126..18390	265	cds_join		18126..18390	265	0	0	group II (?)	nad4	
+mitom_lo_vs_ncbi	KY774371.1	Annelida	Decemunciger sp. AB-2017	gt6	nad1	+		3169..3558	390	cds_join		3211..3546	336	42	-12	group II (?)	nad1	
+mitom_lo_vs_ncbi	KY774371.1	Annelida	Decemunciger sp. AB-2017	le6	cox1	+		6168..7815	1648	cds_join		6166..7813	1648	-2	-2		cox1	
+mitom_lo_vs_ncbi	KY774371.1	Annelida	Decemunciger sp. AB-2017	exact	nad4	+		18122..18386	265	cds_join		18122..18386	265	0	0	group II (?)	nad4	
+mitom_lo_vs_ncbi	LC661358.1	Annelida	Notomastus sp. GK-2021	gt6	cox1	+		1115..1417	303	intron_feature	group II intron	1127..1429	303	12	12	group II (?)	cox1	
+mitom_lo_vs_ncbi	LC670763.1	Annelida	Travisia sp. GK623	exact	cox1	+		236..1100	865	intron_feature	group II intron	236..1100	865	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	LC677172.1	Annelida	Travisia sanrikuensis	le6	cox1	+		9152..10033	882	intron_feature	group II intron	9153..10034	882	1	1		cox1	
+mitom_lo_vs_ncbi	NC_000933.1	Cnidaria	Metridium senile	exact	cox1	+		4156..5008	853	intron_feature		4156..5008	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_000933.1	Cnidaria	Metridium senile	exact	nad5	+		7744..9424	1681	intron_feature		7744..9424	1681	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_003522.1	Cnidaria	Acropora tenuis	exact	nad5	+		3155..15082	11928	intron_feature	group I intron	3155..15082	11928	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_006898.1	Cnidaria	Anacropora matthai	exact	nad5	+		3155..14646	11492	intron_feature	group I intron	3155..14646	11492	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_006902.1	Cnidaria	Montipora cactus	le6	nad5	+		3161..14645	11485	intron_feature	group I intron	3160..14644	11485	-1	-1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_007224.1	Cnidaria	Orbicella annularis	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_007225.1	Cnidaria	Orbicella franksi	exact	nad5	+		2757..12295	9539	intron_feature	group I intron	2757..12295	9539	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_007226.1	Cnidaria	Orbicella faveolata	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008071.1	Cnidaria	Discosoma sp. CASIZ 168915	exact	nad5	+		721..19523	18803	cds_join		721..19523	18803	0	0		nad5	
+mitom_lo_vs_ncbi	NC_008071.1	Cnidaria	Discosoma sp. CASIZ 168915	le6	cox1	+		8890..10096	1207	intron_feature		8889..10095	1207	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_008072.1	Cnidaria	Discosoma sp. CASIZ 168916	exact	nad5	+		721..19527	18807	cds_join		721..19527	18807	0	0		nad5	
+mitom_lo_vs_ncbi	NC_008072.1	Cnidaria	Discosoma sp. CASIZ 168916	le6	cox1	+		8891..10096	1206	intron_feature		8890..10095	1206	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	missed	cox1	-		16824..17511	688	cds_join								no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	le6	cox1	-		17773..18769	997	cds_join		17775..18768	994	2	-1	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	gt6	nad5	+		21844..22593	750	cds_join		21885..22631	747	41	38	group I (IB4)	nad5	
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	exact	cox1	+		34366..34821	456	cds_join		34366..34821	456	0	0	group I (IB4)	cox1	
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	exact	cox1	+		35079..38032	2954	cds_join		35079..38032	2954	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	missed	cox1	+		38112..50185	12074	cds_join								no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_008151.3	Placozoa	Trichoplax adhaerens	fp		+						28239..29469	1231			group II (?)	rrnL	no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_008158.1	Cnidaria	Rhodactis sp. CASIZ 171755	le6	cox1	+		898..2103	1206	intron_feature		897..2102	1206	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_008158.1	Cnidaria	Rhodactis sp. CASIZ 171755	exact	nad5	+		13276..31276	18001	cds_join		13276..31276	18001	0	0		nad5	
+mitom_lo_vs_ncbi	NC_008159.1	Cnidaria	Ricordea florida	le6	cox1	+		892..2088	1197	intron_feature		891..2087	1197	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_008159.1	Cnidaria	Ricordea florida	exact	nad5	+		14185..33431	19247	cds_join		14185..33431	19247	0	0		nad5	
+mitom_lo_vs_ncbi	NC_008160.1	Cnidaria	Agaricia humilis	exact	nad5	+		721..12256	11536	cds_join		721..12256	11536	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008161.1	Cnidaria	Astrangia sp. JVK-2006	exact	nad5	+		712..9969	9258	cds_join		712..9969	9258	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008162.1	Cnidaria	Colpophyllia natans	exact	nad5	+		712..11156	10445	cds_join		712..11156	10445	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008163.1	Cnidaria	Mussa angulosa	exact	nad5	+		712..11347	10636	cds_join		712..11347	10636	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008164.1	Cnidaria	Nematostella sp. JVK-2006	exact	nad5	+		718..2337	1620	cds_join		718..2337	1620	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008165.1	Cnidaria	Pavona clavus	exact	nad5	+		721..11849	11129	cds_join		721..11849	11129	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008166.1	Cnidaria	Porites porites	exact	nad5	+		721..11855	11135	cds_join		721..11855	11135	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008166.1	Cnidaria	Porites porites	le6	cox1	+		14330..15294	965	cds_join		14329..15299	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_008167.1	Cnidaria	Siderastrea radians	exact	nad5	+		721..12183	11463	cds_join		721..12183	11463	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_008167.1	Cnidaria	Siderastrea radians	le6	cox1	+		14802..15789	988	cds_join		14801..15794	994	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_008411.1	Cnidaria	Chrysopathes formosa	exact	nad5	+		10733..12664	1932	intron_feature	group I intron	10733..12664	1932	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_009797.1	Cnidaria	Pocillopora damicornis	exact	nad5	+		2699..13561	10863	intron_feature	group I intron	2699..13561	10863	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_009798.1	Cnidaria	Pocillopora grandis	exact	nad5	+		2700..13562	10863	intron_feature	group I intron	2700..13562	10863	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_010217.1	Porifera	Plakinastrella cf. onkodes DVL-2011	gt6	cox1	+		11554..11935	382	intron_feature		11547..11934	388	-7	-1	group I (IB4)	cox1	
+mitom_lo_vs_ncbi	NC_010217.1	Porifera	Plakinastrella cf. onkodes DVL-2011	exact	cox1	+		11945..13062	1118	intron_feature		11945..13062	1118	0	0		cox1	
+mitom_lo_vs_ncbi	NC_010244.2	Cnidaria	Seriatopora hystrix	exact	nad5	+		2687..13151	10465	intron_feature	group I intron	2687..13151	10465	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_010245.2	Cnidaria	Seriatopora caliendrum	exact	nad5	+		2685..13121	10437	intron_feature	group I intron	2685..13121	10437	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_011160.1	Cnidaria	Madracis myriaster	exact	nad5	+		2720..13134	10415	intron_feature	group I intron	2720..13134	10415	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_011162.1	Cnidaria	Stylophora pistillata	exact	nad5	+		2719..13301	10583	intron_feature	group I intron	2719..13301	10583	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_014885.1	Porifera	Plakina crypta	exact	cox1	+		12070..13033	964	intron_feature		12070..13033	964	0	0	group I (IB4)	cox1	
+mitom_lo_vs_ncbi	NC_015143.1	Cnidaria	Desmophyllum pertusum	exact	nad5	+		715..7174	6460	intron_feature		715..7174	6460	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_015309.1	Placozoa	Placozoan sp. 'Shirahama'	le6	nad5	-		11376..11972	597	cds_join		11377..11973	597	1	1	group I (IB4)	nad5	
+mitom_lo_vs_ncbi	NC_015309.1	Placozoa	Placozoan sp. 'Shirahama'	le6	cox1	+		14653..15368	716	cds_join		14654..15369	716	1	1	group I (IB4)	cox1	
+mitom_lo_vs_ncbi	NC_015309.1	Placozoa	Placozoan sp. 'Shirahama'	exact	cox1	+		15465..17989	2525	cds_join		15465..17989	2525	0	0	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	NC_015309.1	Placozoa	Placozoan sp. 'Shirahama'	exact	cox1	+		18158..18736	579	cds_join		18158..18736	579	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_015309.1	Placozoa	Placozoan sp. 'Shirahama'	le6	cox1	+		31175..31613	439	cds_join		31174..31612	439	-1	-1	group I (IB4)	cox1	
+mitom_lo_vs_ncbi	NC_015640.1	Cnidaria	Fungiacyathus stephanus	le6	nad5	+		3672..14603	10932	cds_join		3673..14604	10932	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_015640.1	Cnidaria	Fungiacyathus stephanus	le6	cox1	+		17096..18056	961	cds_join		17094..18060	967	-2	4	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_015641.1	Cnidaria	Fimbriaphyllia ancora	le6	nad5	+		3177..15042	11866	cds_join		3178..15043	11866	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_015642.1	Cnidaria	Polycyathus sp. MFL-2011	le6	nad5	+		2658..12095	9438	cds_join		2659..12096	9438	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_015643.1	Cnidaria	Goniopora columna	le6	nad5	+		3356..14530	11175	intron_feature		3357..14531	11175	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_015643.1	Cnidaria	Goniopora columna	le6	cox1	+		17022..17985	964	cds_join		17021..17990	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_015644.1	Cnidaria	Porites okinawensis	le6	nad5	+		3281..14413	11133	cds_join		3282..14414	11133	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_015644.1	Cnidaria	Porites okinawensis	le6	cox1	+		16904..17868	965	intron_feature		16903..17873	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_018364.1	Cnidaria	Madrepora oculata	le6	nad5	+		711..10850	10140	cds_join		712..10851	10140	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_018377.1	Cnidaria	Stichopathes luetkeni	le6	cox1	+		6203..7641	1439	cds_join		6202..7640	1439	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_018377.1	Cnidaria	Stichopathes luetkeni	exact	nad5	+		14022..16083	2062	cds_join		14022..16083	2062	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_020049.1	Cnidaria	Platygyra carnosa	exact	nad5	+		2733..12896	10164	cds_join		2733..12896	10164	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022470.1	Cnidaria	Bolocera tuediae	exact	nad5	+		718..2772	2055	intron_feature		718..2772	2055	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022470.1	Cnidaria	Bolocera tuediae	exact	cox1	+		15913..16765	853	intron_feature		15913..16765	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_022823.1	Cnidaria	Acropora humilis	exact	nad5	+		3154..15223	12070	intron_feature	group I intron	3154..15223	12070	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022824.1	Cnidaria	Acropora muricata	exact	nad5	+		3154..15225	12072	intron_feature	group I intron	3154..15225	12072	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022825.1	Cnidaria	Acropora horrida	exact	nad5	+		3154..15224	12071	intron_feature	group I intron	3154..15224	12071	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022826.1	Cnidaria	Acropora hyacinthus	exact	nad5	+		3154..15310	12157	intron_feature	group I intron	3154..15310	12157	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022827.1	Cnidaria	Acropora aspera	exact	nad5	+		3154..15223	12070	intron_feature	group I intron	3154..15223	12070	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022828.1	Cnidaria	Acropora florida	exact	nad5	+		3154..15109	11956	intron_feature	group I intron	3154..15109	11956	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022829.1	Cnidaria	Acropora yongei	exact	nad5	+		3154..15086	11933	intron_feature	group I intron	3154..15086	11933	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022830.1	Cnidaria	Acropora digitifera	exact	nad5	+		3154..15223	12070	intron_feature	group I intron	3154..15223	12070	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022831.1	Cnidaria	Acropora nasuta	exact	nad5	+		3154..15225	12072	intron_feature	group I intron	3154..15225	12072	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022832.1	Cnidaria	Acropora divaricata	exact	nad5	+		3154..15225	12072	intron_feature	group I intron	3154..15225	12072	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_022833.1	Cnidaria	Acropora robusta	exact	nad5	+		3154..15224	12071	intron_feature	group I intron	3154..15224	12071	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024089.1	Cnidaria	Isopora togianensis	exact	nad5	+		3153..15383	12231	cds_join		3153..15383	12231	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024090.1	Cnidaria	Astreopora explanata	exact	nad5	+		3104..14898	11795	cds_join		3104..14898	11795	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024091.1	Cnidaria	Isopora palifera	exact	nad5	+		3153..15469	12317	cds_join		3153..15469	12317	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024092.1	Cnidaria	Astreopora myriophthalma	exact	nad5	+		3105..14899	11795	cds_join		3105..14899	11795	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024182.1	Cnidaria	Porites panamensis	le6	nad5	+		3278..14394	11117	cds_join		3279..14395	11117	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024182.1	Cnidaria	Porites panamensis	le6	cox1	+		16885..17849	965	intron_feature		16884..17854	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_024671.1	Cnidaria	Duncanopsammia peltata	le6	nad5	+		3386..14717	11332	cds_join		3387..14718	11332	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_024671.1	Cnidaria	Duncanopsammia peltata	le6	cox1	+		17209..18172	964	cds_join		17208..18177	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_025472.1	Cnidaria	Solenosmilia variabilis	exact	nad5	+		715..7173	6459	cds_join		715..7173	6459	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_026025.1	Cnidaria	Tubastraea coccinea	exact	nad5	+		721..12020	11300	cds_join		721..12020	11300	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_026025.1	Cnidaria	Tubastraea coccinea	le6	cox1	+		14512..15475	964	cds_join		14511..15480	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_026026.1	Cnidaria	Dendrophyllia cribrosa	exact	nad5	+		721..12002	11282	cds_join		721..12002	11282	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_026026.1	Cnidaria	Dendrophyllia cribrosa	le6	cox1	+		14494..15457	964	cds_join		14493..15462	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_026527.1	Cnidaria	Pavona decussata	exact	nad5	+		721..11849	11129	cds_join		721..11849	11129	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_026530.1	Cnidaria	Pseudosiderastrea formosa	exact	nad5	+		3621..15144	11524	cds_join		3621..15144	11524	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_026530.1	Cnidaria	Pseudosiderastrea formosa	le6	cox1	+		17629..18598	970	cds_join		17627..18596	970	-2	-2	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_026531.1	Cnidaria	Pseudosiderastrea tayamai	exact	nad5	+		3621..15144	11524	cds_join		3621..15144	11524	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_026531.1	Cnidaria	Pseudosiderastrea tayamai	le6	cox1	+		17629..18598	970	cds_join		17627..18596	970	-2	-2	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027100.1	Cnidaria	Discosoma nummiforme	exact	nad5	+		721..19511	18791	cds_join		721..19511	18791	0	0		nad5	
+mitom_lo_vs_ncbi	NC_027100.1	Cnidaria	Discosoma nummiforme	le6	cox1	+		8933..10140	1208	cds_join		8932..10139	1208	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027101.1	Cnidaria	Amplexidiscus fenestrafer	exact	nad5	+		721..18814	18094	cds_join		721..18814	18094	0	0		nad5	
+mitom_lo_vs_ncbi	NC_027101.1	Cnidaria	Amplexidiscus fenestrafer	le6	cox1	+		8443..9648	1206	cds_join		8442..9647	1206	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027102.1	Cnidaria	Corynactis californica	exact	nad5	+		3507..14037	10531	cds_join		3507..14037	10531	0	0		nad5	
+mitom_lo_vs_ncbi	NC_027102.1	Cnidaria	Corynactis californica	le6	cox1	+		8682..9946	1265	cds_join		8681..9945	1265	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027103.1	Cnidaria	Rhodactis indosinensis	exact	nad5	+		721..18733	18013	cds_join		721..18733	18013	0	0		nad5	
+mitom_lo_vs_ncbi	NC_027103.1	Cnidaria	Rhodactis indosinensis	le6	cox1	+		8440..9643	1204	cds_join		8439..9642	1204	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027104.1	Cnidaria	Platyzoanthus mussoides	exact	nad5	+		721..19441	18721	cds_join		721..19441	18721	0	0		nad5	
+mitom_lo_vs_ncbi	NC_027104.1	Cnidaria	Platyzoanthus mussoides	le6	cox1	+		8883..10088	1206	cds_join		8882..10087	1206	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027106.1	Cnidaria	Ricordea yuma	le6	cox1	+		898..2095	1198	cds_join		897..2094	1198	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027106.1	Cnidaria	Ricordea yuma	exact	nad5	+		14892..34778	19887	cds_join		14892..34778	19887	0	0		nad5	
+mitom_lo_vs_ncbi	NC_027526.1	Cnidaria	Porites rus	le6	cox1	+		895..1859	965	cds_join		894..1864	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027526.1	Cnidaria	Porites rus	le6	nad5	+		5924..17056	11133	cds_join		5921..17053	11133	-3	-3	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027590.1	Cnidaria	Dendrophyllia arbuscula	le6	nad5	+		720..12018	11299	cds_join		721..12019	11299	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027590.1	Cnidaria	Dendrophyllia arbuscula	le6	cox1	+		14511..15474	964	cds_join		14510..15479	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027610.1	Cnidaria	Alicia sansibarensis	gt6	nad5	+		13234..15381	2148	intron_feature		13224..15381	2158	-10	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027611.1	Cnidaria	Antholoba achates	exact	cox1	+		3990..4842	853	intron_feature		3990..4842	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027611.1	Cnidaria	Antholoba achates	le6	nad5	+		7580..9462	1883	intron_feature		7579..9462	1884	-1	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027612.1	Cnidaria	Halcampoides purpureus	exact	cox1	+		4071..4926	856	intron_feature		4071..4926	856	0	0	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_027612.1	Cnidaria	Halcampoides purpureus	exact	nad5	+		7655..9302	1648	intron_feature		7655..9302	1648	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027614.1	Cnidaria	Phymanthus crucifer	exact	cox1	+		4166..5030	865	intron_feature		4166..5030	865	0	0	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_027614.1	Cnidaria	Phymanthus crucifer	exact	nad5	+		7904..9814	1911	intron_feature		7904..9814	1911	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027615.1	Cnidaria	Cylista ornata	exact	cox1	+		4069..4921	853	intron_feature		4069..4921	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027615.1	Cnidaria	Cylista ornata	gt6	nad5	+		7667..9337	1671	intron_feature		7658..9337	1680	-9	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_027667.1	Cnidaria	Myriopathes japonica	le6	cox1	+		4070..4993	924	intron_feature		4069..4992	924	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_027667.1	Cnidaria	Myriopathes japonica	exact	nad5	+		10647..12345	1699	intron_feature	group I intron	10647..12345	1699	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_028710.1	Annelida	Chaetopterus variopedatus	le6	cox1	+		733..1045	313	cds_join		734..1049	316	1	4		cox1	
+mitom_lo_vs_ncbi	NC_029695.1	Cnidaria	Porites lutea	le6	cox1	+		895..1865	971	cds_join		894..1864	971	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_029695.1	Cnidaria	Porites lutea	le6	nad5	+		5922..17051	11130	cds_join		5919..17051	11133	-3	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_029696.1	Cnidaria	Galaxea fascicularis	exact	nad5	+		3178..15199	12022	cds_join		3178..15199	12022	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_030186.1	Cnidaria	Porites lobata	le6	nad5	+		3281..14413	11133	intron_feature		3282..14414	11133	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_030186.1	Cnidaria	Porites lobata	le6	cox1	+		16904..17868	965	cds_join		16903..17873	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_030274.1	Cnidaria	Anthopleura anjunae	le6	nad5	+		717..2430	1714	cds_join		718..2431	1714	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_030274.1	Cnidaria	Anthopleura anjunae	exact	cox1	+		17003..17856	854	cds_join		17003..17856	854	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_030352.1	Cnidaria	Tubastraea tagusensis	exact	nad5	+		888..12211	11324	cds_join		888..12211	11324	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_030352.1	Cnidaria	Tubastraea tagusensis	le6	cox1	+		14703..15666	964	cds_join		14702..15671	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_034275.1	Cnidaria	Desmophyllum dianthus	exact	nad5	+		715..7176	6462	cds_join		715..7176	6462	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_034916.1	Cnidaria	Favites pentagona	exact	nad5	+		2724..12870	10147	cds_join		2724..12870	10147	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_035578.1	Cnidaria	Zoanthus sansibaricus	exact	nad5	+		886..2981	2096	intron_feature	group 1 intron	886..2981	2096	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_035578.1	Cnidaria	Zoanthus sansibaricus	exact	cox1	+		11434..12760	1327	intron_feature	group 1 intron	11434..12760	1327	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_035579.1	Cnidaria	Palythoa heliodiscus	exact	nad5	+		886..2962	2077	intron_feature	group 1 intron	886..2962	2077	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_035579.1	Cnidaria	Palythoa heliodiscus	exact	cox1	+		11410..12685	1276	intron_feature	group 1 intron	11410..12685	1276	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_035879.1	Cnidaria	Favites abdita	exact	nad5	+		2760..13761	11002	cds_join		2760..13761	11002	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_037177.1	Cnidaria	Anemonia viridis	missed	nad5	+		718..941	224	intron_feature	group I							candidate 718..2443 (ND5, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I intron, subtype IB2 (Selles Vidal et al. 2025, doi:10.1093/bioadv/vbaf020 model, E=2.4e-07); splice score 14.5; MFannot method; 5'/3' end from existing CDS: end
+mitom_lo_vs_ncbi	NC_037177.1	Cnidaria	Anemonia viridis	exact	nad5	+		718..2443	1726	cds_join		718..2443	1726	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_037177.1	Cnidaria	Anemonia viridis	exact	cox1	+		17007..17859	853	intron_feature	group I	17007..17859	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_037178.1	Cnidaria	Anemonia manjano	exact	nad5	+		718..2396	1679	intron_feature	group I	718..2396	1679	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_037178.1	Cnidaria	Anemonia manjano	exact	cox1	+		16441..17293	853	intron_feature	group I	16441..17293	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_037359.1	Cnidaria	Montipora aequituberculata	exact	nad5	+		3085..14572	11488	cds_join		3085..14572	11488	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_037434.1	Cnidaria	Porites fontanesii	le6	nad5	+		3293..14423	11131	intron_feature		3294..14424	11131	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_037434.1	Cnidaria	Porites fontanesii	le6	cox1	+		16915..17879	965	cds_join		16914..17884	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_037435.1	Cnidaria	Porites harrisoni	le6	nad5	+		3282..14414	11133	intron_feature		3283..14415	11133	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_037435.1	Cnidaria	Porites harrisoni	le6	cox1	+		16887..17851	965	cds_join		16886..17856	971	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_039929.1	Cnidaria	Actinia equina	exact	nad5	+		718..2887	2170	intron_feature	group I	718..2887	2170	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_039929.1	Cnidaria	Actinia equina	exact	cox1	+		17577..18430	854	intron_feature	group I	17577..18430	854	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_040136.1	Cnidaria	Alveopora japonica	exact	nad5	+		3156..14776	11621	intron_feature		3156..14776	11621	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_040137.1	Cnidaria	Montipora efflorescens	exact	nad5	+		3153..14643	11491	intron_feature		3153..14643	11491	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_040169.1	Cnidaria	Echinophyllia aspera	exact	nad5	+		2702..12837	10136	intron_feature	group I intron	2702..12837	10136	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_040169.1	Cnidaria	Echinophyllia aspera	le6	cox1	+		15651..16727	1077	intron_feature	group II intron	15649..16725	1077	-2	-2		cox1	
+mitom_lo_vs_ncbi	NC_041549.1	Placozoa	Polyplacotoma mediterranea	missed	cox1	+		4154..5045	892	intron_feature	Group IB							no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_041549.1	Placozoa	Polyplacotoma mediterranea	missed	cox1	+		5058..5216	159	intron_feature	Group IB							no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_041549.1	Placozoa	Polyplacotoma mediterranea	missed	cox1	-		11000..12234	1235	intron_feature	Group IB (predicted)							no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_041549.1	Placozoa	Polyplacotoma mediterranea	missed	rrnL	-		16114..16658	545	intron_feature	Group II (domain V)							no candidate in intron_report.tsv
+mitom_lo_vs_ncbi	NC_041549.1	Placozoa	Polyplacotoma mediterranea	le6	cox1	+		21912..22080	169	intron_feature	Group IB	21913..22081	169	1	1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_042481.1	Cnidaria	Plesiastrea versipora	exact	nad5	+		2752..12149	9398	cds_join		2752..12149	9398	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_042742.1	Cnidaria	Acropora valida	exact	nad5	+		3154..15129	11976	cds_join		3154..15129	11976	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_042795.1	Cnidaria	Hydnophora exesa	exact	nad5	+		2760..13002	10243	cds_join		2760..13002	10243	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_044074.1	Cnidaria	Dipsastraea rotumana	exact	nad5	+		2682..12830	10149	cds_join		2682..12830	10149	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_044902.1	Cnidaria	Actinia tenebrosa	exact	nad5	+		718..2887	2170	intron_feature	group I	718..2887	2170	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_044902.1	Cnidaria	Actinia tenebrosa	exact	cox1	+		17578..18431	854	intron_feature	group I	17578..18431	854	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_045515.1	Cnidaria	Diadumene lineata	gt6	nad5	+		718..2374	1657	intron_feature		718..2398	1681	0	24	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_045515.1	Cnidaria	Diadumene lineata	missed	cox1	+		13790..14702	913	intron_feature								candidate 14682..15533 (COX1, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I intron, subtype IB1 (Selles Vidal et al. 2025, doi:10.1093/bioadv/vbaf020 model, E=7.6e-24); boundaries adjusted by -1 nt (splice score 24.5); MFannot method; 5'/3' end from existing CDS: start
+mitom_lo_vs_ncbi	NC_045515.1	Cnidaria	Diadumene lineata	gt6	cox1	+		14704..15537	834	cds_join		14682..15533	852	-22	-4	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_045931.1	Cnidaria	Goniopora djiboutiensis	le6	nad5	+		719..11892	11174	cds_join		721..11894	11174	2	2	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_045931.1	Cnidaria	Goniopora djiboutiensis	le6	cox1	+		14381..15350	970	cds_join		14384..15353	970	3	3	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046400.1	Cnidaria	Hydrozoanthus gracilis	exact	cox1	+		889..2013	1125	intron_feature	group 1 intron	889..2013	1125	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046400.1	Cnidaria	Hydrozoanthus gracilis	exact	nad5	+		11330..13516	2187	intron_feature	group 1 intron	11330..13516	2187	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046401.1	Cnidaria	Microzoanthus occultus	exact	nad5	+		11733..14049	2317	intron_feature		11733..14049	2317	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046402.1	Cnidaria	Nanozoanthus harenaceus	exact	nad5	+		9721..11767	2047	intron_feature		9721..11767	2047	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046403.1	Cnidaria	Palythoa mizigama	exact	cox1	+		889..2207	1319	intron_feature	group 1 intron	889..2207	1319	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046403.1	Cnidaria	Palythoa mizigama	exact	nad5	+		11478..13602	2125	intron_feature	group 1 intron	11478..13602	2125	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046404.1	Cnidaria	Palythoa mutuki	exact	cox1	+		889..2195	1307	intron_feature	group 1 intron	889..2195	1307	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046404.1	Cnidaria	Palythoa mutuki	exact	nad5	+		11591..13800	2210	intron_feature	group 1 intron	11591..13800	2210	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046405.1	Cnidaria	Parazoanthus elongatus	exact	cox1	+		889..2263	1375	intron_feature	group 1 intron	889..2263	1375	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046405.1	Cnidaria	Parazoanthus elongatus	exact	nad5	+		11468..13830	2363	intron_feature		11468..13830	2363	0	0		nad5	
+mitom_lo_vs_ncbi	NC_046406.1	Cnidaria	Sphenopus marsupialis	exact	cox1	+		889..2206	1318	intron_feature	group 1 intron	889..2206	1318	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046406.1	Cnidaria	Sphenopus marsupialis	exact	nad5	+		11423..13739	2317	intron_feature		11423..13739	2317	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046474.1	Cnidaria	Epizoanthus illoricatus	exact	cox1	+		889..2574	1686	intron_feature	group 1 intron	889..2574	1686	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046474.1	Cnidaria	Epizoanthus illoricatus	exact	nad5	+		11422..13640	2219	intron_feature		11422..13640	2219	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046475.1	Cnidaria	Parazoanthus swiftii	exact	cox1	+		889..2294	1406	intron_feature	group 1 intron	889..2294	1406	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046475.1	Cnidaria	Parazoanthus swiftii	exact	nad5	+		11547..13968	2422	intron_feature	group 1 intron	11547..13968	2422	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046476.1	Cnidaria	Zoanthus sociatus	exact	cox1	+		889..2168	1280	intron_feature	group 1 intron	889..2168	1280	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046476.1	Cnidaria	Zoanthus sociatus	exact	nad5	+		11318..13535	2218	intron_feature	group 1 intron	11318..13535	2218	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046690.1	Cnidaria	Dipsastraea favus	exact	nad5	+		2757..12998	10242	cds_join		2757..12998	10242	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_046843.1	Cnidaria	Tanacetipathes thamnea	le6	cox1	+		895..1796	902	cds_join		894..1795	902	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_046843.1	Cnidaria	Tanacetipathes thamnea	exact	nad5	+		7450..9148	1699	cds_join		7450..9148	1699	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_047217.1	Cnidaria	Epiactis japonica	exact	nad5	+		718..2398	1681	cds_join		718..2398	1681	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_047217.1	Cnidaria	Epiactis japonica	exact	cox1	+		15722..16574	853	cds_join		15722..16574	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_047218.1	Cnidaria	Haloclava producta	exact	nad5	+		718..2398	1681	cds_join		718..2398	1681	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_047218.1	Cnidaria	Haloclava producta	exact	cox1	+		14546..15398	853	cds_join		14546..15398	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_047219.1	Cnidaria	Heteractis aurora	exact	nad5	+		718..2454	1737	cds_join		718..2454	1737	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_047219.1	Cnidaria	Heteractis aurora	exact	cox1	+		16899..17751	853	cds_join		16899..17751	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_047220.1	Cnidaria	Radianthus crispa	exact	nad5	+		718..2398	1681	cds_join		718..2398	1681	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_047220.1	Cnidaria	Radianthus crispa	exact	cox1	+		15722..16574	853	cds_join		15722..16574	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_047221.1	Cnidaria	Liponema brevicorne	exact	nad5	+		718..2772	2055	cds_join		718..2772	2055	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_047221.1	Cnidaria	Liponema brevicorne	exact	cox1	+		15914..16766	853	cds_join		15914..16766	853	0	0	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_049065.1	Cnidaria	Anemonia sulcata	exact	nad5	+		718..2442	1725	cds_join		718..2442	1725	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_049065.1	Cnidaria	Anemonia sulcata	exact	cox1	+		17089..18141	1053	cds_join		17089..18141	1053	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_049066.1	Cnidaria	Entacmaea quadricolor	exact	nad5	+		718..2769	2052	cds_join		718..2769	2052	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_049066.1	Cnidaria	Entacmaea quadricolor	exact	cox1	+		18086..18938	853	cds_join		18086..18938	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_056275.1	Cnidaria	Paraconotrochus antarcticus	gt6	nad5	+		673..10636	9964	cds_join		658..10600	9943	-15	-36	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_056290.1	Cnidaria	Gardineria hawaiiensis	exact	nad5	+		721..11845	11125	cds_join		721..11845	11125	0	0		nad5	
+mitom_lo_vs_ncbi	NC_056290.1	Cnidaria	Gardineria hawaiiensis	le6	cox1	+		14311..15451	1141	cds_join		14310..15450	1141	-1	-1	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_056771.1	Cnidaria	Exaiptasia diaphana	exact	nad5	+		718..2447	1730	intron_feature		718..2447	1730	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_056771.1	Cnidaria	Exaiptasia diaphana	exact	cox1	+		16280..17126	847	intron_feature		16280..17126	847	0	0	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_056883.1	Cnidaria	Tubastraea micranthus	exact	nad5	+		3511..14825	11315	cds_join		3511..14825	11315	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_056883.1	Cnidaria	Tubastraea micranthus	le6	cox1	+		17317..18280	964	cds_join		17316..18285	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_056884.1	Cnidaria	Tubastraea diaphana	exact	nad5	+		3511..14833	11323	cds_join		3511..14833	11323	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_056884.1	Cnidaria	Tubastraea diaphana	le6	cox1	+		17325..18288	964	cds_join		17324..18293	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_060606.1	Cnidaria	Dendrophyllia minuscula	le6	nad5	+		720..12002	11283	intron_feature		721..12003	11283	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_060606.1	Cnidaria	Dendrophyllia minuscula	le6	cox1	+		14495..15458	964	cds_join		14495..15464	970	0	6	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_060802.1	Cnidaria	Diploastrea heliopora	exact	nad5	+		2867..13384	10518	cds_join		2867..13384	10518	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_060802.1	Cnidaria	Diploastrea heliopora	exact	cox1	+		15486..16561	1076	intron_feature	group I intron	15486..16561	1076	0	0		cox1	
+mitom_lo_vs_ncbi	NC_065774.1	Cnidaria	Heterocyathus sulcatus	gt6	nad5	+		712..11727	11016	cds_join		712..11751	11040	0	24	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_065775.1	Cnidaria	Trochocyathus caryophylloides	exact	nad5	+		712..10136	9425	cds_join		712..10136	9425	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_065776.1	Cnidaria	Caryophyllia scobinosa	exact	nad5	+		715..7151	6437	cds_join		715..7151	6437	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_066051.1	Cnidaria	Anthopleura xanthogrammica	exact	nad5	+		718..2455	1738	cds_join		718..2455	1738	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_066051.1	Cnidaria	Anthopleura xanthogrammica	le6	cox1	+		15500..16352	853	cds_join		15499..16351	853	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_066448.1	Cnidaria	Heteractis doreensis	exact	nad5	+		718..2769	2052	cds_join		718..2769	2052	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_066448.1	Cnidaria	Heteractis doreensis	exact	cox1	+		17846..18698	853	cds_join		17846..18698	853	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_068220.1	Cnidaria	Crispatotrochus rubescens	exact	nad5	+		715..7171	6457	cds_join		715..7171	6457	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_068221.1	Cnidaria	Crispatotrochus rugosus	exact	nad5	+		715..7171	6457	cds_join		715..7171	6457	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_069594.1	Cnidaria	Dendrobathypathes boutillieri	exact	nad5	+		709..2561	1853	cds_join		709..2561	1853	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_070437.1	Cnidaria	Turbinaria bifrons	exact	nad5	+		3390..14639	11250	cds_join		3390..14639	11250	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_070437.1	Cnidaria	Turbinaria bifrons	le6	cox1	+		17113..18076	964	intron_feature	group II intron	17112..18081	970	-1	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_071821.1	Cnidaria	Myriopathes ulex	le6	cox1	+		4160..5058	899	cds_join		4159..5060	902	-1	2	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_071821.1	Cnidaria	Myriopathes ulex	exact	nad5	+		10715..12413	1699	cds_join		10715..12413	1699	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_071915.1	Cnidaria	Paracondylactis sinensis	le6	cox1	+		1069..1932	864	cds_join		1068..1931	864	-1	-1	group I (IB1)	cox1	
+mitom_lo_vs_ncbi	NC_071915.1	Cnidaria	Paracondylactis sinensis	le6	nad5	+		5071..6997	1927	cds_join		5074..6997	1924	3	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_072168.1	Cnidaria	Montipora vietnamensis	exact	nad5	+		3154..14642	11489	cds_join		3154..14642	11489	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_072224.1	Cnidaria	Acropora intermedia	exact	nad5	+		3154..15226	12073	intron_feature	group I intron	3154..15226	12073	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_072225.1	Cnidaria	Acropora microphthalma	exact	nad5	+		3154..15224	12071	cds_join		3154..15224	12071	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_077265.1	Cnidaria	Isopora brueggemanni	exact	nad5	+		3153..15478	12326	cds_join		3153..15478	12326	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_077518.1	Cnidaria	Homophyllia bowerbanki	exact	nad5	+		2711..13171	10461	intron_feature	group I intron	2711..13171	10461	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079937.1	Cnidaria	Bergia puertoricense	exact	nad5	+		91..2211	2121	intron_feature		91..2211	2121	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079937.1	Cnidaria	Bergia puertoricense	exact	cox1	+		10814..12092	1279	intron_feature		10814..12092	1279	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_079938.1	Cnidaria	Epizoanthus ramosus	exact	cox1	+		889..2314	1426	intron_feature		889..2314	1426	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_079938.1	Cnidaria	Epizoanthus ramosus	exact	nad5	+		11159..13074	1916	intron_feature		11159..13074	1916	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079939.1	Cnidaria	Epizoanthus rinbou	exact	cox1	+		889..2298	1410	intron_feature		889..2298	1410	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_079939.1	Cnidaria	Epizoanthus rinbou	exact	nad5	+		10981..12810	1830	intron_feature		10981..12810	1830	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079940.1	Cnidaria	Epizoanthus scotinus	exact	cox1	+		889..2369	1481	intron_feature		889..2369	1481	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_079940.1	Cnidaria	Epizoanthus scotinus	exact	nad5	+		11180..13001	1822	intron_feature		11180..13001	1822	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079941.1	Cnidaria	Hydrozoanthus antumbrosus	exact	nad5	+		4473..6691	2219	intron_feature		4473..6691	2219	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079941.1	Cnidaria	Hydrozoanthus antumbrosus	exact	cox1	+		14755..15879	1125	intron_feature		14755..15879	1125	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_079942.1	Cnidaria	Hydrozoanthus sils	exact	cox1	+		889..2013	1125	intron_feature		889..2013	1125	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_079942.1	Cnidaria	Hydrozoanthus sils	exact	nad5	+		11338..13477	2140	intron_feature		11338..13477	2140	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079943.1	Cnidaria	Hydrozoanthus tunicans	exact	nad5	+		532..2750	2219	intron_feature		532..2750	2219	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_079943.1	Cnidaria	Hydrozoanthus tunicans	exact	cox1	+		10814..11938	1125	intron_feature		10814..11938	1125	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080205.1	Cnidaria	Zoanthus pulchellus	exact	nad5	+		6199..8368	2170	intron_feature		6199..8368	2170	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080205.1	Cnidaria	Zoanthus pulchellus	exact	cox1	+		16901..18169	1269	intron_feature		16901..18169	1269	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080206.1	Cnidaria	Zoanthus solanderi	exact	cox1	+		10409..11686	1278	intron_feature		10409..11686	1278	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080206.1	Cnidaria	Zoanthus solanderi	exact	nad5	+		20912..23049	2138	cds_join		20912..23049	2138	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080207.1	Cnidaria	Antipathozoanthus remengesaui	exact	cox1	+		890..2036	1147	intron_feature		890..2036	1147	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080207.1	Cnidaria	Antipathozoanthus remengesaui	exact	nad5	+		11265..13399	2135	intron_feature		11265..13399	2135	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080208.1	Cnidaria	Antipathozoanthus obscurus	exact	cox1	+		889..2035	1147	intron_feature		889..2035	1147	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080208.1	Cnidaria	Antipathozoanthus obscurus	exact	nad5	+		11434..13655	2222	intron_feature		11434..13655	2222	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080209.1	Cnidaria	Umimayanthus nakama	exact	nad5	+		825..3127	2303	intron_feature		825..3127	2303	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080209.1	Cnidaria	Umimayanthus nakama	exact	cox1	+		11882..13095	1214	intron_feature		11882..13095	1214	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080258.1	Cnidaria	Zoanthus gigantus	exact	cox1	+		10065..11342	1278	cds_join		10065..11342	1278	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080258.1	Cnidaria	Zoanthus gigantus	exact	nad5	+		20568..22705	2138	cds_join		20568..22705	2138	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080259.1	Cnidaria	Umimayanthus parasiticus	exact	nad5	+		1474..4040	2567	cds_join		1474..4040	2567	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080259.1	Cnidaria	Umimayanthus parasiticus	exact	cox1	+		12851..14198	1348	cds_join		12851..14198	1348	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080260.1	Cnidaria	Palythoa caribaeorum	exact	cox1	+		11699..13005	1307	cds_join		11699..13005	1307	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080260.1	Cnidaria	Palythoa caribaeorum	exact	nad5	+		22400..24566	2167	cds_join		22400..24566	2167	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080261.1	Cnidaria	Palythoa grandiflora	exact	nad5	+		102..2277	2176	cds_join		102..2277	2176	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080261.1	Cnidaria	Palythoa grandiflora	le6	cox1	+		10643..11955	1313	cds_join		10643..11949	1307	0	-6	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080262.1	Cnidaria	Palythoa grandis	exact	nad5	+		9623..11871	2249	cds_join		9623..11871	2249	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_080262.1	Cnidaria	Palythoa grandis	exact	cox1	+		20282..21576	1295	cds_join		20282..21576	1295	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080263.1	Cnidaria	Parazoanthus darwini	exact	cox1	+		10335..11740	1406	cds_join		10335..11740	1406	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_080263.1	Cnidaria	Parazoanthus darwini	exact	nad5	+		20993..23414	2422	cds_join		20993..23414	2422	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_081188.1	Cnidaria	Acropora subulata	exact	nad5	+		3154..15310	12157	cds_join		3154..15310	12157	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_081341.1	Cnidaria	Acropora nana	exact	nad5	+		3154..15224	12071	cds_join		3154..15224	12071	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_081452.1	Cnidaria	Acropora cytherea	exact	nad5	+		3154..15310	12157	cds_join		3154..15310	12157	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_081453.1	Cnidaria	Acropora millepora	exact	nad5	+		3154..15110	11957	cds_join		3154..15110	11957	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_081454.1	Cnidaria	Acropora pulchra	exact	nad5	+		3154..15225	12072	cds_join		3154..15225	12072	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_081455.1	Cnidaria	Acropora turaki	exact	nad5	+		3153..15223	12071	cds_join		3153..15223	12071	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_082103.1	Cnidaria	Polymyces wellsi	le6	cox1	+		889..1858	970	cds_join		894..1863	970	5	5	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_082103.1	Cnidaria	Polymyces wellsi	exact	nad5	+		9286..27083	17798	cds_join		9286..27083	17798	0	0		nad5	
+mitom_lo_vs_ncbi	NC_082917.1	Cnidaria	Galaxea astreata	exact	nad5	+		3178..14909	11732	cds_join		3178..14909	11732	0	0		nad5	
+mitom_lo_vs_ncbi	NC_082918.1	Cnidaria	Galaxea paucisepta	exact	nad5	+		3178..14909	11732	cds_join		3178..14909	11732	0	0		nad5	
+mitom_lo_vs_ncbi	NC_083272.1	Cnidaria	Acropora cervicornis	le6	nad5	+		10896..22745	11850	cds_join		10899..22748	11850	3	3	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_086801.1	Cnidaria	Parazoanthus axinellae	exact	cox1	+		889..2256	1368	intron_feature		889..2256	1368	0	0	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_086801.1	Cnidaria	Parazoanthus axinellae	gt6	cox1	+		11545..13711	2167	intron_feature		11545..13672	2128	0	-39	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_087806.1	Annelida	Synelmis amoureuxi	le6	cox1	+		3214..5672	2459	cds_join		3215..5673	2459	1	1	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	NC_087808.1	Annelida	Antonbruunia milenae	le6	cox1	+		8560..8864	305	cds_join		8561..8865	305	1	1	group II (RF00029)	cox1	
+mitom_lo_vs_ncbi	NC_088052.1	Cnidaria	Antipathes grandis	le6	cox1	+		895..2372	1478	cds_join		894..2371	1478	-1	-1	group I (?)	cox1	
+mitom_lo_vs_ncbi	NC_088052.1	Cnidaria	Antipathes grandis	exact	nad5	+		8749..10810	2062	cds_join		8749..10810	2062	0	0	group I (?)	nad5	
+mitom_lo_vs_ncbi	NC_088089.1	Cnidaria	Madrepora piresae	le6	nad5	+		2710..12848	10139	cds_join		2711..12849	10139	1	1	group I (?)	nad5	
+mitom_lo_vs_ncbi	OR637230.1	Annelida	Chaetopterus qiani	gt6	cox1	+		8188..8419	232	cds_join		8135..8429	295	-53	10	type not identified	cox1	
+mitom_lo_vs_ncbi	PP895294.1	Annelida	Chaetopterus sp. j JL-2024	le6	cox1	+		2682..2975	294	cds_join		2683..2979	297	1	4		cox1	
+mitom_lo_vs_ncbi	PP895295.1	Annelida	Chaetopterus sp. h JL-2024	gt6	cox1	+		8120..8385	266	cds_join		8112..8401	290	-8	16		cox1	
+mitom_lo_vs_ncbi	PP895296.1	Annelida	Chaetopterus sp. a JL-2024	le6	cox1	+		7847..8149	303	cds_join		7848..8153	306	1	4		cox1	

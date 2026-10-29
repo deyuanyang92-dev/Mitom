@@ -1,5 +1,5 @@
 """--if_reannotation_2 auto: re-annotate after reorientation only when the round-1 annotation may be wrong
-(user 2026-10-21: always re-annotating wastes resources). batch_mitoz.reorient_check().
+(user 2026-10-21: always re-annotating wastes resources). mitom_pipeline.reorient_check().
 
 Run: python3 -m pytest -q tests/test_reannotation_check.py
 """
@@ -14,7 +14,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 
 rnd = random.Random(3)
 NAMES = ["COX1", "COX2", "ATP8", "ATP6", "COX3", "ND3", "ND5", "ND4", "ND4L", "ND6", "CYTB", "ND1", "ND2",

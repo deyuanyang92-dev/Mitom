@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 
 
 def test_counts_taken_from_final_files(tmp_path):

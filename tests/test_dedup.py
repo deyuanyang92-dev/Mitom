@@ -1,4 +1,4 @@
-"""Tests for batch_mitoz.py deduplication (RefSeq NC_ kept over the INSDC submission it was made from).
+"""Tests for mitom_pipeline.py deduplication (RefSeq NC_ kept over the INSDC submission it was made from).
 
 Run: python3 -m pytest -q tests/test_dedup.py
 """
@@ -12,7 +12,7 @@ from Bio.Seq import Seq
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 
 DATA = HERE / "data"
 
@@ -66,7 +66,7 @@ def test_dedup_subcommand_writes_gb_and_fasta(tmp_path):
     nc = SeqIO.read(str(DATA / "NC_000933.gb"), "genbank")
     f = tmp_path / "in.gb"
     SeqIO.write([insdc_copy(nc, "AF000023"), nc], str(f), "genbank")
-    subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "batch_mitoz.py"), "dedup",
+    subprocess.run([sys.executable, "-W", "ignore", str(HERE.parent / "mitom_pipeline.py"), "dedup",
                     "-i", str(f), "-o", str(tmp_path / "out")], check=True, capture_output=True)
     assert [r.id for r in SeqIO.parse(str(tmp_path / "out" / "dedup.gb"), "genbank")] == ["NC_000933.1"]
     assert [r.id for r in SeqIO.parse(str(tmp_path / "out" / "dedup.fasta"), "fasta")] == ["NC_000933.1"]

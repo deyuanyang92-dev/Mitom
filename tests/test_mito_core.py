@@ -359,10 +359,26 @@ def test_rrna_method_cm_uses_only_the_mitos2_covariance_models(tmp_path, monkeyp
 
 def test_pipeline_passes_rrna_method_to_the_core(tmp_path):
     import argparse
-    import batch_mitoz as bm
+    import mitom_pipeline as bm
     a = argparse.Namespace(genetic_code=5, threads=2, mitos_refdir=None, mitos_bin=None, phylum=None, rrna_hmm_lib=None,
                            rrna_method="cm")
     cmd = bm.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", a)
     assert cmd[cmd.index("--rrna_method") + 1] == "cm"
     cmd = bm.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", {"genetic_code": 5, "threads": 2, "rrna_method": "hmm"})
     assert cmd[cmd.index("--rrna_method") + 1] == "hmm"
+
+
+def test_single_second_copy_kept_only_when_identical():
+    """2026-10-29: one gene with a second locus is kept when the copy is >= COPY_IDENTITY identical (length within 3 nt),
+    as NCBI annotates such copies (heron nad6, Hexamermis atp6); a diverged or longer second locus is still dropped."""
+    g = "ATG" + "GCT" * 30 + "TAA"
+    genome = "C" * 50 + g + "C" * 50 + g + "C" * 50
+    a = mc.Feature("CDS", "atp8", 50, 50 + len(g), 1)
+    b = mc.Feature("CDS", "atp8", 100 + len(g), 100 + 2 * len(g), 1)
+    assert mc.copy_identity(genome, a, b) == 1.0
+    minus = mc.Feature("CDS", "atp8", 100 + len(g), 100 + 2 * len(g), -1)        # other strand: not the same sequence
+    assert mc.copy_identity(genome, a, minus) < mc.COPY_IDENTITY
+    longer = mc.Feature("CDS", "atp8", 100 + len(g), 100 + 2 * len(g) + 6, 1)
+    assert mc.copy_identity(genome, a, longer) == 0.0
+    diverged = genome[:100 + len(g)] + "ATG" + "GCA" * 30 + "TAA" + genome[100 + 2 * len(g):]
+    assert 0 < mc.copy_identity(diverged, a, b) < mc.COPY_IDENTITY

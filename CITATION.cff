@@ -1,5 +1,6 @@
 cff-version: 1.2.0
 title: "MitoM: animal mitochondrial genome annotation"
+version: 1.0.0
 message: >-
   If you use this software, please cite this GitHub repository AND the tools it runs
   (see "references" below and the README section "Citation"). No other conditions apply:

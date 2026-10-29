@@ -92,7 +92,11 @@ ADJACENT = {"atp8": ("atp6", {"arthropoda", "echinodermata"}, 162, 90, 240),
             "nad4l": ("nad4", {"arthropoda", "annelida", "chordata", "nemertea"}, 297, 240, 330)}
 COPY_FRAC = 0.9            # a second locus of a gene scoring this fraction of the placed copy (blastx and exonerate) and
                            # aligned complete is a second copy - kept when >= 2 genes have one (a duplicated block, both
-                           # copies in NCBI: NC_009093.1 mite, 9 genes; one repeated atp8 is not: NC_049135.1)
+                           # copies in NCBI: NC_009093.1 mite, 9 genes) or when it is a COPY_IDENTITY copy of the gene
+COPY_IDENTITY = 0.95       # a single second copy this identical (length within 3 nt) is a real gene copy: 1,050 NCBI
+                           # records 2026-10-29: 30 of 38 identical protein-gene copies annotated twice by NCBI (heron /
+                           # cormorant / turaco nad6, Hexamermis atp6 ...), near-identical ones too (Ardeola, Botaurus
+                           # nad6, Todarodes cox1 / cox2); dropping it lost 12 of MitoM's 55 missing genes
 N_REFS = 3                 # reference proteins aligned per gene (the best blastx hits of the locus)
 NO_START_DOWN = {"echinodermata": {"nad4l"}}   # phylum -> genes left 5'-partial at the alignment start instead of
                            # moved to a downstream start codon: echinoderm nad4l starts right after the preceding tRNA with
@@ -354,6 +358,20 @@ def window_to_genome(ws: int, we: int, strand: int, s: int, e: int) -> Tuple[int
     return (ws + s, ws + e) if strand == 1 else (we - e, we - s)
 
 
+def feature_nt(genome: str, f: Feature) -> str:
+    """Nucleotide sequence of a feature on the searched genome (plus-strand coordinates; minus strand reverse-complemented)."""
+    s = genome[f.start:f.end]
+    return s if f.strand == 1 else str(Seq(s).reverse_complement())
+
+
+def copy_identity(genome: str, a: Feature, b: Feature) -> float:
+    """Fraction of identical positions between two features of one gene, 0 when their lengths differ by more than 3 nt."""
+    sa, sb = feature_nt(genome, a), feature_nt(genome, b)
+    if not sa or not sb or abs(len(sa) - len(sb)) > 3:
+        return 0.0
+    return sum(x == y for x, y in zip(sa, sb)) / max(len(sa), len(sb))
+
+
 def positions(f: Feature, n: int) -> set:
     return {i % n for i in range(f.start, f.end)}
 
@@ -515,8 +533,15 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
                 log.info(f"[core] {f.name}: second copy {g.start + 1}..{g.end} (score {g.score:.0f})")
                 kept, copies = new, copies + 1
     if copies == 1:
-        log.info("[core] one gene with a second copy: not a duplicated block, copy dropped")
-        kept = single
+        new = next(f for f in kept if f not in single)
+        orig = next(f for f in single if f.name == new.name)
+        ident = copy_identity(genome, orig, new)
+        if ident >= COPY_IDENTITY:
+            log.info(f"[core] {new.name}: second copy kept, {100 * ident:.1f} % identical to the gene")
+        else:
+            log.info(f"[core] {new.name}: one gene with a second copy ({100 * ident:.1f} % identical): not a duplicated "
+                     "block, copy dropped")
+            kept = single
     for gene, (nb, phyla, typical, shortest, longest) in ADJACENT.items():
         nbf = next((f for f in kept if f.name == nb), None)
         if (phylum or "").lower() not in phyla or nbf is None or any(f.name == gene for f in kept):

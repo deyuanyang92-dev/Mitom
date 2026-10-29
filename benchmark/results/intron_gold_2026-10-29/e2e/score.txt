@@ -1,0 +1,42 @@
+== mitom_lo: 270 records, status {'ok': 270}, {'0 NCBI ERROR': 270}
+group	n_truth	exact	le6	gt6	missed	fp
+all gold	309	299	4	0	6	1
+dev	73	66	1	0	6	1
+dev:Annelida	23	23	0	0	0	0
+dev:Cnidaria	34	34	0	0	0	0
+dev:Placozoa	16	9	1	0	6	1
+frag	1	1	0	0	0	0
+frag:Annelida	1	1	0	0	0	0
+new	235	232	3	0	0	0
+new:Cnidaria	232	229	3	0	0	0
+new:Porifera	3	3	0	0	0	0
+unann	0	0	0	0	0	1
+unann:Annelida	0	0	0	0	0	1
+class -	0	0	0	0	0	1
+class A	202	202	0	0	0	0
+class B	39	39	0	0	0	0
+class D-corrected	37	37	0	0	0	0
+class E	15	8	1	0	6	0
+class consensus	16	13	3	0	0	0
+
+== mitom_native: 194 records, status {'ok': 194}, {'0 NCBI ERROR': 194}
+group	n_truth	exact	le6	gt6	missed	fp
+all gold	309	309	0	0	0	1
+dev	73	73	0	0	0	1
+dev:Annelida	23	23	0	0	0	0
+dev:Cnidaria	34	34	0	0	0	0
+dev:Placozoa	16	16	0	0	0	1
+frag	1	1	0	0	0	0
+frag:Annelida	1	1	0	0	0	0
+new	235	235	0	0	0	0
+new:Cnidaria	232	232	0	0	0	0
+new:Porifera	3	3	0	0	0	0
+unann	0	0	0	0	0	1
+unann:Annelida	0	0	0	0	0	1
+class -	0	0	0	0	0	1
+class A	202	202	0	0	0	0
+class B	39	39	0	0	0	0
+class D-corrected	37	37	0	0	0	0
+class E	15	15	0	0	0	0
+class consensus	16	16	0	0	0	0
+

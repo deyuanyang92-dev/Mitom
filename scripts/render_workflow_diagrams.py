@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Render bilingual workflow diagrams for batch_mitoz.py.
+Render bilingual workflow diagrams for the MitoM pipeline (mitom_pipeline.py).
 """
 
 from __future__ import annotations
@@ -116,16 +116,16 @@ def main() -> int:
     ]
 
     render_svg(
-        "batch_mitoz.py 工作流程",
+        "MitoM 工作流程",
         "从输入识别到最终 GenBank 结果的主要步骤",
         zh_nodes,
-        OUT_DIR / "batch_mitoz_workflow.zh.svg",
+        OUT_DIR / "mitom_workflow.zh.svg",
     )
     render_svg(
-        "batch_mitoz.py Workflow",
+        "MitoM Workflow",
         "Main steps from input detection to final GenBank outputs",
         en_nodes,
-        OUT_DIR / "batch_mitoz_workflow.en.svg",
+        OUT_DIR / "mitom_workflow.en.svg",
     )
     return 0
 

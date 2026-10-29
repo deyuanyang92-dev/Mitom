@@ -1,0 +1,59 @@
+# Bioconda recipe for MitoM (to submit to bioconda-recipes after a GitHub release v{{ version }}: fill in sha256 of
+# the release tarball; build it once with conda-build / rattler-build before submitting - not built yet). Users then install everything with one command:
+#   mamba create -n mitom -c conda-forge -c bioconda mitom && conda activate mitom && mitom setup
+{% set name = "mitom" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/deyuanyang92-dev/Mitom/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: 0000000000000000000000000000000000000000000000000000000000000000  # fill in after the release
+
+build:
+  number: 0
+  noarch: generic
+
+requirements:
+  run:
+    - python >=3.9
+    - biopython
+    - numpy
+    - scikit-learn ==1.7.2   # MitoM-ML tRNA classifiers are trained with this version (models/trna_ml)
+    - matplotlib-base
+    - exonerate
+    - blast >=2.12
+    - infernal >=1.1.4
+    - hmmer >=3.3
+    - table2asn
+    - aragorn
+    - trnascan-se
+    - mafft
+    - bwa
+    - openjdk >=8            # MiTFi (Java 5 classes): any Java runs it
+
+test:
+  commands:
+    - mitom --version
+    - mitom run -h > /dev/null
+    - mitom import -h > /dev/null
+    - mitom doctor | grep -q "OK blastx"
+
+about:
+  home: https://github.com/deyuanyang92-dev/Mitom
+  license: CC0-1.0 AND GPL-3.0-only AND MIT
+  license_file: LICENSE
+  summary: "Annotation of animal mitochondrial genomes with NCBI-ready GenBank output and genome maps"
+  description: |
+    MitoM annotates animal mitochondrial genomes (protein genes, rRNAs, tRNAs, introns) with its own core, or runs
+    MitoZ / MITOS2 when they are installed, or takes their existing results; then reorients, curates gene ends,
+    writes NCBI names and submission files (table2asn) and circular genome maps. MITOS2's reference data refseq89m is
+    downloaded after installation with `mitom setup`. mito_intron.py (port of MFannot) and models/mfannot_proteins are
+    GPL-3.0; MiTFi (models/mitfi) is MIT; the rest is CC0-1.0.
+  dev_url: https://github.com/deyuanyang92-dev/Mitom
+
+extra:
+  recipe-maintainers:
+    - deyuanyang92-dev
