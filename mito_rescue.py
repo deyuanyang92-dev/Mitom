@@ -53,23 +53,14 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
+import mito_names  # noqa: E402
 
 MITOS_TRNA = re.compile(r"^trn([A-Z])(\d?)(?:_(\d+))?(?:-([a-z]))?\(([a-z-]{3})\)", re.I)
 MITOS_GENE = re.compile(r"^(.+?)(?:_(\d+))?(?:-([a-z]))?$")       # nad5, nad5_1 (2nd copy), cox2-a (fragment)
 MITOS_SKIP = re.compile(r"^(OH|OL)", re.I)
 MIN_RRNA = 300
 
-# MITOS2 name -> the core's gene name and product (the names the core writes; mito_curate N1 makes them NCBI's)
-CORE_NAMES = {
-    "atp6": ("ATP6", "ATP synthase F0 subunit 6"), "atp8": ("ATP8", "ATP synthase F0 subunit 8"),
-    "cox1": ("COX1", "cytochrome c oxidase subunit I"), "cox2": ("COX2", "cytochrome c oxidase subunit II"),
-    "cox3": ("COX3", "cytochrome c oxidase subunit III"), "cob": ("CYTB", "cytochrome b"),
-    "nad1": ("ND1", "NADH dehydrogenase subunit 1"), "nad2": ("ND2", "NADH dehydrogenase subunit 2"),
-    "nad3": ("ND3", "NADH dehydrogenase subunit 3"), "nad4": ("ND4", "NADH dehydrogenase subunit 4"),
-    "nad4l": ("ND4L", "NADH dehydrogenase subunit 4L"), "nad5": ("ND5", "NADH dehydrogenase subunit 5"),
-    "nad6": ("ND6", "NADH dehydrogenase subunit 6"),
-    "rrnS": ("s-rRNA", "12S ribosomal RNA"), "rrnL": ("l-rRNA", "16S ribosomal RNA"),
-}
+CORE_NAMES = mito_names.CORE_NAMES      # MITOS2 name -> the core's gene name and product
 # longest expected gene length (nt), by MITOS2 name; a CDS/rRNA is a possible intron-spanning / merged call
 # only when longer than 1.5 x this value
 MAX_LEN = {

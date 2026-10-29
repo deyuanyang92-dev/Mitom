@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
@@ -16,6 +15,7 @@ from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, Feat
 from Bio.SeqRecord import SeqRecord
 
 from mito_common import write_nonempty_table
+from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
 
 if TYPE_CHECKING:
     from mitom_inputs import SampleInfo
@@ -38,26 +38,8 @@ def gb_to_internal_fasta(gb_in: Path, fasta_out: Path, internal_id: str) -> None
         SeqIO.write(out_recs, fh, "fasta")
 
 
-def normalize_gene_key(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "", (name or "").strip().lower())
-
-
-_GENE_ALIAS_GROUPS = [
-    ["cox1", "coi", "coxi", "co1", "cytochromecoxidasesubuniti", "cytochromecoxidasesubunit1"],
-    ["cox2", "coii", "coxii", "co2", "cytochromecoxidasesubunitii", "cytochromecoxidasesubunit2"],
-    ["cox3", "coiii", "coxiii", "co3", "cytochromecoxidasesubunitiii", "cytochromecoxidasesubunit3"],
-    ["cob", "cytb", "cyb", "cytochromeb"],
-    ["nad1", "nd1", "nadh1", "nadhdehydrogenasesubunit1"],
-    ["atp6", "atpase6", "atpsynthasef0subunit6", "atpsynthasesubunit6"],
-]
-
-
-def gene_aliases(gene: str) -> List[str]:
-    g = normalize_gene_key(gene)
-    for group in _GENE_ALIAS_GROUPS:
-        if g in group:
-            return list(group)
-    return [g]
+normalize_gene_key = name_key
+_GENE_ALIAS_GROUPS = ORIENTATION_ALIAS_GROUPS
 
 
 # Records oriented by a fallback gene because the first gene was absent: {record id: gene}

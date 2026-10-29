@@ -33,6 +33,7 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
+import mito_names  # noqa: E402
 
 GB_SUFFIXES = (".gb", ".gbk", ".gbf", ".gbff", ".genbank")
 FA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
@@ -118,7 +119,6 @@ def mitos2_record(result_dir: Path, seq: str, rid: str, code: Optional[int], top
     /transl_table, tRNA /product and `anticodon: XXX` note), a gene feature before each; fragments of a gene joined
     and features across the origin written as joins (mito_rescue.mitos_to_record); OH / OL and names without a core
     name (introns) left out."""
-    import mito_core
     import mito_rescue
     mitos = mito_rescue.mitos_to_record(Path(result_dir), Seq(seq), rid)
     rec = SeqRecord(Seq(seq), id=rid, name=rid[:16], description="")
@@ -131,10 +131,10 @@ def mitos2_record(result_dir: Path, seq: str, rid: str, code: Optional[int], top
         name = f.qualifiers["gene"][0]
         if f.type == "tRNA":
             ac = (f.qualifiers.get("anticodon") or [""])[0].upper().replace("T", "U")
-            q = {"gene": [name], "product": [f"tRNA-{mito_core.AA3.get(name[3:4].upper(), 'Xaa')}"],
+            q = {"gene": [name], "product": [f"tRNA-{mito_names.AA1_TO_3.get(name[3:4].upper(), 'Xaa')}"],
                  "note": ([f"anticodon: {ac}"] if ac else []) + ["MITOS2"]}
-        elif f.type in ("CDS", "rRNA") and name in mito_core.NAMES:
-            gene, product = mito_core.NAMES[name]
+        elif f.type in ("CDS", "rRNA") and name in mito_names.CORE_NAMES:
+            gene, product = mito_names.CORE_NAMES[name]
             q = {"gene": [gene], "product": [product]}
             if f.type == "CDS":
                 q.update(codon_start=["1"], **({"transl_table": [str(code)]} if code else {}))

@@ -90,42 +90,18 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import mito_names  # noqa: E402
+
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
 GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
 MIN_INTRON = 142        # a CDS gap at least this long is an intron without an intron feature (eval_introns, MFannot)
 PROBE = 30              # nt of exon / intron sequence kept on each side of an intron end
 
-# ── gene names (benchmark/mito_names.py rules) ───────────────────────────────
-ALIAS = {"coi": "cox1", "coii": "cox2", "coiii": "cox3", "co1": "cox1", "co2": "cox2", "co3": "cox3",
-         "cytb": "cob", "cyb": "cob", "nd1": "nad1", "nd2": "nad2", "nd3": "nad3", "nd4": "nad4", "nd4l": "nad4l",
-         "nd5": "nad5", "nd6": "nad6", "atpase6": "atp6", "atpase8": "atp8",
-         "rrns": "rrnS", "srrna": "rrnS", "12s": "rrnS", "12srrna": "rrnS", "rns": "rrnS", "rrn12": "rrnS",
-         "rrnl": "rrnL", "lrrna": "rrnL", "16s": "rrnL", "16srrna": "rrnL", "rnl": "rrnL", "rrn16": "rrnL"}
-RRNA_PRODUCT = {"12s ribosomal rna": "rrnS", "small subunit ribosomal rna": "rrnS", "s-rrna": "rrnS",
-                "16s ribosomal rna": "rrnL", "large subunit ribosomal rna": "rrnL", "l-rrna": "rrnL"}
-PCG = {"cox1", "cox2", "cox3", "cob", "atp6", "atp8", "atp9", "nad1", "nad2", "nad3", "nad4", "nad4l", "nad5", "nad6"}
-PCG_PRODUCT = [(r"cytochrome c oxidase subunit (i{1,3}|[123])\b", "cox"), (r"cytochrome b\b", "cob"),
-               (r"nadh dehydrogenase subunit (4l|[1-6])\b", "nad"), (r"atp synthase (?:f0 )?subunit (6|8|9)\b", "atp")]
-ROMAN = {"i": "1", "ii": "2", "iii": "3"}
-
-
+# ── gene names: mito_names.py (atp9 included: sponge / cnidarian introns) ─────────────────────────────────────────────
 def gene_name(q: dict, ftype: str) -> str:
     """Normalised PCG / rRNA name (cox1, nad4l, rrnL ...); '' when not a standard one. COX1a / COX1b -> cox1."""
-    g = re.sub(r"[^a-z0-9]", "", (q.get("gene", [""])[0] or "").lower())
-    g = ALIAS.get(g, g)
-    m = re.fullmatch(r"(cox[123]|nad[1-6]|nad4l|atp[689]|cob)[abc]", g)
-    if m:
-        g = m.group(1)
-    prod = (q.get("product", [""])[0] or "").lower()
-    if ftype == "rRNA" and g not in ("rrnS", "rrnL"):
-        g = RRNA_PRODUCT.get(prod) or ALIAS.get(re.sub(r"[^a-z0-9]", "", prod), g)
-    if ftype == "CDS" and g not in PCG:
-        for pat, base in PCG_PRODUCT:
-            m = re.search(pat, prod)
-            if m:
-                g = base + ROMAN.get(m.group(1), m.group(1)) if base != "cob" else "cob"
-                break
-    return g if g in PCG or g in ("rrnS", "rrnL") else ""
+    return mito_names.gene_name(q, ftype, atp9=True)
 
 
 # ── library ──────────────────────────────────────────────────────────────────
@@ -1619,13 +1595,7 @@ def _gpos(G: Genome, strand: int, c: int) -> str:
 
 
 # ── write-back ───────────────────────────────────────────────────────────────
-PRODUCTS = {"cox1": "cytochrome c oxidase subunit I", "cox2": "cytochrome c oxidase subunit II",
-            "cox3": "cytochrome c oxidase subunit III", "cob": "cytochrome b", "atp6": "ATP synthase F0 subunit 6",
-            "atp8": "ATP synthase F0 subunit 8", "atp9": "ATP synthase F0 subunit 9",
-            "nad1": "NADH dehydrogenase subunit 1", "nad2": "NADH dehydrogenase subunit 2",
-            "nad3": "NADH dehydrogenase subunit 3", "nad4": "NADH dehydrogenase subunit 4",
-            "nad4l": "NADH dehydrogenase subunit 4L", "nad5": "NADH dehydrogenase subunit 5",
-            "nad6": "NADH dehydrogenase subunit 6", "rrnL": "16S ribosomal RNA", "rrnS": "12S ribosomal RNA"}
+PRODUCTS = mito_names.PRODUCTS
 
 
 def _location(G: Genome, pieces: List[Tuple[int, int, int]], partial5: bool = False, partial3: bool = False):

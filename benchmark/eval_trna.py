@@ -17,11 +17,11 @@ from pathlib import Path
 
 from Bio import SeqIO
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from mito_names import AA3  # noqa: E402
+
 GB, ROOT = Path(sys.argv[1]), Path(sys.argv[2])
 LABEL = sys.argv[3] if len(sys.argv) > 3 else ROOT.name
-AA3 = {"Ala": "A", "Arg": "R", "Asn": "N", "Asp": "D", "Cys": "C", "Gln": "Q", "Glu": "E", "Gly": "G", "His": "H",
-       "Ile": "I", "Leu": "L", "Lys": "K", "Met": "M", "Phe": "F", "Pro": "P", "Ser": "S", "Thr": "T", "Trp": "W",
-       "Tyr": "Y", "Val": "V"}
 
 
 def truth(rec):

@@ -68,11 +68,9 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
+from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
+from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
 
-AA3 = {"Ala": "A", "Arg": "R", "Asn": "N", "Asp": "D", "Cys": "C", "Gln": "Q", "Glu": "E", "Gly": "G",
-       "His": "H", "Ile": "I", "Leu": "L", "Lys": "K", "Met": "M", "Phe": "F", "Pro": "P", "Ser": "S",
-       "Thr": "T", "Trp": "W", "Tyr": "Y", "Val": "V"}
-ONE2THREE = {v: k for k, v in AA3.items()}
 GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
 TIMEOUT = 3600
 
@@ -311,16 +309,6 @@ def anticodon_of(g: List[Pred]) -> str:
 def choose(g: List[Pred], priority: List[str]) -> Pred:
     order = {s: i for i, s in enumerate(priority)}
     return min(g, key=lambda p: order.get(p.source, 99))
-
-
-def trna_name(aa: str, ac: str) -> str:
-    """trnL1/trnL2 and trnS1/trnS2 by anticodon (invertebrate convention: L1 = CUN (tag), L2 = UUR (taa);
-    S1 = AGN (tct/gct), S2 = UCN (tga))."""
-    if aa == "L":
-        return "trnL1" if ac.endswith("ag") else "trnL2" if ac.endswith("aa") else "trnL"
-    if aa == "S":
-        return "trnS1" if ac.endswith("ct") else "trnS2" if ac.endswith("ga") else "trnS"
-    return f"trn{aa}"
 
 
 def feature(p: Pred, ac: str, note: str, L: int) -> SeqFeature:

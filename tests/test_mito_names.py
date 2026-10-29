@@ -21,11 +21,13 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+import mito_core  # noqa: E402
 import mito_curate  # noqa: E402
 import mito_intron  # noqa: E402
 import mito_intron_ref  # noqa: E402
 import mito_names  # noqa: E402
 import mito_plot  # noqa: E402
+import mito_rescue  # noqa: E402
 import mito_rrna_hmm  # noqa: E402
 import mito_trna  # noqa: E402
 import mitom_orient  # noqa: E402
@@ -85,3 +87,25 @@ def got():
 def test_every_call_site_gives_the_old_name(site, got):
     bad = [({c: r[c] for c in COLS if r[c]}, r[site], g[site]) for r, g in zip(ROWS, got) if g[site] != r[site]]
     assert not bad, f"{len(bad)} of {len(ROWS)} rows differ at {site}, e.g. {bad[:3]}"
+
+
+def test_tables_shared_with_the_core_are_equal():
+    """The core keeps its own copy until it imports mito_names (after the speed branches merge)."""
+    assert mito_names.CORE_NAMES == mito_core.NAMES
+    assert mito_names.AA1_TO_3 == mito_core.AA3
+    assert mito_rescue.CORE_NAMES is mito_names.CORE_NAMES and mito_rrna_hmm.GENES == {
+        g: mito_core.NAMES[g] for g in ("rrnS", "rrnL")}
+    assert mito_trna.AA3 == mito_names.AA3 == mito_plot.AA and mito_trna.ONE2THREE == mito_names.AA1_TO_3
+
+
+def test_trna_symbol_is_the_old_mito_trna_rule():
+    def old(aa, ac):
+        if aa == "L":
+            return "trnL1" if ac.endswith("ag") else "trnL2" if ac.endswith("aa") else "trnL"
+        if aa == "S":
+            return "trnS1" if ac.endswith("ct") else "trnS2" if ac.endswith("ga") else "trnS"
+        return f"trn{aa}"
+    codons = [a + b + c for a in "acgt" for b in "acgt" for c in "acgt"] + [""]
+    for aa in list(mito_names.AA1_TO_3) + [""]:
+        for ac in codons:
+            assert mito_names.trna_symbol(aa, ac) == mito_trna.trna_name(aa, ac) == old(aa, ac)

@@ -91,29 +91,11 @@ from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, Exac
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
-import mito_trna  # noqa: E402  (tRNA names: trnL1/L2, trnS1/S2 by anticodon)
+# N1: NCBI gene symbols, products and synonyms; tRNA names trnL1/L2, trnS1/S2 by anticodon (mito_names.py)
+from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key as key, trna_symbol  # noqa: E402
+from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 
 GB_EXT = {".gb", ".gbk", ".gbf", ".genbank", ".gbff"}
-RRNA_NAMES = {"rrns": "rrnS", "srrna": "rrnS", "12s": "rrnS", "12srrna": "rrnS", "rns": "rrnS", "rrn12": "rrnS",
-              "rrnl": "rrnL", "lrrna": "rrnL", "16s": "rrnL", "16srrna": "rrnL", "rnl": "rrnL", "rrn16": "rrnL"}
-RRNA_PRODUCT = {"rrnS": "12S ribosomal RNA", "rrnL": "16S ribosomal RNA"}
-# N1: NCBI-style protein gene symbols and products (as in RefSeq, e.g. NC_012920.1), with common synonyms
-PCG_NAMES = {
-    "COX1": ("cytochrome c oxidase subunit I", ("cox1", "coi", "co1", "coxi", "cytochromecoxidasesubuniti")),
-    "COX2": ("cytochrome c oxidase subunit II", ("cox2", "coii", "co2", "coxii", "cytochromecoxidasesubunitii")),
-    "COX3": ("cytochrome c oxidase subunit III", ("cox3", "coiii", "co3", "coxiii", "cytochromecoxidasesubunitiii")),
-    "ATP6": ("ATP synthase F0 subunit 6", ("atp6", "atpase6", "atp", "atpsynthasef0subunit6")),
-    "ATP8": ("ATP synthase F0 subunit 8", ("atp8", "atpase8", "atpsynthasef0subunit8")),
-    "CYTB": ("cytochrome b", ("cytb", "cob", "ctb", "cyb", "cytochromeb")),
-    "ND1": ("NADH dehydrogenase subunit 1", ("nd1", "nad1", "nadh1", "nadhdehydrogenasesubunit1")),
-    "ND2": ("NADH dehydrogenase subunit 2", ("nd2", "nad2", "nadh2", "nadhdehydrogenasesubunit2")),
-    "ND3": ("NADH dehydrogenase subunit 3", ("nd3", "nad3", "nadh3", "nadhdehydrogenasesubunit3")),
-    "ND4": ("NADH dehydrogenase subunit 4", ("nd4", "nad4", "nadh4", "nadhdehydrogenasesubunit4")),
-    "ND4L": ("NADH dehydrogenase subunit 4L", ("nd4l", "nad4l", "nadh4l", "nadhdehydrogenasesubunit4l")),
-    "ND5": ("NADH dehydrogenase subunit 5", ("nd5", "nad5", "nadh5", "nadhdehydrogenasesubunit5")),
-    "ND6": ("NADH dehydrogenase subunit 6", ("nd6", "nad6", "nadh6", "nadhdehydrogenasesubunit6")),
-}
-PCG_SYN = {syn: name for name, (_, syns) in PCG_NAMES.items() for syn in syns}
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
 NO_START_NOTE = "start codon not determined"
 NO_STOP_NOTE = "stop codon not determined"
@@ -154,10 +136,6 @@ WEAK_TRNA_E = 1e-3          # T1: a MiTFi call with a larger E (or a second copy
 # N1: notes the annotation core writes for itself (reference protein and score, model columns, MitoM-ML / MiTFi
 # scores) - kept in the core's files, not in the GenBank / NCBI submission
 INTERNAL_NOTE = re.compile(r"^(ref \S+ score \d|MitoM-ML p [\d.]|MiTFi \S+ bits [\d.]|nhmmer \S+ bits \d|cmsearch bits \d)")
-
-
-def key(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", (name or "").lower())
 
 
 def span(f: SeqFeature) -> Tuple[int, int]:
@@ -1103,7 +1081,7 @@ class Curator:
         elif f.type == "tRNA":
             txt = " ".join(f.qualifiers.get("product", []) + [cur])
             m = re.search(r"tRNA-([A-Z][a-z]{2})", txt)
-            aa = mito_trna.AA3.get(m.group(1), "") if m else ""
+            aa = AA3.get(m.group(1), "") if m else ""
             if not aa and re.match(r"trn([A-Z])", cur):
                 aa = cur[3]
             ac = ""
@@ -1112,12 +1090,12 @@ class Curator:
                 re.search(r"seq:([acgtuACGTU]{3})", " ".join(f.qualifiers.get("anticodon", [])))
             if m:
                 ac = m.group(1).lower().replace("u", "t")
-            if aa in mito_trna.ONE2THREE:
-                name = mito_trna.trna_name(aa, ac)
+            if aa in AA1_TO_3:
+                name = trna_symbol(aa, ac)
                 if not ac and re.fullmatch(r"trn[LS][12]", cur):
                     name = cur                         # anticodon unknown: the core numbered the gene from the MiTFi model
                 notes = [n for n in f.qualifiers.get("note", []) if not n.startswith("anticodon:")]
-                q = {"gene": [name], "product": [f"tRNA-{mito_trna.ONE2THREE[aa]}"],
+                q = {"gene": [name], "product": [f"tRNA-{AA1_TO_3[aa]}"],
                      "note": ([f"anticodon: {ac.upper().replace('T', 'U')}"] if ac else []) + notes}
         if not q:
             if f.type in ("CDS", "rRNA", "tRNA"):

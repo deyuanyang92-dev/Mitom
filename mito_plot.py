@@ -45,6 +45,7 @@ from matplotlib.textpath import TextPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
+import mito_names  # noqa: E402
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000
 CIGAR = re.compile(r"(\d+)([MIDNSHP=X])")
@@ -58,9 +59,7 @@ GC_HI, GC_LO, SKEW_POS, SKEW_NEG, DEPTH = "#52514e", "#b5b3ab", "#6250d6", "#eb6
 TINT = 0.7                                   # opacity of the large skew / depth areas
 INK, MUTED = "#0b0b0b", "#898781"
 OTHER_TYPES = ("D-loop", "misc_feature", "rep_origin", "repeat_region")
-AA = {"Ala": "A", "Arg": "R", "Asn": "N", "Asp": "D", "Cys": "C", "Gln": "Q", "Glu": "E", "Gly": "G", "His": "H",
-      "Ile": "I", "Leu": "L", "Lys": "K", "Met": "M", "Phe": "F", "Pro": "P", "Ser": "S", "Thr": "T", "Trp": "W",
-      "Tyr": "Y", "Val": "V"}
+AA = mito_names.AA3
 SIZE, R_MAX = 10.0, 1.36                     # figure inches; axes radius in data units (backbone radius 1)
 BLOCK, TRACK, TRACK_GAP = 0.075, 0.12, 0.03  # gene block height on each side; ring height; space between rings
 LABEL_GAP, FS_GENE, FS_TRNA = 0.045, 9.5, 8.0

@@ -15,7 +15,7 @@ positives 9 -> 10, exactly matching ones 59 -> 59 (present but partial rRNAs cou
 coverage / partial-end / window rules below were added after that run and are covered by unit tests only.
 
 Rules:
-  - only rRNAs absent from the record are searched (names as in mito_curate.RRNA_NAMES and free text);
+  - only rRNAs absent from the record are searched (names as in mito_names.RRNA_ALIAS and free text);
     the phylum is taken from the record's taxonomy (or --phylum); phyla with fewer than MIN_REFS
     reference rRNAs have no model and are skipped;
   - hits of one model are joined only when they are pieces of one gene: same strand, disjoint and
@@ -68,10 +68,10 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
-from mito_curate import RRNA_NAMES, key as name_key  # noqa: E402  (one alias table for rRNA names: srrna, rrn12, rrn16 ...)
+from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
 
 LIB = Path(__file__).resolve().parent / "models" / "rrna_hmm"
-GENES = {"rrnS": ("s-rRNA", "12S ribosomal RNA"), "rrnL": ("l-rRNA", "16S ribosomal RNA")}
+GENES = {g: CORE_NAMES[g] for g in ("rrnS", "rrnL")}          # the core's /gene and /product
 NAMES = {"rrnS": {"rrns", "s-rrna", "12s", "rns", "12s rrna"}, "rrnL": {"rrnl", "l-rrna", "16s", "rnl", "16s rrna"}}
 MIN_REFS, MAX_ALN, MIN_RRNA, MAX_GAP, EVALUE, MAX_REF_LEN = 3, 60, 200, 300, 1e-3, 4000
 LEN_HI, LEN_LO, LEN_HI_MEDIAN = 1.3, 0.7, 1.5   # span <= LEN_HI x p95 and (if complete) >= LEN_LO x p5 of the references;
@@ -95,7 +95,7 @@ class Hit(NamedTuple):
 
 def gene_of(f: SeqFeature) -> Optional[str]:
     """rrnS / rrnL for an rRNA feature named in the core's, NCBI or free style; None otherwise. Exact aliases are
-    mito_curate.RRNA_NAMES (shared with R3); NAMES / small / large are the looser free-text match."""
+    mito_names.RRNA_ALIAS (shared with mito_curate R3); NAMES / small / large are the looser free-text match."""
     qs = f.qualifiers.get("gene", []) + f.qualifiers.get("product", [])
     alias = next((RRNA_NAMES[name_key(q)] for q in qs if name_key(q) in RRNA_NAMES), None)
     if alias:
