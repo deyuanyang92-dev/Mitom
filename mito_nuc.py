@@ -15,8 +15,11 @@ Histones: tblastn of the reference proteins, HSPs grouped into loci, exonerate p
 (intronless) with the TOPK best proteins of the locus, best score wins (spliced models x INTRON_PEN per
 intron); the CDS is extended in frame to the next stop codon and, when the model does not start with ATG at
 protein position 1, to the farthest upstream in-frame ATG before a stop. Nuclear code (transl_table 1).
-Massive assemblies: both searches first run with one reference per genus (rDNA) / per gene and phylum
-(histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go to the steps above.
+Massive assemblies: both searches first run with one reference per genus (rDNA; low-complexity stretches do not
+seed) / per gene and phylum (histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go
+to the steps above, each gene set in its own regions. A SPAdes assembly of 460 Mb takes 0.5-1 min on 16 threads
+(2026-10-29: was 4-22 min; barrnap 0.9 45-52 s) with the same features, less calls made of microsatellites only
+(knowledge/topics/nuclear_markers.md section 15).
 
 Per-gene consensus (multi-copy rDNA split over many contigs of one assembly): see consensus(); output
 consensus/<gene>.fasta and consensus.tsv (which contigs were used, which were dropped and why).
@@ -40,6 +43,7 @@ import argparse
 import csv
 import gzip
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -84,9 +88,18 @@ QC_MIN_STUDIES = 3  # ... supported by >= this many other studies (and > 2x the 
 TOPK = 3            # histone proteins tried with exonerate per locus
 INTRON_PEN = 0.9
 MIN_PROT_COVER = 0.3    # histone model must cover this fraction of the protein unless it reaches a contig end
+MIN_H34_PARTIAL_ID = 80 # % identity (exonerate) below which a partial H3 / H4 model is a degenerate copy, not reported
 SEED_COV = 0.1      # consensus seed: fragments with >= this fraction of the best fragment's contig coverage
 END_TOL = 20        # consensus: a copy variant this close (nt) to a contig end does not keep it from joining the next
 PAD = 20000         # flank around prefilter hits taken from long contigs
+DB_PIECE = 10_000_000   # FASTA bytes per makeblastdb piece of the prefilter database (pieces are built at once)
+# a bounded amount of work per assembly, whatever the number of candidates (real genome skims had <= 48 rDNA and
+# <= 3,737 histone regions, 2026-10-29); only where the candidates are < 10 % of the input sequences (an assembly,
+# not a batch of records)
+MAX_RDNA_REGIONS = 300  # rDNA regions annotated, most aligned reference bits first
+MAX_HIST_REGIONS = 1000 # histone regions per gene, closest to a reference protein first
+MAX_CM_JOBS = 300       # rRNA ends per gene placed with the Rfam models, best supported genes first (others: projection)
+MAX_CONS_SEED = 100     # best-covered fragments per gene the consensus backbone is built from
 STOPS = ("TAA", "TAG", "TGA")
 BAD_HISTONE = re.compile(r"factor|transferase|acetyl|chaperone|binding|kinase|demethylase|ligase|DOT1|lysine|"
                          r"regulator|interact|domain|methyl", re.I)
@@ -338,23 +351,71 @@ class Library:
 
 
 # ── prefilter: candidate regions of the input ──────────────────────────────
-def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path,
-              threads: int) -> Dict[str, List[Tuple[int, int]]]:
-    """contig -> merged (start, end) windows hit by a representative reference (+- PAD, clipped)"""
-    db = str(work / "contigs")
-    run([tool("makeblastdb"), "-in", str(contigs), "-dbtype", "nucl", "-out", db])
-    fmt = "6 sseqid sstart send slen"
-    hits = []
-    if "rdna" in genes:
-        hits += run([tool("blastn"), "-task", "megablast", "-word_size", "20", "-query", str(lib.rdna_rep), "-db", db,
-                     "-evalue", "1e-20", "-outfmt", fmt, "-max_target_seqs", "100000", "-num_threads", str(threads),
-                     "-dust", "no"]).splitlines()
-    if "histone" in genes:
-        hits += run([tool("tblastn"), "-query", str(lib.hist_rep), "-db", db, "-evalue", "1e-10", "-outfmt", fmt,
-                     "-max_target_seqs", "100000", "-num_threads", str(threads), "-seg", "no"]).splitlines()
+def blast_db(fa: Path, db: Path, threads: int) -> str:
+    """nucleotide BLAST database of a large FASTA: makeblastdb on `threads` pieces at once, joined by an alias
+    database (same total length and sequence count, so the same e-values as one database); one makeblastdb of a
+    460 Mb SPAdes assembly took 25-35 s"""
+    size = fa.stat().st_size
+    n = max(1, min(threads, size // DB_PIECE))
+    if n == 1:
+        run([tool("makeblastdb"), "-in", str(fa), "-dbtype", "nucl", "-out", str(db)])
+        return str(db)
+    parts = [db.parent / f"{db.name}_{i}" for i in range(n)]
+    with open(fa, "rb") as f:
+        cuts = [0]                      # pieces start at the first record after each n-th of the file
+        for k in range(1, n):
+            f.seek(max(cuts[-1], k * size // n))
+            pos, buf = f.tell(), b""
+            while b"\n>" not in buf:
+                more = f.read(1 << 20)
+                if not more:
+                    break
+                buf += more
+            if b"\n>" in buf:
+                cuts.append(pos + buf.index(b"\n>") + 1)
+        cuts.append(size)
+        for p, a, b in zip(parts, cuts, cuts[1:]):
+            f.seek(a)
+            with open(f"{p}.fa", "wb") as o:
+                while a < b:
+                    chunk = f.read(min(b - a, 1 << 24))
+                    o.write(chunk)
+                    a += len(chunk)
+    parts = parts[:len(cuts) - 1]
+
+    def mk(p: Path) -> None:
+        run([tool("makeblastdb"), "-in", f"{p}.fa", "-dbtype", "nucl", "-out", str(p)])
+        Path(f"{p}.fa").unlink()
+    with ThreadPoolExecutor(len(parts)) as pool:
+        list(pool.map(mk, parts))
+    run([tool("blastdb_aliastool"), "-dblist", " ".join(map(str, parts)), "-dbtype", "nucl", "-out", str(db),
+         "-title", db.name])
+    return str(db)
+
+
+def _search(prog: str, queries: Path, db: str, work: Path, threads: int, args: List[str],
+            qcol: int) -> List[List[str]]:
+    """BLAST of the query sequences in `threads` single-threaded runs at once (one run with -num_threads over the
+    few volumes of a small database kept 3 of 8 CPUs busy); the tabular rows in the order of one run (by query,
+    whose id is column qcol)"""
+    recs = list(SeqIO.parse(str(queries), "fasta"))
+    n = max(1, min(threads, len(recs)))
+    for i in range(n):
+        SeqIO.write(recs[i::n], str(work / f"{queries.stem}_{i}.fa"), "fasta")
+    rows: Dict[str, List[List[str]]] = defaultdict(list)
+    with ThreadPoolExecutor(n) as pool:
+        for o in pool.map(lambda i: run([tool(prog), "-query", str(work / f"{queries.stem}_{i}.fa"), "-db", db,
+                                         "-num_threads", "1", *args]), range(n)):
+            for line in o.splitlines():
+                x = line.split("\t")
+                rows[x[qcol]].append(x)
+    return [x for r in recs for x in rows[r.id]]
+
+
+def _windows(hits: List[List[str]]) -> Dict[str, List[Tuple[int, int]]]:
+    """contig -> merged (start, end) windows around the hits (+- PAD, clipped); hits: [sseqid, sstart, send, slen, ...]"""
     win = defaultdict(list)
-    for line in hits:
-        s, a, b, n = line.split("\t")
+    for s, a, b, n, *_ in hits:
         a, b, n = sorted((int(a), int(b))) + [int(n)]
         win[s].append((max(1, a - PAD), min(n, b + PAD)))
     merged = {}
@@ -368,6 +429,69 @@ def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path,
                 m.append([a, b])
         merged[s] = [tuple(x) for x in m]
     return merged
+
+
+def _best_windows(windows: Dict[str, List[Tuple[int, int]]], hits: List[List[str]], score, cap: int,
+                  what: str) -> Dict[str, List[Tuple[int, int]]]:
+    """the `cap` windows with the highest score(hits inside the window) (ties: contig coverage), all when cap is 0;
+    a fixed amount of work whatever the number of candidates (2,800 rDNA contigs of 469 species: the consensus alone
+    ran > 10 min)"""
+    inside = defaultdict(list)
+    for h in hits:
+        a = min(int(h[1]), int(h[2]))
+        ws = windows[h[0]]
+        inside[(h[0], next(w for w in reversed(ws) if w[0] <= a))].append(h)
+    if not cap or len(inside) <= cap:
+        return windows
+    keep = sorted(inside, key=lambda k: (score(inside[k]), float(_cov(k[0]) or 0), k), reverse=True)[:cap]
+    logging.info(f"[NUC] {what}: {len(inside)} candidate regions, the {cap} best kept ({len(inside) - cap} skipped)")
+    out: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
+    for s, w in sorted(keep):
+        out[s].append(w)
+    return dict(out)
+
+
+def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path, threads: int,
+              n_seq: int) -> Tuple[Dict[str, Dict[str, List[Tuple[int, int]]]], set]:
+    """gene set -> contig -> windows hit by a representative reference, and the gene sets whose work is bounded
+    (assembly: candidates < 10 % of the n_seq input sequences); each set is searched in its own windows.
+    rDNA: low-complexity stretches do not seed (dust): the flanks of the reference units (IGS / ETS) hold
+    microsatellites ((CA)n, (CATA)n, (CT)n) that hit ~10k contigs of a 460 Mb assembly, none of them with an rRNA gene;
+    searching them took 20 of 22 min and 16 GB (SRR27947581). At most MAX_RDNA_REGIONS rDNA regions (most aligned
+    bits of one reference first) and MAX_HIST_REGIONS histone regions per gene (closest to a reference protein
+    first) of an assembly go on, so the time is bounded"""
+    db = blast_db(contigs, work / "contigs", threads)
+    out, bounded = {}, set()
+    if "rdna" in genes:
+        hits = _search("blastn", lib.rdna_rep, db, work, threads,
+                       ["-task", "megablast", "-word_size", "20", "-evalue", "1e-20", "-dust", "yes",
+                        "-max_target_seqs", "100000", "-outfmt", "6 sseqid sstart send slen qseqid bitscore"], 4)
+
+        def bits(hs: List[List[str]]) -> float:         # aligned bits of the best reference in the region
+            per: Dict[str, float] = defaultdict(float)
+            for h in hs:
+                per[h[4]] += float(h[5])
+            return max(per.values())
+        win = _windows(hits)
+        if 10 * sum(map(len, win.values())) < n_seq:
+            bounded.add("rdna")
+        out["rdna"] = _best_windows(win, hits, bits, MAX_RDNA_REGIONS if "rdna" in bounded else 0, "rDNA")
+    if "histone" in genes:
+        hits = _search("tblastn", lib.hist_rep, db, work, threads,
+                       ["-evalue", "1e-10", "-seg", "no", "-max_target_seqs", "100000",
+                        "-outfmt", "6 sseqid sstart send slen qseqid bitscore pident"], 4)
+        win, keep = _windows(hits), set()
+        if 10 * sum(map(len, win.values())) < n_seq:
+            bounded.add("histone")
+        for g in HISTONES:
+            gh = [h for h in hits if lib.hist[h[4]]["gene"] == g]
+            for s, ws in _best_windows(_windows(gh), gh, lambda hs: max((float(h[6]), float(h[5])) for h in hs),
+                                       MAX_HIST_REGIONS if "histone" in bounded else 0, f"histone {g}").items():
+                # a window of one gene lies inside a window of all genes, which is kept
+                keep.update((s, w) for a, b in ws for w in win[s] if w[0] <= a and b <= w[1])
+        out["histone"] = {s: [w for w in ws if (s, w) in keep] for s, ws in win.items()
+                          if any((s, w) in keep for w in ws)}
+    return out, bounded
 
 
 # ── rDNA ────────────────────────────────────────────────────────────────────
@@ -668,7 +792,7 @@ def _identity(chain) -> float:
 
 
 def annotate_rdna(regions: Path, lib: Library, work: Path, threads: int, leave_out: Dict[str, str],
-                  qlens: Dict[str, int], refine: bool = True) -> Dict[str, List[dict]]:
+                  qlens: Dict[str, int], refine: bool = True, bounded: bool = False) -> Dict[str, List[dict]]:
     fmt = "6 qseqid sseqid qstart qend sstart send bitscore qseq sseq"
     # BLAST threads scale poorly over many short queries: single-threaded blastn on chunks of the regions, `threads`
     # at a time; each chunk's hits (with the alignment strings) are turned into loci and dropped right away, so memory
@@ -724,7 +848,7 @@ def annotate_rdna(regions: Path, lib: Library, work: Path, threads: int, leave_o
     if refine:
         rs = {q: seqs[q].seq for q in loci}
         t0 = time.time()
-        n = cm_refine(loci, rs, lib.dir, work, threads)
+        n = cm_refine(loci, rs, lib.dir, work, threads, bounded)
         logging.info(f"[NUC] rRNA ends placed by the Rfam models: {n} ({time.time() - t0:.0f} s)")
         for q, ls in loci.items():
             _tidy(ls, str(rs[q]).upper(), qlens[q])
@@ -761,6 +885,27 @@ def _read_sto(path: Path) -> Tuple[str, Dict[str, str], Dict[str, str]]:
     return rf, seq, pp
 
 
+def _cmsearch(cm: Path, seqs: List[Tuple[str, str]], work: Path, tag: str, threads: int, opts: List[str],
+              align: bool = False, toponly: bool = True) -> List[tuple]:
+    """cmsearch of (name, sequence) pairs in `threads` pieces at once: one cmsearch reads a file of short windows as
+    one block for one worker (38 windows of the 28S model: 14 s at --cpu 16, as at --cpu 1). -Z is the size of all
+    pieces together (nt, x2 for both strands), so the E-values and filter thresholds are those of one search of all
+    (Infernal truncates -Z to whole nt). Returns per piece (tblout rows, -A alignment: RF line, sequences, PP)."""
+    n = max(1, min(threads, len(seqs)))
+    z = sum(len(s) for _, s in seqs) * (1 if toponly else 2)
+
+    def one(i: int) -> tuple:
+        fa, tbl, sto = (work / f"cm_{tag}_{i}.{x}" for x in ("fa", "tbl", "sto"))
+        with open(fa, "w") as o:
+            o.writelines(f">{k}\n{s}\n" for k, s in seqs[i::n])
+        run([tool("cmsearch"), "--cpu", "1", "--notextw", "-Z", f"{(z + 0.5) / 1e6:.9f}", *opts, "--tblout", str(tbl),
+             *(["-A", str(sto)] if align else []), str(cm), str(fa)])
+        rows = [line.split() for line in open(tbl) if not line.startswith("#")]
+        return (rows, *(_read_sto(sto) if align and sto.exists() and sto.stat().st_size else ("", {}, {})))
+    with ThreadPoolExecutor(n) as pool:
+        return list(pool.map(one, range(n)))
+
+
 def cm_ends(jobs: List[tuple], seqs, gene: str, cm: Path, work: Path, threads: int, win: int = CM_WIN,
             hmm_only: bool = False, max_extend: int = 0, edge: Optional[set] = None,
             trunc: Optional[set] = None) -> Dict[int, int]:
@@ -772,32 +917,28 @@ def cm_ends(jobs: List[tuple], seqs, gene: str, cm: Path, work: Path, threads: i
     edge: filled with the jobs whose hit runs into the outer window edge without reaching the model end (the end
     is further away than win); trunc: the same where that edge is the sequence end (the gene is cut there)"""
     tag = f"{gene}_{win}{'_hmm' if hmm_only else ''}"
-    fa = work / f"cm_{tag}.fa"
-    meta = {}
-    with open(fa, "w") as o:
-        for i, (c, st, side, p) in enumerate(jobs):
-            n = len(seqs[c])
-            lo, hi = max(1, p - win), min(n, p + win)
-            s = seqs[c][lo - 1:hi]
-            # the window's outer edge (beyond the end) is the sequence end itself
-            meta[f"j{i}"] = (i, st, side, lo, hi, (lo == 1) if (side == 5) == (st == 1) else (hi == n))
-            o.write(f">j{i}\n{s if st == 1 else s.reverse_complement()}\n")
-    tbl, sto = work / f"cm_{tag}.tbl", work / f"cm_{tag}.sto"
-    run([tool("cmsearch"), "--cpu", str(max(1, threads)), "--notextw", "-E", "1e-5", "--toponly", "--tblout", str(tbl),
-         *(["--hmmonly"] if hmm_only else ["-A", str(sto)]), str(cm), str(fa)])
-    rf, al, pp = _read_sto(sto) if sto.exists() and sto.stat().st_size else ("", {}, {})
-    cons = [i for i, ch in enumerate(rf) if ch not in ".-~"]
+    meta, windows = {}, []
+    for i, (c, st, side, p) in enumerate(jobs):
+        n = len(seqs[c])
+        lo, hi = max(1, p - win), min(n, p + win)
+        s = seqs[c][lo - 1:hi]
+        # the window's outer edge (beyond the end) is the sequence end itself
+        meta[f"j{i}"] = (i, st, side, lo, hi, (lo == 1) if (side == 5) == (st == 1) else (hi == n))
+        windows.append((f"j{i}", str(s if st == 1 else s.reverse_complement())))
     o5, o3 = CM_OFFSET[gene]
     clen = RFAM[gene][1]
     out: Dict[int, int] = {}
     best: Dict[str, tuple] = {}
-    for line in open(tbl):
-        if line.startswith("#"):
-            continue
-        x = line.split()
-        if x[9] == "+" and (x[0] not in best or float(x[14]) > best[x[0]][4]):
-            best[x[0]] = (int(x[5]), int(x[6]), int(x[7]), int(x[8]), float(x[14]))
+    aln: Dict[str, tuple] = {}             # window -> the alignment of its piece (columns, sequences, PP)
+    for rows, rf, al, pp in _cmsearch(cm, windows, work, tag, threads, ["-E", "1e-5", "--toponly"] +
+                                      (["--hmmonly"] if hmm_only else []), align=not hmm_only):
+        cons = [i for i, ch in enumerate(rf) if ch not in ".-~"]
+        for x in rows:
+            if x[9] == "+" and (x[0] not in best or float(x[14]) > best[x[0]][4]):
+                best[x[0]] = (int(x[5]), int(x[6]), int(x[7]), int(x[8]), float(x[14]))
+                aln[x[0]] = (cons, al, pp)
     for k, (mf, mt, sf, se, _) in best.items():
+        cons, al, pp = aln[k]
         i, st, side, lo, hi, at_seq_end = meta[k]
         wl = hi - lo + 1
 
@@ -870,19 +1011,11 @@ def _cm_rescue_58s(loci: Dict[str, List[dict]], seqs, d: Path, work: Path, threa
             where.append(L)
     if not jobs:
         return 0
-    fa = work / "cm_58s_rescue.fa"
-    with open(fa, "w") as o:
-        for i, (q, st, a, b) in enumerate(jobs):
-            s = seqs[q][a - 1:b]
-            o.write(f">r{i}\n{s if st == 1 else s.reverse_complement()}\n")
-    tbl = work / "cm_58s_rescue.tbl"
-    run([tool("cmsearch"), "--cpu", str(max(1, threads)), "--notextw", "-E", "1e-3", "--tblout", str(tbl),
-         str(d / f"{RFAM['5.8S'][0]}.cm"), str(fa)])
+    stretches = [(f"r{i}", str(seqs[q][a - 1:b] if st == 1 else seqs[q][a - 1:b].reverse_complement()))
+                 for i, (q, st, a, b) in enumerate(jobs)]
     o3, done = CM_OFFSET["5.8S"][1], 0
-    for line in open(tbl):
-        if line.startswith("#"):
-            continue
-        x = line.split()
+    for x in (x for rows, *_ in _cmsearch(d / f"{RFAM['5.8S'][0]}.cm", stretches, work, "58s_rescue", threads,
+                                          ["-E", "1e-3"], toponly=False) for x in rows):
         i, mf, mt, sf, se = int(x[0][1:]), int(x[5]), int(x[6]), int(x[7]), int(x[8])
         q, st, a, b = jobs[i]
         L = where[i]
@@ -897,9 +1030,11 @@ def _cm_rescue_58s(loci: Dict[str, List[dict]], seqs, d: Path, work: Path, threa
     return done
 
 
-def cm_refine(loci: Dict[str, List[dict]], seqs, lib_dir: Path, work: Path, threads: int) -> int:
+def cm_refine(loci: Dict[str, List[dict]], seqs, lib_dir: Path, work: Path, threads: int,
+              bounded: bool = False) -> int:
     """move every complete rRNA end to the position homologous to the curated mature end (Rfam CM); ends the model
-    does not place confidently keep the reference projection. Returns the number of ends placed by the model."""
+    does not place confidently keep the reference projection. Returns the number of ends placed by the model.
+    bounded (assembly): the covariance model searches only the MAX_CM_JOBS best supported ends per gene"""
     d = lib_dir / "rfam"
     if not d.is_dir():
         d = LIB / "rfam"
@@ -940,6 +1075,12 @@ def cm_refine(loci: Dict[str, List[dict]], seqs, lib_dir: Path, work: Path, thre
                         ("cm", dict(win=150)), ("cm", dict(win=CM_WIN))):
             if kw["win"] == CM_WIN:          # the wide window only where the hit ran out of the narrow one
                 todo = [i for i in todo if i in cut]
+            # a covariance model search takes ~0.5 s per +-150 nt window and ~12 s per +-600 nt window (28S): the
+            # ends of the best supported genes only (others keep the projection)
+            cap = MAX_CM_JOBS if kw["win"] < CM_WIN else MAX_CM_JOBS // 20
+            if bounded and how == "cm" and len(todo) > cap:
+                log.append(f"{len(todo) - cap} of {len(todo)} not searched")
+                todo = sorted(sorted(todo, key=lambda i: -where[i][0].get("sup", 0))[:cap])
             if not todo:
                 break
             edge: set = set()
@@ -1047,21 +1188,34 @@ def _tidy(loci: List[dict], seq: str, qlen: int) -> None:
 
 
 # ── histones ────────────────────────────────────────────────────────────────
-def _exonerate(target: str, prot: str, model: str, td: Path) -> Optional[tuple]:
-    (td / "p.fa").write_text(f">p\n{prot}\n")
+def _exonerate_all(target: str, prots: List[str], model: str, td: Path) -> List[Optional[tuple]]:
+    """the best alignment of each protein (--bestn 1 counts per query) in one exonerate run: (score, exons, protein
+    start, end, length, % identity) or None. One run per protein and model was 22,700 runs of ~20 ms for the 3,700 H3 loci of
+    SRR2006110; 2 per locus now"""
+    (td / "p.fa").write_text("".join(f">p{i}\n{p}\n" for i, p in enumerate(prots)))
     out = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
                           "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
-                          "-t", target, "--ryo", "SCORE %s %qab %qae %ql\n"], capture_output=True, text=True).stdout
-    sc, ex = None, []
+                          "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"], capture_output=True,
+                         text=True).stdout
+    res: List[list] = [[None, [], 0, 0, 0, 0.0] for _ in prots]
+    ex: List[tuple] = []
     for line in out.splitlines():
-        if line.startswith("SCORE"):
-            _, sc, qab, qae, ql = line.split()
-            sc, qab, qae, ql = int(sc), int(qab), int(qae), int(ql)
+        if line.startswith("SCORE"):             # follows the GFF of its alignment
+            _, q, sc, qab, qae, ql, pi = line.split()
+            r = res[int(q[1:])]
+            r[0], r[2], r[3], r[4], r[5] = int(sc), int(qab), int(qae), int(ql), float(pi)
+            r[1] += ex
+            ex = []
+            continue
         x = line.split("\t")
         # protein2genome lists exons; protein2dna (no introns) only one similarity line
         if len(x) > 8 and (x[2] == "exon" or x[2] == "similarity" and model == "protein2dna"):
             ex.append((int(x[3]), int(x[4]), x[6]))
-    return (sc, ex, qab, qae, ql) if sc and ex else None
+    return [(sc, e, qab, qae, ql, pi) if sc and e else None for sc, e, qab, qae, ql, pi in res]
+
+
+def _exonerate(target: str, prot: str, model: str, td: Path) -> Optional[tuple]:
+    return _exonerate_all(target, [prot], model, td)[0]
 
 
 def _canonical_introns(tseq: str, ex: List[tuple]) -> bool:
@@ -1113,15 +1267,38 @@ def _orf(seq: Seq, ex: List[Tuple[int, int]], st: int,
     return sorted(tr(a, b) for a, b in E), p5, p3, codon_start
 
 
+def _tblastn(lib: Library, db: str, work: Path, threads: int) -> List[str]:
+    """tblastn of the reference proteins against db, lines as one tblastn run writes them. 677 proteins are 269
+    different sequences (one H3 sequence 87 times): each sequence is searched once (its hits are the same for every
+    copy) in single-threaded runs on `threads` pieces at once; one tblastn of all on 16 threads took 40-50 s on the
+    3,700 histone regions of SRR2006110 (460 Mb assembly)"""
+    first: Dict[str, str] = {}
+    for ref, p in lib.prot.items():
+        first.setdefault(p, ref)
+    uniq = list(first.items())
+    n = max(1, min(threads, len(uniq)))
+    for i in range(n):
+        with open(work / f"hist_q{i}.faa", "w") as o:
+            o.writelines(f">{ref}\n{p}\n" for p, ref in uniq[i::n])
+
+    def search(i: int) -> str:
+        return run([tool("tblastn"), "-query", str(work / f"hist_q{i}.faa"), "-db", db, "-evalue", "1e-5", "-outfmt",
+                    "6 qseqid sseqid sstart send bitscore", "-max_target_seqs", "100000", "-num_threads", "1",
+                    "-seg", "no"])
+    by_query: Dict[str, List[str]] = defaultdict(list)
+    with ThreadPoolExecutor(n) as pool:
+        for out in pool.map(search, range(n)):
+            for line in out.splitlines():
+                by_query[line.split("\t", 1)[0]].append(line.split("\t", 1)[1])
+    return [f"{ref}\t{x}" for ref, p in lib.prot.items() for x in by_query[first[p]]]
+
+
 def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, leave_out: Dict[str, str],
                       seqs: Dict[str, Seq]) -> Dict[str, List[dict]]:
     db = str(work / "regions")
     run([tool("makeblastdb"), "-in", str(regions), "-dbtype", "nucl", "-out", db])
-    out = run([tool("tblastn"), "-query", str(lib.hist_faa), "-db", db, "-evalue", "1e-5", "-outfmt",
-               "6 qseqid sseqid sstart send bitscore", "-max_target_seqs", "100000", "-num_threads", str(threads),
-               "-seg", "no"])
     hits = defaultdict(list)
-    for line in out.splitlines():
+    for line in _tblastn(lib, db, work, threads):
         ref, s, a, b, bs = line.split("\t")
         r = lib.hist[ref]
         if leave_out and leave_out.get(_contig(s)) == r["genus"] or _contig(s) == r["accession"]:
@@ -1147,10 +1324,14 @@ def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, lea
                 for h in sorted(L["h"], key=lambda h: -h["bs"]):
                     if h["ref"] not in refs:
                         refs.append(h["ref"])
+                # each different protein once (the best references of a locus often share theirs), all in one run
+                prots = list(dict.fromkeys(lib.prot[ref] for ref in refs[:TOPK]))
+                done = {(p, model): m for model in ("protein2genome", "protein2dna")
+                        for p, m in zip(prots, _exonerate_all(str(td / "t.fa"), prots, model, td))}
                 models = []
                 for ref in refs[:TOPK]:
                     for model in ("protein2genome", "protein2dna"):
-                        m = _exonerate(str(td / "t.fa"), lib.prot[ref], model, td)
+                        m = done[(lib.prot[ref], model)]
                         # a spliced model needs real splice sites (H1 genes have no introns: a gap in the
                         # alignment there is a frameshift or a divergent tail, OU230952.1)
                         if m and not _canonical_introns(str(seq[a:b]), m[1]):
@@ -1160,12 +1341,17 @@ def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, lea
                             models.append((sc, ref, m))
                 if not models:
                     continue
-                sc, ref, (_, ex, qab, qae, ql) = max(models, key=lambda x: x[0])
+                sc, ref, (_, ex, qab, qae, ql, pi) = max(models, key=lambda x: x[0])
                 st = 1 if ex[0][2] == "+" else -1
                 ex = [(x + a, y + a) for x, y, _ in ex]
                 exons, p5, p3, cstart = _orf(seq, ex, st, qab == 0)
                 at_edge = exons[0][0] <= 3 or exons[-1][1] >= len(seq) - 2
                 if (qae - qab) / ql < MIN_PROT_COVER and not at_edge:
+                    continue
+                # H3 and H4 are >= ~85 % identical across animals: a partial model far below that is a piece of a
+                # degenerate copy (SRR2006110: 3,688 'H3' of 61 % median identity, retrocopies with frameshifts and
+                # stop codons, ~87 % nt identity to each other); complete divergent genes exist (MT043459.1 H3 50 %)
+                if lib.hist[ref]["gene"] in ("H3", "H4") and pi < MIN_H34_PARTIAL_ID and (p5 or p3):
                     continue
                 res.append({"gene": lib.hist[ref]["gene"], "st": st, "exons": exons, "p5": p5, "p3": p3,
                             "codon_start": cstart, "ref": lib.hist[ref]["accession"], "ref_org": lib.hist[ref]["organism"], "score": sc})
@@ -1192,10 +1378,78 @@ def _offset(region_id: str) -> int:
     return int(m.group(1)) - 1 if m else 0
 
 
+class FastaIndex:
+    """records of a FASTA file by id (first word of the title), read on demand like SeqIO.index (which took 5 s on
+    the 900k contigs of a 460 Mb assembly); the file is scanned in blocks, with Python work per record title only.
+    plain: every title is a BLAST-safe id alone, the ids are unique, every record has sequence and there is no space,
+    tab or CR (read_input would write the same records); nt: number of nucleotides of a plain file"""
+    BLOCK = 1 << 26
+    TITLE = re.compile(b"\n>([^\n]*)")
+
+    def __init__(self, path: Path):
+        self.path, self.nt, self.plain = path, 0, True
+        titles: List[bytes] = []
+        starts: List[int] = []
+        with open(path, "rb") as f:
+            base, rest = 0, b"\n"           # a record starts after a newline: the file gets one in front
+            while True:
+                b = f.read(self.BLOCK)
+                data = rest + b
+                cut = data.rfind(b"\n>") if b else len(data)
+                if cut <= 0:                        # a record longer than the block
+                    rest = data
+                    continue
+                t = self.TITLE.findall(data, 0, cut)
+                starts += [base + m.start() for m in re.finditer(b"\n>", data[:cut])]
+                if any(data.find(c, 0, cut + 1) >= 0 for c in (b" ", b"\t", b"\r", b"\n\n")):
+                    self.plain = False
+                    t = [(x.split(None, 1) or [b""])[0] for x in t]
+                self.nt += cut - sum(map(len, t)) - len(t) - data.count(b"\n", 0, cut)
+                titles += t
+                base += cut
+                rest = data[cut:]
+                if not b:
+                    break
+        ends = starts[1:] + [base - 1]
+        joined = b"\n".join(titles)
+        # every title a BLAST-safe id alone, unique, followed by sequence (a title line is len + 2 bytes)
+        if self.plain and (not starts or starts[0] != 0 or b"" in titles or
+                           re.search(b"[^A-Za-z0-9_.\n-]", joined) or
+                           any(e - a <= len(x) + 2 for a, e, x in zip(starts, ends, titles))):
+            self.plain = False
+        self.at: Dict[str, Tuple[int, int]] = dict(zip(joined.decode(errors="replace").split("\n"),
+                                                       zip(starts, ends)))
+        self.plain = self.plain and len(titles) == len(self.at)
+        self.fd = os.open(path, os.O_RDONLY)
+
+    def __getitem__(self, k: str) -> SeqRecord:
+        a, b = self.at[k]
+        title, _, seq = os.pread(self.fd, b - a, a).partition(b"\n")
+        return SeqRecord(Seq(seq.translate(None, b" \t\r\n").decode()), id=k, name=k,
+                         description=title[1:].decode(errors="replace").rstrip())
+
+    def close(self) -> None:
+        os.close(self.fd)
+
+
+def open_input(path: Path, work: Path) -> Tuple[Path, Optional[FastaIndex], Dict[str, str], int, int, set]:
+    """read_input, and its index when it has one already: a plain FASTA file (SPAdes scaffolds) is used as it is
+    (rewriting a 460 Mb assembly took 15 s)"""
+    with open(path, "rb") as f:
+        first = f.readline()
+    if path.suffix.lower() not in (".gb", ".gbk", ".gbf", ".genbank") and not re.search(b"[ \t\r]", first):
+        idx = FastaIndex(path)
+        if idx.plain:
+            return path, idx, {}, len(idx.at), idx.nt, set()
+        idx.close()
+    fa, org, n, nt, circ = read_input(path, work)
+    return fa, None, org, n, nt, circ
+
+
 def read_input(path: Path, work: Path) -> Tuple[Path, Dict[str, str], int, int, set]:
     """FASTA or GenBank -> FASTA with unique BLAST-safe ids; returns it, organism by id (GenBank input),
     number of sequences and of nucleotides, and the ids of circular sequences (GetOrganelle paths named
-    '...(circular)', GenBank topology circular). Records are read back on demand (SeqIO.index), so an assembly of
+    '...(circular)', GenBank topology circular). Records are read back on demand (FastaIndex), so an assembly of
     millions of contigs is never held in memory."""
     fmt = "genbank" if path.suffix.lower() in (".gb", ".gbk", ".gbf", ".genbank") else "fasta"
     ids, org, nt, circ = set(), {}, 0, set()
@@ -1695,7 +1949,8 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
     return seq
 
 
-def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: float) -> List[dict]:
+def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: float,
+              bounded: bool = False) -> List[dict]:
     """One sequence per gene from all contigs. rDNA genes / spacers: fragments are cut at scaffold gaps (runs of
     >= 10 N); the pieces of the fragments with >= SEED_COV of the best contig coverage (contig cov_ of SPAdes names,
     else 1 = all fragments) are joined into a backbone by their overlaps and ordered on the reference gene of the
@@ -1722,6 +1977,9 @@ def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: flo
             parts = [(i, p) for i, s in enumerate(seqs) for p in re.split("N{10,}", s) if p]
             # seed: the well-covered fragments (same genome as the best one in an assembly of mixed samples)
             seed = {i for i in range(len(frags)) if wt[i] >= SEED_COV * wt[top]}
+            # assembly: the best-covered ones (the all-against-all blastn of _assemble grows with their number squared)
+            if bounded:
+                seed = set(sorted(seed, key=lambda i: (wt[i], len(seqs[i]), -i), reverse=True)[:MAX_CONS_SEED])
             if not ref:
                 seed = {i for i in seed if frags[i]["partial_5"] == frags[i]["partial_3"] == "0"} or seed
                 # the best copy orders the pieces it was cut into at scaffold gaps
@@ -1800,26 +2058,32 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
                 k, v = line.rstrip("\n").split("\t")[:2]
                 lo[k] = v
     lib = Library(lib_dir, work)
-    fa, org, n_seq, n_nt, circ = read_input(inp, work)
+    t0 = time.time()
+    fa, recs, org, n_seq, n_nt, circ = open_input(inp, work)
     if circ:
         rotate_circular(fa, circ, lib, genes, work, threads, lo)
-    recs = SeqIO.index(str(fa), "fasta")
-    logging.info(f"[NUC] {n_seq} sequences, {n_nt:,} nt")
+    recs = recs or FastaIndex(fa)
+    logging.info(f"[NUC] {n_seq} sequences, {n_nt:,} nt ({time.time() - t0:.0f} s)")
     # the prefilter (one reference per genus) only pays off on large assemblies; smaller inputs are searched whole
+    t0 = time.time()
     if n_nt > PREFILTER_NT:
-        windows = prefilter(fa, lib, genes, work, threads)
+        windows, bounded = prefilter(fa, lib, genes, work, threads, n_seq)
     else:
-        windows = {r.id: [(1, len(r))] for r in SeqIO.parse(str(fa), "fasta")}
-    regions = work / "regions.fa"
-    seqs = write_regions(windows, recs, regions)
-    logging.info(f"[NUC] prefilter: {len(windows)} contig(s), {len(seqs)} region(s), "
-                 f"{sum(len(s) for s in seqs.values()):,} nt")
+        whole = {r.id: [(1, len(r))] for r in SeqIO.parse(str(fa), "fasta")}
+        windows, bounded = {g: whole for g in genes}, set()
+    regions, seqs = {}, {}
+    for g in genes:
+        regions[g] = work / f"regions_{g}.fa"
+        seqs[g] = write_regions(windows[g], recs, regions[g])
+        logging.info(f"[NUC] prefilter {g}: {len(windows[g])} contig(s), {len(seqs[g])} region(s), "
+                     f"{sum(len(s) for s in seqs[g].values()):,} nt ({time.time() - t0:.0f} s)")
     rdna = hist = None
-    if seqs and "rdna" in genes:
-        rdna = annotate_rdna(regions, lib, work, threads, lo, {k: len(v) for k, v in seqs.items()}, refine)
-    if seqs and "histone" in genes:
+    if seqs.get("rdna"):
+        rdna = annotate_rdna(regions["rdna"], lib, work, threads, lo, {k: len(v) for k, v in seqs["rdna"].items()},
+                             refine, "rdna" in bounded)
+    if seqs.get("histone"):
         t0 = time.time()
-        hist = annotate_histones(regions, lib, work, threads, lo, seqs)
+        hist = annotate_histones(regions["histone"], lib, work, threads, lo, seqs["histone"])
         logging.info(f"[NUC] histones (tblastn + exonerate): {time.time() - t0:.0f} s")
     rows, feats = collect(recs, rdna, hist)
     write_outputs(out, recs, org, rows, feats)
@@ -1836,7 +2100,7 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
             groups = {"": rows_s}
         items = sorted(groups.items())
         if len(items) == 1:
-            res = [consensus(items[0][1], recs, lib, work, consensus_identity)]
+            res = [consensus(items[0][1], recs, lib, work, consensus_identity, "rdna" in bounded)]
         else:
             seqs_by_id = {r.id: r for r in (recs[c] for c in {r["contig"] for r in rows_s})}
             lib._seqs = SeqIO.to_dict(SeqIO.parse(str(lib.rdna_fa), "fasta"))     # SeqIO.index is not thread-safe
