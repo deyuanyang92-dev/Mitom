@@ -98,9 +98,9 @@ from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_g
                           INTERMEDIATE_DIRS, _LOCUS_NAME_MAXLEN, merge_gb_files, organize_outputs,  # noqa: F401
                           OUTPUT_LAYOUT, refresh_summary, REPORT_FILES, REPORT_NOTES,  # noqa: F401
                           rewrite_genbank_record_ids, RunSummary, WORK_DIRS, write_summary)  # noqa: F401
-from mitom_steps import (count_rows, optional_step, _plot_file, run_curate, run_curate_and_submit,  # noqa: E402,F401
-                         run_intron_fix, run_intron_ref, run_plots, run_rescue, run_rrna_hmm,  # noqa: F401
-                         run_submission)  # noqa: F401
+from mitom_steps import (count_rows, INTRON_LABEL, optional_step, _plot_file, run_compare,  # noqa: E402,F401
+                         run_curate, run_curate_and_submit, run_intron_fix, run_intron_ref, run_plots,  # noqa: F401
+                         run_rescue, run_rrna_hmm, run_submission, StepResult)  # noqa: F401
 
 
 # ── environment preflight ────────────────────────────────────────────────────────────────────────────────────────────
@@ -314,14 +314,14 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     run_rrna_hmm(args, final_dir, out_root)
     run_intron_fix(args, final_dir, out_root)
     reorient_after_introns(args, final_dir)
-    merge_dir = run_curate_and_submit(args, final_dir, out_root)
+    merge_dir = run_curate_and_submit(args, final_dir, out_root).gb_dir
     refresh_summary(out_root, merge_dir)
     all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
         p for p in merge_dir.rglob("*.gbf")
         if p.is_file() and p.stat().st_size > 0)
     if all_final_gbs:
         merge_gb_files(all_final_gbs, out_root / "all.final.gbf")
-    logging.info(f"[PLOT] {run_plots(args, merge_dir, out_root)}")
+    logging.info(f"[PLOT] {run_plots(args, merge_dir, out_root).summary}")
     (out_root / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary.log()
@@ -661,35 +661,20 @@ def workflow_run(args: argparse.Namespace) -> int:
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
-    run_rescue(args, final_dir, out_root)
-    steps.info(f"genes added by MITOS2 rescue : {count_rows(out_root / 'rescue_report.tsv', 'status', 'added')}")
-    run_rrna_hmm(args, final_dir, out_root)
-    steps.info(f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'rrna_hmm_report.tsv', 'status', 'added')}")
-    steps.info(f"introns                      : {run_intron_fix(args, final_dir, out_root)}")
+    for step in (run_rescue, run_rrna_hmm, run_intron_fix):
+        steps.info(step(args, final_dir, out_root).summary)
     n_rot = reorient_after_introns(args, final_dir)
     if n_rot:
         steps.info(f"re-oriented to the first exon : {n_rot} record(s) whose {args.which_gene_first} gained an exon upstream")
     steps.done()
 
     steps.start("Boundary rules for protein genes and rRNAs, NCBI gene names")
-    merge_dir = run_curate(args, final_dir, out_root)
-    curate_skipped = ("skipped (--curate no)" if args.curate == "no" else
-                      "curation failed (see run.log): the annotation before curation is used")
-    steps.done(f"{count_rows(merge_dir / 'curation_report.tsv')} changes, each with rule and reason in "
-               f"reports/curation_report.tsv" if merge_dir != final_dir else curate_skipped)
+    curated = run_curate(args, final_dir, out_root)
+    merge_dir = curated.gb_dir
+    steps.done(curated.summary)
 
     steps.start("NCBI check (table2asn) and submission files")
-    if merge_dir != final_dir:
-        run_submission(args, merge_dir, out_root)
-        sub_sum = out_root / "06.ncbi_submission" / "submission_summary.tsv"
-        n_rec = count_rows(sub_sum)
-        n_err = count_rows(sub_sum, "ERROR", lambda v: v != "0")
-        steps.done(f"{n_rec} records checked: {n_rec - n_err} without NCBI ERROR, {n_err} with ERROR "
-                   f"(ncbi_submission/validation_messages.tsv)" if n_rec else
-                   ("validation produced no records (see run.log)" if sub_sum.parent.is_dir() else
-                    "table2asn not found: skipped"))
-    else:
-        steps.done(curate_skipped)
+    steps.done(run_submission(args, merge_dir, out_root).summary if merge_dir != final_dir else curated.summary)
     refresh_summary(out_root, merge_dir)
     all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
         p for p in merge_dir.rglob("*.gbf")
@@ -712,21 +697,11 @@ def workflow_run(args: argparse.Namespace) -> int:
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
 
     steps.start("Compare with the original annotation")
-    orig_dir = out_root / "original_annotation"
-    if input_type == "converted_from_gb" and orig_dir.is_dir():
-        try:
-            import mito_compare
-            n = mito_compare.compare_dirs(orig_dir, merge_dir, out_root / "original_vs_mitom.tsv",
-                                          int(args.genetic_code))
-            steps.done(mito_compare.summary_text(n) + "; one row per gene: original_vs_mitom.tsv")
-        except Exception as exc:                   # noqa: BLE001  (a report: must not end the run after annotation)
-            logging.error(f"[COMPARE] failed: {exc!r}")
-            steps.done("comparison failed (see run.log); the annotation itself is complete")
-    else:
-        steps.done("FASTA input has no original annotation: skipped")
+    steps.done(run_compare(args, merge_dir, out_root, original=out_root / "original_annotation"
+                           if input_type == "converted_from_gb" else None).summary)
 
     steps.start("Genome maps (circular plots)")
-    steps.done(run_plots(args, merge_dir, out_root))
+    steps.done(run_plots(args, merge_dir, out_root).summary)
 
     steps.start("Organise the output")
     organize_outputs(out_root, merge_dir, keep=args.keep_intermediate == "yes")

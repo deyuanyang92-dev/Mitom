@@ -101,7 +101,7 @@ def test_run_ends_with_curated_and_submission_files(tmp_path):
     final.mkdir()
     (final / "KY753833.gbf").write_bytes((HERE / "data" / "KY753833_mitoz.gbf").read_bytes())
     args = argparse.Namespace(curate="yes", genetic_code=5, sbt=None)
-    merged_from = bm.run_curate_and_submit(args, final, tmp_path)
+    merged_from = bm.run_curate_and_submit(args, final, tmp_path).gb_dir
     assert merged_from == tmp_path / "05.curated"
     rec = SeqIO.read(str(merged_from / "KY753833.gbf"), "genbank")
     assert {f.qualifiers["gene"][0] for f in rec.features if f.type == "rRNA"} == {"rrnS", "rrnL"}

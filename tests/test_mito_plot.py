@@ -172,9 +172,9 @@ def test_run_plots_one_map_per_record_and_switch(tmp_path):
     import mitom_pipeline as bm
     d, _ = final_dir(tmp_path)
     args = argparse.Namespace(plot="no", infq=None, threads=1, max_tasks=2)
-    assert bm.run_plots(args, d, tmp_path) == "skipped (--plot no)" and not (tmp_path / "plots").exists()
+    assert bm.run_plots(args, d, tmp_path).summary == "skipped (--plot no)" and not (tmp_path / "plots").exists()
     args.plot = "yes"
-    assert bm.run_plots(args, d, tmp_path) == "2 map(s) in plots/"           # worker processes
+    assert bm.run_plots(args, d, tmp_path).summary == "2 map(s) in plots/"           # worker processes
     assert sorted(p.name for p in (tmp_path / "plots").iterdir()) == \
         ["TEST1.1.pdf", "TEST1.1.png", "TEST2.1.pdf", "TEST2.1.png"]
 
@@ -190,4 +190,4 @@ def test_run_plots_depth_ring_from_the_samples_reads(tmp_path):
     write_fastq(tmp_path / "fq" / "S1_1.fq.gz", [s[i:i + 150] for i in range(0, len(s) - 150, 50)])
     args = argparse.Namespace(plot="yes", infq=str(tmp_path / "fq"), fq_position="flat",
                               suffix_fq="_1.fq.gz,_2.fq.gz", threads=1, max_tasks=2)
-    assert bm.run_plots(args, d, tmp_path / "o") == "2 map(s) in plots/, 1 with read depth"
+    assert bm.run_plots(args, d, tmp_path / "o").summary == "2 map(s) in plots/, 1 with read depth"

@@ -91,7 +91,7 @@ def test_rrna_hmm_failure_is_logged_and_the_run_continues(tmp_path, monkeypatch,
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
     monkeypatch.setattr(mito_rrna_hmm, "search_dir", boom)
     with caplog.at_level(logging.ERROR):
-        assert bm.run_rrna_hmm(ns(), tmp_path, tmp_path) is None
+        assert not bm.run_rrna_hmm(ns(), tmp_path, tmp_path).ok
     assert any("[RRNA_HMM] failed" in m for m in caplog.messages)
 
 
@@ -102,7 +102,7 @@ def test_rescue_failure_is_logged_and_the_run_continues(tmp_path, monkeypatch, c
         raise RuntimeError("MITOS2 exploded")
     monkeypatch.setattr(mito_rescue, "rescue_dir", boom)
     with caplog.at_level(logging.ERROR):
-        assert bm.run_rescue(ns(), tmp_path, tmp_path) is None
+        assert not bm.run_rescue(ns(), tmp_path, tmp_path).ok
     assert any("[RESCUE] failed" in m and "MITOS2 exploded" in m for m in caplog.messages)
 
 

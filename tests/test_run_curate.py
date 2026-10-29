@@ -25,7 +25,7 @@ def test_run_curate_passes_the_clade_option(tmp_path, monkeypatch):
     monkeypatch.setattr(bm.subprocess, "run", fake_run)
     args = argparse.Namespace(curate="yes", genetic_code=5, clade="Annelida-segmented-worms")
     out = bm.run_curate(args, tmp_path / "04.final_gb", tmp_path)
-    assert out == tmp_path / "05.curated"
+    assert out.gb_dir == tmp_path / "05.curated" and out.ok
     i = seen[0].index("--aggressive_start_genes")
     assert seen[0][i + 1] == "ND5,ND4L"
     args.clade = "Nematoda"
@@ -77,7 +77,7 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
     monkeypatch.setattr(bm.subprocess, "run", fake_run)
     args = argparse.Namespace(intron_fix="auto", intron_bin=str(bindir), genetic_code=4, threads=2, max_tasks=3,
                               intron_lib=[], intron_ref_gb=[], phylum="Cnidaria")
-    line = bm.run_intron_fix(args, final, tmp_path)
+    line = bm.run_intron_fix(args, final, tmp_path).summary
     assert [Path(c[1]).name for c in seen] == ["mito_intron.py", "mito_intron_ref.py"]
     ref = seen[1]
     assert ref[2] == "annotate" and ref[ref.index("-i") + 1] == ref[ref.index("-o") + 1] == str(final)
