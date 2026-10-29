@@ -966,11 +966,11 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out --lib my_lib
 
 | 输出 | 内容 |
 |---|---|
-| `nuc_features.tsv` | 每个特征一行：contig、长度、SPAdes 覆盖度、基因、起止、链、5'/3' 是否不完整、最佳参考及物种、一致度、边界依据（aligned 比对得到 / projected 无比对外推）、`aligned_nt`（参考基因内比对到该特征的 nt，越少越要人工核对） |
+| `nuc_features.tsv` | 每个特征一行：contig、长度、SPAdes 覆盖度、基因、起止、链、5'/3' 是否不完整、最佳参考及物种、一致度、边界依据（aligned 比对得到 / projected 无比对外推）、`aligned_nt`（参考基因内比对到该特征的 nt，越少越要人工核对）；`copy_ratio`（contig 覆盖度 / 单拷贝覆盖度，后者取 SPAdes contig ≥ 1 kb 的长度加权中位数）；组蛋白另有 `class` / `class_evidence`：`replication-dependent`（串联基因簇拷贝，系统发育常用的 H3/H4：H3 第 31/87/89/90 位 = A S V M，或 copy_ratio ≥ 5）、`replacement`（替换变体：H3.3 = S A I G，或含内含子）、`single-copy`（copy_ratio < 2，如 H2A.X）、空 = 证据不足；序列证据优先于覆盖度 |
 | `nuc_annotation.gb` | 有特征的 contig 的 GenBank（rRNA / misc_RNA / CDS，不完整端为 `<` `>`，CDS 带 translation、transl_table 1） |
 | `submission/nuc.fsa`、`nuc.tbl`、`nuc.sqn` | NCBI 提交文件：定义行按 NCBI 规范自动生成（如 "... 18S ribosomal RNA gene, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, and internal transcribed spacer 2, complete sequence; and 28S ribosomal RNA gene, partial sequence"），来源信息取自输入 GenBank（voucher、isolate、geo_loc_name、collection_date 等）或 `--organism` / `--src`（NCBI source table TSV）；内部说明不写入；rRNA 在负链的序列翻成正向；≥10 N 在 .sqn 中为缺口（100 N = 长度未知）；内部终止的组蛋白写成 gene /pseudo。装有 table2asn 时自动 `-V vb -Z` 校验，结果在 `validation.txt`、`nuc.val`、`nuc.dr`。提交前需加提交者模板（`table2asn -t template.sbt`），NCBI 要求 collection_date 与 geo_loc_name |
 | `genes/<基因>.fasta` | 每个拷贝的序列（组蛋白另有 `.faa`） |
-| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列（GenBank 输入含多个物种时每个物种一条，`sample` 列为物种名）：多拷贝 rDNA 在组装中散成许多 contig 时，片段先在 scaffold 缺口（≥10 N）处切开，高覆盖片段按重叠拼接（拷贝变异分叉处接覆盖度高的一支）、按参考排序（ITS 没有参考，用样本自己的完整拷贝），再按覆盖度加权逐位投票；与共识一致度 < 99 %（`--consensus_identity`）的片段（其他物种、另一种 rDNA、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，取覆盖度最高的完整 CDS |
+| `consensus/<基因>.fasta`、`consensus.tsv` | 每个基因一条序列（GenBank 输入含多个物种时每个物种一条，`sample` 列为物种名）：多拷贝 rDNA 在组装中散成许多 contig 时，片段先在 scaffold 缺口（≥10 N）处切开，高覆盖片段按重叠拼接（拷贝变异分叉处接覆盖度高的一支）、按参考排序（ITS 没有参考，用样本自己的完整拷贝），再按覆盖度加权逐位投票；与共识一致度 < 99 %（`--consensus_identity`）的片段（其他物种、另一种 rDNA、污染）不用，`consensus.tsv` 列出用了哪些 contig、丢了哪些及原因；没有片段覆盖的区段为 N。组蛋白各拷贝是旁系同源，不合并，按 `class` 取一条：基因簇拷贝优先，其次未定、单拷贝，替换变体最后；同类中完整、覆盖度高者优先。SPAdes 常把基因簇拆成 < 150 nt 的高覆盖碎片：此时报告基因簇碎片（标为不完整），而不用完整的单拷贝变体顶替（MJ20260820041 环节动物 6 个组装：旧规则 3 个取到 H3.3、2 个取到基因簇 H3、3 个 H2A 取到 H2A.X）；`consensus.tsv` 的 `class` 列标明所取拷贝的类别 |
 
 大组装先用每属一个 rDNA 单元、每门每种组蛋白一个蛋白做快速预筛，只把命中的区域（±20 kb）送入精细注释：
 SRR16188826 SPAdes scaffolds（148 万条、7.2 亿 nt）32 线程 2 分 18 秒。

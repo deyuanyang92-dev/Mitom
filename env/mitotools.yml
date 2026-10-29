@@ -24,3 +24,5 @@ dependencies:
   - mafft=7.526
   - bwa                 # read depth ring of the genome maps (mito_plot.py, --infq); minimap2 is used instead when
                         # installed (8x faster) but is not listed: its k8 pulls sysroot_linux-64 (+0.5 GB on Linux)
+  - defusedxml          # NCBI XML in benchmark/mito_sample.py (tests/test_mito_sample.py imports it)
+  - pytest              # tests/
