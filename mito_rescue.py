@@ -63,7 +63,8 @@ MAX_LEN = {
 }
 CONTAINER_FACTOR = 1.5
 NOTE = "annotated by similarity to a MITOS2 prediction (not found by the primary annotation)"
-HINT = "MITOS2 boundaries are less exact than MitoZ's (52 % vs 80 % both ends exact): check the ends manually"
+HINT = ("MITOS2 boundaries are often inexact (both ends exact for 52 % of its genes in the 2026-10-20 benchmark): "
+        "check the ends manually")
 _MAX_LEN_BY_NAME = {n.lower(): MAX_LEN[g] for g, (n, _) in CORE_NAMES.items()}
 _MAX_LEN_BY_NAME.update({g.lower(): v for g, v in MAX_LEN.items()})
 

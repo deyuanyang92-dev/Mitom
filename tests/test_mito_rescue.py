@@ -222,7 +222,7 @@ def test_note_is_neutral_and_hint_goes_to_report(tmp_path):
         return out
 
     rows = mr.rescue_dir(d, 5, run=fake_mitos)
-    assert "boundar" in rows[0]["hint"]
+    assert "boundar" in rows[0]["hint"] and "MitoZ" not in rows[0]["hint"]     # MitoZ is no longer the annotation
     notes = [n for f in SeqIO.read(str(d / "S1.gbf"), "genbank").features if f.type == "CDS"
              for n in f.qualifiers.get("note", [])]
     assert notes == ["annotated by similarity to a MITOS2 prediction (not found by the primary annotation)"]
