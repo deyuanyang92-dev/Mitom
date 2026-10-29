@@ -1,5 +1,6 @@
 """mito_common.py - helpers shared by the MitoM modules: GenBank files (suffixes, finding them, atomic writes), FASTA
-reading, safe file names, report tables, file copies, CDS stop qualifiers and codon translation."""
+reading, safe file names, report tables, file copies, CDS stop qualifiers and codon translation, the annotation
+core's gene record (CoreFeature), running external programs (run_tool)."""
 from __future__ import annotations
 
 import argparse
@@ -12,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterator, List, Tuple
 
@@ -144,6 +146,26 @@ def contig_record_id(prefix: str, seq_id: str, k: int, n_seqs: int) -> str:
     """Record name of sequence k of a sample as the core gives it: the prefix for one sequence, else the sequence's
     own (cleaned, <= 16 characters) name."""
     return prefix if n_seqs == 1 else (re.sub(r"[^A-Za-z0-9_.-]", "_", seq_id)[:16] or f"{prefix}_{k + 1}")
+
+
+# ── the annotation core's genes (mito_core.py; its tRNA step in mito_trna.py) ─────────────────────────────────────
+@dataclass
+class CoreFeature:
+    kind: str              # CDS / rRNA / tRNA
+    name: str              # MITOS2-style: cox1, rrnL, trnL1
+    start: int             # 0-based half-open
+    end: int
+    strand: int
+    note: str = ""
+    partial5: bool = False
+    anticodon: str = ""
+    acpos: int = -1            # tRNA: 0-based position of the anticodon within the tRNA (MiTFi)
+    model: str = ""            # tRNA: the covariance model that found it
+    score: float = 0.0
+
+
+def positions(f: CoreFeature, n: int) -> set:
+    return {i % n for i in range(f.start, f.end)}
 
 
 # ── locations on a circular sequence: rotation, reverse complement ─────────────────────────────────────────────────
@@ -383,6 +405,15 @@ def run_tool(cmd, *, cwd=None, env=None, timeout=None, check: bool = False, capt
         TOOL_LOG.debug("[CMD stderr] " + "\n".join(p.stderr.strip().splitlines()[-STDERR_TAIL:]))
     if check and p.returncode:
         raise subprocess.CalledProcessError(p.returncode, args, p.stdout, p.stderr)
+    return p
+
+
+def run_or_raise(cmd, **kw) -> subprocess.CompletedProcess:
+    """run_tool for the annotation core's programs: RuntimeError('<program> failed (<exit code>): <end of stderr>')
+    when the program fails."""
+    p = run_tool(cmd, **kw)
+    if p.returncode != 0:
+        raise RuntimeError(f"{Path(cmd[0]).name} failed ({p.returncode}): {p.stderr.strip()[-400:]}")
     return p
 
 

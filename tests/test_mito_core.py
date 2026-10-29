@@ -311,10 +311,10 @@ def test_mitfi_path_runs_cmsearch_and_mitfi_as_mitos2(tmp_path, monkeypatch):
     class P:
         stdout = ""
 
-    def fake_run(cmd, log):
+    def fake_run(cmd, **kw):
         calls.append(cmd)
         return P()
-    monkeypatch.setattr(mc, "run", fake_run)
+    monkeypatch.setattr(mc.mito_trna, "run_or_raise", fake_run)      # the tRNA step is in mito_trna.py
     (tmp_path / "ncRNA").mkdir()
     for m in ("trnA", "trnD"):
         (tmp_path / "ncRNA" / f"{m}.cm").write_text("")
@@ -394,12 +394,12 @@ def test_trna_sensitive_pass_searches_the_gene_free_stretches_with_the_cm_filter
     class P:
         stdout = ""
 
-    def fake_run(cmd, log):
+    def fake_run(cmd, **kw):
         calls.append(cmd)
         if cmd[0] == "cmsearch":
             fastas[cmd[-1]] = Path(cmd[-1]).read_text()
         return P()
-    monkeypatch.setattr(mc, "run", fake_run)
+    monkeypatch.setattr(mc.mito_trna, "run_or_raise", fake_run)      # the tRNA step is in mito_trna.py
     (tmp_path / "ncRNA").mkdir()
     (tmp_path / "ncRNA" / "trnD.cm").write_text("")
     genome = "A" * 3500                                   # 3,000-nt circular record + 500 nt appended
@@ -470,3 +470,25 @@ def test_single_second_copy_kept_only_when_identical():
     assert mc.copy_identity(genome, a, longer) == 0.0
     diverged = genome[:100 + len(g)] + "ATG" + "GCA" * 30 + "TAA" + genome[100 + 2 * len(g):]
     assert 0 < mc.copy_identity(diverged, a, b) < mc.COPY_IDENTITY
+
+
+def test_trna_step_lives_in_mito_trna(monkeypatch):
+    """The core's tRNA step is mito_trna.core_trnas (its names stay importable from mito_core): MitoM-ML calls with
+    p < 0.9 need MiTFi's call of the same tRNA, MiTFi's calls of the families MitoM-ML did not call are added; without
+    MiTFi every MitoM-ML call stays; without MitoM-ML the tRNAs are MiTFi's."""
+    import mito_common
+    import mito_trna
+    assert mc.annotate_trnas is mito_trna.annotate_trnas and mc.trna_name is mito_trna.mitfi_trna_name
+    assert mc.Feature is mito_common.CoreFeature
+    ml = [mc.Feature("tRNA", "trnA", 100, 170, 1, "MitoM-ML", score=0.95),
+          mc.Feature("tRNA", "trnC", 300, 370, 1, "MitoM-ML", score=0.5)]
+    mitfi = [mc.Feature("tRNA", "trnD", 500, 570, 1, "MiTFi trnD.cm bits 30.0 E 1.0e-05", score=30.0)]
+    monkeypatch.setattr(mito_trna, "annotate_trnas_ml", lambda *a: list(ml))
+    monkeypatch.setattr(mito_trna, "annotate_trnas", lambda *a, **k: list(mitfi))
+
+    def names(tools, use_ml):
+        return [f.name for f in mito_trna.core_trnas("A" * 16000, "A" * 16000, Path("g.fa"), Path("."), 5, 1, tools,
+                                                     Path("."), LOG, 16000, None, "Metazoa;Annelida", True, use_ml, [])]
+    assert names({"mitfi": ("jar", "codes")}, True) == ["trnA", "trnD"]
+    assert names({}, True) == ["trnA", "trnC"]
+    assert names({"mitfi": ("jar", "codes")}, False) == ["trnD"]
