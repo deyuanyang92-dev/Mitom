@@ -11,10 +11,11 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, FeatureLocation, SeqFeature
+from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import write_gb, write_nonempty_table
+from mito_common import (feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
+                         reverse_complement_record, shift_location, write_gb, write_nonempty_table)
 from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
 
 if TYPE_CHECKING:
@@ -76,87 +77,6 @@ def feature_gene_names(feature: "SeqFeature") -> List[str]:
         for v in feature.qualifiers.get(k, []):
             names.append(str(v))
     return names
-
-
-def _rc_location(loc, seq_len: int):
-    if isinstance(loc, CompoundLocation):
-        return CompoundLocation(
-            [_rc_location(p, seq_len) for p in loc.parts][::-1], operator=loc.operator)
-    start, end = int(loc.start), int(loc.end)
-    new_strand  = None if loc.strand is None else (-loc.strand)
-    return FeatureLocation(seq_len - end, seq_len - start, strand=new_strand)
-
-
-def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
-    seq_len = len(record.seq)
-    new_rec = SeqRecord(record.seq.reverse_complement(), id=record.id,
-                        name=record.name, description=record.description)
-    new_rec.annotations = dict(record.annotations)
-    new_rec.dbxrefs     = list(getattr(record, "dbxrefs", []))
-    new_features: List["SeqFeature"] = []
-    for feat in record.features:
-        try:
-            new_loc = _rc_location(feat.location, seq_len)
-            new_features.append(SeqFeature(location=new_loc, type=feat.type,
-                                            id=getattr(feat, "id", "<unknown>"),
-                                            qualifiers=dict(feat.qualifiers)))
-        except Exception:
-            new_features.append(feat)
-    new_rec.features = new_features
-    return new_rec
-
-
-def merge_abutting_parts(parts: List, operator: str = "join"):
-    """Consecutive parts of the same strand that abut (a join across the old origin, [s, n) + [0, e), after the
-    shift) become one interval; parts are in transcript order, so on the minus strand the later part lies
-    before the earlier one. The outer ends keep their (fuzzy) positions. One part left: a plain FeatureLocation."""
-    merged = [parts[0]]
-    for part in parts[1:]:
-        prev = merged[-1]
-        if part.strand == prev.strand and part.strand == -1 and int(part.end) == int(prev.start):
-            merged[-1] = FeatureLocation(part.start, prev.end, strand=prev.strand)
-        elif part.strand == prev.strand and part.strand != -1 and int(prev.end) == int(part.start):
-            merged[-1] = FeatureLocation(prev.start, part.end, strand=prev.strand)
-        else:
-            merged.append(part)
-    return merged[0] if len(merged) == 1 else CompoundLocation(merged, operator=operator)
-
-
-def shift_location(location, shift: int, seq_len: int):
-    """Shift all feature coordinates by -shift (mod seq_len). Nested joins are flattened, parts that meet at the old
-    origin merged; a whole-sequence feature (source) stays whole; a zero-length point stays a point; partial ends
-    (< >) stay partial (trans-spliced placozoan cox1 pieces, 2026-10-29)."""
-    if isinstance(location, CompoundLocation):
-        flat_parts: List = []
-        for p in location.parts:
-            shifted = shift_location(p, shift, seq_len)
-            if isinstance(shifted, CompoundLocation):
-                flat_parts.extend(shifted.parts)
-            else:
-                flat_parts.append(shifted)
-        return merge_abutting_parts(flat_parts, location.operator)
-
-    orig_start = int(location.start)
-    orig_end   = int(location.end)
-    strand     = location.strand
-    length     = orig_end - orig_start
-
-    if length == seq_len:
-        return FeatureLocation(0, seq_len, strand=strand)
-
-    start = (orig_start - shift) % seq_len
-    end   = (orig_end   - shift) % seq_len
-
-    if end == 0 and length > 0:
-        end = seq_len
-    start, end = (type(old)(new) if isinstance(old, (BeforePosition, AfterPosition)) else new
-                  for old, new in ((location.start, start), (location.end, end)))
-
-    if start <= end:
-        return FeatureLocation(start, end, strand=strand)
-
-    return CompoundLocation([FeatureLocation(start, seq_len, strand=strand),
-                              FeatureLocation(0, end, strand=strand)])
 
 
 _LINEAR_SKIP_SEEN: set = set()      # sequences already reported by [LINEAR_REORIENT_SKIP] (run: step 3, then the final write)
@@ -330,13 +250,6 @@ def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
         if cross:
             probs.append(f"{ro.id}: feature(s) across the new origin: {', '.join(cross)}")
     return probs
-
-
-def feature_start_pos(feat: "SeqFeature") -> int:
-    loc = feat.location
-    if isinstance(loc, CompoundLocation) and loc.parts:
-        return int(loc.parts[0].start)
-    return int(loc.start)
 
 
 def reorient_one_gb(
