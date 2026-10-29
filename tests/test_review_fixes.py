@@ -18,6 +18,7 @@ from Bio.SeqRecord import SeqRecord
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import mitom_pipeline as bm  # noqa: E402
+import mitom_stage  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -77,7 +78,7 @@ def fake_core(tmp_path, rc, stderr="boom: no refseq89m"):
 
 
 def test_core_failure_is_warned_on_the_root_logger(tmp_path, monkeypatch, caplog):
-    monkeypatch.setattr(bm, "MITO_CORE", fake_core(tmp_path, 3))
+    monkeypatch.setattr(mitom_stage, "MITO_CORE", fake_core(tmp_path, 3))
     a = parse(tmp_path, "--clade", "Mollusca", "--genetic_code", "5")
     fa = tmp_path / "S00001.fasta"
     fa.write_text(">S00001 topology=circular\nACGT\n")
@@ -91,7 +92,7 @@ def test_core_failure_is_warned_on_the_root_logger(tmp_path, monkeypatch, caplog
 
 
 def test_run_returns_nonzero_when_every_record_failed(tmp_path, monkeypatch):
-    monkeypatch.setattr(bm, "MITO_CORE", fake_core(tmp_path, 3))
+    monkeypatch.setattr(mitom_stage, "MITO_CORE", fake_core(tmp_path, 3))
     monkeypatch.setenv("YZZ_MITO_NO_SCAN", "1")
     inp = tmp_path / "in.fa"
     inp.write_text(">rec1 topology=circular\n" + "ACGT" * 4000 + "\n")

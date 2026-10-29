@@ -17,6 +17,7 @@ from Bio.SeqRecord import SeqRecord
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import mitom_pipeline as bm  # noqa: E402
+import mitom_stage  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -173,7 +174,7 @@ def test_added_count_includes_partial_statuses(tmp_path, monkeypatch, caplog):
 def test_empty_phase2_list_starts_no_annotation_stage(tmp_path, monkeypatch):
     def boom(**k):
         raise AssertionError("run_annotation_stage must not be called for an empty list")
-    monkeypatch.setattr(bm, "run_annotation_stage", boom)
+    monkeypatch.setattr(mitom_stage, "run_annotation_stage", boom)          # run_phase2 lives there
     assert bm.run_phase2([], argparse.Namespace(), tmp_path, tmp_path) == {}
 
 
