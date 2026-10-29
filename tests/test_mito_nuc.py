@@ -684,7 +684,7 @@ def test_plain_fasta_is_used_as_it_is(tmp_path):
 @needs_tools
 def test_blast_db_in_pieces_searches_like_one_database(tmp_path, monkeypatch):
     """makeblastdb on pieces at once, joined by an alias database: the same hits and e-values as one database"""
-    monkeypatch.setattr(nuc, "DB_PIECE", 2000)
+    monkeypatch.setattr(nuc, "DB_PIECE", 2000)          # 12 kb: 3 pieces
     gene = rand(400)
     contigs = [SeqRecord(Seq(rand(300) + mutate(gene, 0.03 * (i % 4)) + rand(300)), id=f"c{i}", description="")
                for i in range(12)]

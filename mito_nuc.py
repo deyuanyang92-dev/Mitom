@@ -96,11 +96,11 @@ MIN_H34_PARTIAL_ID = 80 # % identity (exonerate) below which a partial H3 / H4 m
 SEED_COV = 0.1      # consensus seed: fragments with >= this fraction of the best fragment's contig coverage
 END_TOL = 20        # consensus: a copy variant this close (nt) to a contig end does not keep it from joining the next
 PAD = 20000         # flank around prefilter hits taken from long contigs
-DB_PIECE = 10_000_000   # FASTA bytes per makeblastdb piece of the prefilter database (pieces are built at once)
+DB_PIECE = 1_000_000    # min. FASTA bytes per makeblastdb piece of the prefilter database (one piece per thread)
 # a bounded amount of work per assembly, whatever the number of candidates (real genome skims had <= 48 rDNA and
 # <= 3,737 histone regions, 2026-10-29); only where the candidates are < 10 % of the input sequences (an assembly,
 # not a batch of records)
-MAX_RDNA_REGIONS = 300  # rDNA regions annotated, most aligned reference bits first
+MAX_RDNA_REGIONS = 1000 # rDNA regions annotated, most aligned reference bits first
 MAX_HIST_REGIONS = 1000 # histone regions per gene, closest to a reference protein first
 MAX_CM_JOBS = 300       # rRNA ends per gene placed with the Rfam models, best supported genes first (others: projection)
 MAX_CONS_SEED = 30      # best-covered fragments per gene the consensus backbone is built from (real assemblies: <= 8)
@@ -358,7 +358,7 @@ class Library:
 def blast_db(fa: Path, db: Path, threads: int) -> str:
     """nucleotide BLAST database of a large FASTA: makeblastdb on `threads` pieces at once, joined by an alias
     database (same total length and sequence count, so the same e-values as one database); one makeblastdb of a
-    460 Mb SPAdes assembly took 25-35 s"""
+    460 Mb SPAdes assembly took 25-35 s. BLAST threads share the work by volume: one volume per thread"""
     size = fa.stat().st_size
     n = max(1, min(threads, size // DB_PIECE))
     if n == 1:
@@ -395,25 +395,6 @@ def blast_db(fa: Path, db: Path, threads: int) -> str:
     run([tool("blastdb_aliastool"), "-dblist", " ".join(map(str, parts)), "-dbtype", "nucl", "-out", str(db),
          "-title", db.name])
     return str(db)
-
-
-def _search(prog: str, queries: Path, db: str, work: Path, threads: int, args: List[str],
-            qcol: int) -> List[List[str]]:
-    """BLAST of the query sequences in `threads` single-threaded runs at once (one run with -num_threads over the
-    few volumes of a small database kept 3 of 8 CPUs busy); the tabular rows in the order of one run (by query,
-    whose id is column qcol)"""
-    recs = list(SeqIO.parse(str(queries), "fasta"))
-    n = max(1, min(threads, len(recs)))
-    for i in range(n):
-        SeqIO.write(recs[i::n], str(work / f"{queries.stem}_{i}.fa"), "fasta")
-    rows: Dict[str, List[List[str]]] = defaultdict(list)
-    with ThreadPoolExecutor(n) as pool:
-        for o in pool.map(lambda i: run([tool(prog), "-query", str(work / f"{queries.stem}_{i}.fa"), "-db", db,
-                                         "-num_threads", "1", *args]), range(n)):
-            for line in o.splitlines():
-                x = line.split("\t")
-                rows[x[qcol]].append(x)
-    return [x for r in recs for x in rows[r.id]]
 
 
 def _windows(hits: List[List[str]]) -> Dict[str, List[Tuple[int, int]]]:
@@ -467,9 +448,10 @@ def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path, threads
     db = blast_db(contigs, work / "contigs", threads)
     out, bounded = {}, set()
     if "rdna" in genes:
-        hits = _search("blastn", lib.rdna_rep, db, work, threads,
-                       ["-task", "megablast", "-word_size", "20", "-evalue", "1e-20", "-dust", "yes",
-                        "-max_target_seqs", "100000", "-outfmt", "6 sseqid sstart send slen qseqid bitscore"], 4)
+        hits = [x.split("\t") for x in run([tool("blastn"), "-task", "megablast", "-word_size", "20", "-query",
+                                             str(lib.rdna_rep), "-db", db, "-evalue", "1e-20", "-dust", "yes",
+                                             "-max_target_seqs", "100000", "-num_threads", str(threads), "-outfmt",
+                                             "6 sseqid sstart send slen qseqid bitscore"]).splitlines()]
 
         def bits(hs: List[List[str]]) -> float:         # aligned bits of the best reference in the region
             per: Dict[str, float] = defaultdict(float)
@@ -481,9 +463,9 @@ def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path, threads
             bounded.add("rdna")
         out["rdna"] = _best_windows(win, hits, bits, MAX_RDNA_REGIONS if "rdna" in bounded else 0, "rDNA")
     if "histone" in genes:
-        hits = _search("tblastn", lib.hist_rep, db, work, threads,
-                       ["-evalue", "1e-10", "-seg", "no", "-max_target_seqs", "100000",
-                        "-outfmt", "6 sseqid sstart send slen qseqid bitscore pident"], 4)
+        hits = [x.split("\t") for x in run([tool("tblastn"), "-query", str(lib.hist_rep), "-db", db, "-evalue", "1e-10",
+                                             "-seg", "no", "-max_target_seqs", "100000", "-num_threads", str(threads),
+                                             "-outfmt", "6 sseqid sstart send slen qseqid bitscore pident"]).splitlines()]
         win, keep = _windows(hits), set()
         if 10 * sum(map(len, win.values())) < n_seq:
             bounded.add("histone")
