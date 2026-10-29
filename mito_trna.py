@@ -69,7 +69,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
-from mito_common import GB_SUFFIXES, run_tool, write_tsv  # noqa: E402
+from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_tsv  # noqa: E402
 
 GB_EXT = set(GB_SUFFIXES)
 TIMEOUT = 3600
@@ -348,7 +348,9 @@ def main(argv=None) -> int:
                    help="independent method families needed for a group to be selected (ARWEN+ARAGORN count once)")
     p.add_argument("--bin", default=None, help="directory with arwen, aragorn, tRNAscan-SE")
     p.add_argument("--mitos_bin", default=None, help="directory with runmitos (MITOS2 environment bin)")
-    p.add_argument("--mitos_refdir", default=None, help="MITOS2 reference data directory (contains refseq89m)")
+    p.add_argument("--refdir", dest="mitos_refdir", metavar="DIR", default=None, help="folder that holds the MITOS2 reference data "
+                   "refseq89m")
+    old_spelling(p, "--mitos_refdir", "mitos_refdir")
     p.add_argument("--mitos_ref", default="refseq89m")
     p.add_argument("--lineage", default="",
                    help="NCBI lineage (';'-separated) for MitoM-ML clade models when the input has no GenBank taxonomy")

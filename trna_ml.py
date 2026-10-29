@@ -531,8 +531,11 @@ def main(argv=None) -> int:
     ap.add_argument("-i", "--input", required=True, help="FASTA or GenBank (lineage then read from the record)")
     ap.add_argument("--lineage", default="", help="NCBI lineage, ';'-separated (GenBank input: from the record)")
     ap.add_argument("--genetic_code", type=int, default=5)
-    ap.add_argument("--mitos_refdir", default=None)
-    ap.add_argument("--cpu", type=int, default=1)
+    from mito_common import old_spelling
+    ap.add_argument("--refdir", dest="mitos_refdir", metavar="DIR", default=None, help="folder that holds refseq89m (or refseq89m)")
+    old_spelling(ap, "--mitos_refdir", "mitos_refdir")
+    ap.add_argument("--threads", dest="cpu", metavar="N", type=int, default=1, help="CPUs for cmsearch / cmalign")
+    old_spelling(ap, "--cpu", "cpu", type=int)
     a = ap.parse_args(argv)
     ref = mito_env.mitos_refdir(a.mitos_refdir)
     cms, cma = mito_env.find("cmsearch"), mito_env.find("cmalign")

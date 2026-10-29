@@ -14,7 +14,7 @@ run      GenBank input: records deduplicated (RefSeq NC_ kept), the original ann
 import   the same steps on existing MitoZ / MITOS2 results or any annotated GenBank, without annotating again.
 annotate one round of annotation and the steps after it, in the work layout (04.final_gb/, 05.curated/ ...).
 
-The annotation runs --max_tasks samples at a time with --threads each, in threads or with Snakemake
+The annotation runs --jobs samples at a time with --threads each, in threads or with Snakemake
 (--scheduler_backend snakemake / auto; Snakemake is optional and not installed with MitoM); everything after the
 annotation runs in this process.
 
@@ -57,7 +57,7 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (GB_SUFFIXES, reports_dir, safe_copy, safe_name, write_nonempty_list,  # noqa: E402,F401
+from mito_common import (GB_SUFFIXES, old_spelling, reports_dir, safe_copy, safe_name, write_nonempty_list,  # noqa: E402,F401
                          write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
                        CLADE_CODES, CLADE_PHYLUM, EXTRA_CLADES, METAZOAN_PHYLA, no_upstream_atg,  # noqa: F401
@@ -930,7 +930,7 @@ def default_threads() -> int:
 
 
 def default_max_tasks() -> int:
-    """Concurrent jobs when --max_tasks is not given: CPUs // default threads (at least 1)."""
+    """Concurrent jobs when --jobs is not given: CPUs // default threads (at least 1)."""
     return max(1, (os.cpu_count() or 8) // default_threads())
 
 
@@ -960,8 +960,9 @@ def build_parser() -> argparse.ArgumentParser:
     def add_common(sp: argparse.ArgumentParser) -> None:
         sp.add_argument("-i", "--input",  required=True,
                         help="Input FASTA file/dir or GenBank file/dir.")
-        sp.add_argument("-o", "--out_root", default="mitom_out",
-                        help="Output root directory (default: mitom_out).")
+        sp.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="mitom_out",
+                        help="Output folder (default: mitom_out).")
+        old_spelling(sp, "--out_root", "out_root")
         sp.add_argument("--if_split_fasta", choices=["yes", "no"], default="yes")
         sp.add_argument("--id_maxlen", type=id_maxlen_arg, default=15,
                         help="Max length of internal sample IDs (default: 15).")
@@ -980,12 +981,13 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--core", choices=["native"], default="native", help=argparse.SUPPRESS)   # old scripts
         g.add_argument("--mitos_bin", default=None,
                        help="MITOS2 environment bin (runmitos). Default: found automatically (mito_env.py).")
-        g.add_argument("--mitos_refdir", default=None,
-                       help="Directory containing MITOS2 refseq89m. Default: found automatically.")
+        g.add_argument("--refdir", dest="mitos_refdir", metavar="DIR", default=None,
+                       help="Folder that holds the MITOS2 reference data refseq89m. Default: found automatically.")
+        old_spelling(g, "--mitos_refdir", "mitos_refdir")
         g.add_argument("--plot", choices=["yes", "no"], default="yes",
                        help="Circular genome map per record (mito_plot.py, matplotlib) -> plots/<record>.png and .pdf: "
                             "genes by strand and type, GC content, GC skew; with --infq also the read depth (minimap2 when installed, else bwa mem). "
-                            "Default yes (about 2 s per record, --max_tasks in parallel).")
+                            "Default yes (about 2 s per record, --jobs in parallel).")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",
                        help="yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and "
                             "NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/")
@@ -1032,8 +1034,9 @@ def build_parser() -> argparse.ArgumentParser:
                             "samples are always kept (reports/failed_logs/).")
         g.add_argument("--threads",      type=positive_int_arg, default=default_threads(),
                        help="Threads per annotation job (default: min(8, number of CPUs) = %(default)s).")
-        g.add_argument("--max_tasks",    type=positive_int_arg, default=default_max_tasks(),
-                       help="Max concurrent annotation jobs (default: CPUs // threads = %(default)s).")
+        g.add_argument("--jobs", dest="max_tasks", metavar="N", type=positive_int_arg, default=default_max_tasks(),
+                       help="Records annotated at the same time (default: CPUs // threads = %(default)s).")
+        old_spelling(g, "--max_tasks", "max_tasks", type=positive_int_arg)
         g.add_argument("--clade",        default=_CLADE_DEFAULT,
                        help="Taxonomic group (sets the genetic code and group rules). auto (default): from the taxonomy of the GenBank "
                             "input (one phylum per run; class names such as Vertebrata, Gastropoda, Insecta count "
@@ -1142,7 +1145,8 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Original GenBank file/dir (metadata source).")
     tm.add_argument("-n", "--new_body", required=True,
                     help="Re-annotated GenBank file/dir (body source).")
-    tm.add_argument("-o", "--out_root", default="transfer_metadata_out")
+    tm.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="transfer_metadata_out")
+    old_spelling(tm, "--out_root", "out_root")
     tm.add_argument("--if_replace_metadata",  choices=["yes", "no"], default="yes")
     tm.add_argument("--overwrite_new_body",   choices=["yes", "no"], default="no")
     tm.add_argument("--output_name", default=None,
@@ -1164,8 +1168,9 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Original GenBank file/dir (organism/source name source).")
     ro.add_argument("-n", "--new_body", required=True,
                     help="Re-annotated GenBank file/dir whose /organism= needs fixing.")
-    ro.add_argument("-o", "--out_root", default="replace_organism_out",
-                    help="Output root directory (default: replace_organism_out).")
+    ro.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="replace_organism_out",
+                    help="Output folder (default: replace_organism_out).")
+    old_spelling(ro, "--out_root", "out_root")
     ro.add_argument("--overwrite_new_body", choices=["yes", "no"], default="no",
                     help="Overwrite the input files in-place (default: no).")
 
@@ -1175,7 +1180,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Deduplicate GenBank records (same accession / older version / RefSeq copy of an "
              "INSDC submission / identical sequence; RefSeq NC_ kept) and write GenBank + FASTA.")
     dd.add_argument("-i", "--input", required=True, help="GenBank file or directory.")
-    dd.add_argument("-o", "--out_root", default="dedup_out", help="Output directory (default: dedup_out).")
+    dd.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="dedup_out", help="Output folder (default: dedup_out).")
+    old_spelling(dd, "--out_root", "out_root")
 
     return p
 

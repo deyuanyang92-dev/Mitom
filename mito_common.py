@@ -2,6 +2,7 @@
 reading, safe file names, report tables, file copies, CDS stop qualifiers and codon translation."""
 from __future__ import annotations
 
+import argparse
 import csv
 import logging
 import os
@@ -20,6 +21,11 @@ from Bio.SeqRecord import SeqRecord
 
 _UMASK = os.umask(0)                 # the process umask, read once (os.umask can only be read by setting it)
 os.umask(_UMASK)
+
+
+def old_spelling(parser, name: str, dest: str, **kw) -> None:
+    """An option's old spelling: still accepted (scripts written for earlier versions keep working), not shown in -h."""
+    parser.add_argument(name, dest=dest, default=argparse.SUPPRESS, help=argparse.SUPPRESS, **kw)
 
 
 def safe_name(s: str) -> str:

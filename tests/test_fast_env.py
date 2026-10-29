@@ -160,3 +160,21 @@ def test_doctor_and_preflight_check_every_program_a_step_needs(capsys, monkeypat
     assert any("makeblastdb for the intron step" in p for p in probs) and any("cmalign for MitoM-ML" in p for p in probs)
     a.intron_fix = "no"
     assert not any("makeblastdb" in p for p in bm.check_environment(a))
+
+
+def test_new_option_spellings_and_hidden_old_ones():
+    """One spelling per meaning (-o/--out, --jobs, --refdir, --threads); the old ones still work and are not shown."""
+    p = bm.build_parser()
+    old = p.parse_args(["run", "-i", "x", "--out_root", "o", "--max_tasks", "3", "--mitos_refdir", "r"])
+    new = p.parse_args(["run", "-i", "x", "--out", "o", "--jobs", "3", "--refdir", "r"])
+    assert vars(old) == vars(new) and (new.out_root, new.max_tasks, new.mitos_refdir) == ("o", 3, "r")
+    assert set(vars(p.parse_args(["run", "-i", "x"]))) == set(vars(new))         # run_params.json keys unchanged
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf), pytest.raises(SystemExit):
+        p.parse_args(["run", "-h"])
+    shown = buf.getvalue()
+    assert "--jobs" in shown and "--refdir" in shown and "--max_tasks" not in shown and "--out_root" not in shown
+    import mito_rrna_hmm  # noqa: F401  (build --cpu / --manifest-only still accepted)
+    import trna_ml  # noqa: F401

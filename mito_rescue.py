@@ -49,7 +49,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import run_tool, write_gb, write_tsv  # noqa: E402
+from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
 from mito_engines import engine_env, mitos2_command, mitos_to_record  # noqa: E402,F401  (MITOS2: one runner, one parser)
 
 MIN_RRNA = 300
@@ -221,7 +221,8 @@ def main(argv=None) -> int:
     p.add_argument("-i", "--input", required=True, help="directory of final GenBank files (*.gbf), edited in place")
     p.add_argument("--genetic_code", type=int, required=True)
     p.add_argument("--mitos_bin")
-    p.add_argument("--mitos_refdir")
+    p.add_argument("--refdir", dest="mitos_refdir", metavar="DIR", help="folder that holds the MITOS2 reference data refseq89m")
+    old_spelling(p, "--mitos_refdir", "mitos_refdir")
     a = p.parse_args(argv)
     rows = rescue_dir(Path(a.input), a.genetic_code, mitos_bin=a.mitos_bin, refdir=a.mitos_refdir)
     rep = Path(a.input) / "rescue_report.tsv"

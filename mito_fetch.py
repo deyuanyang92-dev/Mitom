@@ -36,7 +36,7 @@ from Bio import Entrez, SeqIO
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
-from mito_common import write_tsv  # noqa: E402
+from mito_common import old_spelling, write_tsv  # noqa: E402
 
 ESEARCH_PAGE = 10000          # NCBI maximum retmax of one esearch request
 ACC_BATCH = 500               # UIDs per efetch rettype=acc request
@@ -214,7 +214,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--taxon", help="Scientific name or taxid; the whole subtree is taken (e.g. Annelida, 6340).")
     g.add_argument("--query", help="Raw Entrez query for nuccore (used instead of the taxon + mitogenome filters).")
-    ap.add_argument("-o", "--out_dir", default="fetch_out", help="Output directory (default: fetch_out).")
+    ap.add_argument("-o", "--out", dest="out_dir", metavar="OUT", default="fetch_out", help="Output folder (default: fetch_out).")
+    old_spelling(ap, "--out_dir", "out_dir")
     ap.add_argument("--name", help="Base name of the GenBank file (default: taxon name, or 'ncbi' for --query).")
     ap.add_argument("--refseq_only", action="store_true", help="RefSeq (NC_) records only.")
     ap.add_argument("--min_len", type=int, default=0, help="Minimum sequence length (bp).")

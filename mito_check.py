@@ -44,7 +44,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from mito_common import iter_gb_files, write_tsv  # noqa: E402
+from mito_common import iter_gb_files, old_spelling, write_tsv  # noqa: E402
 from mito_names import PCG, gene_name, trna_name  # noqa: E402
 
 # usual protein gene lengths (nt, incl. stop) in bilaterian mitogenomes; 60 % / 160 % are the error limits
@@ -268,7 +268,8 @@ def summary_line(rows: List[dict]) -> str:
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("-i", "--input", required=True, help="GenBank file or directory.")
-    ap.add_argument("-o", "--out_dir", default="check_out", help="Output directory (default: check_out).")
+    ap.add_argument("-o", "--out", dest="out_dir", metavar="OUT", default="check_out", help="Output folder (default: check_out).")
+    old_spelling(ap, "--out_dir", "out_dir")
     ap.add_argument("--genetic_code", type=int, default=None,
                     help="Translation table for CDS without /transl_table (default: the record's own tables).")
     ap.add_argument("--min_trna", type=int, default=22, help="Fewer tRNAs than this is an ERROR (default 22; 0 = off).")

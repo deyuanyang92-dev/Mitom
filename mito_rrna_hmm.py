@@ -37,11 +37,11 @@ Rules:
 
 Usage:
   python3 scripts/fetch_rrna_refs.py -o refs --all-metazoa [--set benchmark/sets/mito_bench_2026-10.tsv]
-  python3 mito_rrna_hmm.py build --gb refs/*.gb -o models/rrna_hmm [--exclude accessions.txt] [--manifest-only]
+  python3 mito_rrna_hmm.py build --gb refs/*.gb -o models/rrna_hmm [--exclude accessions.txt] [--manifest_only]
   python3 mito_rrna_hmm.py search -i 04.final_gb/ [--lib models/rrna_hmm] [--phylum Ctenophora]
 build: one GenBank file per phylum (file name = phylum), made by scripts/fetch_rrna_refs.py (reusable form
 of knowledge/experiments/rrna_ref/fetch_refs.py, which also writes refs_<phylum>.txt accession lists);
-rRNAs of 300-4000 nt with <= 1 % N; --manifest-only recomputes manifest.tsv (lengths, percentiles) without
+rRNAs of 300-4000 nt with <= 1 % N; --manifest_only recomputes manifest.tsv (lengths, percentiles) without
 re-aligning. search writes the GenBank files in place (all *.gbf / *.gb below the directory; failures
 become "failed: ..." rows) and rrna_hmm_report.tsv next to them.
 
@@ -68,7 +68,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
-from mito_common import run_tool, write_gb, write_tsv  # noqa: E402
+from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
 
 LIB = Path(__file__).resolve().parent / "models" / "rrna_hmm"
 GENES = {g: CORE_NAMES[g] for g in ("rrnS", "rrnL")}          # the core's /gene and /product
@@ -499,8 +499,10 @@ def main() -> int:
     b.add_argument("--gb", nargs="+", type=Path, required=True, help="one GenBank file per phylum (stem = phylum)")
     b.add_argument("-o", "--out", type=Path, default=LIB)
     b.add_argument("--exclude", type=Path, help="file with accessions to leave out (one per line)")
-    b.add_argument("--cpu", type=int, default=4)
-    b.add_argument("--manifest-only", action="store_true",
+    b.add_argument("--threads", dest="cpu", metavar="N", type=int, default=4)
+    old_spelling(b, "--cpu", "cpu", type=int)
+    old_spelling(b, "--manifest-only", "manifest_only", action="store_true")
+    b.add_argument("--manifest_only", action="store_true",
                    help="recompute manifest.tsv from the references; keep the existing .hmm files (no alignment)")
     s = sub.add_parser("search", help="search missing rRNAs in final GenBank files (in place)")
     s.add_argument("-i", "--input", type=Path, required=True, help="directory of *.gbf / *.gb")
