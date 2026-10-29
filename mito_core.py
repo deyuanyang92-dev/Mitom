@@ -57,7 +57,9 @@ from Bio.SeqRecord import SeqRecord
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_env  # noqa: E402
-import mito_rrna_hmm  # noqa: E402  (per-phylum rRNA profile HMMs: nhmmer search, best span)
+import mito_rrna_hmm  # noqa: E402,F401  (the rRNA step: per-phylum profile HMMs, MITOS2's covariance models)
+# the rRNA step, moved to mito_rrna_hmm.py, stays importable from here (tests)
+from mito_rrna_hmm import annotate_rrnas, cm_len, rrna_hmm, tbl_hits  # noqa: E402,F401
 from mito_common import contig_record_id, CoreFeature as Feature, positions, read_fasta, run_or_raise  # noqa: E402,F401
 from mito_common import topology_from_header  # noqa: E402
 import mito_trna  # noqa: E402  (the tRNA step: MitoM-ML checked by MiTFi, mito_trna.core_trnas)
@@ -505,93 +507,6 @@ def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.C
         return None
     s, e = (best[1], best[2]) if nb.strand == 1 else (N - best[2], N - best[1])
     return Feature("CDS", gene, s, e, nb.strand, f"open reading frame before {nb.name} (gene order)", score=1.0)
-
-
-# ── RNAs ─────────────────────────────────────────────────────────────────────
-def tbl_hits(tbl: Path) -> List["mito_rrna_hmm.Hit"]:
-    """Hits of a cmsearch --tblout file as mito_rrna_hmm.Hit (0-based half-open plus coordinates, model columns,
-    bits), so that the rRNA HMM rules join the pieces of one gene (consecutive, disjoint model columns)."""
-    hits = []
-    for line in tbl.read_text().splitlines():
-        if line.startswith("#"):
-            continue
-        c = line.split()
-        a, b = int(c[7]), int(c[8])
-        hits.append(mito_rrna_hmm.Hit(min(a, b) - 1, max(a, b), 1 if c[9] == "+" else -1, int(c[5]), int(c[6]),
-                                      float(c[14])))
-    return hits
-
-
-def cm_len(cm: Path) -> int:
-    """CLEN (model columns) of an Infernal .cm file."""
-    with open(cm) as fh:
-        for line in fh:
-            if line.startswith("CLEN"):
-                return int(line.split()[1])
-    return 0
-
-
-def rrna_hmm(lib: Path, phylum: Optional[str], model: str) -> Optional[Path]:
-    """The per-phylum profile HMM of model (rrnS / rrnL) in lib for `phylum`, None when there is none."""
-    if not phylum or not lib.is_dir():
-        return None
-    name = {p.name.split(".")[0].lower(): p.name.split(".")[0] for p in lib.glob("*.hmm")}.get(phylum.lower())
-    p = lib / f"{name}.{model}.hmm" if name else None
-    return p if p and p.is_file() else None
-
-
-def annotate_rrnas(genome_fa: Path, refdir: Path, tools: dict, tmp: Path, log, phylum: Optional[str] = None,
-                   rrna_lib: Optional[Path] = None, n: Optional[int] = None, method: str = "hmm") -> List[Feature]:
-    """12S / 16S: method hmm (default) = the per-phylum profile HMM (nhmmer, ~0.1 GB, seconds) when the library has
-    the record's phylum, else the MITOS2 covariance model (cmsearch, 0.4-0.6 GB, 10 s); method cm = the MITOS2
-    covariance model only. Both give the same accuracy (2026-10-28, full pipeline on 300 + 150 leave-out records:
-    found 98.5 / 98.5 % and 99.3 / 99.3 %, both ends exact 47.4 / 47.6 % and 32.3 / 32.3 %); R1 of mito_curate.py
-    then fits the ends to the flanking genes. Hits are joined by
-    mito_rrna_hmm's rules (n = record length of a circular record searched with ORIGIN_EXT nt appended); a span over
-    less than MIN_COVER of the model is not taken (MitoM's rRNA HMM step looks again). A second copy (best_spans'
-    runner-up over the same model columns elsewhere) scoring >= COPY_FRAC of the gene is added too: duplicated rRNAs,
-    both copies in NCBI (NC_044480.1 rrnS + rrnL, mermithid nematodes NC_008046.1, NC_008047.1; nhmmer with the
-    leave-out libraries on the 1,050 + 669 benchmark records found 7 such copies, all of them NCBI's second copy)."""
-    feats = []
-    lib = rrna_lib or mito_rrna_hmm.LIB
-    for model in ("rrnS", "rrnL"):
-        hmm = rrna_hmm(lib, phylum, model) if method == "hmm" else None
-        cm = refdir / "ncRNA" / f"{model}.cm"
-        span, copy, how = None, None, ""
-        if hmm is not None:
-            span, copy = mito_rrna_hmm.best_spans(mito_rrna_hmm.nhmmer(hmm, genome_fa), n)
-            leng, how = mito_rrna_hmm.model_len(hmm), f"nhmmer {hmm.name}"
-            if span is None:
-                log.info(f"[core] {model}: no nhmmer hit with {hmm.name}; trying the covariance model")
-            elif (span.hmm_to - span.hmm_from + 1) / leng < mito_rrna_hmm.MIN_COVER:
-                # a weak partial hit of a divergent genome (tunicates against the vertebrate-dominated Chordata
-                # model: NC_009833.1, NC_013561.1, whose rRNAs MITOS2's covariance models find)
-                log.info(f"[core] {model}: nhmmer span covers {(span.hmm_to - span.hmm_from + 1) / leng:.2f} of "
-                         f"{hmm.name}; trying the covariance model")
-                span = None
-        if span is None:
-            hits = tbl_hits(cmsearch(tools["cmsearch"], cm, genome_fa, tmp / f"{model}.out", False, log, rrna=True).with_suffix(".tbl"))
-            span, copy = mito_rrna_hmm.best_spans(hits, n)
-            leng, how = cm_len(cm), "cmsearch"
-        if span is None:
-            # no sensitive (--nohmm) pass: 2.4 GB and 2 min per model; a missing rRNA is found later by MitoM's
-            # per-phylum rRNA HMM step (mito_rrna_hmm.py, nhmmer)
-            log.info(f"[core] {model}: no hit (left to the rRNA HMM step)")
-            continue
-        cover = (span.hmm_to - span.hmm_from + 1) / leng if leng else 1.0
-        if cover < mito_rrna_hmm.MIN_COVER:
-            log.info(f"[core] {model}: best span {span.start + 1}..{span.end} covers {cover:.2f} of the model: "
-                     "not taken (left to the rRNA HMM step)")
-            continue
-        feats.append(Feature("rRNA", model, span.start, span.end, span.strand,
-                             f"{how} bits {span.score:.0f} model {span.hmm_from}-{span.hmm_to}/{leng}", score=span.score))
-        log.info(f"[core] {model}: {span.start + 1}..{span.end} ({'+' if span.strand == 1 else '-'}) by {how}")
-        if copy is not None and copy.score >= COPY_FRAC * span.score and \
-                (copy.hmm_to - copy.hmm_from + 1) / leng >= mito_rrna_hmm.MIN_COVER:
-            feats.append(Feature("rRNA", model, copy.start, copy.end, copy.strand,
-                                 f"{how} bits {copy.score:.0f} model {copy.hmm_from}-{copy.hmm_to}/{leng}", score=copy.score))
-            log.info(f"[core] {model}: second copy {copy.start + 1}..{copy.end} ({'+' if copy.strand == 1 else '-'}) by {how}")
-    return feats
 
 
 # ── output ───────────────────────────────────────────────────────────────────

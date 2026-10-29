@@ -230,9 +230,9 @@ def test_rrna_weak_hmm_span_falls_back_to_the_covariance_model(tmp_path, monkeyp
     monkeypatch.setattr(mc.mito_rrna_hmm, "nhmmer", lambda h, fa: [weak])
     monkeypatch.setattr(mc.mito_rrna_hmm, "model_len", lambda h: 900)
     monkeypatch.setattr(mc.mito_rrna_hmm, "best_spans", lambda hits, n: (hits[0] if hits else None, None))
-    monkeypatch.setattr(mc, "cmsearch", lambda *a, **k: tmp_path / "x.out")
-    monkeypatch.setattr(mc, "tbl_hits", lambda tbl: [good])
-    monkeypatch.setattr(mc, "cm_len", lambda cm: 900)
+    monkeypatch.setattr(mc.mito_rrna_hmm, "cmsearch", lambda *a, **k: tmp_path / "x.out")
+    monkeypatch.setattr(mc.mito_rrna_hmm, "tbl_hits", lambda tbl: [good])
+    monkeypatch.setattr(mc.mito_rrna_hmm, "cm_len", lambda cm: 900)
     feats = mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, {"cmsearch": "cmsearch"}, tmp_path,
                               logging.getLogger("t"), phylum="Chordata", rrna_lib=tmp_path)
     assert [(f.name, f.start, f.end) for f in feats] == [("rrnS", 1000, 1800), ("rrnL", 1000, 1800)]
@@ -429,14 +429,14 @@ def test_rrna_method_cm_uses_only_the_mitos2_covariance_models(tmp_path, monkeyp
     """--rrna_method cm: MITOS2's rrnS / rrnL covariance models only (no nhmmer); hmm (default): the per-phylum HMM
     first. Same accuracy on 450 leave-out records (2026-10-28); hmm is faster."""
     calls = []
-    monkeypatch.setattr(mc, "rrna_hmm", lambda lib, phylum, model: tmp_path / f"{model}.hmm")
+    monkeypatch.setattr(mc.mito_rrna_hmm, "rrna_hmm", lambda lib, phylum, model: tmp_path / f"{model}.hmm")
     monkeypatch.setattr(mc.mito_rrna_hmm, "nhmmer", lambda h, fa: calls.append(("nhmmer", h.name)) or [])
     monkeypatch.setattr(mc.mito_rrna_hmm, "best_spans", lambda hits, n: (None, None))
     monkeypatch.setattr(mc.mito_rrna_hmm, "model_len", lambda h: 900)
-    monkeypatch.setattr(mc, "cmsearch", lambda cm, model, fa, out, sensitive, log, rrna=False, z=None:
+    monkeypatch.setattr(mc.mito_rrna_hmm, "cmsearch", lambda cm, model, fa, out, sensitive, log, rrna=False, z=None:
                         calls.append(("cmsearch", model.name)) or out)
-    monkeypatch.setattr(mc, "tbl_hits", lambda tbl: [])
-    monkeypatch.setattr(mc, "cm_len", lambda cm: 900)
+    monkeypatch.setattr(mc.mito_rrna_hmm, "tbl_hits", lambda tbl: [])
+    monkeypatch.setattr(mc.mito_rrna_hmm, "cm_len", lambda cm: 900)
     tools = {"cmsearch": "cmsearch"}
     mc.annotate_rrnas(tmp_path / "g.fa", tmp_path, tools, tmp_path, LOG, "Annelida", None, None, "cm")
     assert calls == [("cmsearch", "rrnS.cm"), ("cmsearch", "rrnL.cm")]
