@@ -8,7 +8,7 @@ from Bio import SeqIO
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -56,7 +56,7 @@ def test_bin_with_needs_all_programs(cfg, tmp_path):
 
 def test_wrong_clade_rejected_before_any_job(tmp_path):
     # 2026-10-20: an unknown --clade only failed per sample after setup (Cnidaria is now an extended clade)
-    r = subprocess.run([sys.executable, str(HERE.parent / "batch_mitoz.py"), "run", "-i", str(tmp_path),
+    r = subprocess.run([sys.executable, str(HERE.parent / "mitom_pipeline.py"), "run", "-i", str(tmp_path),
                         "-o", str(tmp_path / "out"), "--clade", "Cnidarians"], capture_output=True, text=True)
     assert r.returncode == 2 and "not a supported clade" in r.stderr and not (tmp_path / "out").exists()
 
@@ -83,7 +83,7 @@ def test_mito_trna_rejects_unknown_mitos_mode(tmp_path):
 
 def test_extended_clade_accepted_and_needs_code(tmp_path):
     assert "Animal" in bm.ALL_CLADES and "Cnidaria" in bm.ALL_CLADES
-    r = subprocess.run([sys.executable, str(HERE.parent / "batch_mitoz.py"), "run", "-i", str(tmp_path), "-o", str(tmp_path / "o"),
+    r = subprocess.run([sys.executable, str(HERE.parent / "mitom_pipeline.py"), "run", "-i", str(tmp_path), "-o", str(tmp_path / "o"),
                         "--clade", "Cnidaria"], capture_output=True, text=True)
     assert r.returncode != 0 and "--genetic_code" in (r.stdout + r.stderr)
 
@@ -149,6 +149,6 @@ def test_default_threads_follow_the_machine(monkeypatch, cpus, threads, tasks):
 
 def test_prog_name_follows_the_launcher(monkeypatch):
     monkeypatch.delenv("MITOM_LAUNCHER", raising=False)
-    assert bm.build_parser().prog == "batch_mitoz.py"
+    assert bm.build_parser().prog == "mitom_pipeline.py"
     monkeypatch.setenv("MITOM_LAUNCHER", "1")
     assert bm.build_parser().prog == "mitom"

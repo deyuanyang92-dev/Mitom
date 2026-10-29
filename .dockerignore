@@ -1,5 +1,13 @@
 __pycache__
 **/__pycache__
 .pytest_cache
-benchmark/out*
 *.log
+.git
+.github
+mito_config.json
+models/trna_ml/clades
+models/trna_ml/cache
+benchmark
+knowledge
+packaging
+tests

@@ -1,10 +1,10 @@
-"""batch_mitoz.organize_outputs: the final layout of `run`, the user's own files and a second run into the same folder."""
+"""mitom_pipeline.organize_outputs: the final layout of `run`, the user's own files and a second run into the same folder."""
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 
 
 def _fake_run(out: Path, errors: str) -> Path:

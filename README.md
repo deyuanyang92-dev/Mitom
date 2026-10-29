@@ -1,7 +1,7 @@
 # MitoM 使用说明 / User Guide
 
-本文档说明 MitoM（命令 `mitom`，主程序 `batch_mitoz.py`）的安装、输入格式、各子命令、常用参数、输出文件和工作流程。
-This document explains installation, inputs, subcommands, key options, outputs, and workflow of MitoM (command `mitom`, main program `batch_mitoz.py`).
+本文档说明 MitoM（命令 `mitom`，主程序 `mitom_pipeline.py`）的安装、输入格式、各子命令、常用参数、输出文件和工作流程。
+This document explains installation, inputs, subcommands, key options, outputs, and workflow of MitoM (command `mitom`, main program `mitom_pipeline.py`).
 
 ## 快速上手 / Quick start
 
@@ -9,11 +9,27 @@ This document explains installation, inputs, subcommands, key options, outputs, 
 
 ```bash
 git clone https://github.com/deyuanyang92-dev/Mitom.git MitoM && cd MitoM
-bash install.sh            # 一个 conda 环境 mitotools（BLAST、exonerate、Infernal、HMMER、Java、table2asn）+ 参考数据 + 命令 mitom
-mitom doctor               # 检查：所有必需程序都应显示 OK
+bash install.sh            # 一个 conda 环境 mitotools（Python 包和全部程序）+ 命令 mitom + mitom setup（参考数据、配置）
+mitom doctor               # 检查：所有必需程序都应显示 OK；mitom --version 显示版本
 ```
 
+全部依赖都在一个 conda 环境 `mitotools` 里（`env/mitotools.yml`，Python 包也在内），不往系统 Python 装任何东西；`mitom` 用这个环境的 Python 和程序。
+All dependencies, the Python packages included, live in one conda environment (`env/mitotools.yml`); nothing is installed into the system Python.
+
 Docker：`docker build -t mitom . && docker run --rm -v "$PWD":/data mitom mitom run -i /data/genomes.gb -o /data/out`
+（bioconda 配方在 `packaging/bioconda/`；发布后可 `mamba create -n mitom -c conda-forge -c bioconda mitom && conda activate mitom && mitom setup`）
+
+**安装大小 / Install size**（2026-10-28，Linux x86_64 全新安装实测：conda 环境 + 参考数据 refseq89m）：
+
+| 软件 / tool | 下载 / download | 安装后 / installed | conda 包 / packages |
+|---|---|---|---|
+| MitoM 1.0.0 | 0.48 GB | 1.8 GB（首次运行再解压 0.19 GB tRNA 模型） | 157 |
+| MITOS2 2.1.10 | 0.75 GB | 2.9 GB | 185 |
+| MitoZ 3.6 | 1.37 GB | 4.5 GB | 380 |
+
+MitoM 用电脑上已有的 Java（MiTFi 用，任何 ≥ 8 的版本）；没有时 install.sh 另装 openjdk 8（下载约 0.09 GB）。MITOS2 一行含它的参考数据 refseq89m，MitoZ 一行只是它的 conda 环境。conda 下载的安装包缓存可用 `mamba clean -t` 删除。
+
+MitoZ、MITOS2 不随 MitoM 安装；装了它们时，MitoM 可以调用它们注释或导入它们的结果（见下）。
 
 **2. 运行 / Run**
 
@@ -26,6 +42,13 @@ mitom run -i fetch_out/Annelida.gb -o out            # 不论 NCBI 原注释好�
 
 # FASTA 输入（没有分类信息）：不写 --clade 时沿用 Annelida 蛋白库并警告；其他类群请写明类群库和遗传密码
 mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5
+
+# 用 MitoZ 或 MITOS2 注释（需自己另装；之后照常方向调整、第二轮、校正、NCBI 文件、圈图）
+mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5 --engine mitoz      # 或 --engine mitos2
+
+# 已有 MitoZ / MITOS2 结果或任何注释好的 GenBank：不再注释，直接方向调整、端点校正与 NCBI 命名、NCBI 提交文件、圈图
+mitom import -i mitoz_results/ -o out --clade Mollusca --genetic_code 5               # MitoZ 结果目录或 .gbf
+mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5   # MITOS2 结果目录
 ```
 
 `--clade` 可选：`Chordata Arthropoda Echinodermata Annelida-segmented-worms Bryozoa Mollusca Nematoda
@@ -83,7 +106,7 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。`
 
 ## MitoM：声明、致谢与引用 / Statement, acknowledgements and citation
 
-**MitoM**（命令名 `mitom`；M = Merge / Metazoa）是一条动物线粒体基因组注释流程。流程本身（下表"MitoM 自有步骤"）是作者多年研究中逐步优化形成的；基因识别由 MitoM 自己的注释核心 `mito_core.py` 完成，各环节用什么方法以 benchmark 结果为依据（`benchmark/`）。MitoZ 只作方法参考和 benchmark 对照，不需安装（2026-10-28 起不再调用）；MITOS2 程序可选，只用于漏注救回（`--rescue yes`）和 `mito_trna.py --select mitos2`（核心用到的 MITOS2 参考数据 refseq89m 由 `install.sh` 下载）。
+**MitoM**（命令名 `mitom`；M = Merge / Metazoa）是一条动物线粒体基因组注释流程。流程本身（下表"MitoM 自有步骤"）是作者多年研究中逐步优化形成的；基因识别由 MitoM 自己的注释核心 `mito_core.py` 完成，各环节用什么方法以 benchmark 结果为依据（`benchmark/`）。MitoZ、MITOS2 不随 MitoM 安装：装了它们时可以用 `--engine mitoz|mitos2` 让它们注释，或用 `mitom import` 读入它们已有的结果，之后的 MitoM 步骤相同；MITOS2 还可用于漏注救回（`--rescue yes`）。核心用到的 MITOS2 参考数据 refseq89m 由 `mitom setup` 下载（install.sh 会运行）。
 
 | 环节 | 来源 |
 |---|---|
@@ -91,12 +114,13 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。`
 | 方向调整（cox1 起始、统一正链，cox1 缺失时依次用 cox2/cox3/cob/nad1） | MitoM 自有步骤 |
 | 方向调整后第二轮注释 | MitoM 自有步骤 |
 | 元数据迁回（原 GenBank header）、`/organism` 修复 | MitoM 自有步骤 |
-| 内含子（`mito_intron.py`，按 MFannot 方法实现） | MitoM 自有步骤（方法来自 MFannot） |
+| 内含子（`mito_intron.py` 按 MFannot 方法从头识别 + `mito_intron_ref.py` 近缘位点迁移） | MitoM 自有步骤（从头识别方法来自 MFannot；位点库由 193 条核实的 NCBI 记录构建） |
 | 漏注基因从 MITOS2 救回（`mito_rescue.py`，可选：`--rescue yes`，需另装 MITOS2） | MitoM 自有步骤 |
 | 仍缺的 12S/16S 用按门建立的 rRNA HMM 补搜（`mito_rrna_hmm.py`，库 `models/rrna_hmm/`，nhmmer；只在常规方法找不到时启用） | MitoM 自有步骤（思路参考 EMMA 的 nhmmer rRNA 模型） |
 | 蛋白基因与 rRNA 端点校正（`mito_curate.py`）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
 | 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
 | 基因组圈图（`mito_plot.py`：基因、GC 含量、GC skew，可选测序深度） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
+| 用 MitoZ / MITOS2 注释（`--engine mitoz\|mitos2`）或导入它们已有的结果（`mitom import`；`mito_engines.py`） | 可选：MitoZ、MITOS2 需自己安装 |
 | 蛋白基因、rRNA、tRNA 识别 | 注释核心 `mito_core.py`（blastx + exonerate 蛋白基因，按门 rRNA profile HMM，MitoM-ML tRNA：分支协方差模型 + 学习的判别器与端点，未调用的 tRNA 家族由 MiTFi 补，脊椎动物取 MiTFi 端点） |
 
 `mito_core.py` = MitoM 自己的核心（blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m，起始密码子按 MitoZ 的规则取比对上游最近的一个（比对缺少较多残基时取最接近预期位置的）；rRNA 用按门的 profile HMM（`--rrna_method cm` 改用 MITOS2 的协方差模型）；tRNA 用 MitoM-ML（MITOS2 tRNA 模型 + 220 个分支的协方差模型，ARWEN/ARAGORN 作证据，梯度提升判别器与端点模型；它未调用的家族用 MiTFi 补，脊椎动物取 MiTFi 端点；无 scikit-learn 时整个改用 MiTFi）），只需一个 conda 环境，每条记录约 1–2 分钟。
@@ -116,9 +140,11 @@ On 17 records all four tools finished, protein genes with both ends as RefSeq: M
 **Benchmark（多类群，2026-10）/ Metazoa benchmark**：8 个门 × 3 条 RefSeq 线粒体基因组（环节、节肢、脊索、刺胞、棘皮、软体、线虫、扁形），裸序列输入，与 NCBI 注释逐基因比较，并用 table2asn 检查能否直接提交（`docs/benchmark_metazoa_2026-10.md`，数据 `benchmark/results/metazoa_mini_2026-10/`）。四个工具都完成的 17 条：蛋白基因两端完全一致 MitoM 82%、MitoZ 78%、MITOS2 51%、MitoFinder 59%；rRNA 两端一致 38% / 25% / 16% / 9%；tRNA 找回 98% / 93% / 96% / 97%；记录无明显错误 10/17、1/17、0/17、0/17；0 个 NCBI ERROR 的记录 MitoM 17/24，MitoZ 4/18，MITOS2 与 MitoFinder 0。每条用时中位数 175 s / 249 s / 385 s / 204 s；峰值内存 0.7 / 0.5 / 1.0 / 0.24 GB（MitoM 的内存来自其内部的 MITOS2 tRNA 搜索）。MitoZ 不支持刺胞和扁形动物（无 clade）；MitoFinder 需要用户提供近缘参考基因组，2 条因无近缘参考失败。安装、功能、便捷性的对比见同一文档。 **原生核心（2026-10-22，默认 `--core native`，不再调用 MitoZ）在同一 24 条上**：蛋白基因两端一致 247/306（MitoZ 路线 240，MitoZ 174/230；17 条共同记录 82.6% / 82.1% / 78.4%），rRNA 3 nt 内 50%（48% / 27%），tRNA 3 nt 内 81%（81% / 79%），每条用时中位 109 s（175 / 249），峰值内存 0.32 GB（0.73 / 0.49），NCBI ERROR 记录 1（2 / 13）；只需一个 conda 环境。表见 `benchmark/results/metazoa_mini_2026-10/report_native.md`。 在 30 个门 173 条 RefSeq 记录上：蛋白基因两端一致 79.0%（MitoZ 路线 66.7%），30 个门中 25 个提升，NCBI ERROR 记录 11 vs 113，每条用时中位 146 s vs 325 s（`benchmark/results/metazoa_173_2026-10/`）。
 On 17 records all four tools finished (8 phyla), protein genes with both ends exactly as RefSeq: MitoM 82 %, MitoZ 78 %, MITOS2 51 %, MitoFinder 59 %; records with zero NCBI table2asn errors: MitoM 17 of 24, MitoZ 4 of 18, MITOS2 and MitoFinder none. Details, installation and feature comparison: `docs/benchmark_metazoa_2026-10.md`.
 
+**原始结果与经 MitoM 校正后的比较（2026-10-28）/ Raw and curated**：24 条 NC 记录（8 门 × 3），MitoZ 支持的 18 条上：蛋白基因两端一致 MitoM 83.0%、MitoZ 原始 75.7% → 经 MitoM 校正 78.7%、MITOS2 原始 50.0% → 56.5%；rRNA 3 nt 内 MitoM 61.8%、MitoZ 26.5% → 61.8%、MITOS2 23.5% → 64.7%；tRNA 找回 MitoM 99.5%、MitoZ 92.9%、MITOS2 95.9%（校正不改变）；校正后三者都 0 条 NCBI ERROR（原始 MitoZ 13/18、MITOS2 18/18）。MitoM 不校正时蛋白基因两端一致只有 58.7%（核心把终止子等交给校正规则）。详见 `benchmark/results/curation_cmp_2026-10-28/`。
+
 **Benchmark（环节动物，2026-10）/ Annelida benchmark**：40 条 RefSeq 环节动物线粒体基因组，裸序列输入，与 NCBI 注释比较（`docs/benchmark_annelida_2026-10.md`，数据 `benchmark/results/annelida_2026-10/`）。蛋白基因两端完全一致：MitoM 80%、MitoZ 63%、MITOS2 54%、MitoFinder 48%；有明显错误（缺基因、内部终止、重复、边界差 >30 nt）的记录：MitoM 16/40、MitoZ 36/40、MITOS2 39/40、MitoFinder 34/39；每条用时中位数 MitoM 100 s、MitoZ 244 s、MITOS2 353 s、MitoFinder 206 s。
 
-**MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation, genome maps) was developed by the author over years of research. Gene finding is done by MitoM's own annotation core `mito_core.py`, its methods chosen by benchmark results (`benchmark/`): blastx + exonerate protein genes, per-phylum rRNA profile HMMs, MitoM-ML tRNAs (clade covariance models with a learned caller and ends, MiTFi for the families it does not call and MiTFi ends for vertebrates); one conda environment. MitoZ is a methods reference and a benchmark comparison only and need not be installed (no longer run since 2026-10-28); the MITOS2 program is optional (rescue of missed genes with `--rescue yes`, `mito_trna.py --select mitos2`; the MITOS2 reference data refseq89m the core uses are downloaded by `install.sh`).
+**MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation, genome maps) was developed by the author over years of research. Gene finding is done by MitoM's own annotation core `mito_core.py`, its methods chosen by benchmark results (`benchmark/`): blastx + exonerate protein genes, per-phylum rRNA profile HMMs, MitoM-ML tRNAs (clade covariance models with a learned caller and ends, MiTFi for the families it does not call and MiTFi ends for vertebrates); one conda environment. MitoZ and MITOS2 are not installed with MitoM: when they are installed, `--engine mitoz|mitos2` lets them annotate, or `mitom import` reads their existing results, and the MitoM steps that follow are the same; MITOS2 can also rescue missed genes (`--rescue yes`). The MITOS2 reference data refseq89m the core uses are downloaded by `mitom setup` (install.sh runs it).
 
 **声明 / Statement**
 
@@ -131,9 +157,9 @@ On 17 records all four tools finished (8 phyla), protein genes with both ends ex
 
 **第三方软件 / Third-party tools**
 
-注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa 由 `install.sh` 装入 conda 环境（装有 minimap2 时自动改用它，快约 8 倍），圈图用的 matplotlib 由 pip 安装，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`install.sh` 另外下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MITOS2（可选）不随本仓库分发；MitoZ 不再需要。
+注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa（装有 minimap2 时自动改用它，快约 8 倍）、Python 包（Biopython、scikit-learn、matplotlib）由 `install.sh` 装入同一个 conda 环境，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`mitom setup` 下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MitoZ（GPL-3.0）、MITOS2 可选，不随本仓库分发。
 
-The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, about 8x faster) are installed into a conda environment by `install.sh`, matplotlib (genome maps) with pip; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `install.sh` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MITOS2 (optional) is not distributed here; MitoZ is no longer needed.
+The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, about 8x faster) and the Python packages (Biopython, scikit-learn, matplotlib) are installed into one conda environment by `install.sh`; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `mitom setup` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MitoZ (GPL-3.0) and MITOS2 are optional and not distributed here.
 
 **致谢 / Acknowledgements**
 
@@ -146,7 +172,7 @@ We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, G
 引用本软件的同时，请一并引用实际用到的软件 / When citing this software, please also cite the tools it ran:
 
 - 本软件 / This software: https://github.com/deyuanyang92-dev/Mitom (`CITATION.cff`)
-- MitoZ（方法参考、benchmark 对照 / methods reference, benchmark）: Meng G, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz173
+- MitoZ（`--engine mitoz`、方法参考 / methods reference）: Meng G, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz173
 - MITOS2: Donath A, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz833
 - MITOS: Bernt M, et al. 2013. Mol Phylogenet Evol. doi:10.1016/j.ympev.2012.08.023
 - MiTFi (tRNA models; MitoM's core and MITOS2): Jühling F, et al. 2012. Nucleic Acids Res. doi:10.1093/nar/gkr1131
@@ -161,16 +187,16 @@ We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, G
 
 ## 脚本定位 / What The Script Does
 
-`batch_mitoz.py` 是 MitoM 流程的主程序（文件名沿用早期版本，已不调用 MitoZ）：批量线粒体注释（MitoM 核心 `mito_core.py`）及作者设计的方向调整、元数据迁回、内含子、基因组圈图等步骤。
+`mitom_pipeline.py` 是 MitoM 流程的主程序（命令 `mitom run` / `import` / `annotate` …；旧名 `batch_mitoz.py` 仍可用）：批量线粒体注释（MitoM 核心 `mito_core.py`，或 `--engine mitoz|mitos2`）及作者设计的方向调整、元数据迁回、内含子、端点校正、NCBI 提交文件、基因组圈图等步骤。
 
-`batch_mitoz.py` is the main program of the MitoM workflow (the file name is historical; MitoZ is not run): batch mitochondrial annotation (MitoM's core `mito_core.py`) plus the author's own steps - reorientation, metadata transfer, introns, genome maps and more.
+`mitom_pipeline.py` is the main program of the MitoM workflow (`mitom run` / `import` / `annotate` ...; the old name `batch_mitoz.py` still works): batch mitochondrial annotation (MitoM's core `mito_core.py`, or `--engine mitoz|mitos2`) plus the author's own steps - reorientation, metadata transfer, introns, curation, NCBI submission files, genome maps and more.
 
 它主要完成：
 
 - 识别 FASTA 或 GenBank 输入。
 - 把 GenBank 输入去重并转换为内部 FASTA。
 - 为每条记录生成短内部 ID，例如 `S00001`，避免注释核心或 GenBank LOCUS 名称过长。
-- 批量调用注释核心 `mito_core.py`。
+- 批量调用注释引擎：MitoM 核心 `mito_core.py`（默认），或 MitoZ / MITOS2（`--engine`）；`mitom import` 直接用已有的注释结果。
 - 按目标基因重定向序列，默认 `cox1`。
 - 可选对重定向后的序列做第二轮注释。
 - 把原始 GenBank header metadata 转移回最终结果。
@@ -183,7 +209,7 @@ It can:
 - Detect FASTA or GenBank input.
 - Deduplicate GenBank records and convert them to internal FASTA.
 - Generate short internal IDs such as `S00001`.
-- Run the annotation core `mito_core.py` in batch.
+- Run the annotation engine in batch: MitoM's core `mito_core.py` (default), or MitoZ / MITOS2 (`--engine`); `mitom import` takes existing results instead.
 - Reorient records by a target gene, defaulting to `cox1`.
 - Optionally run a second annotation pass after reorientation.
 - Restore original GenBank header metadata.
@@ -193,35 +219,26 @@ It can:
 
 ## 依赖 / Requirements
 
-一条命令安装全部依赖：`bash install.sh`（见"快速上手"）；`mitom doctor` 检查。下面是各组件：
+一条命令安装全部依赖：`bash install.sh`（见"快速上手"）；`mitom doctor` 检查。全部在一个 conda 环境 `mitotools`（`env/mitotools.yml`）：
 
-- 注释核心：exonerate、BLAST、Infernal、HMMER、Java、table2asn、MAFFT（env/mitotools.yml）+ MITOS2 参考数据 refseq89m
-- 基因组圈图：matplotlib；测序深度环用 bwa（mitotools 环境）。装有 minimap2 时自动改用它，快约 8 倍：`mamba install -n mitotools -c bioconda minimap2`（Linux 上环境多 0.5 GB）
-- 可选：MITOS2 2.1.10（`--rescue yes` 漏注救回、`mito_trna.py --select mitos2`）
+- Python 3.11 及 Biopython、numpy、scikit-learn 1.7.2（MitoM-ML tRNA 判别器按此版本训练）、matplotlib（圈图）
+- 注释核心与后续步骤：exonerate、BLAST、Infernal、HMMER、table2asn、ARAGORN、tRNAscan-SE、MAFFT + MITOS2 参考数据 refseq89m（`mitom setup`）
+- Java（MiTFi 用，任何 ≥ 8 的版本）：用电脑上已有的；没有时 install.sh 往环境里加 openjdk 8
+- 圈图测序深度：bwa；装有 minimap2 时自动改用它，快约 8 倍：`mamba install -n mitotools -c bioconda minimap2`（Linux 上环境多 0.5 GB）
+- 可选，自己安装：MITOS2 2.1.10（`--engine mitos2`、`--rescue yes`；`bash install.sh --envs "mitotools mitos"`）、MitoZ 3.6（`--engine mitoz`；`mamba create -n mitoz -c bioconda -c conda-forge mitoz=3.6`）、Snakemake（多任务调度）
 
-基础依赖：
-
-- Python 3.8+
-- Biopython
-- matplotlib（基因组圈图）
-- Snakemake，可选，用于调度多任务
-
-Basic requirements:
-
-- Python 3.8+
-- Biopython
-- matplotlib (genome maps)
-- Snakemake, optional scheduler
+Everything is in one conda environment, `mitotools` (`env/mitotools.yml`): Python 3.11 with Biopython, numpy, scikit-learn 1.7.2 and matplotlib; the programs of the core and the later steps; the MITOS2 reference data via `mitom setup`. Java for MiTFi (any version >= 8): the computer's own; install.sh adds openjdk 8 to the environment only when there is none. Optional, installed by you: MITOS2 (`--engine mitos2`, `--rescue yes`), MitoZ (`--engine mitoz`), Snakemake, minimap2 (faster depth ring).
 
 检查帮助：
 
 ```bash
-python3 batch_mitoz.py --help
-python3 batch_mitoz.py run --help
-python3 batch_mitoz.py annotate --help
-python3 batch_mitoz.py reorient --help
-python3 batch_mitoz.py transfer_metadata --help
-python3 batch_mitoz.py replace_organism --help
+mitom -h
+mitom run -h
+mitom import -h
+mitom annotate -h
+mitom reorient -h
+mitom transfer_metadata -h
+mitom replace_organism -h
 ```
 
 ## 输入格式 / Input Formats
@@ -324,7 +341,8 @@ In `sample_dir` mode, exact filenames are preferred. If exact names are absent, 
 
 | 子命令 | 用途 | English |
 |---|---|---|
-| `run` | 完整流程：注释、重定向、可选二轮注释、最终 GenBank 生成 | Full pipeline |
+| `run` | 完整流程：注释（MitoM 核心，或 `--engine mitoz\|mitos2`）、重定向、可选二轮注释、校正、NCBI 提交文件、圈图 | Full pipeline |
+| `import` | 已有 MitoZ / MITOS2 结果或注释好的 GenBank：不再注释，走 `run` 的后续步骤 | Existing annotations through the MitoM steps |
 | `annotate` | 只做一轮批量注释和最终整理 | Annotation only |
 | `reorient` | 只对已有 GenBank 按目标基因重定向 | Reorient existing GenBank |
 | `transfer_metadata` | 单独转移 GenBank header metadata | Standalone metadata transfer |
@@ -355,7 +373,7 @@ In `sample_dir` mode, exact filenames are preferred. If exact names are absent, 
 ### 常用参数示例 / Example With Common Options
 
 ```bash
-python3 batch_mitoz.py run \
+mitom run \
   -i /path/to/input_fasta_or_genbank \
   -o mitom_out \
   --scheduler_backend threads \
@@ -380,7 +398,7 @@ rename_summary_all.fasta
 如果要用已改名后的 FASTA 跑完整流程，可用：
 
 ```bash
-python3 batch_mitoz.py run \
+mitom run \
   -i rename_summary_all.fasta \
   -o mitom_renamed_out \
   --scheduler_backend threads \
@@ -400,7 +418,7 @@ Replace `Arthropoda` and `genetic_code` with values appropriate for your dataset
 reads 只用于圈图的测序深度环（bwa mem；装有 minimap2 时用它）/ reads only add the read depth ring of the genome maps:
 
 ```bash
-python3 batch_mitoz.py run \
+mitom run \
   -i input.fasta \
   -o mitom_out \
   --infq /path/to/fastq_dir \
@@ -416,7 +434,7 @@ python3 batch_mitoz.py run \
 ### Snakemake 调度示例 / Snakemake Scheduler Example
 
 ```bash
-python3 batch_mitoz.py run \
+mitom run \
   -i input.fasta \
   -o mitom_out \
   --scheduler_backend snakemake \
@@ -442,7 +460,7 @@ python3 batch_mitoz.py run \
 Note: `annotate` does not run phase-2 annotation, but final `.gbf` files are still ID-rewritten and reoriented by `--which_gene_first`. Metadata preservation defaults to `no` for `annotate`.
 
 ```bash
-python3 batch_mitoz.py annotate \
+mitom annotate \
   -i /path/to/fasta_or_genbank \
   -o annotate_out \
   --scheduler_backend threads \
@@ -470,7 +488,7 @@ Use it when one annotation pass is enough.
 For `reorient`, `-i` must be a GenBank file or directory. FASTA input is not processed by this workflow. `--if_split_fasta` and `--id_maxlen` appear in the shared help output but have no practical effect for `reorient`.
 
 ```bash
-python3 batch_mitoz.py reorient \
+mitom reorient \
   -i /path/to/genbank_dir \
   -o reorient_out \
   --which_gene_first cox1
@@ -479,7 +497,7 @@ python3 batch_mitoz.py reorient \
 如果目标基因在负链上，默认会反向互补，使目标基因转到正向。如果不想这样做：
 
 ```bash
-python3 batch_mitoz.py reorient \
+mitom reorient \
   -i /path/to/genbank_dir \
   -o reorient_out \
   --which_gene_first cox1 \
@@ -495,7 +513,7 @@ By default, minus-strand target genes are reverse-complemented. Use `--no_force_
 `transfer_metadata` replaces the header section of re-annotated GenBank files with metadata from the original GenBank files while keeping the new `FEATURES` and `ORIGIN`.
 
 ```bash
-python3 batch_mitoz.py transfer_metadata \
+mitom transfer_metadata \
   -m /path/to/original_gb_dir \
   -n /path/to/new_body_gb_dir \
   -o transfer_metadata_out \
@@ -505,7 +523,7 @@ python3 batch_mitoz.py transfer_metadata \
 单文件模式可指定输出文件名：
 
 ```bash
-python3 batch_mitoz.py transfer_metadata \
+mitom transfer_metadata \
   -m original.gbf \
   -n reannotated.gbf \
   -o transfer_metadata_out \
@@ -515,7 +533,7 @@ python3 batch_mitoz.py transfer_metadata \
 如果需要自动接受模糊匹配：
 
 ```bash
-python3 batch_mitoz.py transfer_metadata \
+mitom transfer_metadata \
   -m original.gbf \
   -n reannotated.gbf \
   -o transfer_metadata_out \
@@ -556,7 +574,7 @@ Outputs and behavior:
 `replace_organism` restores `/organism=` inside `FEATURES source` and can also sync the SOURCE text.
 
 ```bash
-python3 batch_mitoz.py replace_organism \
+mitom replace_organism \
   -m /path/to/original_gb_dir \
   -n /path/to/new_body_gb_dir \
   -o replace_organism_out
@@ -565,7 +583,7 @@ python3 batch_mitoz.py replace_organism \
 如需覆盖输入文件：
 
 ```bash
-python3 batch_mitoz.py replace_organism \
+mitom replace_organism \
   -m /path/to/original_gb_dir \
   -n /path/to/new_body_gb_dir \
   --overwrite_new_body yes
@@ -608,10 +626,12 @@ Outputs and matching:
 | `--max_tasks` | `run`, `annotate` | 同时运行的任务数，必须为正整数；默认 `max(1, CPU 数 // threads)` | Maximum concurrent jobs, positive integer; default `max(1, CPUs // threads)` |
 | `--clade` | `run`, `annotate` | 类群蛋白库，默认 `auto`：从 GenBank 分类信息判断（一次一个门；纲级名按所属门处理；分类信息里没有已知门名、含多个门、或各条记录 CDS `transl_table` 不一致时报错；**完全没有分类信息**（FASTA、无 lineage 的 GenBank）时沿用 Annelida 并警告）；可选值见"快速上手" | Taxon protein database, default `auto` (from the GenBank taxonomy, one phylum per run; class names count for their phylum; a taxonomy without a known phylum, several phyla, or differing CDS transl_tables are errors; input with NO taxonomy at all - FASTA, GenBank without lineage - falls back to Annelida with a warning) |
 | `--genetic_code` | `run`, `annotate` | 遗传密码表，无默认固定值：`--clade auto` 时取输入各记录 CDS 的 transl_table（记录间不一致则报错），无则该门常用码；显式 `--clade` 时取该类群的密码（Chordata 2、Echinodermata 9、Porifera 4，其余 5；Cnidaria、Platyhelminthes、Chaetognatha、Animal 必须显式给出）；显式给出时优先 | Genetic code (no fixed default): with `--clade auto` from the per-record CDS transl_table (differing records are an error), else the phylum's usual code; with an explicit `--clade` the code of that clade (2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal); an explicit value wins |
+| `--engine`, `--mitoz_bin` | `run`, `annotate` | 注释程序：`native`（默认，MitoM 核心）/ `mitoz` / `mitos2`（需自己安装；MitoZ 只支持它自己的 9 个 `--clade`）；`--mitoz_bin` 给 mitoz 所在目录 | Annotation program: native (default) / mitoz / mitos2 (installed by you) |
+| `--fasta`, `--topology` | `import` | MITOS2 结果对应的基因组 FASTA（按 result.bed 里的序列名匹配；默认在结果目录或其上一级找）；拓扑：`auto`（默认：MITOS2 取 result.gff，GenBank 取 LOCUS 行，MitoZ 输出按环状）/ `circular` / `linear` | Genome FASTA of MITOS2 results; topology of imported records |
 | `--rescue` | `run`, `annotate` | 从 MITOS2 补回核心漏注的蛋白基因/rRNA（需另装 MITOS2）：`auto`（默认）/ `no` = 不运行（核心自己重试其他位点）；`yes` = 对缺基因的记录运行 | Rescue genes the core missed from MITOS2 (optional install): `auto` (default) / `no` = not run; `yes` = run for records missing a gene |
 | `--rrna_method` | `run`, `annotate` | 注释核心的 12S/16S 搜索：`hmm`（默认，更快）= MitoM 按门 profile HMM，无模型或无命中时用 MITOS2 协方差模型；`cm` = 只用 MITOS2 协方差模型（refseq89m）。两者准确度相同（2026-10-28，450 条留一法记录完整流程：找回 98.5% / 98.5%，两端一致 47.4% / 47.6%）；hmm 每个基因几秒、约 0.1 GB，cm 约 10 秒、约 0.5 GB | 12S/16S search of the core: `hmm` (default, faster) = per-phylum profile HMMs, MITOS2 covariance models where there is no model or hit; `cm` = MITOS2 covariance models only. Same accuracy (450 leave-out records: found 98.5 / 98.5 %, both ends exact 47.4 / 47.6 %) |
 | `--rrna_hmm`, `--rrna_hmm_lib`, `--phylum` | `run`, `annotate` | 仍缺的 12S/16S 用按门 HMM 补搜：`auto`（默认）/ `yes` / `no`；库默认 `models/rrna_hmm`；`--phylum` 默认取 `--clade auto` 判出的门、显式 `--clade` 对应的门（`--clade Animal` 时不确定，FASTA 输入请自己给 `--phylum`），都没有时才用记录自己的分类信息；没有可用模型的记录会在日志和屏幕上提示 | Per-phylum rRNA HMM fallback for rRNAs still missing: `auto` (default) / `yes` / `no`; `--phylum` defaults to the phylum found by `--clade auto` or that of an explicit `--clade` (unknown for `--clade Animal`: give it for FASTA input), then to the record's own taxonomy; records without a model are reported on screen and in the log |
-| `--intron_fix` | `run`, `annotate` | 内含子（MFannot 方法）：`auto`（默认，找到 exonerate 即运行）/ `yes` / `no` | Introns (MFannot method): `auto` (default) / `yes` / `no` |
+| `--intron_fix` | `run`, `annotate` | 内含子：从头识别（MFannot 方法，`mito_intron.py`）+ 近缘位点迁移（`mito_intron_ref.py`，位点库 `models/intron_sites.*`）：`auto`（默认，找到 exonerate 即运行）/ `yes` / `no` | Introns: de novo (MFannot method) + site transfer from annotated relatives: `auto` (default) / `yes` / `no` |
 | `--curate`, `--sbt` | `run`, `annotate` | 端点校正 + NCBI 命名 + 提交文件（默认 `yes`）；`--sbt` 为 NCBI 提交者模板 | Curation + NCBI names + submission files (default `yes`); `--sbt` submitter template |
 | `--plot` | `run`, `annotate` | 每条记录的基因组圈图 `plots/<记录>.png`、`.pdf`（`mito_plot.py`）：`yes`（默认，每条约 1 秒）/ `no` | Circular genome map per record (`plots/`): `yes` (default) / `no` |
 | `--infq`, `--fq_position`, `--suffix_fq` | `run`, `annotate` | 可选双端 FASTQ，只用于圈图的测序深度环（bwa mem，装有 minimap2 时用它）；`--suffix_fq` 必须有两个逗号分隔后缀 | Optional paired FASTQ, only for the read depth ring of the genome maps (bwa mem, or minimap2 when installed); suffix list must contain two comma-separated values |
@@ -678,7 +698,7 @@ out/
 ├── ncbi_submission/            # NCBI 提交文件（需 table2asn）：<登录号>.fsa/.tbl（BankIt 上传）、.sqn/.val（table2asn）、
 │                               #   submission_summary.tsv（每条记录 ERROR/WARNING 数）、validation_messages.tsv
 ├── reports/                    # 各步骤的报告：dedup_report.tsv、reannotation_decision.tsv、curation_report.tsv、validation_compare.tsv、
-│                               #   rescue_report.tsv、rrna_hmm_report.tsv、intron_report.tsv、metadata_transfer_log.tsv、
+│                               #   rescue_report.tsv、rrna_hmm_report.tsv、intron_report.tsv、intron_ref_report.tsv、metadata_transfer_log.tsv、
 │                               #   oriented_by_fallback.txt、all_problem_samples.txt、*_failed.txt、run_params.json、
 │                               #   failed_logs/（问题样本的核心日志）
 ├── run.log                     # 完整日志（终端只显示步骤和警告）
@@ -706,7 +726,7 @@ annotate_out/
 ├── 05.curated/                 # --curate yes（默认）：端点校正 + NCBI 命名；curation_report.tsv
 ├── 06.ncbi_submission/         # NCBI 提交文件（需 table2asn）
 ├── plots/                      # 基因组圈图
-├── rescue_report.tsv, rrna_hmm_report.tsv, intron_report.tsv, annotation-summary.tsv
+├── rescue_report.tsv, rrna_hmm_report.tsv, intron_report.tsv, intron_ref_report.tsv, annotation-summary.tsv
 ├── all.final.gbf
 └── annotation_failed.txt, final_write_failed.txt, failed_logs/
 ```
@@ -745,7 +765,7 @@ tRNA 边界保持注释软件结果（准则 v）。每处修改写入 `curation
 **内置 NCBI 评估**：有 `table2asn` 时（PATH、`--table2asn` 或 mitointron 环境），每条记录在校正前后各用 NCBI 校验一次，`validation_compare.tsv` 按"记录 + 错误代码 + 特征"列出每类问题 fixed / remaining / new，终端汇总一行（如 `ERROR 128 -> 4 … fixed 124, remaining 4, new 0`）；"new" 即校正引入的新问题，应为 0。`--no_validate` 关闭。
 
 ```bash
-python3 mito_curate.py -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds trim|fill]
+mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds trim|fill]
 ```
 
 **验证**（31 条鳞沙蚕类真实 MitoZ 注释，/mnt/n/DLC_mt_2023_1016/Mitoz_annotate，对照 NCBI 原记录；坐标换算到 NCBI 序列）：
@@ -773,11 +793,11 @@ python3 mito_curate.py -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rr
 **用 MITOS2 tRNA 替换现有 tRNA**（`--select mitos2`，可选，不在默认流程中）：
 
 ```bash
-# 默认流程：1 batch_mitoz.py run → 3 mito_curate.py（含 4 NCBI 校验）
+# 默认流程：mitom run（含端点校正 mito_curate.py 与 NCBI 校验）
 # 需要 MITOS2 tRNA 时在 1 与 3 之间插入：
-python3 mito_trna.py -i mitom_out/work/04.final_gb -o trna_mitos2 --select mitos2 --genetic_code 5 \
+mitom trna -i mitom_out/work/04.final_gb -o trna_mitos2 --select mitos2 --genetic_code 5 \
   --mitos_bin MITOS_ENV/bin --mitos_refdir DIR_WITH_refseq89m
-python3 mito_curate.py -i trna_mitos2/selected -o curated --genetic_code 5
+mitom curate -i trna_mitos2/selected -o curated --genetic_code 5
 ```
 
 - 输入必须是**调整方向后的最终 GenBank**（`04.final_gb/`）：MITOS2 在该 GB 自身序列上运行，坐标与其它特征一致；FASTA、`00.*`、`01.anno_round1/`（方向调整前）一律拒绝。
@@ -785,7 +805,7 @@ python3 mito_curate.py -i trna_mitos2/selected -o curated --genetic_code 5
 - 某条记录 MITOS2 运行失败 → 该记录原样保留，不会删掉原有 tRNA。
 
 ```bash
-python3 mito_trna.py -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen,aragorn,trnascan \
+mitom trna -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen,aragorn,trnascan \
   --bin ENV/bin --mitos_bin MITOS_ENV/bin --mitos_refdir DIR_WITH_refseq89m
 ```
 
@@ -828,9 +848,29 @@ PCG 两端一致按门（1,050 条）24 个门全部高于 MITOS2；PCG、rRNA �
 
 ARWEN、ARAGORN、tRNAscan-SE、MiTFi 参数（半全局、重叠、E 值、只按阈值、加分支模型）、多软件投票、重训判别器与端点均测过，见 `benchmark/trna_ml/README.md`。
 
-## intron 注释 / Introns (mito_intron.py)
+## intron 注释 / Introns (mito_intron.py, mito_intron_ref.py)
 
-**注释核心不注释 intron（group I / II；MitoZ 也不能）。** `run` / `annotate` 写完最终 GenBank 后自动调用 `mito_intron.py` 补上 intron，并整合进核心结果（`--intron_fix auto`：找到 exonerate+blastp 时运行；`yes` 强制，`no` 关闭；`--intron_bin <env>/bin`）。
+**注释核心不注释 intron（group I / II；MitoZ 也不能）。** `run` / `annotate` 写完最终 GenBank 后分两步补上 intron，并整合进核心结果（`--intron_fix auto`：找到 exonerate+blastp 时运行；`yes` 强制，`no` 关闭；`--intron_bin <env>/bin`）：
+1. `mito_intron.py`（从头识别，MFannot 方法，见下）：同源蛋白比对 + 剪接规则定边界；
+2. `mito_intron_ref.py`（位点迁移）：内含子位点库 `models/intron_sites.*`（193 条 NCBI 带内含子记录、逐个核实后的 309 个内含子，79 KB）中近缘记录的位点映射到本序列：近缘位点重新定位从头识别的边界，补上从头识别漏掉的（小外显子、反式剪接片段、rRNA 内含子）；库中没有的位点保留从头识别结果。报告 `reports/intron_report.tsv`、`reports/intron_ref_report.tsv`。
+
+### 当前版本（2026-10-29）：核实的金标准 + 位点迁移 / Current version: verified gold standard + site transfer
+
+NCBI 的内含子边界写法因课题组而异（同一位点不同记录可差 1–60 nt，海葵、皮群海葵符合 group I 规则，石珊瑚、角海葵、不少环节动物 group II 不符合），所以先逐个核实本地全部 193 条带内含子的 NCBI 记录（311 个内含子）：剪接后产物（内部终止、起止密码子）、与 12 个他种同源蛋白在拼接点 ±5 aa 内有无插入缺失、group I/II 剪接规则与可滑动窗口、近缘记录同一位点的写法。结果：202 个原样正确，39 个产物相同但边界挪位（改到符合规则的位置），37 个 NCBI 有错且有唯一纠正，16 个证据不足保留 NCBI 写法，2 个 NCBI 内含子特征不是内含子（删除），15 个扁盘动物反式剪接 / rRNA 内含子等只能部分核实；金标准 309 个，其中 97 个位置与 NCBI 不同。详见 `benchmark/results/intron_gold_2026-10-29/`。
+
+真实 `mitom run`（裸序列）对金标准：
+
+| 口径 | 完全一致 | ≤6 nt | >6 nt | 漏检 | 76 条无内含子记录的假阳性 | NCBI ERROR |
+|---|---|---|---|---|---|---|
+| 默认（完整位点库），194 条 | **309 / 309** | 0 | 0 | 0 | 0 | 0 |
+| 留一（本记录不进核心参考和位点库，相当于新物种），270 条 | **299 / 309** | 4 | 0 | 6 | 0 | 0 |
+| 留种 / 留属（同一流程输入，只跑内含子步骤） | 296 / 309 | 4 | 3 | 6 | — | — |
+
+留一口径下 A / B / 纠正类全部完全一致（202 / 39 / 37）；差的 10 个是 3 个金标准保留 NCBI 偏离共识写法的珊瑚 nad5 和 7 个库中别无其他记录的扁盘动物反式剪接 / rRNA 内含子。另报出 2 个 NCBI 未注释、很可能真实的内含子（KT989324.1 *Glycera* cox1；丝盘虫 rrnL）。与 NCBI 原注释直接比（311 个）：默认 218 完全一致 / 76 ≤6 nt / 15 >6 nt / 2 漏检（即 NCBI 写错、金标准删除的 2 个）。耗时：从头识别每条 10–20 s，位点迁移 2–5 s。
+
+从头识别（`mito_intron.py`）本轮的改动：跨环状原点的基因在旋转后的副本上建模（原来按 cox1 定向时原点切进 cox1 内含子，环节动物 cox1 内含子因此漏掉一半）；外显子按蛋白顺序串联（刺胞 nad5 的反序片段不再拼成假内含子）；内含子里含有本基因外显子拷贝时拒绝（*Hexamermis* 三个相同 atp6 被拼成 3.7 kb 假内含子）；外显子在两条链上 / 相隔很远的反式剪接基因写成带 `<`/`>` 的部分 CDS；核心的部分基因用核心参考蛋白补搜（*Decemunciger* nad4）；内含子两端可独立微调（按至多 5 个同源蛋白的中位得分）；小外显子插入后两侧内含子重新定边界。`mitom_pipeline` 在内含子步骤后再次旋转，使定向基因的第一个外显子位于序列起点；旋转保留 `<`/`>` 不完整端（此前丢失，反式剪接片段因此出 table2asn ERROR）。
+
+### 从头识别的方法（MFannot 移植）与早期验证（2026-10-09 / 10）/ De novo method and earlier validation
 
 `mito_intron.py` = MFannot（Beck & Lang，https://github.com/BFL-lab/Mfannot ；数据 https://github.com/BFL-lab/MFannot_data ，GPL-3.0；Lang et al. 2023, doi:10.3389/fpls.2023.1222186）intron 流程的 Python 移植，本文件按 GPL-3.0 发布：
 
@@ -843,7 +883,7 @@ ARWEN、ARAGORN、tRNAscan-SE、MiTFi 参数（半全局、重叠、E 值、只�
 | 边界 | Adjust_all_intronic_junctions | ±6 nt 同移，group I（外显子末端 U、intron 末端 ωG）≥19，group II（GUGYG…AY）≥40 |
 | 整合核心结果 | — | 基因起止优先采用核心的同框 CDS 端点；无则按同源蛋白延伸到起始/终止（含不完整终止 T/TA） |
 
-与 MFannot 的差异（均写在脚本开头）：类型判定用 Rfam；边界移位以同源蛋白判断（MFannot 以起始模型判断，Exonerate 起始模型错时会拒绝正确边界）；跨环状原点的基因、外显子在两条链上的反式剪接基因不建模（报告中注明）；未移植 MFannot 的小外显子 HMM 步骤。
+与 MFannot 的差异（均写在脚本开头）：类型判定用 Rfam；边界移位以同源蛋白判断（MFannot 以起始模型判断，Exonerate 起始模型错时会拒绝正确边界）；跨环状原点的基因在旋转副本上建模（跨原点的内含子只写在 CDS join 中，table2asn 不接受两段式 intron 特征）；反式剪接基因写成部分 CDS 片段；未移植 MFannot 的小外显子 HMM 步骤。
 
 **验证**（`benchmark/`，2026-10-09）：NCBI RefSeq 中全部带 intron 标注的动物线粒体基因组 85 条（刺胞 82、海绵 2、扁盘 1；真值 138 个 intron = 126 个 intron 特征 + 12 个由 CDS join 推出但缺 intron 特征的），阴性对照环节动物 20 条（含围沙蚕属 4 条）。输入模拟 MitoZ 输出（去掉 intron、拆分基因只留外显子 1）。
 
@@ -877,7 +917,7 @@ MFannot 找到的 85 个 intron 中 83 个与本脚本坐标完全相同；MFann
 
 与 NCBI 不一致的 28 处 intron 边界，用独立证据（同源蛋白比对得分、group I ωG 规则）判定：13 处两种边界蛋白相同（写法差异），14 处本脚本更好（多为石珊瑚 COX1，NCBI 边界不符合 ωG 规则），1 处 NCBI 更好。NCBI 原记录自身在 table2asn 下也有错误（刺胞 13 个 `MultiIntervalIntron`，环节 1 个 `AbuttingIntervals`），本脚本不照抄 NCBI 坐标。环节动物漏检 7 个：*Decemunciger* ND4 ×3（MFannot 亦漏）、*Chaetopterus* ×4（约 300 nt、未定型、剪接位点弱、MFannot 未报，NCBI 仅以 CDS join 表示；是否为 intron **未确证**，按门槛不写入）。
 
-**近缘参考（借鉴 MitoFinder）**：`--ref_gb <近缘物种 GenBank>`（`batch_mitoz.py --intron_ref_gb`）把参考 CDS 翻译加入同源蛋白库。MFannot 自带库以真菌/原生生物为主，动物极少、无环节动物，近缘参考可提高环节动物等类群的检出。MitoFinder 本身的 intron 注释只靠 BLASTX 相似性合并片段、不搜边界（其 README 明言），故不替换现有方法。
+**近缘参考（借鉴 MitoFinder）**：`--ref_gb <近缘物种 GenBank>`（`mitom run --intron_ref_gb`）把参考 CDS 翻译加入同源蛋白库。MFannot 自带库以真菌/原生生物为主，动物极少、无环节动物，近缘参考可提高环节动物等类群的检出。MitoFinder 本身的 intron 注释只靠 BLASTX 相似性合并片段、不搜边界（其 README 明言），故不替换现有方法。
 
 ### v6（2026-10-10）：结构模型扩充 + 裸序列验证
 
@@ -896,13 +936,13 @@ MFannot 找到的 85 个 intron 中 83 个与本脚本坐标完全相同；MFann
 - **瓶颈实测**（cProfile）：v6 的时间几乎全在 cmsearch，且只集中在命中的少数模型（IB3 12 s、RF00028 10 s）；与 intron 长度无关（只扫两端 1.5 kb 不更快，判型也不变）。
 - **两步判型**：先用 Infernal `--rfam` 快速过滤，仍未定型的再全灵敏度搜索；同一记录所有 intron 一次调用；只搜正链（`--toponly`）、`--threads` 多线程。165 个 NCBI intron 判型数与大类与全灵敏度完全一致（147/165）。
 - **小外显子两步搜索**：先单同源蛋白、交界窗口粗筛，再对前 5 个候选完整验证。
-- **稳健性**：外部程序超时（`--timeout`，默认 900 s）不再卡死；单条记录出错不影响整批（原样保留并在报告中注明）；`--jobs N` 多文件并行（batch_mitoz 传 `--max_tasks`）。
+- **稳健性**：外部程序超时（`--timeout`，默认 900 s）不再卡死；单条记录出错不影响整批（原样保留并在报告中注明）；`--jobs N` 多文件并行（mitom_pipeline 传 `--max_tasks`）。
 - **效果**：单记录 *Porites* 42 → 6 s、*Plakinastrella* 103 → 8.5 s、*Travisia forbesii* 4.2 → 1.2 s；全部 846 条验证记录 12 分钟；坐标与 v6 完全相同，判型 +1（NC_040136 nad5，IB1）；测试 464 → 107 s。
 
 依赖：`conda create -n mitointron -c conda-forge -c bioconda exonerate blast infernal biopython`。
 
 ```bash
-python3 mito_intron.py -i final_gb_dir -o out_dir --genetic_code 4 --bin /root/miniconda3/envs/mitointron/bin
+mitom intron -i final_gb_dir -o out_dir --genetic_code 4 --bin /root/miniconda3/envs/mitointron/bin
 python3 -m pytest -q tests          # Metridium / Nematostella / Platynereis，排除本物种蛋白
 ```
 
@@ -994,10 +1034,10 @@ Notes:
 
 已生成以下流程图文件：
 
-- 中文 SVG: [docs/flowcharts/batch_mitoz_workflow.zh.svg](docs/flowcharts/batch_mitoz_workflow.zh.svg)
-- English SVG: [docs/flowcharts/batch_mitoz_workflow.en.svg](docs/flowcharts/batch_mitoz_workflow.en.svg)
-- 中文 Mermaid: [docs/flowcharts/batch_mitoz_workflow.zh.mmd](docs/flowcharts/batch_mitoz_workflow.zh.mmd)
-- English Mermaid: [docs/flowcharts/batch_mitoz_workflow.en.mmd](docs/flowcharts/batch_mitoz_workflow.en.mmd)
+- 中文 SVG: [docs/flowcharts/mitom_workflow.zh.svg](docs/flowcharts/mitom_workflow.zh.svg)
+- English SVG: [docs/flowcharts/mitom_workflow.en.svg](docs/flowcharts/mitom_workflow.en.svg)
+- 中文 Mermaid: [docs/flowcharts/mitom_workflow.zh.mmd](docs/flowcharts/mitom_workflow.zh.mmd)
+- English Mermaid: [docs/flowcharts/mitom_workflow.en.mmd](docs/flowcharts/mitom_workflow.en.mmd)
 - SVG 生成脚本: [scripts/render_workflow_diagrams.py](scripts/render_workflow_diagrams.py)
 
 重新生成 SVG：

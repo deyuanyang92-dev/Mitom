@@ -586,23 +586,56 @@ def test_minus_strand_frame_anchored_at_the_genome_end():
     assert L > 0
 
 
-def test_duplicate_pcg_copy_removed():
-    """D1: MitoZ annotated atp8 twice on a repeated region (NC_049135.1); one CDS + gene stays."""
+def _with_atp8_copy(diverge: int):
+    """NC_000931 with a copy of atp8 at the record end; diverge = codons whose third base is changed in the copy."""
     from Bio.SeqFeature import FeatureLocation, SeqFeature
     rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
     atp8 = next(f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == "ATP8")
     s, e = int(atp8.location.start), int(atp8.location.end)
     seq = str(rec.seq)
-    rec.seq = type(rec.seq)(seq[:len(seq) - (e - s)] + seq[s:e])          # copy of atp8 at the record end
+    copy = list(seq[s:e])
+    for k in range(3, 3 + 3 * diverge, 3):                                 # after the start codon, before the stop
+        copy[k + 2] = {"A": "C", "C": "A", "G": "T", "T": "G"}[copy[k + 2]]
+    rec.seq = type(rec.seq)(seq[:len(seq) - (e - s)] + "".join(copy))
     copy_loc = FeatureLocation(len(rec.seq) - (e - s), len(rec.seq), 1)
     rec.features = [f for f in rec.features if int(f.location.end) <= copy_loc.start or f.type == "source"]
     rec.features.append(SeqFeature(copy_loc, type="gene", qualifiers={"gene": ["ATP8"]}))
     rec.features.append(SeqFeature(copy_loc, type="CDS", qualifiers=dict(atp8.qualifiers)))
+    return rec, s
+
+
+def test_duplicate_pcg_copy_removed():
+    """D1: a second, diverged (< 95 % identical) copy of atp8 on a repeated region is removed; one CDS + gene stays."""
+    rec, s = _with_atp8_copy(diverge=12)                                   # 12 of ~160 nt: 92.5 % identical
     rows = _curate_rec(rec)
     cds = [f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == "ATP8"]
     genes = [f for f in rec.features if f.type == "gene" and f.qualifiers["gene"][0].upper() == "ATP8"]
     assert len(cds) == 1 and len(genes) == 1 and int(cds[0].location.start) == s
     assert any(r["rule"] == "D1" for r in rows)
+
+
+def test_identical_complete_second_copy_kept():
+    """D1 (2026-10-29): a complete second copy >= 95 % identical to the gene is a real gene copy and stays, as NCBI
+    annotates it (heron / cormorant / turaco nad6, Hexamermis atp6: 30 of 38 identical copies in 1,050 records)."""
+    for diverge in (0, 2):
+        rec, _ = _with_atp8_copy(diverge)
+        rows = _curate_rec(rec)
+        assert len([f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == "ATP8"]) == 2
+        assert len([f for f in rec.features if f.type == "gene" and f.qualifiers["gene"][0].upper() == "ATP8"]) == 2
+        assert not any(r["rule"] == "D1" for r in rows)
+
+
+def test_identical_copy_without_stop_yet_kept():
+    """D1: the core ends a gene at its last aligned codon (the stop comes from P3 later); two identical copies whose
+    stop is not yet annotated are a real gene copy too (NC_044480.1 cob, NC_010636.1 cox2 were removed)."""
+    from Bio.SeqFeature import FeatureLocation
+    rec, _ = _with_atp8_copy(0)
+    for f in [x for x in rec.features if x.type in ("CDS", "gene") and x.qualifiers["gene"][0].upper() == "ATP8"]:
+        s, e = int(f.location.start), int(f.location.end)
+        f.location = FeatureLocation(s, e - 3, 1)                         # without the stop codon
+    rows = _curate_rec(rec)
+    assert len([f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"][0].upper() == "ATP8"]) == 2
+    assert not any(r["rule"] == "D1" for r in rows)
 
 
 def test_duplicated_block_copies_kept():

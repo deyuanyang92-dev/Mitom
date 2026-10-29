@@ -37,7 +37,7 @@ PHYLA.update({p: SMALL for p in ("Porifera", "Placozoa", "Ctenophora", "Xenacoel
                                  "Loricifera", "Nemertea", "Brachiopoda", "Phoronida", "Bryozoa", "Entoprocta",
                                  "Cycliophora", "Rotifera", "Acanthocephala", "Gastrotricha", "Gnathostomulida",
                                  "Chaetognatha", "Orthonectida", "Dicyemida")})
-# MitoZ 3.6 `annotate --clade` (batch_mitoz.py MITOZ_CLADES); None = not supported by MitoZ
+# MitoZ 3.6 `annotate --clade` (mitom_pipeline.py BASE_CLADES); None = not supported by MitoZ
 MITOZ_CLADE: Dict[str, Optional[str]] = {p: None for p in PHYLA}
 MITOZ_CLADE.update({"Chordata": "Chordata", "Arthropoda": "Arthropoda", "Echinodermata": "Echinodermata",
                     "Annelida": "Annelida-segmented-worms", "Bryozoa": "Bryozoa", "Mollusca": "Mollusca",

@@ -1,12 +1,19 @@
-# Our own steps: the native annotation core mito_core.py (blastx, exonerate, Infernal cmsearch, HMMER nhmmer, Java for
-# MiTFi), mito_intron.py (exonerate, BLAST, Infernal), mito_curate.py / ncbi_validate.py (table2asn), optional extra
-# tRNA methods for mito_trna.py (ARAGORN, tRNAscan-SE), rRNA HMM fallback (HMMER nhmmer; MAFFT only to rebuild the
-# HMM library, mito_rrna_hmm.py), bwa (read depth of the genome maps, mito_plot.py). Versions = those validated 2026-10.
+# MitoM's one environment (install.sh): the Python the `mitom` command runs on - Biopython, scikit-learn for the
+# MitoM-ML tRNA caller (trna_ml.py; 1.7.2 = the version its classifiers were validated with), matplotlib for the
+# genome maps (mito_plot.py) - and the programs: the annotation core mito_core.py (blastx, exonerate, Infernal
+# cmsearch, HMMER nhmmer), mito_intron.py (exonerate, BLAST, Infernal), mito_curate.py /
+# ncbi_validate.py (table2asn), optional extra tRNA methods for mito_trna.py (ARAGORN, tRNAscan-SE), the rRNA HMM
+# library (MAFFT only to rebuild it, mito_rrna_hmm.py), bwa (read depth of the genome maps).
+# Java for MiTFi (any version >= 8) is not listed: install.sh uses the system Java, else adds openjdk=8 here.
+# Versions = those validated 2026-10.
 name: mitotools
 channels: [conda-forge, bioconda]
 dependencies:
   - python=3.11
   - biopython
+  - numpy
+  - scikit-learn=1.7.2
+  - matplotlib-base
   - exonerate=2.4.0
   - blast=2.17.0
   - infernal=1.1.5
@@ -17,4 +24,3 @@ dependencies:
   - mafft=7.526
   - bwa                 # read depth ring of the genome maps (mito_plot.py, --infq); minimap2 is used instead when
                         # installed (8x faster) but is not listed: its k8 pulls sysroot_linux-64 (+0.5 GB on Linux)
-  - openjdk>=17          # MiTFi (models/mitfi/mitfi_import.jar), the tRNA selection step of mito_core.py

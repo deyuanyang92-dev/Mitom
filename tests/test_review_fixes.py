@@ -1,4 +1,4 @@
-"""Review fixes 2026-10-22 (batch_mitoz / mito_env): origin joins after the shift, core failures on the console,
+"""Review fixes 2026-10-22 (mitom_pipeline / mito_env): origin joins after the shift, core failures on the console,
 native core without MitoZ / MITOS2 messages, cox1_first of linear records, run.log per run, wrong --genetic_code,
 multi-contig FASTA topology, $YZZ_MITO_CONFIG for a new file.
 
@@ -17,7 +17,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -210,7 +210,7 @@ def test_rescue_auto_skipped_for_native_core(tmp_path, monkeypatch):
     """--rescue auto does not run MITOS2: under the native core it cost 5-7 min and ~1 GB per record lacking a gene
     (mostly atp8 of taxa without atp8) for 2 genes in 24 records."""
     import argparse
-    import batch_mitoz as bm
+    import mitom_pipeline as bm
     import mito_rescue
     called = []
     monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: called.append(1) or [])

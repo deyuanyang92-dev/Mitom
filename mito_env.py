@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """mito_env.py - find the external programs of the mitogenome annotation scripts, one place for all.
 
-Every script (batch_mitoz.py, mito_intron.py, mito_trna.py, mito_curate.py, ncbi_validate.py) asks
+Every script (mitom_pipeline.py, mito_intron.py, mito_trna.py, mito_curate.py, ncbi_validate.py) asks
 this module where a program is, so no --bin / --intron_bin / --mitos_bin / --mitos_refdir has to be
-typed. Order: command-line value > config file > PATH > automatic scan of conda / mamba environments.
+typed. Order: command-line value > config file > the conda environment of the running Python (MitoM's own,
+env/mitotools.yml) > PATH > automatic scan of conda / mamba environments.
 
 Config file (JSON, all keys optional), first found of:
   $YZZ_MITO_CONFIG, <yzz root>/config/mitoz.json (inside the yzz workflow), <this dir>/mito_config.json,
@@ -15,28 +16,34 @@ Config file (JSON, all keys optional), first found of:
 YZZ_MITO_NO_SCAN=1 turns the conda scan off (only command line, config file and PATH are used).
 
 Usage:
+  python3 mito_env.py setup [--refdir DIR]    # download the MITOS2 reference data refseq89m, write the config
   python3 mito_env.py doctor                  # what is found, what is missing, how to install it
   python3 mito_env.py doctor --write-config   # also save the found locations to the config file
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
 import sys
+import tarfile
+import urllib.request
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional
 
 HERE = Path(__file__).resolve().parent
 MITOS_REF = "refseq89m"
+REF_URL = "https://zenodo.org/records/4284483/files/refseq89m.tar.bz2"      # MITOS2 reference data, 19.6 MB
+REF_MD5 = "bb6325e27612e61a6995e88e8ffcecf8"
 # what each program is needed for, and the conda environment (env/*.yml) that installs it
 TOOLS = {
     "runmitos":    ("optional: MITOS2 rescue of missed genes (mito_rescue.py, --rescue yes), mito_trna.py", "mitos"),
     "exonerate":   ("protein gene boundaries (mito_core.py); intron models (mito_intron.py)", "mitotools"),
     "cmsearch":    ("tRNA / rRNA covariance models (mito_core.py); intron typing (mito_intron.py)", "mitotools"),
     "blastx":      ("protein gene search (mito_core.py)", "mitotools"),
-    "java":        ("MiTFi tRNA selection (mito_core.py, the default core)", "mitotools"),
+    "java":        ("MiTFi tRNA selection (mito_core.py, the default core); any Java >= 8", "mitotools"),
     "blastp":      ("intron homolog search (mito_intron.py)", "mitotools"),
     "table2asn":   ("NCBI validation (mito_curate.py, ncbi_validate.py)", "mitotools"),
     "nhmmer":      ("per-phylum rRNA profile HMMs (mito_core.py, mito_rrna_hmm.py)", "mitotools"),
@@ -115,12 +122,17 @@ def _exe(p: Path) -> bool:
     return p.is_file() and os.access(p, os.X_OK)
 
 
+def own_env_bin() -> Optional[str]:
+    """bin/ of the conda environment this Python runs in (MitoM's own when started by `mitom`), else None."""
+    return str(Path(sys.executable).parent) if (Path(sys.prefix) / "conda-meta").is_dir() else None
+
+
 def find(name: str, explicit: Optional[str] = None, *config_keys: str) -> Optional[str]:
     """Path of program `name`: explicit dir/file (only there: a wrong explicit path is an error, never
-    silently replaced) > config bins > PATH > conda environments."""
+    silently replaced) > config bins > the running Python's conda environment > PATH > conda environments."""
     cfg = config()
     dirs = [explicit] if explicit else \
-        [cfg.get(k, "") for k in (*config_keys, "tools_bin", "intron_bin", "trna_bin", "mitos_bin")]
+        [cfg.get(k, "") for k in (*config_keys, "tools_bin", "intron_bin", "trna_bin", "mitos_bin")] + [own_env_bin()]
     for d in dirs:
         if not d:
             continue
@@ -235,7 +247,7 @@ def doctor(write: bool = False) -> int:
         envs = sorted({e for n, e in missing if n in REQUIRED})
         print("\nMissing required parts. Install everything with one command:\n"
               f"  bash {HERE / 'install.sh'}" + (f"   (environments: {', '.join(envs)})" if envs else "")
-              + ("\n  MITOS2 reference data is downloaded by the same script." if not ref else "")
+              + ("\n  MITOS2 reference data: mitom setup (install.sh runs it)." if not ref else "")
               + ("\n  Biopython is missing: pip install biopython (install.sh does this too)." if not bio else ""))
     else:
         print("\nAll required programs found.")
@@ -252,7 +264,42 @@ def doctor(write: bool = False) -> int:
     return 1 if req or not ref or not bio else 0
 
 
+def setup(refdir: Optional[str] = None) -> int:
+    """Download the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked) into refdir (default
+    $MITOS_REFDIR or ~/mitos_refs) unless it is found, then save the found locations (doctor --write-config)."""
+    have = refdir if refdir and (Path(refdir).expanduser() / MITOS_REF).is_dir() else None if refdir else mitos_refdir()
+    if have:
+        print(f"MITOS2 reference data present: {Path(have).expanduser() / MITOS_REF}")
+    else:
+        target = Path(refdir or os.environ.get("MITOS_REFDIR") or Path.home() / "mitos_refs").expanduser()
+        target.mkdir(parents=True, exist_ok=True)
+        tgz = target / f"{MITOS_REF}.tar.bz2"
+        print(f"downloading the MITOS2 reference data {MITOS_REF} (19.6 MB) to {target}", flush=True)
+        try:
+            urllib.request.urlretrieve(REF_URL, tgz)            # honours https_proxy
+        except OSError as exc:
+            print(f"download failed: {exc}\n  get {REF_URL} yourself and run: mitom setup --refdir <its folder>",
+                  file=sys.stderr)
+            return 1
+        if hashlib.md5(tgz.read_bytes()).hexdigest() != REF_MD5:
+            tgz.unlink()
+            print(f"checksum mismatch for {tgz.name}: run mitom setup again", file=sys.stderr)
+            return 1
+        with tarfile.open(tgz) as tf:
+            tf.extractall(target, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
+        tgz.unlink()
+        have = str(target)
+    os.environ["MITOS_REFDIR"] = str(Path(have).expanduser())  # doctor --write-config records it
+    config.cache_clear()
+    return doctor(write=True)
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "doctor":
         sys.exit(doctor(write="--write-config" in sys.argv))
+    if len(sys.argv) > 1 and sys.argv[1] == "setup":
+        import argparse
+        a = argparse.ArgumentParser(prog="mitom setup", description=setup.__doc__)
+        a.add_argument("--refdir", default=None, help="folder for refseq89m (default: $MITOS_REFDIR or ~/mitos_refs)")
+        sys.exit(setup(a.parse_args(sys.argv[2:]).refdir))
     print(__doc__)

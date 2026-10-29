@@ -12,7 +12,7 @@ from Bio.SeqFeature import FeatureLocation, SeqFeature
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 import mito_check as mc  # noqa: E402
 
 

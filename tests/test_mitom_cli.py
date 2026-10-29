@@ -61,7 +61,7 @@ def test_doctor_runs_and_exits_zero():
 
 
 def test_launcher_sets_prog_name():
-    """B22: mitom run -h shows `mitom run`, not batch_mitoz.py."""
+    """B22: mitom run -h shows `mitom run`, not mitom_pipeline.py."""
     p = run("run", "-h")
     assert "usage: mitom run" in p.stdout
 
@@ -78,7 +78,7 @@ def venv_without_bio(tmp_path):
 
 def test_launcher_without_biopython_gives_hint(venv_without_bio):
     """B1/B18 review: Biopython missing and no conda env offers it -> one clear message, exit 2 (not a
-    traceback or `ERROR: Biopython not installed` from deep inside batch_mitoz.py)."""
+    traceback or `ERROR: Biopython not installed` from deep inside mitom_pipeline.py)."""
     env = dict(os.environ, YZZ_MITO_NO_SCAN="1")
     p = run("run", "-h", py=venv_without_bio, env=env)
     assert p.returncode == 2

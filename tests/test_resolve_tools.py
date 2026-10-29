@@ -1,4 +1,4 @@
-"""batch_mitoz.resolve_tools / optional post-steps / final-step helpers (review B findings 6, 7, 10, 11, 15).
+"""mitom_pipeline.resolve_tools / optional post-steps / final-step helpers (review B findings 6, 7, 10, 11, 15).
 
 Run: python3 -m pytest -q tests/test_resolve_tools.py
 """
@@ -16,7 +16,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import batch_mitoz as bm  # noqa: E402
+import mitom_pipeline as bm  # noqa: E402
 import mito_env  # noqa: E402
 
 
