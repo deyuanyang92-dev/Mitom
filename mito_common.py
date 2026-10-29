@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, List, Tuple
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, FeatureLocation, SeqFeature
@@ -124,6 +124,74 @@ def rc_location(loc, seq_len: int):
     return FeatureLocation(new_start, new_end, strand=new_strand)
 
 
+# qualifiers that name positions of the sequence: (pos:<location>,aa:...[,seq:...])
+POSITION_QUALIFIERS = ("transl_except", "anticodon")
+
+
+def _split_pos(text: str):
+    """'(pos:LOC,rest' -> ('(pos:', LOC, ',rest') with LOC up to the comma outside its parentheses; None if no pos:."""
+    i = text.find("pos:")
+    if i < 0:
+        return None
+    depth, j = 0, i + 4
+    while j < len(text):
+        ch = text[j]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            if depth == 0:
+                break
+            depth -= 1
+        elif ch == "," and depth == 0:
+            break
+        j += 1
+    return text[:i + 4], text[i + 4:j], text[j:]
+
+
+def move_positions(text: str, seq_len: int, shift: int = 0, rc: bool = False) -> str:
+    """A /transl_except or /anticodon value with its positions moved as the sequence is: reverse-complemented first
+    (rc), then rotated so that 0-based position `shift` becomes the start (as shift_location). Ranges cut by the new
+    origin become join(a..L,1..b); ranges that meet across the old origin are merged. Unparsable values unchanged."""
+    parts = _split_pos(text)
+    if parts is None:
+        return text
+    head, loc, rest = parts
+    comp = loc.startswith("complement(") and loc.endswith(")")
+    inner = loc[len("complement("):-1] if comp else loc
+    if inner.startswith("join(") and inner.endswith(")"):
+        inner = inner[len("join("):-1]
+    try:
+        ranges = [tuple(int(x) for x in r.split("..")) if ".." in r else (int(r), int(r)) for r in inner.split(",")]
+    except ValueError:
+        return text
+    if rc:
+        ranges = [(seq_len - b + 1, seq_len - a + 1) for a, b in reversed(ranges)]
+        comp = not comp
+    out: List[Tuple[int, int]] = []
+    for a, b in ranges:
+        a2, b2 = (a - 1 - shift) % seq_len + 1, (b - 1 - shift) % seq_len + 1
+        pieces = [(a2, b2)] if a2 <= b2 else [(a2, seq_len), (1, b2)]
+        for p in pieces:
+            if out and out[-1][1] + 1 == p[0]:
+                out[-1] = (out[-1][0], p[1])
+            else:
+                out.append(p)
+    body = ",".join(f"{a}..{b}" if a != b else f"{a}" for a, b in out)
+    body = f"join({body})" if len(out) > 1 else body
+    return head + (f"complement({body})" if comp else body) + rest
+
+
+def move_position_qualifiers(qualifiers: Dict[str, List[str]], seq_len: int, shift: int = 0,
+                             rc: bool = False) -> Dict[str, List[str]]:
+    """A copy of a feature's qualifiers whose position qualifiers (POSITION_QUALIFIERS) follow the sequence
+    (move_positions); the other qualifiers unchanged."""
+    q = dict(qualifiers)
+    for k in POSITION_QUALIFIERS:
+        if k in q:
+            q[k] = [move_positions(str(v), seq_len, shift, rc) for v in q[k]]
+    return q
+
+
 def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
     seq_len = len(record.seq)
     new_rec = SeqRecord(record.seq.reverse_complement(), id=record.id,
@@ -136,7 +204,7 @@ def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
             new_loc = rc_location(feat.location, seq_len)
             new_features.append(SeqFeature(location=new_loc, type=feat.type,
                                             id=getattr(feat, "id", "<unknown>"),
-                                            qualifiers=dict(feat.qualifiers)))
+                                            qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, rc=True)))
         except Exception:
             new_features.append(feat)
     new_rec.features = new_features

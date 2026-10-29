@@ -111,7 +111,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_LIB = HERE / "models" / "mfannot_proteins"
 DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
-from mito_common import GB_SUFFIXES as GB_EXT, stop_qualifiers, write_gb  # noqa: E402  (CC0 helper module)
+from mito_common import GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb  # noqa: E402  (CC0)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
 TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII
 II_AA_TOLERANCE = 5                  # homolog score (median, BLOSUM62) a group II placement may lose when none is free
@@ -1297,7 +1297,8 @@ def model_across_origin(rec, gene: str, cand: dict, chain: List[Report], lib, li
     after_ids = {id(f) for f in rot.features}
     before_ids = {id(f) for f in before}
     gone = {i for i, f in enumerate(before) if id(f) not in after_ids}
-    added = [SeqFeature(move_location(f.location, d, L), type=f.type, qualifiers=f.qualifiers)
+    added = [SeqFeature(move_location(f.location, d, L), type=f.type,
+                        qualifiers=move_position_qualifiers(f.qualifiers, L, -d))     # /transl_except moves too
              for f in rot.features if id(f) not in before_ids]
     # an intron across the origin would be a join, which NCBI rejects (table2asn SEQ_FEAT.MultiIntervalIntron): it is
     # given by the CDS join only (as NCBI's NC_027106.1 nad5)

@@ -127,3 +127,51 @@ def test_reverse_complement_keeps_and_swaps_partial_ends():
     assert isinstance(c.parts[0].start, BeforePosition) and isinstance(c.parts[-1].end, AfterPosition)
     back = bm.reverse_complement_record(rc)
     assert [str(f.location) for f in back.features] == [str(f.location) for f in r.features]
+
+
+def _triplet(rec, text):
+    """The 3 nt named by an /anticodon (pos:...) value, read on its strand."""
+    import re as _re
+    m = _re.search(r"pos:(complement\()?(?:join\()?(\d+(?:\.\.\d+)?(?:,\d+(?:\.\.\d+)?)*)", text)
+    nums = [int(x) for x in _re.findall(r"\d+", m.group(2))]
+    ranges = [tuple(int(x) for x in r.split("..")) if ".." in r else (int(r), int(r)) for r in m.group(2).split(",")]
+    s = "".join(str(rec.seq[a - 1:b]) for a, b in ranges)
+    from Bio.Seq import Seq as _Seq
+    return str(_Seq(s).reverse_complement()) if m.group(1) else s, nums
+
+
+def test_rotation_and_reverse_complement_move_transl_except_and_anticodon():
+    """2026-10-30 (integration audit): /transl_except and /anticodon (pos:...) kept their old positions when a record
+    was rotated (re-orientation, the rotation after the intron step, `mitom import` of NCBI records) or turned to the
+    plus strand: the NCBI submission files then named the wrong bases."""
+    from Bio.SeqFeature import CompoundLocation
+    seq = "".join("ACGT"[(i * 7 + i // 3) % 4] for i in range(3000))
+    seq = seq[:2994] + "ACTAAT"                                          # the CDS ends with a T at the record end
+    r = SeqRecord(Seq(seq), id="R1", name="R1", description="")
+    r.annotations.update(molecule_type="DNA", topology="circular")
+    L = len(seq)
+    trna = FeatureLocation(1000, 1070, -1)
+    anti = str(Seq(seq[1030:1033]).reverse_complement()).lower()
+    r.features = [SeqFeature(FeatureLocation(0, L, 1), type="source"),
+                  SeqFeature(FeatureLocation(2500, L, 1), type="CDS", qualifiers={
+                      "gene": ["ND5"], "transl_except": [f"(pos:{L},aa:TERM)"]}),
+                  SeqFeature(trna, type="tRNA", qualifiers={
+                      "gene": ["trnL1"], "anticodon": [f"(pos:complement(1031..1033),aa:Leu,seq:{anti})"]}),
+                  SeqFeature(FeatureLocation(200, 1500, 1), type="CDS", qualifiers={"gene": ["COX1"]})]
+
+    def check(rec):
+        cds = next(f for f in rec.features if f.qualifiers.get("gene") == ["ND5"])
+        t = next(f for f in rec.features if f.type == "tRNA")
+        last = cds.location.parts[-1]
+        pos = int(last.end) if last.strand == 1 else int(last.start) + 1
+        te = cds.qualifiers["transl_except"][0]
+        assert te in (f"(pos:{pos},aa:TERM)", f"(pos:complement({pos}),aa:TERM)"), te
+        trip, nums = _triplet(rec, t.qualifiers["anticodon"][0])
+        assert trip.lower() == anti and all(int(t.location.start) < n <= int(t.location.end) for n in nums)
+
+    check(r)
+    rot = bm.rotate_record(r, 200)                                     # cox1 first
+    check(rot)
+    check(bm.rotate_record(r, 1032))                                   # the anticodon is cut by the new origin
+    check(bm.reverse_complement_record(rot))
+    check(bm.rotate_record(bm.reverse_complement_record(r), 1500))

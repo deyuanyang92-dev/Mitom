@@ -15,7 +15,8 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 from mito_common import (abbreviated_stop, feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
-                         reverse_complement_record, shift_location, write_gb, write_nonempty_table)
+                         move_position_qualifiers, reverse_complement_record, shift_location, write_gb,
+                         write_nonempty_table)
 from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
 
 if TYPE_CHECKING:
@@ -111,7 +112,7 @@ def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
             new_loc = shift_location(feat.location, start_pos, seq_len)
             new_features.append(SeqFeature(location=new_loc, type=feat.type,
                                             id=getattr(feat, "id", "<unknown>"),
-                                            qualifiers=dict(feat.qualifiers)))
+                                            qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, start_pos)))
         except Exception:
             new_features.append(feat)
     new_features.sort(key=lambda f: feature_start_pos(f))

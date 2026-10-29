@@ -140,3 +140,23 @@ def test_abbreviated_stop_and_ends_with_stop():
         old_tail = len(nt) % 3
         assert mc.abbreviated_stop(nt) == abbr == bool(old_tail and nt[-old_tail:] in ("T", "TA"))
         assert mc.ends_with_stop(nt, stops) == stop == (nt[-3:] in stops if not old_tail else nt[-old_tail:] in ("T", "TA"))
+
+
+@pytest.mark.parametrize("text,L,shift,rc,want", [
+    ("(pos:100..102,aa:Leu,seq:tag)", 1000, 50, False, "(pos:50..52,aa:Leu,seq:tag)"),
+    ("(pos:complement(10..12),aa:Leu,seq:tag)", 1000, 11, False, "(pos:complement(join(999..1000,1)),aa:Leu,seq:tag)"),
+    ("(pos:complement(join(999..1000,1)),aa:TERM)", 1000, -5, False, "(pos:complement(4..6),aa:TERM)"),
+    ("(pos:1000,aa:TERM)", 1000, 0, True, "(pos:complement(1),aa:TERM)"),
+    ("(pos:join(999..1000,1),aa:TERM)", 1000, 0, True, "(pos:complement(join(1000,1..2)),aa:TERM)"),
+    ("(pos:2..3,aa:TERM)", 1000, -998, False, "(pos:join(1000,1),aa:TERM)"),
+    ("no position here", 1000, 7, True, "no position here"),
+])
+def test_move_positions(text, L, shift, rc, want):
+    assert mc.move_positions(text, L, shift, rc) == want
+
+
+def test_move_position_qualifiers_only_touches_positions():
+    q = {"gene": ["ND5"], "transl_except": ["(pos:10,aa:TERM)"], "note": ["pos:1 is not a position qualifier"]}
+    out = mc.move_position_qualifiers(q, 100, 5)
+    assert out == {"gene": ["ND5"], "transl_except": ["(pos:5,aa:TERM)"], "note": q["note"]} and q["transl_except"] == [
+        "(pos:10,aa:TERM)"]
