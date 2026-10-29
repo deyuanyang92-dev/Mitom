@@ -164,6 +164,7 @@ def test_setup_downloads_checks_and_writes_the_config(tmp_path, monkeypatch):
     monkeypatch.setattr(mito_env, "REF_MD5", hashlib.md5(tgz.read_bytes()).hexdigest())
     monkeypatch.setenv("YZZ_MITO_CONFIG", str(tmp_path / "cfg.json"))
     monkeypatch.delenv("MITOS_REFDIR", raising=False)
+    monkeypatch.setattr(mito_env, "prepare_trna_ml", lambda: None)       # tested in test_mito_trna.py
     mito_env.config.cache_clear()
     try:
         mito_env.setup(str(tmp_path / "refs"))

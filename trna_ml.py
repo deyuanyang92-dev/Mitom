@@ -14,9 +14,11 @@ Built and benchmarked in projects/invert_trna (REQUIREMENTS #53). For one sequen
             p >= threshold; same-strand calls overlapping > 50 % keep the more probable.
   3. ends   candidate (start, end) pairs from all source ends +-1 scored by a second model (source agreement,
             CM end reached, acceptor-stem pairing).
-The two models are trained on first use from the training tables shipped in models/trna_ml (genomes of
-held-out families, i.e. scanned with clade models that never saw their family) and cached as
-models/trna_ml/cache/*.pkl, so no pickled model is downloaded or shared between scikit-learn versions.
+The two models are trained from the training tables shipped in models/trna_ml (genomes of held-out families, i.e.
+scanned with clade models that never saw their family) and cached per scikit-learn version, so no pickled model is
+downloaded or shared between versions; they and the unpacked clade CMs go to the user data folder
+(~/.local/share/mitom/trna_ml, $MITOM_DATA; work_dir()) by `mitom setup` or at the first run, so the install folder
+may be read-only (models/trna_ml/{clades,cache} are used when present there).
 
 Benchmark (1,069 RefSeq invertebrate mitogenomes of families unseen by the clade models and absent from MITOS2
 refseq89m; 22,099 RefSeq tRNAs; projects/invert_trna/REPORT.md): see that report for the numbers.
@@ -31,7 +33,9 @@ import csv
 import gzip
 import json
 import math
+import os
 import pickle   # models trained locally from the shipped tables and read back by this module only
+import shutil
 import statistics
 import sys
 import tarfile
@@ -72,16 +76,43 @@ def sh(cmd: List[str]) -> None:
 
 
 # ── models ───────────────────────────────────────────────────────────────────
-def clade_dir(models: Path = MODELS) -> Path:
-    """Clade CMs, unpacked from clades.tar.gz on first use."""
-    d = models / "clades"
-    if not (d / "models.json").exists():
-        tgz = models / "clades.tar.gz"
-        if not tgz.exists():
-            raise FileNotFoundError(f"{tgz} missing (MitoM-ML clade models)")
+def work_dir(models: Optional[Path] = None) -> Path:
+    """Where MitoM-ML writes what it makes from the shipped files (unpacked clade CMs, trained classifiers): for the
+    shipped models the user data folder (mito_env.data_dir()/trna_ml), as the install folder may be read-only (a
+    shared or bioconda install); for another models folder that folder itself."""
+    models = Path(models) if models is not None else MODELS
+    if Path(models).resolve() != MODELS.resolve():
+        return Path(models)
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))
+    import mito_env
+    return mito_env.data_dir() / "trna_ml"
+
+
+def clade_dir(models: Optional[Path] = None) -> Path:
+    """Clade CMs: models/clades when unpacked there, else unpacked from clades.tar.gz on first use into work_dir();
+    the unpacking goes to a temporary folder first, so parallel first runs never read a half-unpacked one."""
+    models = Path(models) if models is not None else MODELS
+    for d in (models / "clades", work_dir(models) / "clades"):
+        if (d / "models.json").exists():
+            return d
+    tgz = models / "clades.tar.gz"
+    if not tgz.exists():
+        raise FileNotFoundError(f"{tgz} missing (MitoM-ML clade models)")
+    dest = work_dir(models) / "clades"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(dir=dest.parent, prefix=".clades."))
+    try:
         with tarfile.open(tgz) as t:
-            t.extractall(models, filter="data")
-    return d
+            t.extractall(tmp, filter="data")
+        try:
+            os.replace(tmp / "clades", dest)
+        except OSError:                                # another run unpacked them first
+            if not (dest / "models.json").exists():
+                raise
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return dest
 
 
 def _train(table: Path, feats: List[str], out: Path, **kw):
@@ -92,26 +123,41 @@ def _train(table: Path, feats: List[str], out: Path, **kw):
     clf.fit([[float(r[k]) for k in feats] for r in rows], [int(r["label"]) for r in rows],
             sample_weight=[float(r.get("weight") or 1) for r in rows])   # shuffled-genome negatives: weight 0.1
     out.parent.mkdir(parents=True, exist_ok=True)
-    with open(out, "wb") as fh:
+    fd, tmp = tempfile.mkstemp(dir=out.parent, prefix=f".{out.name}.")
+    with os.fdopen(fd, "wb") as fh:                  # parallel first runs: each pickle appears complete or not at all
         pickle.dump(clf, fh)
+    os.replace(tmp, out)
     return clf
 
 
-def classifiers(models: Path = MODELS):
-    """(caller, boundary model): cached pickles, trained here from the shipped tables when missing or older."""
+def classifiers(models: Optional[Path] = None):
+    """(caller, boundary model): cached pickles (models/cache, else work_dir()/cache), trained from the shipped tables
+    into work_dir()/cache when missing or older than the tables."""
+    models = Path(models) if models is not None else MODELS
     import sklearn
-    cache = models / "cache" / f"sklearn{sklearn.__version__}"
+    sub = Path("cache") / f"sklearn{sklearn.__version__}"
     out = []
     for name, feats, kw in (("caller", FEATS, dict(max_iter=400, learning_rate=0.05, max_leaf_nodes=31,
                                                    l2_regularization=1.0)),
                             ("bounds", BFEATS, dict(max_iter=500, learning_rate=0.05, max_leaf_nodes=31))):
-        table, pkl = models / f"{name}_train.tsv.gz", cache / f"{name}.pkl"
-        if pkl.exists() and pkl.stat().st_mtime >= table.stat().st_mtime:
-            with open(pkl, "rb") as fh:
+        table = models / f"{name}_train.tsv.gz"
+        fresh = [p for p in (models / sub / f"{name}.pkl", work_dir(models) / sub / f"{name}.pkl")
+                 if p.exists() and p.stat().st_mtime >= table.stat().st_mtime]
+        if fresh:
+            with open(fresh[0], "rb") as fh:
                 out.append(pickle.load(fh))
         else:
-            out.append(_train(table, feats, pkl, **kw))
+            out.append(_train(table, feats, work_dir(models) / sub / f"{name}.pkl", **kw))
     return out[0], out[1]
+
+
+def prepare(models: Optional[Path] = None) -> Path:
+    """Unpack the clade models and train the classifiers now (`mitom setup`), not at the first run; returns the
+    folder of the clade models."""
+    models = Path(models) if models is not None else MODELS
+    d = clade_dir(models)
+    classifiers(models)
+    return d
 
 
 def model_paths(pan: Path, cdir: Optional[Path], lineage: str) -> List[Tuple[Path, str, int]]:
@@ -460,9 +506,10 @@ def refine_ends(calls, gen: str, bclf) -> None:
 
 # ── driver ───────────────────────────────────────────────────────────────────
 def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign: str, ext_preds=(),
-            models: Path = MODELS, cpu: int = 1, thr: float = THRESHOLD, use_clades: bool = True) -> List[Dict[str, Any]]:
+            models: Optional[Path] = None, cpu: int = 1, thr: float = THRESHOLD, use_clades: bool = True) -> List[Dict[str, Any]]:
     """tRNA calls of one (circular) sequence: dicts with family (A..Y, L1/L2, S1/S2), aa, anticodon, start, end
     (1-based; end > len(seq) for a tRNA across the origin), strand, p (classifier probability), bound_p."""
+    models = Path(models) if models is not None else MODELS
     from threadpoolctl import threadpool_limits      # installed with scikit-learn
     with threadpool_limits(limits=max(1, cpu)):     # its OpenMP pool otherwise takes every core: 16 parallel records
         clf, bclf = classifiers(models)              # ran 99 threads each (load 160 on 72 cores)
@@ -497,7 +544,7 @@ def main(argv=None) -> int:
     w.writerow(["record", "family", "anticodon", "start", "end", "strand", "p", "bound_p"])
     for rec in SeqIO.parse(a.input, fmt):
         lin = a.lineage or ";".join(rec.annotations.get("taxonomy", []))
-        for c in predict(str(rec.seq), lin, a.genetic_code, Path(ref) / "ncRNA", cms, cma, cpu=a.cpu):
+        for c in predict(str(rec.seq), lin, a.genetic_code, mito_env.refseq_dir(ref) / "ncRNA", cms, cma, cpu=a.cpu):
             w.writerow([rec.id, c["family"], c["anticodon"], c["start"], c["end"], c["strand"], c["p"], c["bound_p"]])
     return 0
 

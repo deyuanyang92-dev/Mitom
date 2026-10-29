@@ -225,3 +225,47 @@ def test_mitom_replaces_mitoz_trnas_keeps_pcgs(tmp_path):
     before = SeqIO.read(str(src), "genbank")
     keep = lambda r: sorted(str(f.location) for f in r.features if f.type in ("CDS", "rRNA"))  # noqa: E731
     assert keep(after) == keep(before)
+
+
+def test_trna_ml_prepares_into_the_user_data_folder_of_a_read_only_install(tmp_path, monkeypatch):
+    """2026-10-30 (integration audit): MitoM-ML unpacked its clade models and trained its classifiers into the install
+    folder at the first run: a read-only (shared, bioconda) install failed at the first tRNA call. Now they go to the
+    user data folder ($MITOM_DATA here) and the install folder is only read."""
+    import gzip
+    import io
+    import random
+    import tarfile
+    models = tmp_path / "install" / "models" / "trna_ml"
+    models.mkdir(parents=True)
+    with tarfile.open(models / "clades.tar.gz", "w:gz") as tf:
+        for name, text in (("clades/models.json", '{"models": {}}'), ("clades/X__A.cm", "cm")):
+            data = text.encode()
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            tf.addfile(info, io.BytesIO(data))
+    rnd = random.Random(1)
+    for name, feats in (("caller", trna_ml.FEATS), ("bounds", trna_ml.BFEATS)):
+        with gzip.open(models / f"{name}_train.tsv.gz", "wt") as fh:
+            fh.write("\t".join(feats + ["label"]) + "\n")
+            for i in range(40):
+                fh.write("\t".join(f"{rnd.random():.3f}" for _ in feats) + f"\t{i % 2}\n")
+    for d in (models, models.parent, models.parent.parent):
+        d.chmod(0o555)
+    monkeypatch.setattr(trna_ml, "MODELS", models)
+    monkeypatch.setenv("MITOM_DATA", str(tmp_path / "data"))
+    try:
+        d = trna_ml.prepare()
+        assert d == tmp_path / "data" / "trna_ml" / "clades" and (d / "models.json").is_file()
+        assert sorted(p.name for p in models.iterdir()) == ["bounds_train.tsv.gz", "caller_train.tsv.gz", "clades.tar.gz"]
+        cached = sorted(p.name for p in (tmp_path / "data" / "trna_ml" / "cache").rglob("*.pkl"))
+        assert cached == ["bounds.pkl", "caller.pkl"]
+        assert trna_ml.clade_dir() == d and len(trna_ml.classifiers()) == 2       # read back, nothing trained again
+    finally:
+        for p in (models, models.parent, models.parent.parent):
+            p.chmod(0o755)
+
+
+def test_refseq_dir_from_either_folder(tmp_path):
+    (tmp_path / "refs" / "refseq89m" / "ncRNA").mkdir(parents=True)
+    assert mito_env.refseq_dir(str(tmp_path / "refs")) == tmp_path / "refs" / "refseq89m"
+    assert mito_env.refseq_dir(str(tmp_path / "refs" / "refseq89m")) == tmp_path / "refs" / "refseq89m"

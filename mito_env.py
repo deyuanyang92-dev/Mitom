@@ -173,6 +173,25 @@ def mitos_bin(explicit: Optional[str] = None) -> Optional[str]:
     return str(Path(exe).parent) if exe else None
 
 
+def data_dir() -> Path:
+    """Folder for the data MitoM makes on first use (MitoM-ML: unpacked clade models, trained classifiers), so that
+    the install folder may be read-only: $MITOM_DATA, else $XDG_DATA_HOME/mitom, else ~/.local/share/mitom."""
+    if os.environ.get("MITOM_DATA"):
+        return Path(os.environ["MITOM_DATA"]).expanduser()
+    xdg = os.environ.get("XDG_DATA_HOME")
+    return (Path(xdg).expanduser() if xdg else Path.home() / ".local" / "share") / "mitom"
+
+
+def refseq_dir(refdir: Optional[str] = None, ref: str = MITOS_REF) -> Optional[Path]:
+    """The MITOS2 reference data folder itself (refseq89m: featureProt/, ncRNA/), given that folder or the folder
+    that holds it (as mitos_refdir returns it); found automatically when refdir is None; None when not found."""
+    d = refdir or mitos_refdir(None, ref)
+    if not d:
+        return None
+    p = Path(d).expanduser()
+    return p / ref if (p / ref).is_dir() else p
+
+
 def mitos_refdir(explicit: Optional[str] = None, ref: str = MITOS_REF) -> Optional[str]:
     """Directory that contains the MITOS2 reference data folder `ref` (e.g. refseq89m)."""
     if explicit:                                  # used as given; a wrong one makes MITOS2 fail visibly
@@ -275,7 +294,19 @@ def setup(refdir: Optional[str] = None) -> int:
         have = str(target)
     os.environ["MITOS_REFDIR"] = str(Path(have).expanduser())  # doctor --write-config records it
     config.cache_clear()
+    prepare_trna_ml()
     return doctor(write=True)
+
+
+def prepare_trna_ml() -> None:
+    """MitoM-ML's clade models unpacked and classifiers trained now (into data_dir()), not by the first run's
+    parallel jobs; without scikit-learn the core uses MiTFi and nothing is prepared."""
+    try:
+        sys.path.insert(0, str(HERE))
+        import trna_ml
+        print(f"MitoM-ML tRNA models ready: {trna_ml.prepare()}", flush=True)
+    except Exception as exc:                       # noqa: BLE001  (setup goes on; the first run tries again)
+        print(f"MitoM-ML tRNA models not prepared ({exc!r}); the first run prepares them", file=sys.stderr)
 
 
 if __name__ == "__main__":
