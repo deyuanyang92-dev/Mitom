@@ -47,7 +47,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from Bio.Data import CodonTable
 from Bio.Seq import Seq
@@ -58,21 +58,11 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_env  # noqa: E402
 import mito_rrna_hmm  # noqa: E402  (per-phylum rRNA profile HMMs: nhmmer search, best span)
+from mito_common import contig_record_id, read_fasta, run_tool, topology_from_header  # noqa: E402
+# the core's /gene and /product (understood by every later MitoM step) and the amino acids, one letter -> three
+from mito_names import AA1_TO_3 as AA3, CORE_NAMES as NAMES  # noqa: E402
 
 PCG = ("atp6", "atp8", "cob", "cox1", "cox2", "cox3", "nad1", "nad2", "nad3", "nad4", "nad4l", "nad5", "nad6")
-NAMES = {                                   # the core's /gene and /product, understood by every later MitoM step
-    "atp6": ("ATP6", "ATP synthase F0 subunit 6"), "atp8": ("ATP8", "ATP synthase F0 subunit 8"),
-    "cox1": ("COX1", "cytochrome c oxidase subunit I"), "cox2": ("COX2", "cytochrome c oxidase subunit II"),
-    "cox3": ("COX3", "cytochrome c oxidase subunit III"), "cob": ("CYTB", "cytochrome b"),
-    "nad1": ("ND1", "NADH dehydrogenase subunit 1"), "nad2": ("ND2", "NADH dehydrogenase subunit 2"),
-    "nad3": ("ND3", "NADH dehydrogenase subunit 3"), "nad4": ("ND4", "NADH dehydrogenase subunit 4"),
-    "nad4l": ("ND4L", "NADH dehydrogenase subunit 4L"), "nad5": ("ND5", "NADH dehydrogenase subunit 5"),
-    "nad6": ("ND6", "NADH dehydrogenase subunit 6"),
-    "rrnS": ("s-rRNA", "12S ribosomal RNA"), "rrnL": ("l-rRNA", "16S ribosomal RNA"),
-}
-AA3 = {"A": "Ala", "C": "Cys", "D": "Asp", "E": "Glu", "F": "Phe", "G": "Gly", "H": "His", "I": "Ile", "K": "Lys",
-       "L": "Leu", "M": "Met", "N": "Asn", "P": "Pro", "Q": "Gln", "R": "Arg", "S": "Ser", "T": "Thr", "V": "Val",
-       "W": "Trp", "Y": "Tyr"}
 BLAST_EVALUE = 10          # blastx is only the locator; short divergent genes (atp8, nad6, nad4l) score weakly
 BLAST_MIN_BITS = 35        # weakest locus accepted (exonerate then has to align it)
 EXONERATE_MIN_SCORE = 40   # exonerate --score (default 100 loses short divergent genes)
@@ -194,8 +184,9 @@ def mitfi_files(mitos_bin: Optional[str]) -> Tuple[Path, Path]:
 
 
 def run(cmd: List[str], log: logging.Logger, **kw) -> subprocess.CompletedProcess:
-    log.debug("[CMD] " + " ".join(cmd))
-    p = subprocess.run(cmd, capture_output=True, text=True, **kw)
+    """A program of the core (mito_common.run_tool: logged at DEBUG); a failure raises RuntimeError with the end of
+    its stderr."""
+    p = run_tool(cmd, **kw)
     if p.returncode != 0:
         raise RuntimeError(f"{Path(cmd[0]).name} failed ({p.returncode}): {p.stderr.strip()[-400:]}")
     return p
@@ -234,22 +225,6 @@ def loci(hits: List[Hit]) -> List[List[Hit]]:
 def clean_protein(seq: str) -> str:
     """exonerate stops on letters outside the 20 amino acids + X (RefSeq proteins carry J, B, Z, U, O, *)."""
     return re.sub(r"[^ACDEFGHIKLMNPQRSTVWY]", "X", seq.upper().rstrip("*"))
-
-
-def read_fasta(path: Path) -> Iterator[SeqRecord]:
-    """FASTA records (id = first word, description = whole header), streamed, without Bio.SeqIO: it imports numpy
-    (~27 MB), resident in this process while nhmmer / blastx / cmsearch run (peak memory); SeqIO only writes GenBank"""
-    head, parts = None, []
-    with open(path) as fh:
-        for line in fh:
-            if line.startswith(">"):
-                if head is not None:
-                    yield SeqRecord(Seq("".join(parts)), id=(head.split() or [""])[0], description=head)
-                head, parts = line[1:].strip(), []
-            elif head is not None:
-                parts.append("".join(line.split()))
-    if head is not None:
-        yield SeqRecord(Seq("".join(parts)), id=(head.split() or [""])[0], description=head)
 
 
 def reference_proteins(db_fasta: Path, ids: List[str]) -> Dict[str, str]:
@@ -1030,8 +1005,8 @@ def annotate(args) -> int:
     for k, rec in enumerate(seqs):
         genome = str(rec.seq).upper()
         n = len(genome)
-        topology = "linear" if re.search(r"topology\s*=\s*linear", rec.description, re.I) else "circular"
-        rid = prefix if len(seqs) == 1 else (re.sub(r"[^A-Za-z0-9_.-]", "_", rec.id)[:16] or f"{prefix}_{k + 1}")
+        topology = topology_from_header(rec.description)
+        rid = contig_record_id(prefix, rec.id, k, len(seqs))
         searched = genome + genome[:min(ORIGIN_EXT, n)] if topology == "circular" else genome
         with tempfile.TemporaryDirectory(prefix="mito_core.") as td:
             tmp = Path(td)

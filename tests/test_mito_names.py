@@ -89,10 +89,9 @@ def test_every_call_site_gives_the_old_name(site, got):
     assert not bad, f"{len(bad)} of {len(ROWS)} rows differ at {site}, e.g. {bad[:3]}"
 
 
-def test_tables_shared_with_the_core_are_equal():
-    """The core keeps its own copy until it imports mito_names (after the speed branches merge)."""
-    assert mito_names.CORE_NAMES == mito_core.NAMES
-    assert mito_names.AA1_TO_3 == mito_core.AA3
+def test_tables_shared_with_the_core_are_one():
+    """The core's /gene and /product names and amino acid table are mito_names' own (no copy)."""
+    assert mito_core.NAMES is mito_names.CORE_NAMES and mito_core.AA3 is mito_names.AA1_TO_3
     assert mito_rescue.CORE_NAMES is mito_names.CORE_NAMES and mito_rrna_hmm.GENES == {
         g: mito_core.NAMES[g] for g in ("rrnS", "rrnL")}
     assert mito_trna.AA3 == mito_names.AA3 == mito_plot.AA and mito_trna.ONE2THREE == mito_names.AA1_TO_3
