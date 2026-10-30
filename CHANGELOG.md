@@ -11,6 +11,13 @@ installed one.
 - `mitom dedup` takes FASTA too: identical sequences, and versions of one accession when the header's first word is
   an accession (MK123456.1); local names such as NODE_1 are never merged on their name.
 - `mitom fetch --fasta`: a FASTA of the downloaded records next to the GenBank file.
+- `--topology auto|label|circular|linear` (`mitom run`, `mitom annotate`; default auto): records are annotated as
+  labelled (GenBank LOCUS line; FASTA `topology=`; else one sequence >= 10 kb circular, several or shorter linear)
+  and the protein genes at the two ends are aligned to their reference protein across the junction
+  (`mito_core.py --check_ends`): a gene running from the end across to the start makes a record circular, a gene cut
+  at an end of a circular-labelled record makes it linear, and circular-labelled jellyfish / hydroids / calcareous
+  sponges (linear mtDNA) are annotated as linear unless a gene runs across their ends. Changed records are annotated
+  again; `reports/topology_decision.tsv` gives each record's label, topology and reason.
 
 ### Changed
 - `dedup.fasta` headers carry `topology=circular|linear` (without it `mitom run` takes the records of a multi-record
@@ -23,6 +30,10 @@ installed one.
   Cnidaria 109 vs 5, Mollusca 66 vs 12). Curation of 1,718 leave-out benchmark records: annelid protein genes with
   both ends as NCBI 7,357 -> 7,414, no other phylum changed. The same nad2 no longer depends on whether the record
   was rotated.
+
+### Fixed
+- The GenBank header copied from the input record keeps the topology MitoM annotated in its LOCUS line (it took the
+  input's back, which every later step reads).
 
 ## 1.0.0 - 2026-10-30
 

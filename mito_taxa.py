@@ -50,6 +50,17 @@ def aggressive_start_genes(clade: Optional[str]) -> str:
     return "ND5,ND4L" if (clade or "").lower().startswith("annelida") else ""
 
 
+def linear_mtdna(lineage: str) -> str:
+    """The taxon of an NCBI lineage (';'-separated) whose mitochondrial genome is linear - jellyfish and hydroids
+    (Medusozoa: Kayal et al. 2012 BMC Evol Biol) and calcareous sponges (Lavrov et al. 2013 Genome Biol Evol) -
+    or '' (mitom --topology auto: such a record is linear unless a gene runs across its ends)."""
+    taxa = {t.strip() for t in (lineage or "").split(";")}
+    return next((t for t in LINEAR_MT_TAXA if t in taxa), "")
+
+
+LINEAR_MT_TAXA = ("Hydrozoa", "Scyphozoa", "Cubozoa", "Staurozoa", "Calcarea")
+
+
 def abbreviated_overlap(clade: Optional[str]) -> List[str]:
     """mito_curate.py --abbreviated_overlap for the Chordata clade: vertebrate RefSeq records end a gene whose complete
     stop would run 1-2 nt into the next tRNA / gene with T / TA (leave-out benchmark: +14 exact ends in Chordata;

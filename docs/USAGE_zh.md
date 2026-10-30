@@ -88,10 +88,22 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 
 ### 3.2 环状还是线状
 
-GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
+先看标签。GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
 
 - 表头写 `topology=circular` 或 `topology=linear` 时按写的处理，例如 `>sample1 topology=circular`。
 - 没写时：文件里只有一条且 ≥ 10 kb 的序列当作环状；一个文件有多条序列，或序列 < 10 kb，当作组装的 contig，按线状处理（日志中有 `[TOPOLOGY]` 警告）。
+
+标签可能标错，所以默认（`--topology auto`）第一轮注释后再核对序列两端：两端的蛋白基因用它的参考蛋白跨过“尾接头”的接点再比对一次。
+
+| 序列显示 | 处理 |
+|---|---|
+| 有基因从序列末尾接到开头：参考蛋白跨过接点连续比对上，并且两侧各自也能比对上、正好接上（或两侧各 ≥ 90 nt 且读码框不断）。例如组装从基因中间开始、多条放在一个 FASTA 里又没写 `topology=` | 当环状 |
+| 标为环状，但两端有基因被截断：比对停在端点，缺 ≥ 30 个氨基酸，读码框一直开放到端点，另一端也接不上。即部分序列 | 当线状 |
+| 证据矛盾（例如比对只偶然越过接点几十 nt） | 不改判，按标签 |
+| 标为环状的水母类、水螅类（Medusozoa）和钙质海绵：它们的线粒体基因组是线状的，且没有基因跨两端 | 当线状（第一轮就按线状注释） |
+| 其他 | 按标签 |
+
+被改判的记录用新的拓扑重新注释一遍；多数记录不改判，核对本身每条约 1 秒（93 条 NCBI 记录总用时 164.2 分钟，只按标签 164.6 分钟）；每条记录的标签、来源、最终拓扑和原因写在 `reports/topology_decision.tsv`。`--topology label` 只按标签；`--topology circular` / `linear` 把全部记录设为环状 / 线状。
 
 环状记录会旋转到以 cox1 起始（见第 4 节）；线状记录从不旋转，以免在假的“原点”处把真基因切断。
 
@@ -130,7 +142,7 @@ GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
 | 步骤 | 做什么 | 结果 / 报告 |
 |---|---|---|
 | 1 读入与去重 | 读 GenBank / FASTA；同一个基因组的多条记录只留一条（见 3.4）；给每条记录一个内部短 ID | `reports/dedup_report.tsv` |
-| 2 第一轮注释 | 注释核心 `mito_core.py`（或 `--engine mitoz / mitos2`）：蛋白基因（blastx 定位 + exonerate 定边界）、rRNA（按门的 profile HMM）、tRNA（MitoM-ML + MiTFi） | — |
+| 2 第一轮注释 | 注释核心 `mito_core.py`（或 `--engine mitoz / mitos2`）：蛋白基因（blastx 定位 + exonerate 定边界）、rRNA（按门的 profile HMM）、tRNA（MitoM-ML + MiTFi）；再核对序列两端，标签与序列矛盾的记录改判环状 / 线状并重注（见 3.2） | `reports/topology_decision.tsv` |
 | 3 统一方向 | 环状记录转到正链并以 cox1 起始；没有 cox1 时依次用 cox2、cox3、cob、nad1（`--fallback_genes`） | `reports/oriented_by_fallback.txt`、`reports/no_cox1_samples.txt` |
 | 4 需要时再注释一次 | 转动起点后，原来跨在序列首尾两端的基因会被接起来；这类记录，以及转动后有基因受影响、或缺了标准基因的记录，再注释一遍，其余记录不用重做 | `reports/reannotation_decision.tsv` |
 | 5 写结果 | 写 GenBank，并把原记录的表头（物种、文献、标本）复制回来 | `reports/metadata_transfer_log.tsv` |
@@ -342,6 +354,7 @@ out/
 | 报告（`reports/`） | 内容 |
 |---|---|
 | `dedup_report.tsv` | 每条输入记录：保留 / 去掉及原因 |
+| `topology_decision.tsv` | 每条记录的标签及来源、最终按环状还是线状注释、是否改判及原因（见 3.2） |
 | `reannotation_decision.tsv` | 旋转后是否做第二轮及原因 |
 | `metadata_transfer_log.tsv` | 每条记录的表头来自哪里 |
 | `rescue_report.tsv` | MITOS2 补回的基因 |
@@ -420,7 +433,7 @@ mitom debug out
 | `--clade auto: the input must be one metazoan phylum` | 输入含多个门。按门分开运行，或给 `--clade` 和 `--genetic_code` |
 | `exonerate / blastp not found`，内含子步骤跳过 | 不在 mitotools 环境中运行，或环境不完整。运行 `mitom doctor`；用 `--intron_bin <环境>/bin` 指定 |
 | tRNA 很少或没有 | 先看 `mitom doctor` 中 cmsearch / cmalign / java 是否 OK（MitoM-ML 和 MiTFi 需要）；部分类群（刺胞动物、同骨海绵）本来只有 1–6 个 tRNA |
-| 线状记录没有旋转 | 设计如此：线状序列旋转会切断真基因。确为环状时在 FASTA 表头加 `topology=circular` |
+| 线状记录没有旋转 | 设计如此：线状序列旋转会切断真基因。有基因跨两端时会自动改判为环状（`reports/topology_decision.tsv`）；确为环状但两端没有基因时，在 FASTA 表头加 `topology=circular` |
 | `ncbi_errors` 不为 0 | 看 `ncbi_submission/<记录>.val`、`submission_summary.tsv` 和 `validation_messages.tsv`；常见原因是组装错误（移码、内部终止） |
 | 运行很慢 | `--threads` × `--jobs` 不要超过 CPU 数；内含子步骤对每条记录约 10–20 秒 |
 | 结果与 NCBI 原注释不同 | 看 `original_vs_mitom.tsv` 和 `reports/curation_report.tsv`：MitoM 按统一规则修整边界，NCBI 各记录写法不一 |
@@ -465,9 +478,9 @@ FASTA header 中可以包含 topology：
 ATGC...
 ```
 
-如果没有写 `topology=linear` 或 `topology=circular`，脚本默认按 `circular` 处理。
+如果没有写 `topology=linear` 或 `topology=circular`：单条 ≥ 10 kb 的序列按 `circular`，多条或更短的按 `linear`；默认还会核对序列两端（见 3.2）。
 
-Supported FASTA extensions are `.fa`, `.fasta`, `.fna`, and `.fas`. If no topology tag is present, the script assumes `circular`.
+Supported FASTA extensions are `.fa`, `.fasta`, `.fna`, and `.fas`. Without a topology tag one sequence of >= 10 kb is circular, several or shorter ones linear; `--topology auto` (default) then checks the sequence ends (section 3.2).
 
 #### GenBank 输入 / GenBank Input
 
@@ -834,6 +847,7 @@ Outputs and matching:
 | `--clade` | `run`, `annotate` | 类群蛋白库，默认 `auto`：从 GenBank 分类信息判断（一次一个门；纲级名按所属门处理；分类信息里没有已知门名、含多个门、或各条记录 CDS `transl_table` 不一致时报错；**完全没有分类信息**（FASTA、无 lineage 的 GenBank）时沿用 Annelida 并警告）；可选值见"快速上手" | Taxon protein database, default `auto` (from the GenBank taxonomy, one phylum per run; class names count for their phylum; a taxonomy without a known phylum, several phyla, or differing CDS transl_tables are errors; input with NO taxonomy at all - FASTA, GenBank without lineage - falls back to Annelida with a warning) |
 | `--genetic_code` | `run`, `annotate` | 遗传密码表，无默认固定值：`--clade auto` 时取输入各记录 CDS 的 transl_table（记录间不一致则报错），无则该门常用码；显式 `--clade` 时取该类群的密码（Chordata 2、Echinodermata 9、Porifera 4，其余 5；Cnidaria、Platyhelminthes、Chaetognatha、Animal 必须显式给出）；显式给出时优先 | Genetic code (no fixed default): with `--clade auto` from the per-record CDS transl_table (differing records are an error), else the phylum's usual code; with an explicit `--clade` the code of that clade (2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal); an explicit value wins |
 | `--engine`, `--mitoz_bin` | `run`, `annotate` | 注释程序：`native`（默认，MitoM 核心）/ `mitoz` / `mitos2`（需自己安装；MitoZ 只支持它自己的 9 个 `--clade`）；`--mitoz_bin` 给 mitoz 所在目录 | Annotation program: native (default) / mitoz / mitos2 (installed by you) |
+| `--topology` | `run`, `annotate` | 环状 / 线状：`auto`（默认）= 按标签（GenBank LOCUS 行；FASTA 表头 `topology=`；没有时单条 ≥ 10 kb 环状、多条或更短线状），再核对序列两端：有基因从末尾接到开头 → 环状；标为环状但两端有基因被截断 → 线状；标为环状的水母类、水螅类和钙质海绵（线状线粒体基因组）且没有基因跨两端 → 线状；改判的记录重注，结果见 `reports/topology_decision.tsv`。`label` = 只按标签；`circular` / `linear` = 全部设为环状 / 线状 | Circular or linear: `auto` (default) = the label, checked at the sequence ends (gene across the ends -> circular; gene cut at an end of a circular-labelled record -> linear; Medusozoa / Calcarea labelled circular without a gene across the ends -> linear; changed records annotated again, `reports/topology_decision.tsv`); `label`; `circular` / `linear` for every record |
 | `--fasta`, `--topology` | `import` | MITOS2 结果对应的基因组 FASTA（按 result.bed 里的序列名匹配；默认在结果目录或其上一级找）；拓扑：`auto`（默认：MITOS2 取 result.gff，GenBank 取 LOCUS 行，MitoZ 输出按环状）/ `circular` / `linear` | Genome FASTA of MITOS2 results; topology of imported records |
 | `--rescue` | `run`, `annotate` | 从 MITOS2 补回核心漏注的蛋白基因/rRNA（需另装 MITOS2）：`auto`（默认）/ `no` = 不运行（核心自己重试其他位点）；`yes` = 对缺基因的记录运行 | Rescue genes the core missed from MITOS2 (optional install): `auto` (default) / `no` = not run; `yes` = run for records missing a gene |
 | `--rrna_method` | `run`, `annotate` | 注释核心的 12S/16S 搜索：`hmm`（默认，更快）= MitoM 按门 profile HMM，无模型或无命中时用 MITOS2 协方差模型；`cm` = 只用 MITOS2 协方差模型（refseq89m）。两者准确度相同（2026-10-28，450 条留一法记录完整流程：找回 98.5% / 98.5%，两端一致 47.4% / 47.6%）；hmm 每个基因几秒、约 0.1 GB，cm 约 10 秒、约 0.5 GB | 12S/16S search of the core: `hmm` (default, faster) = per-phylum profile HMMs, MITOS2 covariance models where there is no model or hit; `cm` = MITOS2 covariance models only. Same accuracy (450 leave-out records: found 98.5 / 98.5 %, both ends exact 47.4 / 47.6 %) |

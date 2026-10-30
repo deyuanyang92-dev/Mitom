@@ -509,6 +509,94 @@ def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.C
     return Feature("CDS", gene, s, e, nb.strand, f"open reading frame before {nb.name} (gene order)", score=1.0)
 
 
+# ── sequence ends (mitom --topology auto) ────────────────────────────────────
+END_TOUCH = 15             # nt between a CDS and a sequence end, beyond the room its missing residues need: checked
+END_FLANK = 30             # nt of the reference alignment on both sides of the junction: it runs across (END_MEET /
+                           # END_LONG decide whether the ends are contiguous)
+END_CUT = 30               # residues of the reference missing where the alignment stops at the junction, the frame open
+                           # up to it, not found across it: the gene is cut there (fewer can be a divergent end)
+END_REACH = 60             # ... and the alignment stops at most this far from the junction (exonerate trims the last
+                           # codons of a gene cut by a sequence end: 20-21 nt in the 2026-10-30 synthetic tests)
+END_MEET = 10              # joined: the reference aligned on each side alone, the two pieces meet within this many residues
+                           # (a chance extension across a false junction has none: 5 of 20 synthetic partial genomes ran
+                           # 35-338 nt across with one alignment) ...
+END_LONG = 90              # ... or >= this many nt aligned on both sides, the frame open across and no piece of one side
+                           # re-aligning residues of the other (a divergent half aligns only with the rest: synthetic
+                           # NC_045069.1 nad2, 510 / 372 nt). An alignment across that is neither: no evidence either way
+ENDS_HEADER = "record\tgene\tstrand\tend\treference\tresidues\tbefore_nt\tafter_nt\tverdict\n"
+
+
+def side_pieces(window: str, j: int, prots: Dict[str, str], code: int, tools: dict, tmp: Path, log) -> list:
+    """The reference aligned on each side of the junction alone (exonerate score >= EXONERATE_MIN_SCORE), as
+    (qab, qae, tab, tae) on the whole window; a side without an alignment is left out."""
+    out = []
+    for lo, hi in ((0, j), (j, len(window))):
+        b = exonerate_best(tools["exonerate"], window[lo:hi], prots, code, tmp, log)
+        if b is not None:
+            out.append((b[1], b[2], b[3] + lo, b[4] + lo))
+    return out
+
+
+def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, tools: dict, tmp: Path, log) -> List[str]:
+    """CDS at the sequence ends - across the origin, or nearer an end than its missing residues need (+ END_TOUCH):
+    the sequence joined end to start and the CDS's reference protein (the one its note names) aligned again across the
+    junction (exonerate, as in annotate_pcgs). One row per CDS (ENDS_HEADER without the record): gene, strand, end
+    (across / start / end), reference, residues aligned, nt aligned before / after the junction on the gene's strand,
+    and the verdict: joined (>= END_FLANK nt on both sides, and the reference aligned on each side alone reaches the
+    junction with pieces that meet, or END_LONG nt on both sides in an open frame: the ends are contiguous), cut (the
+    alignment stops within END_REACH nt of the junction with >= END_CUT residues of the reference missing there and
+    the reading frame open up to it: they are not) or complete (no evidence). mitom --topology auto decides the
+    topology of the record with it."""
+    n = len(genome)
+    double = genome + genome                               # the junction lies between double[n - 1] and double[n]
+    stops = set(CodonTable.unambiguous_dna_by_id[code].stop_codons)
+    rows = []
+    for f in feats:
+        m = re.match(r"ref (\S+)(?: \(blastx\))? score \S+ residues (\d+)-(\d+)/(\d+)", f.note)
+        if f.kind != "CDS" or not m:                       # (an ORF placed by gene order has no reference)
+            continue
+        a, b, reflen = int(m.group(2)), int(m.group(3)), int(m.group(4))
+        room5, room3 = 3 * (a - 1) + END_TOUCH, 3 * (reflen - b) + END_TOUCH   # nt the missing residues need
+        left, right = (room5, room3) if f.strand == 1 else (room3, room5)      # ... before / after it on the plus strand
+        where = "across" if f.end > n else "end" if n - f.end < right else "start" if f.start < left else ""
+        if not where:
+            continue
+        prots = reference_proteins(refdir / "featureProt" / f"{f.name}.fas", [m.group(1)])
+        if not prots:
+            continue
+        s, e = (f.start + n, f.end + n) if where == "start" else (f.start, f.end)
+        flank = max(0, min(3 * reflen + WINDOW, (n - (e - s)) // 2))   # one copy of the sequence at most
+        ws, we = max(0, s - flank), min(2 * n, e + flank)
+        window = double[ws:we] if f.strand == 1 else str(Seq(double[ws:we]).reverse_complement())
+        j = n - ws if f.strand == 1 else we - n            # the junction on the window (gene's strand)
+        best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
+        if best is None:
+            continue
+        ref, qab, qae, tab, tae, _ = best
+        before, after = j - tab, tae - j
+        if before >= END_FLANK and after >= END_FLANK:     # an alignment across the junction
+            pieces = side_pieces(window, j, prots, code, tools, tmp, log)
+            meet = len(pieces) == 2 and pieces[0][3] >= j - END_REACH and pieces[1][2] <= j + END_REACH \
+                and abs(pieces[1][0] - pieces[0][1]) <= END_MEET
+            apart = len(pieces) == 2 and abs(pieces[1][0] - pieces[0][1]) > END_MEET
+            frame_open = not any(window[c:c + 3] in stops for c in range(tab, tae - 3, 3))
+            verdict = "joined" if meet or before >= END_LONG and after >= END_LONG and frame_open and not apart \
+                else "complete"
+        elif j - END_REACH <= tae < j + END_FLANK and reflen - qae >= END_CUT \
+                and not any(window[c:c + 3] in stops for c in range(tae, j - 2, 3)) \
+                or j - END_FLANK < tab <= j + END_REACH and qab >= END_CUT \
+                and not any(window[c:c + 3] in stops for c in range(tab - 3, j - 1, -3)):
+            # the gene's 3' side runs into the junction, or its 5' side starts there, the frame open up to it
+            verdict = "cut"
+        else:
+            verdict = "complete"
+        rows.append(f"{f.name}\t{'+' if f.strand == 1 else '-'}\t{where}\t{ref}\t{qab + 1}-{qae}/{reflen}\t"
+                    f"{before}\t{after}\t{verdict}\n")
+        log.info(f"[core] {f.name} at the sequence {where}: reference aligned {before} nt before / {after} nt after "
+                 f"the junction, residues {qab + 1}-{qae}/{reflen}: {verdict}")
+    return rows
+
+
 # ── output ───────────────────────────────────────────────────────────────────
 def location(f: Feature, n: int):
     """f's location; a feature ending beyond n (circular record) is a join across the origin in transcript order;
@@ -599,7 +687,7 @@ def annotate(args) -> int:
     EXCLUDE_REFS = {x.split(".")[0] for x in re.split(r"[,\s]+", args.exclude_ref or os.environ.get("MITOM_EXCLUDE_REF", "")) if x}
     if EXCLUDE_REFS:
         log.info(f"[core] reference proteins of {', '.join(sorted(EXCLUDE_REFS))} not used")
-    recs, rows, n_all = [], [], {"CDS": 0, "rRNA": 0, "tRNA": 0}
+    recs, rows, ends, n_all = [], [], [], {"CDS": 0, "rRNA": 0, "tRNA": 0}
     for k, rec in enumerate(seqs):
         genome = str(rec.seq).upper()
         n = len(genome)
@@ -617,6 +705,8 @@ def annotate(args) -> int:
             if not args.no_trna:
                 feats += mito_trna.core_trnas(genome, searched, gfa, refdir, code, args.threads, tools, tmp, log, n,
                                               args.phylum, lineage, topology == "circular", use_ml, feats)
+            if args.check_ends:
+                ends += [f"{rid}\t{row}" for row in end_evidence(genome, feats, refdir, code, tools, tmp, log)]
             if args.keep_tmp:
                 shutil.copytree(tmp, out / "core_tmp" / rid, dirs_exist_ok=True)
         recs.append(genbank_record(genome, feats, code, rid, topology))
@@ -631,6 +721,8 @@ def annotate(args) -> int:
     with (out / f"{prefix}.core.tsv").open("w") as fh:
         fh.write("record\tkind\tname\tstart\tend\tstrand\tscore\tanticodon\tnote\n")
         fh.writelines(rows)
+    if args.check_ends:
+        (out / f"{prefix}.ends.tsv").write_text(ENDS_HEADER + "".join(ends))
     log.info(f"[core] done in {time.time() - t0:.0f} s: {n_all['CDS']} protein genes, {n_all['rRNA']} rRNAs, "
              f"{n_all['tRNA']} tRNAs in {len(recs)} sequence(s) -> {gb}")
     return 0
@@ -657,6 +749,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     a.add_argument("--rrna_method", choices=["hmm", "cm"], default="hmm",
                    help="12S / 16S search: hmm (default) = MitoM's per-phylum profile HMMs (faster), MITOS2's covariance "
                         "models where no model or hit; cm = MITOS2's covariance models only (same accuracy)")
+    a.add_argument("--check_ends", action="store_true",
+                   help="align the CDS at the sequence ends again across them: <out>/<prefix>.ends.tsv tells whether "
+                        "the ends are contiguous (mitom --topology auto)")
     a.add_argument("--keep_tmp", action="store_true", help="keep blastx / cmsearch / MiTFi files in <out>/core_tmp")
     a.add_argument("--exonerate_model", default=EXONERATE_MODEL, help="exonerate model (protein2dna, protein2dna:bestfit)")
     a.add_argument("--blastx"), a.add_argument("--exonerate"), a.add_argument("--cmsearch"), a.add_argument("--java")

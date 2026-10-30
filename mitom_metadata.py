@@ -37,6 +37,18 @@ _REFSEQ_PREFIX_PAT = re.compile(r"^([A-Z]{2}_)")
 # only accession-shaped IDs lose a trailing version: local sample names such as B64_2 are distinct samples
 _NON_REFSEQ_VERSION_PAT = re.compile(r"^[A-Z]{1,4}\d{5,}[._]\d+$", re.I)
 _LOCUS_BPCOUNT_RE  = re.compile(r"(LOCUS\s+\S+\s+)\d+(\s+[a-zA-Z]+)")      # LOCUS bp count
+_LOCUS_TOPOLOGY_RE = re.compile(r"^(LOCUS .*?\s)(circular|linear  |linear)(?=\s|$)", re.M)   # LOCUS topology (8 wide)
+
+
+def keep_topology(meta: str, new_record: str) -> str:
+    """The original header *meta* with the topology of the LOCUS line of MitoM's record: the annotation's topology
+    (mitom --topology auto can change the label, and every later step reads it)."""
+    m = _LOCUS_TOPOLOGY_RE.search(new_record)
+    if not m:
+        return meta
+    topology = m.group(2).strip()
+    return _LOCUS_TOPOLOGY_RE.sub(lambda x: x.group(1) + (topology if len(x.group(2)) < 8 else f"{topology:8s}"),
+                                  meta, count=1)
 
 
 def _clean_acc(acc: Optional[str]) -> Optional[str]:
@@ -283,6 +295,7 @@ def replace_metadata_in_text(
             if new_locus_m:
                 real_len = new_locus_m.group(1)
                 meta = _LOCUS_BPCOUNT_RE.sub(rf"\g<1>{real_len}\g<2>", meta, count=1)
+            meta = keep_topology(meta, rec)
             out_records.append(meta + body if body else rec)
             if match_type == "exact":
                 stats["exact"] += 1
@@ -297,7 +310,7 @@ def replace_metadata_in_text(
                 acc, candidates, exact_dict, auto_accept=auto_accept)
             if resolved_meta is not None:
                 _, body = _split_meta_body(rec)
-                out_records.append(resolved_meta + body if body else rec)
+                out_records.append(keep_topology(resolved_meta, rec) + body if body else rec)
                 stats["smart_resolved"] += 1
                 stats["smart_list"].append((acc, chosen_acc))
                 continue

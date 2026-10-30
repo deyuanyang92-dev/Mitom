@@ -742,7 +742,7 @@ def main(argv=None) -> int:
         # record; the input must therefore be the final, reoriented annotation (mitom_pipeline 04.final_gb),
         # never a FASTA or the round-1 output from before reorientation
         bad = [x for x in files if x.suffix.lower() not in GB_EXT or any(
-            part.startswith(("00.", "01.anno_round1", "01.mitoz_anno1")) for part in x.parts)]   # (01.mitoz_anno1: older runs)
+            part.startswith(("00.", "01.anno_round1", "02.anno_topology", "01.mitoz_anno1")) for part in x.parts)]   # (01.mitoz_anno1: older runs)
         if bad:
             print(f"[mito_trna] --select mitos2 needs the final reoriented GenBank (e.g. 04.final_gb/), "
                   f"not: {', '.join(map(str, bad[:3]))}", file=sys.stderr)

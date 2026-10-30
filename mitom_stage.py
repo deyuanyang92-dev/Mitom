@@ -22,7 +22,8 @@ from mitom_snakemake import AnnotTask, run_snakemake_for_annotation_tasks, snake
 
 
 _STAGE_PROGRESS: Optional[Progress] = None          # set by run_annotation_stage; updated per finished sample
-STAGE_LABEL = {"01.anno_round1": "round-1 annotation", "03.anno_round2_reoriented": "round-2 annotation"}
+STAGE_LABEL = {"01.anno_round1": "round-1 annotation", "02.anno_topology": "round-1 annotation, topology changed",
+               "03.anno_round2_reoriented": "round-2 annotation"}
 
 
 MITO_CORE = Path(__file__).resolve().parent / "mito_core.py"      # MitoM's annotation core
@@ -78,6 +79,8 @@ def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args, lin
         cmd += ["--rrna_method", str(g("rrna_method"))]
     if lineage:
         cmd += ["--lineage", lineage]
+    if g("topology", "auto") == "auto":                  # the evidence --topology auto decides with (mitom_topology.py)
+        cmd += ["--check_ends"]
     return cmd
 
 

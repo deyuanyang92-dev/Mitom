@@ -487,6 +487,9 @@ class SampleInfo:
     source_fasta:   Path
     internal_fasta: Path
     orig_gb_path:   Optional[Path] = None
+    topology_source: str = ""      # where the label came from (reports/topology_decision.tsv)
+    label:          str = ""       # the input's topology (topology: what round 1 annotates; --topology circular /
+                                   # linear and linear-mtDNA lineages can differ, mitom_topology)
 
 
 def write_one_record_fasta(record: "SeqRecord", out_fa: Path, seq_id: str, topology: str) -> None:
@@ -504,7 +507,12 @@ def split_or_sanitize_fastas(
     if_split: bool,
     id_maxlen: int,
     acc_to_orig_gb: Optional[Dict[str, Path]] = None,
+    topology: Optional[str] = None,
 ) -> Tuple[List[SampleInfo], Path]:
+    """One single-sequence FASTA per sample (out_dir/<internal_id>.fasta, header topology=...). The topology: `topology`
+    (--topology circular / linear) when given, else the label - the GenBank LOCUS line, a FASTA header's
+    topology=circular|linear, else circular for one sequence of >= MIN_CIRCULAR_LEN nt and linear for several
+    sequences in a file or a shorter one."""
     out_dir.mkdir(parents=True, exist_ok=True)
     if acc_to_orig_gb is None:
         acc_to_orig_gb = {}
@@ -540,27 +548,34 @@ def split_or_sanitize_fastas(
                 cand_name = f"{base_name}_{sample_counts[base_name]}"
             _seen_sample_names.add(cand_name)
             sample_name = cand_name
-            topology    = infer_topology_from_description(desc)
-            if topology == "circular" and not re.search(r"topology\s*=\s*circular", desc.lower()) \
-                    and (len(records) > 1 or len(rec.seq) < MIN_CIRCULAR_LEN):
-                # contigs of an assembly: rotating / joining across a false origin cuts real genes
-                topology = "linear"
-                logging.warning(f"[TOPOLOGY] {orig_token}: {len(records)} records / {len(rec.seq)} nt — treated "
-                                "as linear; add topology=circular to the header to override")
-            internal_id = make_internal_id(idx, id_maxlen)
-            out_fa      = out_dir / f"{internal_id}.fasta"
-            write_one_record_fasta(rec, out_fa, seq_id=internal_id, topology=topology)
             orig_gb_path = acc_to_orig_gb.get(safe_name(rec.id)) \
                         or acc_to_orig_gb.get(orig_token)
+            topo     = infer_topology_from_description(desc)
+            tagged   = re.search(r"topology\s*=\s*(circular|linear)", desc.lower())
+            source   = "GenBank LOCUS line" if orig_gb_path and tagged else "FASTA header" if tagged else \
+                       "FASTA without topology=: one sequence of >= 10 kb"
+            if topo == "circular" and not tagged and (len(records) > 1 or len(rec.seq) < MIN_CIRCULAR_LEN):
+                # contigs of an assembly: rotating / joining across a false origin cuts real genes
+                topo = "linear"
+                source = "FASTA without topology=: " + (f"{len(records)} sequences in the file" if len(records) > 1
+                                                        else "shorter than 10 kb")
+                logging.warning(f"[TOPOLOGY] {orig_token}: {len(records)} records / {len(rec.seq)} nt — treated "
+                                "as linear; add topology=circular to the header to override")
+            label = topo
+            if topology in ("circular", "linear"):
+                topo = topology
+            internal_id = make_internal_id(idx, id_maxlen)
+            out_fa      = out_dir / f"{internal_id}.fasta"
+            write_one_record_fasta(rec, out_fa, seq_id=internal_id, topology=topo)
             si = SampleInfo(
                 sample_name=sample_name, orig_token=orig_token,
-                internal_id=internal_id, topology=topology,
+                internal_id=internal_id, topology=topo,
                 source_fasta=fa.resolve(), internal_fasta=out_fa.resolve(),
-                orig_gb_path=orig_gb_path,
+                orig_gb_path=orig_gb_path, topology_source=source, label=label,
             )
             samples.append(si)
             id_map_lines.append(
-                f"{internal_id}\t{sample_name}\t{orig_token}\t{topology}\t"
+                f"{internal_id}\t{sample_name}\t{orig_token}\t{topo}\t"
                 f"{si.source_fasta}\t{si.internal_fasta}\t{orig_gb_path or 'NA'}\n"
             )
     id_map_path = out_dir / "id_map.tsv"

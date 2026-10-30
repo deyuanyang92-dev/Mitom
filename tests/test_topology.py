@@ -1,0 +1,259 @@
+"""--topology auto (2026-10-30): the core's evidence at the sequence ends (mito_core.end_evidence, exonerate replaced by
+a string search), the decision (mitom_topology.decide / apply_topology), where a label comes from and --topology
+circular / linear (mitom_inputs), and the LOCUS line of the restored header (mitom_metadata.keep_topology).
+
+Run: python3 -m pytest -q tests/test_topology.py
+"""
+import argparse
+import logging
+import random
+import sys
+from pathlib import Path
+
+from Bio import SeqIO
+from Bio.Seq import Seq
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+import mito_core as mc  # noqa: E402
+import mitom_topology as mt  # noqa: E402
+from mito_common import CoreFeature  # noqa: E402
+from mito_taxa import linear_mtdna  # noqa: E402
+from mitom_inputs import SampleInfo, split_or_sanitize_fastas  # noqa: E402
+from mitom_metadata import keep_topology  # noqa: E402
+
+LOG = logging.getLogger("test")
+rng = random.Random(7)
+CODONS = [a + b + c for a in "ACGT" for b in "ACGT" for c in "ACGT" if a + b + c not in ("TAA", "TAG")]
+GENE = "".join(rng.choice(CODONS) for _ in range(300))           # a 300-codon "cox1", open frame (code 5)
+FILLER = "".join(rng.choice("ACGT") for _ in range(11000))
+
+
+def fake_exonerate(gene: str, trim: int = 0):
+    """exonerate_best stand-in: the whole gene where the window holds it (ends joined), else its longest 5' part at
+    the window's end or 3' part at its start (the gene cut by the junction); trim: nt of a 5' part not aligned at its
+    end (exonerate drops the last codons of a gene cut by a sequence end)."""
+    def best(exonerate, window, prots, code, tmp, log):
+        i = window.find(gene)
+        if i >= 0:
+            return "ref1", 0, 300, i, i + len(gene), 900.0
+        for k in range(len(gene) - 3, 89, -3):
+            if window.find(gene[:k]) >= 0:
+                i = window.find(gene[:k])
+                return "ref1", 0, (k - trim) // 3, i, i + k - trim, 3.0 * k
+            if window.find(gene[-k:]) >= 0:
+                i = window.find(gene[-k:])
+                return "ref1", 300 - k // 3, 300, i, i + k, 3.0 * k
+        return None
+    return best
+
+
+def evidence(monkeypatch, genome, feats, gene=GENE, trim=0):
+    monkeypatch.setattr(mc, "exonerate_best", fake_exonerate(gene, trim))
+    monkeypatch.setattr(mc, "reference_proteins", lambda db, ids: {i: "M" * 300 for i in ids})
+    rows = mc.end_evidence(genome, feats, Path("."), 5, {"exonerate": "exonerate"}, Path("."), LOG)
+    return [dict(zip(mc.ENDS_HEADER.rstrip("\n").split("\t")[1:], r.rstrip("\n").split("\t"))) for r in rows]
+
+
+def cds(start, end, strand, residues):
+    return CoreFeature("CDS", "cox1", start, end, strand, f"ref ref1 score 900 residues {residues}/300")
+
+
+def test_gene_across_the_ends_of_a_linear_record_joins_them(monkeypatch):
+    """An assembly started inside cox1 (labelled linear: several sequences in one FASTA): the 3' part at the start,
+    the 5' part at the end; aligned across the junction from either piece -> joined."""
+    genome = GENE[600:] + FILLER + GENE[:600]
+    n = len(genome)
+    rows = evidence(monkeypatch, genome, [cds(n - 600, n, 1, "1-200"), cds(0, 300, 1, "201-300")])
+    assert [(r["end"], r["before_nt"], r["after_nt"], r["verdict"]) for r in rows] == \
+        [("end", "600", "300", "joined"), ("start", "600", "300", "joined")]
+
+
+def test_minus_strand_gene_across_the_ends(monkeypatch):
+    """The same on the minus strand (NC_035740.1 cox1: its 3' end lies at the end of the record)."""
+    rc = str(Seq(GENE[600:] + FILLER + GENE[:600]).reverse_complement())
+    n = len(rc)
+    rows = evidence(monkeypatch, rc, [cds(0, 600, -1, "1-200")])
+    assert (rows[0]["end"], rows[0]["before_nt"], rows[0]["after_nt"], rows[0]["verdict"]) == ("start", "600", "300", "joined")
+    circ = evidence(monkeypatch, rc, [cds(n - 300, n + 600, -1, "1-300")])         # the core's join across the origin
+    assert (circ[0]["end"], circ[0]["verdict"]) == ("across", "joined")
+
+
+def test_gene_cut_at_the_end_of_a_partial_sequence(monkeypatch):
+    """A partial genome: cox1's 5' 600 nt at the end, its 3' part missing -> cut (200 of 300 residues)."""
+    genome = FILLER + GENE[:600]
+    rows = evidence(monkeypatch, genome, [cds(len(genome) - 600, len(genome), 1, "1-200")])
+    assert (rows[0]["residues"], rows[0]["after_nt"], rows[0]["verdict"]) == ("1-200/300", "0", "cut")
+
+
+def test_alignment_trimmed_short_of_the_end(monkeypatch):
+    """exonerate stops ~20 nt before the end of a gene cut by it (synthetic tests 2026-10-30: NC_006990.1 cox1,
+    NC_045069.1 nad2 21 nt short): still checked, as the missing residues would not fit before the end."""
+    genome = GENE[600:] + FILLER + GENE[:600]
+    n = len(genome)
+    rows = evidence(monkeypatch, genome, [cds(n - 600, n - 21, 1, "1-193")], trim=21)
+    assert (rows[0]["end"], rows[0]["verdict"]) == ("end", "joined")
+    part = FILLER + GENE[:600]
+    rows = evidence(monkeypatch, part, [cds(len(part) - 600, len(part) - 21, 1, "1-193")], trim=21)
+    assert (rows[0]["after_nt"], rows[0]["verdict"]) == ("-21", "cut")
+
+
+def test_stop_codon_before_the_junction_is_a_complete_gene(monkeypatch):
+    """A gene whose divergent 3' end does not align (120 residues missing) but whose stop codon lies before the
+    junction is complete, not cut by it (a circular genome stays circular)."""
+    for stop, verdict in (("TAA", "complete"), ("GCC", "cut")):
+        genome = FILLER + GENE[:540] + stop + GENE[543:600]
+        n = len(genome)
+        rows = evidence(monkeypatch, genome, [cds(n - 600, n - 60, 1, "1-180")], gene=GENE[:540] + stop + GENE[543:],
+                        trim=60)
+        assert rows[0]["verdict"] == verdict, stop
+
+
+def test_alignment_across_needs_both_halves_or_a_long_open_span(monkeypatch):
+    """An alignment across the junction is joined when each half aligns alone and the pieces meet, or when both sides
+    are long (>= 90 nt) in an open frame - a divergent half may align only with the rest (synthetic NC_045069.1 nad2,
+    510 / 372 nt). A short extension whose halves do not meet is no evidence either way (5 synthetic partial genomes:
+    35-42 nt across by chance)."""
+    genome = GENE[600:] + FILLER + GENE[:600]
+    n = len(genome)
+    whole = fake_exonerate(GENE)
+
+    def one_half(exonerate, window, prots, code, tmp, log):        # the 3' half too divergent to align alone
+        hit = whole(exonerate, window, prots, code, tmp, log)
+        return hit if hit and hit[1] < 200 else None
+    monkeypatch.setattr(mc, "exonerate_best", one_half)
+    monkeypatch.setattr(mc, "reference_proteins", lambda db, ids: {i: "M" * 300 for i in ids})
+    rows = mc.end_evidence(genome, [cds(n - 600, n, 1, "1-200")], Path("."), 5, {"exonerate": "x"}, Path("."), LOG)
+    assert rows[0].split("\t")[-1].strip() == "joined"
+    short = GENE[870:] + FILLER + GENE[:600]                          # 30 nt across: halves needed, the 3' one is missing
+    n = len(short)
+
+    def short_half(exonerate, window, prots, code, tmp, log):
+        i, k = window.find(GENE[:600] + GENE[870:]), 630
+        if i >= 0:
+            return "ref1", 0, 210, i, i + k, 630.0
+        i = window.find(GENE[:600])
+        return ("ref1", 0, 200, i, i + 600, 600.0) if i >= 0 else None
+    monkeypatch.setattr(mc, "exonerate_best", short_half)
+    rows = mc.end_evidence(short, [cds(n - 600, n, 1, "1-200")], Path("."), 5, {"exonerate": "x"}, Path("."), LOG)
+    assert rows[0].split("\t")[-1].strip() == "complete"
+
+
+def test_complete_gene_at_an_end_is_no_evidence(monkeypatch):
+    """cox1 starting at position 1 (most NCBI records): complete, whatever lies before it."""
+    genome = GENE + FILLER
+    rows = evidence(monkeypatch, genome, [cds(0, 900, 1, "1-300")])
+    assert (rows[0]["end"], rows[0]["before_nt"], rows[0]["verdict"]) == ("start", "0", "complete")
+    assert evidence(monkeypatch, genome, [cds(5000, 5900, 1, "1-300")]) == []        # not at an end: not checked
+
+
+def test_decide():
+    joined = {"gene": "cox1", "end": "end", "residues": "1-300/300", "before_nt": "600", "after_nt": "300",
+              "verdict": "joined"}
+    cut = {**joined, "residues": "1-200/300", "after_nt": "0", "verdict": "cut"}
+    assert mt.decide("linear", [joined])[0] == "circular"
+    assert mt.decide("circular", [cut]) == ("linear", "cox1 stops at the junction of the sequence ends with residues "
+                                            "1-200/300 of its protein, the rest is not on the other side: the ends do "
+                                            "not join")
+    assert mt.decide("linear", [cut]) == ("linear", "as labelled")
+    assert mt.decide("circular", []) == ("circular", "as labelled")
+    hydrozoa = "Eukaryota;Metazoa;Cnidaria;Hydrozoa;Hydroidolina"
+    assert mt.decide("circular", [], hydrozoa) == ("linear", "Hydrozoa: linear mitochondrial genome, no gene across "
+                                                             "the ends")
+    assert mt.decide("circular", [joined], hydrozoa)[0] == "circular"              # NC_035740.1 (Scyphozoa)
+    assert linear_mtdna("Metazoa;Porifera;Calcarea") == "Calcarea" and linear_mtdna("Metazoa;Cnidaria;Anthozoa") == ""
+
+
+def test_apply_topology_annotates_changed_records_again(tmp_path, monkeypatch):
+    split = tmp_path / "split"
+    split.mkdir()
+    samples, results = [], {}
+    for i, (name, verdict) in enumerate((("asm1", "joined"), ("asm2", "complete")), 1):
+        iid = f"S{i:05d}"
+        fa = split / f"{iid}.fasta"
+        fa.write_text(f">{iid} topology=linear\n{FILLER}\n")
+        samples.append(SampleInfo(name, name, iid, "linear", fa, fa, None, "FASTA without topology=: 2 sequences in the file"))
+        wd = tmp_path / "01.anno_round1" / iid
+        wd.mkdir(parents=True)
+        (wd / f"{iid}.ends.tsv").write_text(mc.ENDS_HEADER + f"{iid}\tcox1\t+\tend\tref1\t1-300/300\t600\t300\t{verdict}\n")
+        results[iid] = {"ok": True, "workdir": str(wd), "best_gb": str(wd / f"{iid}.gbf")}
+    seen = []
+
+    def fake_stage(*, samples, phase_dirname, out_root, args, fasta_selector):
+        seen.extend((s.sample_name, s.topology, fasta_selector(s).read_text().split("\n")[0]) for s in samples)
+        return {s.internal_id: {"ok": True, "workdir": "new", "best_gb": "new.gbf"} for s in samples}
+    monkeypatch.setattr(mt, "run_annotation_stage", fake_stage)
+    args = argparse.Namespace(topology="auto", engine="native")
+    new, res = mt.apply_topology(samples, results, args, tmp_path, tmp_path / "reports")
+    assert seen == [("asm1", "circular", ">S00001 topology=circular")]
+    assert [(s.sample_name, s.topology) for s in new] == [("asm1", "circular"), ("asm2", "linear")]
+    assert res["S00001"]["best_gb"] == "new.gbf" and res["S00002"]["best_gb"].endswith("S00002.gbf")
+    rows = (tmp_path / "reports" / "topology_decision.tsv").read_text().splitlines()
+    assert rows[0] == mt.DECISION_HEADER.rstrip("\n")
+    assert rows[1].split("\t")[:6] == ["asm1", "11000", "linear", "FASTA without topology=: 2 sequences in the file",
+                                       "circular", "yes"]
+    assert rows[2].split("\t")[4:] == ["linear", "no", "as labelled"]
+    seen.clear()
+    mt.apply_topology(samples, results, argparse.Namespace(topology="label", engine="native"), tmp_path, tmp_path / "r2")
+    assert seen == []                                                               # --topology label: nothing changes
+    monkeypatch.setattr(mt, "run_annotation_stage", lambda **kw: {s.internal_id: {"ok": False} for s in kw["samples"]})
+    new, res = mt.apply_topology(samples, results, args, tmp_path, tmp_path / "r3")    # annotation as circular failed
+    assert [s.topology for s in new] == ["linear", "linear"] and res["S00001"] is results["S00001"]
+    row = (tmp_path / "r3" / "topology_decision.tsv").read_text().splitlines()[1].split("\t")
+    assert row[4:6] == ["linear", "no"] and row[6].endswith("annotation as circular failed, kept linear")
+
+
+def test_label_source_and_forced_topology(tmp_path):
+    fa = tmp_path / "asm.fa"
+    fa.write_text(f">a1\n{FILLER}\n>a2 topology=circular\n{FILLER}\n")
+    one = tmp_path / "one.fa"
+    one.write_text(f">g1\n{FILLER}\n")
+    samples, _ = split_or_sanitize_fastas([fa, one], tmp_path / "s1", True, 15)
+    assert [(s.topology, s.topology_source) for s in samples] == [
+        ("linear", "FASTA without topology=: 2 sequences in the file"), ("circular", "FASTA header"),
+        ("circular", "FASTA without topology=: one sequence of >= 10 kb")]
+    samples, _ = split_or_sanitize_fastas([fa, one], tmp_path / "s2", True, 15, topology="linear")
+    assert [(s.topology, s.label) for s in samples] == [("linear", "linear"), ("linear", "circular"), ("linear", "circular")]
+    assert "topology=linear" in samples[1].internal_fasta.read_text().split("\n")[0]
+    args = argparse.Namespace(topology="linear", engine="native")
+    results = {s.internal_id: {"ok": True, "workdir": str(tmp_path)} for s in samples}
+    mt.apply_topology(samples, results, args, tmp_path, tmp_path / "rep")
+    rows = [r.split("\t") for r in (tmp_path / "rep" / "topology_decision.tsv").read_text().splitlines()[1:]]
+    assert [r[2:] for r in rows[1:]] == [["circular", "FASTA header", "linear", "yes", "set by --topology linear"],
+                                         ["circular", "FASTA without topology=: one sequence of >= 10 kb", "linear", "yes",
+                                          "set by --topology linear"]]
+
+
+def test_linear_lineage_is_annotated_linear_from_round_1(tmp_path, monkeypatch):
+    """A circular-labelled hydrozoan: linear in round 1 (no second annotation); annotated again as circular only when
+    a gene runs across its ends (NC_035740.1, a scyphozoan whose cox1 does)."""
+    fa = tmp_path / "S00001.fasta"
+    fa.write_text(f">S00001 topology=circular\n{FILLER}\n")
+    si = SampleInfo("NC_1", "NC_1", "S00001", "circular", fa, fa, None, "GenBank LOCUS line", "circular")
+    monkeypatch.setattr(mt, "sample_lineage", lambda s: "Eukaryota;Metazoa;Cnidaria;Hydrozoa")
+    args = argparse.Namespace(topology="auto", engine="native")
+    [lin] = mt.linear_lineages_first([si], args)
+    assert lin.topology == "linear" and lin.label == "circular" and "topology=linear" in lin.internal_fasta.read_text()
+    assert mt.linear_lineages_first([si], argparse.Namespace(topology="label", engine="native")) == [si]
+    wd = tmp_path / "w"
+    wd.mkdir()
+    redo = []
+    monkeypatch.setattr(mt, "run_annotation_stage", lambda **kw: redo.extend(kw["samples"]) or
+                        {s.internal_id: {"ok": True, "workdir": "x"} for s in kw["samples"]})
+    new, _ = mt.apply_topology([lin], {"S00001": {"ok": True, "workdir": str(wd)}}, args, tmp_path, tmp_path / "r")
+    assert redo == [] and new[0].topology == "linear"
+    row = (tmp_path / "r" / "topology_decision.tsv").read_text().splitlines()[1].split("\t")
+    assert row[2:] == ["circular", "GenBank LOCUS line", "linear", "yes", "Hydrozoa: linear mitochondrial genome, no "
+                       "gene across the ends"]
+    (wd / "S00001.ends.tsv").write_text(mc.ENDS_HEADER + "S00001\tcox1\t-\tstart\tr\t1-530/530\t1548\t42\tjoined\n")
+    new, _ = mt.apply_topology([lin], {"S00001": {"ok": True, "workdir": str(wd)}}, args, tmp_path, tmp_path / "r")
+    assert [s.topology for s in redo] == ["circular"] and new[0].topology == "circular"
+
+
+def test_restored_header_keeps_the_annotated_topology():
+    meta = "LOCUS       NC_035740              17024 bp    DNA     circular INV 03-APR-2023\nDEFINITION  x.\n"
+    new = "LOCUS       S00001                 17024 bp    DNA     linear   INV 01-JAN-1980\n"
+    assert keep_topology(meta, new).splitlines()[0] == \
+        "LOCUS       NC_035740              17024 bp    DNA     linear   INV 03-APR-2023"
+    back = keep_topology(keep_topology(meta, new), meta)
+    assert back == meta

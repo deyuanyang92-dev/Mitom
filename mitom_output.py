@@ -309,7 +309,7 @@ def finalize_genbank_output(
 
 INTERMEDIATE_DIRS = (
     "00.internal_fasta", "00.gb_converted_fasta", "00.reoriented_fasta_internal",
-    "01.anno_round1", "03.anno_round2_reoriented", "04.final_body_merged", "00.imported",
+    "01.anno_round1", "02.anno_topology", "03.anno_round2_reoriented", "04.final_body_merged", "00.imported",
 )
 
 
@@ -324,7 +324,7 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
     for si in samples:
         if si.sample_name not in problems:
             continue
-        for phase in ("01.anno_round1", "03.anno_round2_reoriented"):
+        for phase in ("01.anno_round1", "02.anno_topology", "03.anno_round2_reoriented"):
             wd = out_root / phase / si.internal_id
             for log in [wd / "sample.log", *sorted((wd / "logs").glob("*.log"))]:
                 if log.is_file():
@@ -356,6 +356,7 @@ OUTPUT_LAYOUT = [
 ]
 REPORT_NOTES = {
     "dedup_report.tsv": "deduplication: one row per input record with a sequence, kept / dropped and why",
+    "topology_decision.tsv": "circular or linear: each record's label, where it came from, the topology annotated, why",
     "reannotation_decision.tsv": "after re-orientation: round 2 or not, and why",
     "curation_report.tsv": "every boundary / name change: rule, old and new location, reason",
     "rescue_report.tsv": "genes added from MITOS2",
@@ -376,6 +377,7 @@ REPORT_FILES = tuple(REPORT_NOTES) + (
     "annotation-summary.tsv", "pipeline.log",
 )                                                   # top-level files `run` writes; organize_outputs moves these to reports/
 WORK_DIRS = INTERMEDIATE_DIRS + ("04.final_gb", "05.curated", "_snakemake_01.anno_round1",
+                                 "_snakemake_02.anno_topology",
                                  "_snakemake_03.anno_round2_reoriented")   # folders of the run: work/ or deleted
 
 

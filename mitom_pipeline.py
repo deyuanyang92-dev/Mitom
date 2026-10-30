@@ -101,6 +101,7 @@ from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_g
                           INTERMEDIATE_DIRS, _LOCUS_NAME_MAXLEN, merge_gb_files, organize_outputs,  # noqa: F401
                           OUTPUT_LAYOUT, refresh_summary, REPORT_FILES, REPORT_NOTES,  # noqa: F401
                           rewrite_genbank_record_ids, RunSummary, WORK_DIRS, write_summary)  # noqa: F401
+from mitom_topology import apply_topology, linear_lineages_first  # noqa: E402
 from mitom_steps import (count_rows, intron_denovo_cmd, INTRON_LABEL, intron_ref_cmd, optional_step,  # noqa: E402,F401
                          _plot_file, run_compare, run_curate, run_curate_and_submit, run_intron_fix,  # noqa: F401
                          run_intron_ref, run_plots, run_rescue, run_rrna_hmm, run_submission, StepResult)  # noqa: F401
@@ -345,13 +346,15 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
-        acc_to_orig_gb=acc_to_orig_gb)
+        acc_to_orig_gb=acc_to_orig_gb, topology=args.topology)
+    samples = linear_lineages_first(samples, args)
     logging.info(f"[ID_MAP] {id_map}  (total: {len(samples)})")
 
     results = run_annotation_stage(
         samples=samples, phase_dirname="01.anno_round1",
         out_root=out_root, args=args,
         fasta_selector=lambda si: si.internal_fasta)
+    samples, results = apply_topology(samples, results, args, out_root, reports_dir(out_root))
 
     summary    = RunSummary()
     final_dir  = out_root / "04.final_gb"
@@ -491,6 +494,9 @@ def workflow_run(args: argparse.Namespace) -> int:
     say(f"    parallel     : {args.max_tasks} records at a time x {args.threads} threads")
     say(f"    annotation   : {ENGINE_LABEL[getattr(args, 'engine', 'native')]}")
     say(f"    round 2      : {args.if_reannotation_2}  (auto = only records whose annotation is broken by the cox1 shift)")
+    if getattr(args, "engine", "native") == "native":
+        say(f"    topology     : {args.topology}" + ("  (as labelled, checked at the sequence ends)"
+                                                     if args.topology == "auto" else ""))
     say(f"    full log     : {out_root / 'run.log'}")
 
     in_path     = Path(args.input).resolve()
@@ -504,7 +510,8 @@ def workflow_run(args: argparse.Namespace) -> int:
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
-        acc_to_orig_gb=acc_to_orig_gb)
+        acc_to_orig_gb=acc_to_orig_gb, topology=args.topology)
+    samples = linear_lineages_first(samples, args)
     total = len(samples)
     logging.info(f"[ID_MAP] {id_map}  (total: {total})")
     if input_type == "converted_from_gb":
@@ -533,6 +540,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     for si in samples:
         if not results1.get(si.internal_id, {}).get("ok"):
             summary.annotation_failed.append(si.sample_name)
+    samples, results1 = apply_topology(samples, results1, args, out_root, reports_dir(out_root), steps.info)
     steps.done(f"{total - len(summary.annotation_failed)} annotated, {len(summary.annotation_failed)} failed"
                + (f" ({', '.join(summary.annotation_failed[:5])}{' ...' if len(summary.annotation_failed) > 5 else ''})"
                   if summary.annotation_failed else ""))
@@ -1191,6 +1199,17 @@ def build_parser() -> argparse.ArgumentParser:
                          help="Extra Snakemake flags appended verbatim.\n"
                               "Example: --smk_extra '--profile slurm'")
 
+    def add_topology(sp: argparse.ArgumentParser) -> None:
+        sp.add_argument("--topology", choices=["auto", "label", "circular", "linear"], default="auto",
+                        help="Circular or linear. auto (default): as labelled - GenBank LOCUS line; FASTA header "
+                             "topology=circular|linear; else one sequence of >= 10 kb circular, several in a file or a "
+                             "shorter one linear - and the protein genes at the two ends checked against their "
+                             "reference proteins: a gene running from the end across to the start makes the record "
+                             "circular, a gene cut at an end of a circular-labelled record makes it linear, and so do "
+                             "jellyfish / hydroids / calcareous sponges (linear mtDNA) without a gene across the ends; "
+                             "such records are annotated again (reports/topology_decision.tsv). label: the label only. "
+                             "circular / linear: every record.")
+
     def add_engine(sp: argparse.ArgumentParser) -> None:
         g = sp.add_argument_group("Annotation engine")
         g.add_argument("--engine", choices=["native", "mitoz", "mitos2"], default="native",
@@ -1215,6 +1234,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_common(a)
     add_annotation(a)
     add_engine(a)
+    add_topology(a)
     a.add_argument("--preserve_phase1_metadata", choices=["yes", "no"], default="no")
 
     # ── reorient ──────────────────────────────────────────────────────────
@@ -1230,6 +1250,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_common(run_p)
     add_annotation(run_p)
     add_engine(run_p)
+    add_topology(run_p)
     run_p.add_argument("--if_reannotation_2", choices=["yes", "auto", "no"], default="auto",
                        help="Phase-2 re-annotation of the reoriented sequences. auto (default): round 1 runs in "
                             "full and only samples that fail the check after the cox1 shift (gene at the original "
