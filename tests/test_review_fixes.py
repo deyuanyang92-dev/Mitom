@@ -189,7 +189,9 @@ def test_transl_table_of_the_input_differing_from_the_code_is_warned(tmp_path, c
 
 
 # ---- multi-contig / short FASTA records are linear unless the header says circular -------------------------
-def test_contigs_and_short_records_are_linear_unless_declared_circular(tmp_path, caplog):
+def test_short_records_are_linear_unlabelled_long_ones_circular_first(tmp_path, caplog):
+    """An unlabelled sequence < 10 kb is a contig (linear); one of >= 10 kb is annotated circular first, also when the
+    file holds several (mitom_topology.decide then decides it from its ends and gene set, 2026-10-31)."""
     fa = tmp_path / "contigs.fa"
     fa.write_text(">c1\n" + "ACGT" * 4000 + "\n>c2\n" + "ACGT" * 500 + "\n>c3 topology=circular\n" + "ACGT" * 500 + "\n")
     one = tmp_path / "one.fa"
@@ -199,10 +201,11 @@ def test_contigs_and_short_records_are_linear_unless_declared_circular(tmp_path,
     with caplog.at_level(logging.WARNING):
         samples, _ = bm.split_or_sanitize_fastas([fa, one, short], tmp_path / "split", True, 16)
     topo = {si.sample_name: si.topology for si in samples}
-    assert topo == {"c1": "linear", "c2": "linear", "c3": "circular", "g1": "circular", "g2": "linear"}
-    msgs = [r.getMessage() for r in caplog.records if r.getMessage().startswith("[TOPOLOGY]")]
-    assert len(msgs) == 3 and "[TOPOLOGY] c1: 3 records / 16000 nt — treated as linear" in msgs[0]
-    assert ">c1 topology=linear" in (tmp_path / "split" / "S00001.fasta").read_text().replace(">S00001", ">c1")
+    assert topo == {"c1": "circular", "c2": "linear", "c3": "circular", "g1": "circular", "g2": "linear"}
+    src = {si.sample_name: si.topology_source for si in samples}
+    assert src["c1"] == src["g1"] == "FASTA without topology=: decided from the sequence"
+    assert src["c2"] == src["g2"] == "FASTA without topology=: shorter than 10 kb" and src["c3"] == "FASTA header"
+    assert ">c1 topology=circular" in (tmp_path / "split" / "S00001.fasta").read_text().replace(">S00001", ">c1")
 
 
 # ---- $YZZ_MITO_CONFIG names the file to write even before it exists ------------------------------------------

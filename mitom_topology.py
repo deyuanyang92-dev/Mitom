@@ -1,7 +1,7 @@
 """mitom_topology.py - circular or linear (mitom run / annotate --topology; default auto).
 
 Every record is annotated as its label says: the GenBank LOCUS line, the FASTA header's topology=circular|linear,
-else circular for one sequence of >= 10 kb and linear for several sequences in a file or a shorter one
+else (no label) circular for a sequence of >= 10 kb - one in the file or several - and linear for a shorter one
 (mitom_inputs.split_or_sanitize_fastas). With --topology auto the core also checks the two ends (mito_core.py
 --check_ends: each protein gene at an end aligned to its reference protein across the junction, <id>.ends.tsv), and a
 label the sequence contradicts is changed:
@@ -11,7 +11,9 @@ label the sequence contradicts is changed:
     the other end: linear - a partial sequence; found at the other end behind an intron (exonerate protein2genome,
     verdict joined_intron): circular - a record started inside a gene with an intron (Travisia cox1);
   - jellyfish / hydroids and calcareous sponges (linear mitochondrial genomes, mito_taxa.linear_mtdna) labelled
-    circular, no gene across the ends: linear.
+    circular, no gene across the ends: linear;
+  - an unlabelled record no gene at the ends decides: circular with the complete gene set (>= 12 of the 13 protein
+    genes and both rRNAs), else linear (a partial genome or a contig of an assembly).
 A changed record is annotated again with its new topology (02.anno_topology/); every record's label, topology and
 reason: reports/topology_decision.tsv. --topology label keeps every label; circular / linear set every record
 (mitom_inputs)."""
@@ -27,7 +29,7 @@ from typing import Callable, Dict, List, Tuple
 from Bio import SeqIO
 
 from mito_taxa import linear_mtdna
-from mitom_inputs import SampleInfo, write_one_record_fasta
+from mitom_inputs import SampleInfo, UNLABELLED, write_one_record_fasta
 from mitom_log import record_event
 from mitom_stage import run_annotation_stage, sample_lineage
 
@@ -44,8 +46,32 @@ def read_ends(workdir: Path, internal_id: str) -> List[Dict[str, str]]:
         return list(csv.DictReader(fh, delimiter="\t"))
 
 
-def decide(label: str, ends: List[Dict[str, str]], lineage: str = "") -> Tuple[str, str]:
-    """(topology, reason) of one record from its label, the core's evidence at the ends and its NCBI lineage."""
+MIN_PCG_COMPLETE = 12   # protein genes of a complete gene set: 13, atp8 absent or not found in several lineages
+#                         (nematodes, flatworms, many bivalves, chaetognaths)
+
+
+def gene_set(gb_path) -> set:
+    """Normalised names (cox1 ... nad6, rrnS, rrnL) of the CDS and rRNAs of an annotated GenBank file; empty set when
+    it cannot be read."""
+    from mito_names import gene_name
+    try:
+        return {gene_name(f.qualifiers, f.type) for r in SeqIO.parse(str(gb_path), "genbank")
+                for f in r.features if f.type in ("CDS", "rRNA")} - {""}
+    except Exception:  # noqa: BLE001  (no evidence rather than a failed run)
+        return set()
+
+
+def complete_set(genes: set) -> bool:
+    """>= MIN_PCG_COMPLETE of the 13 protein genes and both rRNAs."""
+    from mito_names import PCG
+    return len(genes & PCG) >= MIN_PCG_COMPLETE and {"rrnS", "rrnL"} <= genes
+
+
+def decide(label: str, ends: List[Dict[str, str]], lineage: str = "", unlabelled: bool = False,
+           genes: set = frozenset()) -> Tuple[str, str]:
+    """(topology, reason) of one record from its label, the core's evidence at the ends and its NCBI lineage; an
+    unlabelled record (FASTA without topology=) that no gene at the ends decides is circular when it holds the
+    complete gene set (complete_set) and linear otherwise (a partial genome or a contig)."""
     joined = next((r for r in ends if r["verdict"] in ("joined", "joined_intron")), None)
     if joined:
         how = " with an intron (aligned spliced)" if joined["verdict"] == "joined_intron" else ""
@@ -58,6 +84,13 @@ def decide(label: str, ends: List[Dict[str, str]], lineage: str = "") -> Tuple[s
     taxon = linear_mtdna(lineage)
     if label == "circular" and taxon:
         return "linear", f"{taxon}: linear mitochondrial genome, no gene across the ends"
+    if unlabelled and label == "circular":                # no label, no gene at the ends: the gene set decides
+        from mito_names import PCG
+        n_pcg, rrna = len(genes & PCG), sorted({"rrnS", "rrnL"} & genes)
+        found = f"{n_pcg} of 13 protein genes, rRNA {', '.join(rrna) or 'none'}"
+        if complete_set(genes):
+            return "circular", f"no topology label, no gene cut at the ends, complete gene set ({found})"
+        return "linear", f"no topology label, no gene across the ends, gene set incomplete ({found}): partial"
     return label, "as labelled"
 
 
@@ -99,7 +132,10 @@ def apply_topology(samples: List[SampleInfo], results: Dict[str, Dict], args: ar
             continue
         label = si.label or si.topology
         if auto:
-            decided[si.internal_id] = decide(label, read_ends(Path(r["workdir"]), si.internal_id), sample_lineage(si))
+            unlabelled = si.topology_source.startswith(UNLABELLED)
+            decided[si.internal_id] = decide(label, read_ends(Path(r["workdir"]), si.internal_id), sample_lineage(si),
+                                             unlabelled, gene_set(r["best_gb"]) if unlabelled and r.get("best_gb")
+                                             else frozenset())
         else:
             decided[si.internal_id] = (si.topology, f"set by --topology {si.topology}" if si.topology != label
                                        else "as labelled")

@@ -461,7 +461,8 @@ def iter_inputs(
     raise FileNotFoundError(f"Input not found or unrecognised: {in_path}")
 
 
-MIN_CIRCULAR_LEN = 10000    # a FASTA record shorter than this, or one of several in a file, is a contig: linear
+MIN_CIRCULAR_LEN = 10000    # an unlabelled FASTA record shorter than this is a contig: linear
+UNLABELLED = "FASTA without topology=: "   # start of the topology_source of an unlabelled record
 
 
 def infer_topology_from_description(desc: str) -> str:
@@ -553,14 +554,13 @@ def split_or_sanitize_fastas(
             topo     = infer_topology_from_description(desc)
             tagged   = re.search(r"topology\s*=\s*(circular|linear)", desc.lower())
             source   = "GenBank LOCUS line" if orig_gb_path and tagged else "FASTA header" if tagged else \
-                       "FASTA without topology=: one sequence of >= 10 kb"
-            if topo == "circular" and not tagged and (len(records) > 1 or len(rec.seq) < MIN_CIRCULAR_LEN):
-                # contigs of an assembly: rotating / joining across a false origin cuts real genes
+                       UNLABELLED + "decided from the sequence"
+            if topo == "circular" and not tagged and len(rec.seq) < MIN_CIRCULAR_LEN:
+                # too short for a whole mitogenome: a contig (rotating / joining across a false origin cuts genes)
                 topo = "linear"
-                source = "FASTA without topology=: " + (f"{len(records)} sequences in the file" if len(records) > 1
-                                                        else "shorter than 10 kb")
-                logging.warning(f"[TOPOLOGY] {orig_token}: {len(records)} records / {len(rec.seq)} nt — treated "
-                                "as linear; add topology=circular to the header to override")
+                source = UNLABELLED + "shorter than 10 kb"
+            # (an unlabelled sequence of >= 10 kb - one in the file or several - is annotated circular first and then
+            # decided from its ends and gene set, mitom_topology.decide: assemblies often hold several mitogenomes)
             label = topo
             if topology in ("circular", "linear"):
                 topo = topology

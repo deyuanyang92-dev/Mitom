@@ -248,18 +248,19 @@ def test_label_source_and_forced_topology(tmp_path):
     one.write_text(f">g1\n{FILLER}\n")
     samples, _ = split_or_sanitize_fastas([fa, one], tmp_path / "s1", True, 15)
     assert [(s.topology, s.topology_source) for s in samples] == [
-        ("linear", "FASTA without topology=: 2 sequences in the file"), ("circular", "FASTA header"),
-        ("circular", "FASTA without topology=: one sequence of >= 10 kb")]
+        ("circular", "FASTA without topology=: decided from the sequence"), ("circular", "FASTA header"),
+        ("circular", "FASTA without topology=: decided from the sequence")]
     samples, _ = split_or_sanitize_fastas([fa, one], tmp_path / "s2", True, 15, topology="linear")
-    assert [(s.topology, s.label) for s in samples] == [("linear", "linear"), ("linear", "circular"), ("linear", "circular")]
+    assert [(s.topology, s.label) for s in samples] == [("linear", "circular"), ("linear", "circular"),
+                                                        ("linear", "circular")]
     assert "topology=linear" in samples[1].internal_fasta.read_text().split("\n")[0]
     args = argparse.Namespace(topology="linear", engine="native")
     results = {s.internal_id: {"ok": True, "workdir": str(tmp_path)} for s in samples}
     mt.apply_topology(samples, results, args, tmp_path, tmp_path / "rep")
     rows = [r.split("\t") for r in (tmp_path / "rep" / "topology_decision.tsv").read_text().splitlines()[1:]]
     assert [r[2:] for r in rows[1:]] == [["circular", "FASTA header", "linear", "yes", "set by --topology linear"],
-                                         ["circular", "FASTA without topology=: one sequence of >= 10 kb", "linear", "yes",
-                                          "set by --topology linear"]]
+                                         ["circular", "FASTA without topology=: decided from the sequence", "linear",
+                                          "yes", "set by --topology linear"]]
 
 
 def test_linear_lineage_is_annotated_linear_from_round_1(tmp_path, monkeypatch):
@@ -318,3 +319,37 @@ def test_intron_features_restored_after_rotation():
     rec2 = SeqRecord(Seq("A" * 17000), id="r2", annotations={"topology": "circular"},
                      features=[SeqFeature(across, type="CDS", qualifiers={"gene": ["COX1"]})])
     assert mitom_orient.add_exon_gap_introns(rec2) == 0
+
+
+ALL = {"cox1", "cox2", "cox3", "cob", "atp6", "atp8", "nad1", "nad2", "nad3", "nad4", "nad4l", "nad5", "nad6",
+       "rrnS", "rrnL"}
+
+
+def test_unlabelled_record_decided_by_its_gene_set():
+    """No topology label and no gene at the ends (a complete genome started at a gene boundary, or a contig ending in
+    non-coding sequence): the complete gene set (>= 12 of 13 protein genes - atp8 is missing in several lineages -
+    and both rRNAs) makes it circular, an incomplete one linear; ends that decide win; a label is kept."""
+    assert mt.decide("circular", [], unlabelled=True, genes=ALL)[0] == "circular"
+    assert mt.decide("circular", [], unlabelled=True, genes=ALL - {"atp8"})[0] == "circular"
+    top, why = mt.decide("circular", [], unlabelled=True, genes=ALL - {"atp8", "nad6"})
+    assert top == "linear" and "11 of 13 protein genes" in why
+    assert mt.decide("circular", [], unlabelled=True, genes=ALL - {"rrnS"})[0] == "linear"
+    cut = [{"gene": "cox1", "verdict": "cut", "residues": "100-513/513"}]
+    assert mt.decide("circular", cut, unlabelled=True, genes=ALL)[0] == "linear"           # a gene cut at an end
+    joined = [{"gene": "nad5", "verdict": "joined", "before_nt": "300", "after_nt": "900"}]
+    assert mt.decide("linear", joined, unlabelled=True, genes=set())[0] == "circular"
+    assert mt.decide("circular", [], genes=set()) == ("circular", "as labelled")           # labelled: kept
+    assert mt.decide("linear", [], unlabelled=True, genes=ALL) == ("linear", "as labelled")  # < 10 kb: a contig
+
+
+def test_gene_set_of_an_annotation(tmp_path):
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    r = SeqRecord(Seq("A" * 300), id="x", annotations={"molecule_type": "DNA"})
+    r.features = [SeqFeature(FeatureLocation(0, 90, 1), type="CDS", qualifiers={"gene": ["COX1"]}),
+                  SeqFeature(FeatureLocation(90, 200, 1), type="rRNA", qualifiers={"product": ["16S ribosomal RNA"]}),
+                  SeqFeature(FeatureLocation(200, 260, 1), type="tRNA", qualifiers={"gene": ["trnL1"]})]
+    SeqIO.write(r, str(tmp_path / "x.gb"), "genbank")
+    assert mt.gene_set(tmp_path / "x.gb") == {"cox1", "rrnL"}
+    assert mt.gene_set(tmp_path / "missing.gb") == set()
