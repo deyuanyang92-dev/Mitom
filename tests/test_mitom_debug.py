@@ -66,7 +66,7 @@ def test_an_error_goes_into_the_log_with_its_traceback_and_the_exit_code(tmp_pat
         _drop_handlers()
     log = (tmp_path / "out" / "dedup.log").read_text()
     assert "[ERROR] ValueError: broken input" in log and "Traceback (most recent call last)" in log
-    assert "[DONE] exit=1" in log
+    assert "[DONE] exit=1" in log and "[ENV] command: " in log          # every workflow's log starts with [ENV]
     assert f"mitom debug {tmp_path / 'out'}" in capsys.readouterr().err
 
 

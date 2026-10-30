@@ -802,7 +802,8 @@ def workflow_run(args: argparse.Namespace) -> int:
 def workflow_transfer_metadata(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    setup_root_logger(out_root / "transfer_metadata.log")
+    setup_root_logger(out_root / "transfer_metadata.log", debug=getattr(args, "debug", False))
+    log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
 
     metadata_files = collect_genbank_files(Path(args.metadata).resolve())
@@ -890,7 +891,8 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
     finalize_genbank_output)."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    setup_root_logger(out_root / "replace_organism.log")
+    setup_root_logger(out_root / "replace_organism.log", debug=getattr(args, "debug", False))
+    log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
 
     meta_files = collect_genbank_files(Path(args.metadata).resolve())
@@ -948,7 +950,8 @@ def workflow_dedup(args: argparse.Namespace) -> int:
     """Standalone deduplication: dedup.gb, dedup.fasta, dedup_report.tsv."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    setup_root_logger(out_root / "dedup.log")
+    setup_root_logger(out_root / "dedup.log", debug=getattr(args, "debug", False))
+    log_environment(args)
     files = collect_genbank_files(Path(args.input).resolve())
     kept, _, stats = dedup_gb_records(files, dedup_report_path=out_root / "dedup_report.tsv")
     recs = [m.record for m in kept]
