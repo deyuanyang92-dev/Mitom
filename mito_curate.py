@@ -455,15 +455,17 @@ class Curator:
             # 100-500 nt) and nothing is annotated up to the first complete stop: extend to it
             # (metazoa benchmark 2026-10, 173 RefSeq records: 50 of 52 ends > 100 nt short match NCBI exactly)
             new_b, why_end = first_stop, "first in-frame complete stop codon (annotated end stopped short, no feature in between)"
-        nxt = min((x for x in (trna, down) if x is not None), default=None)
+        nxt = trna                                     # (a tRNA only: before a protein gene NCBI keeps the complete stop)
         if getattr(self.a, "abbreviated_overlap", False) and nxt is not None and 1 <= new_b - nxt + 1 <= 2 \
                 and (new_b - new_a + 1) % 3 == 0 and s[new_b - 3:new_b] in self.stops:
-            # vertebrate RefSeq convention: a complete stop running 1-2 nt into the next same-strand tRNA / gene is
+            # vertebrate RefSeq convention: a complete stop running 1-2 nt into the next same-strand tRNA is
             # annotated as the abbreviated stop T / TA ending right before it (leave-out core, 255 records: Chordata
-            # +14 exact ends, 1 lost; other phyla keep the complete stop: 82 records, 63 lost)
+            # +14 exact ends, 1 lost; other phyla keep the complete stop: 82 records, 63 lost). Not before a protein
+            # gene: atp6's TAA sharing its A with cox3's ATG is kept (1,719 leave-out records 2026-10-30: 294 more
+            # exact ends, 70 fewer, mostly ray-finned fishes, which write it both ways: 104 / 60)
             tail = (nxt - 1 - new_a + 1) % 3
             if tail in (1, 2) and s[nxt - 1 - tail:nxt - 1] == ("T", "TA")[tail - 1]:
-                new_b, why_end = nxt - 1, "abbreviated stop T/TA immediately before the next gene " \
+                new_b, why_end = nxt - 1, "abbreviated stop T/TA immediately before the next tRNA " \
                     "(the complete stop would overlap it)"
         if (new_a, new_b) != (a, b) and new_b - new_a + 1 >= 60:
             gs, ge = self.from_tx(f, new_a, new_b)
@@ -690,11 +692,10 @@ class Curator:
         if len(nt) % 3 or "*" in prot[:-1] or not prot.endswith("*"):    # cannot happen: the search checked every codon
             return
         why = f"one nucleotide (CDS position {p - S + 1}) not translated: join over a frameshift"
-        trna, down = self.downstream_trna_start(f), self.downstream_gene_start(f)
-        nxt = min((x for x in (trna, down) if x is not None), default=None)
+        nxt = self.downstream_trna_start(f)
         tail = 0
         if getattr(self.a, "abbreviated_overlap", False) and nxt is not None and 1 <= E - nxt + 1 <= 2:
-            t = (nxt - 1 - S) % 3                      # vertebrate convention as in P3: T / TA before the next gene
+            t = (nxt - 1 - S) % 3                      # vertebrate convention as in P3: T / TA before the next tRNA
                                                        # (the join is nxt-1-S nt long: one nucleotide skipped)
             if t in (1, 2) and s[nxt - 1 - t:nxt - 1] == ("T", "TA")[t - 1]:
                 E, tail = nxt - 1, t
@@ -1196,8 +1197,9 @@ def main(argv=None) -> int:
                    help="P1: keep a non-ATG start codon instead of moving to the most upstream in-frame ATG (mitom run "
                         "sets it for nematodes and arthropods)")
     p.add_argument("--abbreviated_overlap", action="store_true",
-                   help="P3: a complete stop overlapping the next same-strand tRNA / gene by 1-2 nt becomes the T / TA "
-                        "before it (vertebrate RefSeq convention; mitom run sets it for the Chordata clade)")
+                   help="P3: a complete stop overlapping the next same-strand tRNA by 1-2 nt becomes the T / TA "
+                        "before it (vertebrate RefSeq convention; before a protein gene the complete stop is kept: "
+                        "atp6 TAA / cox3 ATG; mitom run sets it for the Chordata clade)")
     p.add_argument("--abbreviated_pcg_overlap", action="store_true",
                    help="P3: a complete stop more than 10 nt inside the next same-strand protein gene becomes the T / TA "
                         "before it, as O1 at the origin (NCBI annelid records; others allow 30 nt; mitom run sets it "

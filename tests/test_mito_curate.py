@@ -953,6 +953,18 @@ def test_abbreviated_pcg_overlap_annelid_nad2_before_cox1():
         assert int(_by(rec, "CDS", "ND2").location.end) == end, (last, flag)
 
 
+def test_abbreviated_overlap_keeps_the_stop_shared_with_the_next_gene():
+    """--abbreviated_overlap only before a tRNA: atp6's TAA sharing its A with cox3's ATG stays a complete stop
+    (NCBI vertebrate records; 1,719 leave-out records 2026-10-30: +224 exact ends)."""
+    from Bio.SeqFeature import FeatureLocation
+    atp6 = "ATG" + "GCC" * 40 + "TAA"                                   # 126 nt, TAA at 154..156 below
+    cox3 = "ATG" + "GCC" * 40 + "TAA"
+    seq = "GCC" * 10 + atp6[:-1] + cox3 + "GCC" * 10                     # cox3's ATG starts on atp6's last A
+    rec = _mkrec(seq, [("CDS", FeatureLocation(30, 156, 1), "ATP6"), ("CDS", FeatureLocation(155, 155 + len(cox3), 1), "COX3")])
+    _curate_rec(rec, abbreviated_overlap=True, genetic_code=2)
+    assert int(_by(rec, "CDS", "ATP6").location.end) == 156             # TAA kept, 1 nt into cox3
+
+
 def test_upstream_atg_for_non_atg_start():
     """P1: a non-ATG start (ATT) with an in-frame ATG upstream, open frame, after the preceding tRNA -> the ATG (leave-out
     benchmark +37 starts); --no_upstream_atg (nematodes, arthropods) keeps ATT; an ATG start is never moved."""
