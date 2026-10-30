@@ -29,6 +29,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import time
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
@@ -46,7 +47,7 @@ from matplotlib.textpath import TextPath
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import iter_gb_files, old_spelling  # noqa: E402
+from mito_common import command_line, iter_gb_files, old_spelling, STDERR_MARK, STDERR_TAIL, TOOL_LOG  # noqa: E402
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000
 CIGAR = re.compile(r"(\d+)([MIDNSHP=X])")
@@ -388,10 +389,11 @@ def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.nd
     with tempfile.TemporaryDirectory(prefix="mito_plot_") as tmp:
         fa, log = Path(tmp) / "ref.fa", Path(tmp) / "aligner.log"
         fa.write_text(f">ref\n{ref}\n")
+        t0 = time.time()
         with open(log, "w") as err:
             if mm2:
-                p = subprocess.Popen([mm2, "-x", "sr", "-c", "--secondary=no", "-t", str(threads), str(fa),
-                                      *map(str, reads)], stdout=subprocess.PIPE, stderr=err, text=True)
+                cmd = [mm2, "-x", "sr", "-c", "--secondary=no", "-t", str(threads), str(fa), *map(str, reads)]
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=err, text=True)
                 for line in p.stdout:                             # PAF: mapped reads only
                     f = line.rstrip("\n").split("\t")
                     if "tp:A:P" in f[12:]:
@@ -399,10 +401,11 @@ def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.nd
                         diff[int(f[8])] -= 1
                 rc = p.wait()
             else:
-                rc = subprocess.run([bwa, "index", str(fa)], stdout=err, stderr=err).returncode
+                cmd = [bwa, "index", str(fa)]
+                rc = subprocess.run(cmd, stdout=err, stderr=err).returncode
                 if not rc:
-                    p = subprocess.Popen([bwa, "mem", "-t", str(threads), str(fa), *map(str, reads)],
-                                         stdout=subprocess.PIPE, stderr=err, text=True)
+                    cmd = [bwa, "mem", "-t", str(threads), str(fa), *map(str, reads)]
+                    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=err, text=True)
                     for line in p.stdout:                         # SAM: unmapped reads have a line too
                         f = line.split("\t", 6)
                         if line[0] == "@" or int(f[1]) & 0x904:   # unmapped, secondary, supplementary
@@ -411,6 +414,9 @@ def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.nd
                         diff[start] += 1
                         diff[start + sum(int(k) for k, op in CIGAR.findall(f[5]) if op in "MDN=X")] -= 1
                     rc = p.wait()
+        tail = log.read_text().strip().splitlines()[-STDERR_TAIL:] if rc else []
+        TOOL_LOG.debug(f"[CMD rc={rc} {time.time() - t0:.1f}s] {command_line(cmd)}" + "".join(f"\n{STDERR_MARK}{ln}"
+                                                                                       for ln in tail))
         if rc:
             raise RuntimeError(f"{Path(mm2 or bwa).name} failed (exit {rc}): {log.read_text().strip()[-1000:]}")
     cov = np.cumsum(diff[:-1])
