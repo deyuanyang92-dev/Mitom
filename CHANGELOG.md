@@ -37,6 +37,15 @@ installed one.
   both ends as NCBI 7,357 -> 7,414, no other phylum changed. The same nad2 no longer depends on whether the record
   was rotated.
 
+- Start codons (`mito_curate.py` P11, `mito_start.py`): after P1, the in-frame start codon NCBI records would choose
+  is taken - gradient-boosted trees learned from 1,683 leave-out benchmark records (codon, distance to the preceding
+  feature, the core's alignment, gene, phylum), stored as plain JSON trees (models/start_model/, no pickle). Exact
+  starts, cross-validated by family: 89.1 -> 90.7 % (arthropods 77.8 -> 82.3 %); `--start_model no` turns it off;
+  retrain with benchmark/train_start_model.py.
+- Vertebrates: a complete stop running 1-2 nt into the next protein gene is kept (atp6's TAA sharing its A with
+  cox3's ATG); `--abbreviated_overlap` (T / TA) applies before tRNAs only. 1,719 leave-out records: protein genes with
+  both ends as NCBI 17,727 -> 17,951.
+
 ### Fixed
 - Genome maps: no position tick right before the origin (16 kb of a 16,063 bp record covered "0").
 - The GenBank header copied from the input record keeps the topology MitoM annotated in its LOCUS line (it took the

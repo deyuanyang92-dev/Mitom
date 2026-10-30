@@ -28,6 +28,7 @@ python3 bench_report.py --eval bench/eval/all --tools mitom_native,mitos2 --out 
 | `eval_trna.py` | tRNA methods of `mito_trna.py` against NCBI tRNAs |
 | `eval_introns.py` | introns against NCBI or the gold standard (`--gb gold/gb`): exact / within 6 nt / more / missed / false, per gold class |
 | `bench_intron_ref.py` | intron-site transfer: own / leave-one-out / leave-species / leave-genus |
+| `train_start_model.py` | start-codon model of `mito_curate.py` P11 (`models/start_model/start_model.json`): candidates from `mito_curate.py --dump_starts` on the leave-out runs, labelled by NCBI, cross-validated by family |
 | `compare.py`, `bidirectional.py`, `make_mitoz_like_input.py` | early intron evaluation vs real MFannot (2026-10-09/10, see below) |
 | `nuc_bench.py`, `nuc_gold_bench.py`, `nuc_cm_gold.py`, `nuc_cm_speed.py`, `nuc_family_bench.py`, `nuc_fp_bench.py` | `mitom nuc`: rDNA boundaries, histone models, precision, Rfam end placement |
 | `check_knowledge.py` | checks the knowledge-base Markdown files |

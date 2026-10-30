@@ -15,6 +15,11 @@ to automatic annotation (MitoM's core, or another annotator's GenBank such as MI
       overlaps the preceding gene is moved downstream only when a start codon lies within 15 nt. A start placed
       upstream of a whole same-strand tRNA (in the gene's first third) moves to the first in-frame start codon after
       it (table2asn BadCDScomponentOverlapTRNA: unionid nad1 across trnL2).
+  P11 PCG start, after P1: of the in-frame start codons within 30 codons of P1's start (reading frame open in
+      between), the one NCBI records would choose, as scored by gradient-boosted trees learned from 1,683 NCBI
+      records (mito_start.py, models/start_model/start_model.json; --start_model no turns it off): codon, distance to
+      the preceding feature, the core's alignment (residues missing at the N-terminus), gene, phylum. Cross-validated
+      by family: exact starts 89.1 -> 90.7 % (arthropods 77.8 -> 82.3 %, cnidarians 79.8 -> 83.2 %).
   P2  Two PCGs on the same strand and in the same frame cannot overlap (criterion ii) - reported.
   D1  A protein gene annotated twice at different places (e.g. MitoZ on a duplicated region): only one
       copy is kept - the complete one (start + stop, no internal stop), the longer, then the first in
@@ -95,6 +100,8 @@ from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
                          transl_except_term, write_tsv)
+import mito_start  # noqa: E402  (P11: the start codon NCBI records choose, learned)
+from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
 NO_START_NOTE = "start codon not determined"
 NO_STOP_NOTE = "stop codon not determined"
@@ -174,6 +181,13 @@ def gene_feature(rec, f: SeqFeature) -> Optional[SeqFeature]:
     return None
 
 
+def record_phylum(rec) -> str:
+    """Phylum named in a record's taxonomy (a class / subphylum name counts for its phylum), '' if none."""
+    tax = rec.annotations.get("taxonomy", []) or []
+    return next((t for t in tax if t in METAZOAN_PHYLA), "") or next((PHYLUM_SYNONYMS[t] for t in tax
+                                                                       if t in PHYLUM_SYNONYMS), "")
+
+
 class Curator:
     def __init__(self, rec, code: int, a):
         self.rec, self.a = rec, a
@@ -189,6 +203,11 @@ class Curator:
         self.joined: set = set()        # id() of CDS joined over an untranslated nucleotide (P9)
         genes = getattr(a, "aggressive_start_genes", None)
         self.aggressive_genes = {PCG_SYN.get(key(x), x.upper()) for x in genes.split(",") if x} if genes else set()
+        self.aln: Dict[int, Tuple[int, int, int]] = {}   # id() of a CDS -> the core's alignment (first, last residue,
+        self.core_start: Dict[int, int] = {}             # reference length) and its start before curation: P11
+        self.start_model = getattr(a, "start_model_obj", None)
+        self.start_rows: List[Dict] = []                 # --dump_starts
+        self.phylum = record_phylum(rec) or getattr(a, "phylum", None) or ""
 
     # ── helpers in transcript orientation ──
     def log(self, f: SeqFeature, rule: str, old: Tuple[int, int], new: Tuple[int, int], why: str) -> None:
@@ -295,6 +314,28 @@ class Curator:
     def overlap_fallback(self, first_stop, nxt) -> bool:
         return first_stop is not None and nxt is not None and first_stop - (nxt - 1) <= OVERLAP_FALLBACK
 
+    def learned_start(self, f: SeqFeature, s: str, b: int, a: int) -> int:
+        """P11: of the in-frame start codons near P1's start a (reading frame open in between), the one the start
+        model scores best (mito_start.py); with --dump_starts every candidate is also kept for training."""
+        gene = PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "")
+        if not gene or id(f) not in self.aln:          # only genes of MitoM's core (its alignment note): the model knows
+            return a                                   # no other annotator's starts (MitoZ / MITOS2 / mitom import)
+        up = None                                      # the preceding feature, either strand: (end, type, same strand)
+        for g in self.others(f):
+            for gs, ge in spans(g):
+                ts, te = (gs, ge) if f.location.strand == 1 else (self.L + 1 - ge, self.L + 1 - gs)
+                if ts < a and te <= a + 60 and (up is None or te > up[0]):
+                    up = (te, g.type, g.location.strand == f.location.strand)
+        rows = mito_start.candidates(s, a, b, self.starts, self.stops, self.core_start.get(id(f)), self.aln.get(id(f)),
+                                     up, gene, self.phylum, self.code)
+        if getattr(self.a, "dump_starts", None):
+            for r in rows:
+                self.start_rows.append({"record": self.rec.id, "strand": "+" if f.location.strand == 1 else "-",
+                                        "genome_pos": r["pos"] if f.location.strand == 1 else self.L + 1 - r["pos"], **r})
+        if self.start_model is None or len(rows) < 2:
+            return a
+        return rows[self.start_model.best(rows)[0]]["pos"]
+
     def pcg(self, f: SeqFeature) -> None:
         if not simple(f):
             return
@@ -341,6 +382,12 @@ class Curator:
                 if s[c - 1:c + 2] == "ATG":
                     new_a = c
                 c -= 3
+        start_rule = "P1"
+        if self.start_model is not None or getattr(self.a, "dump_starts", None):
+            chosen = self.learned_start(f, s, b, new_a)
+            if chosen != new_a:
+                new_a, start_rule = chosen, "P11"
+                why_start = "start codon where NCBI records put it (start model, mito_start.py)"
         # P3: first complete stop, or T / TA ending right before the downstream tRNA
         first_stop = None
         for c in range(new_a, len(s) - 1, 3):
@@ -474,7 +521,7 @@ class Curator:
             if g is not None and simple(g):
                 set_span(g, gs, ge)
             if new_a != a:
-                self.log(f, "P1", old, (gs, ge), why_start)
+                self.log(f, start_rule, old, (gs, ge), why_start)
             if new_b != b:
                 self.log(f, "P3", old, (gs, ge), why_end)
         else:
@@ -1054,6 +1101,11 @@ class Curator:
     # ── N1: NCBI-style names (every feature, also joins / origin-spanning ones) ──
     def names(self, f: SeqFeature) -> None:
         g = gene_feature(self.rec, f)
+        if f.type == "CDS" and simple(f):                  # P11 reads the core's alignment (its note is dropped below)
+            m = re.search(r"residues (\d+)-(\d+)/(\d+)", " ".join(f.qualifiers.get("note", [])))
+            if m:
+                self.aln[id(f)] = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            self.core_start[id(f)] = self.tx(f)[0]
         for n in f.qualifiers.get("note", []) if f.type == "tRNA" else []:
             m = re.match(r"MiTFi \S+ bits [\d.]+ E ([0-9.eE+-]+)( copy)?", n)
             if m and (float(m.group(1)) > WEAK_TRNA_E or m.group(2)):
@@ -1209,11 +1261,21 @@ def main(argv=None) -> int:
                         "(default none; `mitom run` passes ND5,ND4L for the Annelida clade). Benchmark 2026-10: right "
                         "for nad5 / nad4L in every differing annelid record (40), wrong in most other phyla (173 "
                         "metazoa records: 17 right, 52 wrong).")
+    p.add_argument("--start_model", default="auto",
+                   help="P11: auto (default) = models/start_model/start_model.json when present; no = off; or a model "
+                        "file (benchmark/train_start_model.py)")
+    p.add_argument("--dump_starts", default=None,
+                   help="write every P11 start candidate with its features to this TSV (training data)")
+    p.add_argument("--phylum", default=None, help="phylum of records without a taxonomy (a feature of the start model)")
     p.add_argument("--table2asn", default=None,
                    help="NCBI table2asn for validation before/after curation (default: found by mito_env.py)")
     p.add_argument("--no_validate", action="store_true", help="Skip the NCBI validation before/after curation")
     a = p.parse_args(argv)
     src, out = Path(a.input), Path(a.out)
+    a.start_model_obj = None if a.start_model == "no" else mito_start.load(None if a.start_model == "auto" else a.start_model)
+    if a.start_model not in ("auto", "no") and a.start_model_obj is None:
+        p.error(f"--start_model {a.start_model}: no such model")
+    start_rows: List[Dict] = []
     t2a = None if a.no_validate else mito_env.find("table2asn", a.table2asn)
     if t2a:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -1230,7 +1292,9 @@ def main(argv=None) -> int:
                 val_before += nv.validate_record(copy.deepcopy(rec), out / "validation" / "before", t2a)
             backup = copy.deepcopy(rec)                  # run() edits in place: a failure must not leave a half-curated record
             try:
-                rows += Curator(rec, a.genetic_code, a).run()
+                cur = Curator(rec, a.genetic_code, a)
+                rows += cur.run()
+                start_rows += cur.start_rows
             except Exception as exc:
                 recs[i] = backup
                 rows.append({"record": rec.id, "rule": "error", "reason": f"left unchanged: {exc!r}"})
@@ -1242,6 +1306,8 @@ def main(argv=None) -> int:
         SeqIO.write(recs, str(dest), "genbank")      # always: N1 names / gene ranges change without a report row
     cols = ["record", "feature", "gene", "strand", "rule", "old", "new", "reason"]
     write_tsv(out / "curation_report.tsv", cols, rows)
+    if a.dump_starts:
+        write_tsv(Path(a.dump_starts), list(start_rows[0]) if start_rows else ["record"], start_rows)
     from collections import Counter
     c = Counter(r["rule"] for r in rows)
     print(f"[mito_curate] {len(files)} file(s); changes: " + ", ".join(f"{k} {v}" for k, v in sorted(c.items())),
