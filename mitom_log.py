@@ -1,12 +1,25 @@
 """mitom_log.py - what MitoM shows and logs while it runs: the run log (setup_root_logger: everything goes to the log
 file, the console gets the numbered steps), numbered steps and progress lines on the terminal (Steps, Progress, say),
-one log file per sample of the annotation stage."""
+one log file per sample of the annotation stage.
+
+Lines of the run log that `mitom debug` reads (their form stays as it is):
+  [STEP 6/11 add_missing] start: <title>            a step starts (Steps.start)
+  [STEP 6/11 add_missing] introns done 5.4s: ...    a part of a step (Steps.part)
+  [STEP 6/11 add_missing] done 9.2s: <result>       ... ends ('failed' instead of 'done': it could not do its work)
+  [CMD rc=1 12.3s] <command line>  (in <folder>)    every external program (mito_common.run_tool); when it
+      | <a line of its stderr>                      failed, the end of its stderr below (debug mode: always)
+  [RECORD <name>] <what happened to this record>    a record that failed or was left out (record_event)
+  [ENV] ...                                         the environment (programs, versions with --debug)
+  [ERROR] <exception> + traceback                   the run stopped on an error
+  [DONE] exit=<code> <time>                         the run ended (mitom_pipeline.main)
+"""
 from __future__ import annotations
 
 import logging
 import threading
 import time
 from pathlib import Path
+from typing import Callable, Optional
 
 
 _LOG_LOCK = threading.Lock()
@@ -28,12 +41,18 @@ class _LockedHandler(logging.Handler):
 QUIET_LOGGERS = ("fontTools", "matplotlib", "PIL")
 
 
-def setup_root_logger(log_file: Path, console_level: int = logging.INFO, mode: str = "a") -> None:
-    """Everything goes to log_file (mode "w": a new log for this run); the console gets console_level and above
-    (run: WARNING, its steps are printed by Steps / say()); QUIET_LOGGERS only from WARNING."""
+def setup_root_logger(log_file: Path, console_level: int = logging.INFO, mode: str = "a", debug: bool = False) -> None:
+    """Everything goes to log_file (mode "w": a new log for this run), every external program too ([CMD] lines of
+    'mitom.tools'); the console gets console_level and above (run: WARNING, its steps are printed by Steps / say());
+    QUIET_LOGGERS only from WARNING. debug: DEBUG lines of every module in log_file."""
     log_file.parent.mkdir(parents=True, exist_ok=True)
     root = logging.getLogger()
-    root.setLevel(logging.INFO)
+    root.setLevel(logging.DEBUG if debug else logging.INFO)
+    tools = logging.getLogger("mitom.tools")    # the programs run: in the log file, not on the console
+    for h in list(tools.handlers):              # (mito_common's stderr handler of a step run in debug mode)
+        tools.removeHandler(h)
+    tools.setLevel(logging.DEBUG)
+    tools.propagate = True
     for h in list(root.handlers):
         root.removeHandler(h)
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
@@ -66,22 +85,53 @@ def duration(sec: float) -> str:
 
 
 class Steps:
-    """Numbered steps: start() prints '[Step n/N] title', info() an indented line, done() the result and the time."""
+    """Numbered steps: start() prints '[Step n/N] title', info() an indented line, done() the result and the time; the
+    run log gets '[STEP n/N key] start: title' and '[STEP n/N key] done|failed <seconds>s: result' (see above)."""
+    current: Optional["Steps"] = None    # the steps of the running workflow: main() logs the step an error stopped
 
     def __init__(self, total: int):
         self.total, self.n, self.t0, self.run_t0 = total, 0, time.time(), time.time()
+        self.key = ""                    # the running step ('' between steps)
+        Steps.current = self
 
-    def start(self, title: str) -> None:
+    def tag(self) -> str:
+        return f"[STEP {self.n}/{self.total} {self.key}]"
+
+    def start(self, key: str, title: str) -> None:
         self.n += 1
-        self.t0 = time.time()
-        say("")
-        say(f"[Step {self.n}/{self.total}] {title}")
+        self.key, self.t0 = key, time.time()
+        print("", flush=True)
+        print(f"[Step {self.n}/{self.total}] {title}", flush=True)
+        logging.info(f"{self.tag()} start: {title}")
 
     def info(self, text: str) -> None:
         say(f"    {text}")
 
-    def done(self, text: str = "") -> None:
-        say(f"    -> {text}  ({duration(time.time() - self.t0)})" if text else f"    -> done ({duration(time.time() - self.t0)})")
+    def part(self, name: str, fn: Callable, *args):
+        """Run one part of the step (fn returns a StepResult): its time and whether it did its work in the log."""
+        t0 = time.time()
+        res = fn(*args)
+        logging.info(f"{self.tag()} {name} {'done' if getattr(res, 'ok', True) else 'failed'} {time.time() - t0:.1f}s: "
+                     f"{getattr(res, 'summary', res)}")
+        return res
+
+    def done(self, text: str = "", ok: bool = True) -> None:
+        dt = time.time() - self.t0
+        print(f"    -> {text}  ({duration(dt)})" if text else f"    -> done ({duration(dt)})", flush=True)
+        logging.info(f"{self.tag()} {'done' if ok else 'failed'} {dt:.1f}s" + (f": {text}" if text else ""))
+        self.key = ""
+
+    def failed(self, exc: BaseException) -> None:
+        """The running step stopped on exc (logged by main() before the traceback)."""
+        if self.key:
+            logging.error(f"{self.tag()} failed {time.time() - self.t0:.1f}s: {type(exc).__name__}: {exc}")
+            self.key = ""
+
+
+def record_event(name: str, text: str, level: int = logging.WARNING) -> None:
+    """One line about one record, as `mitom debug` reads it: '[RECORD <name>] <text>' (a record that failed or was
+    left out of a step)."""
+    logging.log(level, f"[RECORD {name}] {text}")
 
 
 class Progress:

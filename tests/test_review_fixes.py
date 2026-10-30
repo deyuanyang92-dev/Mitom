@@ -87,7 +87,8 @@ def test_core_failure_is_warned_on_the_root_logger(tmp_path, monkeypatch, caplog
         iid, ok, *_ = bm.annotate_one(si, fa, tmp_path / "out", "01.anno_round1", a)
     assert not ok
     msgs = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
-    assert any(m.startswith("[FAIL] sampleA: annotation core exit 3: boom: no refseq89m") for m in msgs), msgs
+    assert any(m.startswith("[RECORD sampleA] annotation failed (round-1 annotation, exit 3): boom: no refseq89m")
+               for m in msgs), msgs
     assert not any("MitoZ" in m for m in msgs)
 
 
@@ -101,7 +102,9 @@ def test_run_returns_nonzero_when_every_record_failed(tmp_path, monkeypatch):
     assert bm.resolve_tools(a) == ""
     assert bm.workflow_run(a) != 0
     log = (tmp_path / "out" / "run.log").read_text()
-    assert "[FAIL] rec1: annotation core exit 3" in log and "[FAIL] every record failed" in log
+    assert "[RECORD rec1] annotation failed (round-1 annotation, exit 3)" in log and "[FAIL] every record failed" in log
+    assert "[STEP 2/11 annotate] start: Round-1 annotation" in log and "[STEP 11/11 output] done " in log
+    assert "[DONE]" not in log                     # main() writes the exit line ([DONE] exit=1)
 
 
 # ---- resolve_tools under the native core --------------------------------------------------------------------

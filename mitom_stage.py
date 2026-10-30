@@ -17,7 +17,7 @@ from Bio.SeqRecord import SeqRecord
 
 from mito_common import run_tool, safe_name
 from mitom_inputs import SampleInfo
-from mitom_log import Progress, close_sample_logger, get_sample_logger, tail_text
+from mitom_log import Progress, close_sample_logger, get_sample_logger, record_event, tail_text
 from mitom_snakemake import AnnotTask, run_snakemake_for_annotation_tasks, snakemake_available
 
 
@@ -162,7 +162,8 @@ def annotate_one(
         lg.error(f"[FAIL] annotation core returned {rc}")
         lg.error("---- stderr tail ----\n" + err_tail)
         last = next((x.strip() for x in reversed(err_tail.splitlines()) if x.strip()), "no stderr")
-        logging.warning(f"[FAIL] {si.sample_name}: annotation core exit {rc}: {last}  (sample log: {workdir / 'sample.log'})")
+        record_event(si.sample_name, f"annotation failed ({STAGE_LABEL.get(phase_dirname, phase_dirname)}, exit {rc}): "
+                                     f"{last}  (sample log: {workdir / 'sample.log'})")
         close_sample_logger(log_name)
         return internal_id, False, workdir, None
 
@@ -214,7 +215,8 @@ def run_annotation_stage(
             try:
                 internal_id, ok, workdir, best_gb = fut.result()
             except Exception as exc:
-                logging.error(f"[TASK_EXCEPTION] {si.sample_name}: {exc}")
+                record_event(si.sample_name, f"annotation failed ({STAGE_LABEL.get(phase_dirname, phase_dirname)}): "
+                                             f"{type(exc).__name__}: {exc}", logging.ERROR)
                 internal_id, ok, workdir, best_gb = si.internal_id, False, out_root / phase_dirname / si.internal_id, None
             results[internal_id] = {
                 "internal_id": internal_id, "sample_name": si.sample_name,

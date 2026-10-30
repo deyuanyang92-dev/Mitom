@@ -17,7 +17,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from mitom_log import Progress, tail_text, watch_files
+from mito_common import run_tool
+from mitom_log import Progress, record_event, tail_text, watch_files
 
 
 def which_or_none(exe: str) -> Optional[str]:
@@ -189,7 +190,7 @@ def run_snakemake_for_annotation_tasks(
 
     def _run(c: List[str]) -> "subprocess.CompletedProcess[str]":
         logging.info("[SNAKEMAKE] " + " ".join(c))
-        return subprocess.run(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return run_tool(c)
 
     stop = threading.Event()
     if progress is not None:
@@ -200,10 +201,7 @@ def run_snakemake_for_annotation_tasks(
             combined = (p.stdout or "") + (p.stderr or "")
             if "LockException" in combined or "Directory cannot be locked" in combined:
                 logging.warning(f"[SNAKEMAKE_LOCK] Stale lock in {snk_work} — attempting --unlock…")
-                pu = subprocess.run(
-                    [str(smk_bin), "--snakefile", str(snakefile),
-                     "--directory", str(snk_work), "--unlock"],
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                pu = run_tool([str(smk_bin), "--snakefile", str(snakefile), "--directory", str(snk_work), "--unlock"])
                 if pu.returncode == 0:
                     logging.warning("[SNAKEMAKE_LOCK] Unlock OK — retrying…")
                     p = _run(cmd)
@@ -232,8 +230,8 @@ def run_snakemake_for_annotation_tasks(
             if not obj.get("ok"):                              # the worker's sample.log holds the details
                 last = next((x.strip() for x in reversed(str(obj.get("stderr_tail") or "").splitlines())
                              if x.strip()), "no stderr")
-                logging.warning(f"[FAIL] {obj.get('sample_name', obj['internal_id'])}: annotation core exit "
-                                f"{obj.get('returncode', '?')}: {last}  (sample log: {obj.get('workdir')}/sample.log)")
+                record_event(obj.get("sample_name", obj["internal_id"]), f"annotation failed ({phase_name}, exit "
+                             f"{obj.get('returncode', '?')}): {last}  (sample log: {obj.get('workdir')}/sample.log)")
         else:
             iid = tp.stem
             logging.warning(f"[SNAKEMAKE_RESULT_MISSING] {rp} not found for task {iid}")

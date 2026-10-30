@@ -112,6 +112,7 @@ DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
 from mito_common import (GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb,  # noqa: E402
                          write_tsv)                                                                       # (CC0)
+from mito_common import run_tool as run_program  # noqa: E402  (CC0: logged, e.g. by `mitom run --debug`)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
 TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII
 II_AA_TOLERANCE = 5                  # homolog score (median, BLOSUM62) a group II placement may lose when none is free
@@ -194,7 +195,7 @@ def run_tool(cmd: List[str], what: str) -> str:
     """Run an external program; on timeout or failure return '' and warn, so one hard
     sequence cannot stall or kill a batch."""
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=TIMEOUT).stdout
+        return run_program(cmd, timeout=TIMEOUT).stdout
     except subprocess.TimeoutExpired:
         print(f"[mito_intron] {what} timed out after {TIMEOUT}s - skipped", file=sys.stderr)
     except OSError as exc:
@@ -1584,8 +1585,8 @@ def main(argv=None) -> int:
     with tempfile.TemporaryDirectory() as td:
         lib_faa = Path(td) / "lib.faa"
         lib_faa.write_text("".join(f">{k}\n{v.seq}\n" for k, v in lib.items()))
-        subprocess.run([str(tools["makeblastdb"]), "-in", str(lib_faa), "-dbtype", "prot", "-out", str(Path(td) / "lib")],
-                       capture_output=True, check=True)
+        run_program([str(tools["makeblastdb"]), "-in", str(lib_faa), "-dbtype", "prot", "-out", str(Path(td) / "lib")],
+                    check=True)
         _JOB.update(lib=lib, lib_db=Path(td) / "lib", a=a, tools=tools, out=out)
         if a.jobs > 1 and len(files) > 1:
             import multiprocessing as mp

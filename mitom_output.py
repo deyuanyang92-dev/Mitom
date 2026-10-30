@@ -16,6 +16,7 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
 from mito_common import REPORTS, reports_dir, safe_copy
+from mitom_log import record_event
 from mitom_inputs import SampleInfo
 from mitom_metadata import (_sync_organism_qualifier, build_organism_index, gb_file_has_meaningful_metadata,
                             replace_organism_in_gb_file, transfer_gb_metadata_file)
@@ -214,7 +215,7 @@ def finalize_genbank_output(
                     f"[FINAL_NO_GENE] {sample_name}: '{which_gene_first}' not found "
                     f"in chosen_gb; orientation unchanged.")
         except Exception as exc:
-            logging.warning(f"[FINAL_REORIENT_FAIL] {sample_name}: {exc} — using ID-rewritten GB")
+            record_event(sample_name, f"final re-orientation failed ({exc}): written as annotated")
             working_gb = id_gb
 
         # ── Step 3: Optional metadata overlay (header section, text-level) ──

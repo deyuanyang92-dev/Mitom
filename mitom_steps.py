@@ -20,6 +20,7 @@ from typing import Any, Callable, List, Optional, Tuple, TypeVar
 from Bio import SeqIO
 
 from mito_common import reports_dir, run_tool, write_table
+from mitom_log import record_event
 from mito_taxa import abbreviated_overlap, aggressive_start_genes, no_upstream_atg
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
 
@@ -125,6 +126,9 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
                 if (d / f"rec{ext}").exists():
                     shutil.copy2(d / f"rec{ext}", sub / f"{d.name}{ext}")
             n = {sev: sum(r["severity"] == sev for r in rows) for sev in ("ERROR", "WARNING")}
+            if n["ERROR"]:
+                record_event(rec.id, f"NCBI ERROR: {n['ERROR']} ({'; '.join(sorted({r['code'] for r in rows if r['severity'] == 'ERROR'}))})"
+                                     " - ncbi_submission/validation_messages.tsv")
             summary.append(f"{rec.id}\t{n['ERROR']}\t{n['WARNING']}\t"
                            + "; ".join(sorted({r["code"] for r in rows if r["severity"] == "ERROR"})))
             msgs += [f"{r['record']}\t{r['severity']}\t{r['code']}\t{r['message']}" for r in rows]

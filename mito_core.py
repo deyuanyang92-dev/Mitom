@@ -60,7 +60,7 @@ import mito_env  # noqa: E402
 import mito_rrna_hmm  # noqa: E402,F401  (the rRNA step: per-phylum profile HMMs, MITOS2's covariance models)
 # the rRNA step, moved to mito_rrna_hmm.py, stays importable from here (tests)
 from mito_rrna_hmm import annotate_rrnas, cm_len, rrna_hmm, tbl_hits  # noqa: E402,F401
-from mito_common import contig_record_id, CoreFeature as Feature, positions, read_fasta, run_or_raise  # noqa: E402,F401
+from mito_common import contig_record_id, CoreFeature as Feature, debug_mode, positions, read_fasta, run_or_raise  # noqa: E402,F401
 from mito_common import topology_from_header  # noqa: E402
 import mito_trna  # noqa: E402  (the tRNA step: MitoM-ML checked by MiTFi, mito_trna.core_trnas)
 # the tRNA step's names, moved to mito_trna.py, stay importable from here (benchmark scripts, tests)
@@ -667,7 +667,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     a.add_argument("--log", default=None)
     args = p.parse_args(argv)
     EXONERATE_MODEL = args.exonerate_model
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
+    logging.basicConfig(level=logging.DEBUG if debug_mode() else logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
                         handlers=[logging.StreamHandler(sys.stderr)] + ([logging.FileHandler(args.log)] if args.log else []))
     return annotate(args)
 

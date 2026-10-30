@@ -40,6 +40,7 @@ import argparse
 import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -57,13 +58,13 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (GB_SUFFIXES, old_spelling, reports_dir, run_tool, safe_copy, safe_name,  # noqa: E402,F401
-                         write_nonempty_list, write_nonempty_table, write_table)  # noqa: F401
+from mito_common import (command_line, debug_mode, GB_SUFFIXES, old_spelling, reports_dir, run_tool,  # noqa: E402,F401
+                         safe_copy, safe_name, write_nonempty_list, write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
                        CLADE_CODES, CLADE_PHYLUM, EXTRA_CLADES, METAZOAN_PHYLA, no_upstream_atg,  # noqa: F401
                        PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS)  # noqa: F401
 from mitom_log import (close_sample_logger, duration, get_sample_logger, _LockedHandler, _LOG_LOCK,  # noqa: E402,F401
-                       Progress, say, setup_root_logger, Steps, tail_text, watch_files)  # noqa: F401
+                       Progress, record_event, say, setup_root_logger, Steps, tail_text, watch_files)  # noqa: F401
 from mitom_metadata import (_acc_variants, build_metadata_index, build_organism_index, _clean_acc,  # noqa: E402,F401
                             diagnose_unmatched, find_metadata_from_index,  # noqa: F401
                             gb_file_has_meaningful_metadata, gb_record_accession,  # noqa: F401
@@ -165,6 +166,63 @@ def check_environment(args: argparse.Namespace) -> List[str]:
             logging.info(f"[ENV] FASTQ dir exists ✔  ({fq_p})")
 
     return problems
+
+
+def git_state(folder: Path) -> str:
+    """', git <commit>[, uncommitted changes]' for a MitoM folder that is a git checkout, else ''."""
+    try:
+        head = subprocess.run(["git", "-C", str(folder), "rev-parse", "--short", "HEAD"], capture_output=True,
+                              text=True, timeout=5)
+        if head.returncode:
+            return ""
+        dirty = subprocess.run(["git", "-C", str(folder), "status", "--porcelain", "--untracked-files=no"],
+                               capture_output=True, text=True, timeout=5).stdout.strip()
+        return f", git {head.stdout.strip()}" + (", uncommitted changes" if dirty else "")
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def log_environment(args: argparse.Namespace) -> None:
+    """[ENV] lines at the start of a run's log: MitoM (version, folder, git commit), the command as typed, the working
+    folder, Python and the machine; with --debug also every program with its version, the Python packages, the config
+    file, the reference and data folders, the environment variables, memory and free disk space."""
+    import platform
+    import mito_env
+    here = Path(__file__).resolve().parent
+    logging.info(f"[ENV] MitoM {os.environ.get('MITOM_VERSION', '?')}  {here}{git_state(here)}")
+    cmd = (["mitom"] if os.environ.get("MITOM_LAUNCHER") else [sys.executable, sys.argv[0]]) + sys.argv[1:]
+    logging.info(f"[ENV] command: {command_line(cmd)}")
+    logging.info(f"[ENV] working folder: {Path.cwd()}")
+    logging.info(f"[ENV] Python {platform.python_version()} ({sys.executable}); {platform.platform()}; "
+                 f"{os.cpu_count()} CPUs")
+    if not getattr(args, "debug", False):
+        return
+    for name in mito_env.TOOLS:
+        exe = mito_env.find(name)
+        logging.info(f"[ENV] program {name}: " + (f"{exe}  ({mito_env.program_version(exe, name) or 'version ?'})"
+                                                   if exe else "not found"))
+    for pkg in ("Bio", "numpy", "sklearn", "matplotlib"):
+        try:
+            logging.info(f"[ENV] package {pkg} {getattr(__import__(pkg), '__version__', '?')}")
+        except ImportError:
+            logging.info(f"[ENV] package {pkg} not installed")
+    cfg = mito_env.config_path()
+    logging.info(f"[ENV] config {cfg}: " + (cfg.read_text(encoding="utf-8").strip() if cfg.is_file() else "none"))
+    logging.info(f"[ENV] MITOS2 reference data: {mito_env.mitos_refdir(getattr(args, 'mitos_refdir', None)) or 'not found'}")
+    logging.info(f"[ENV] data folder (MitoM-ML models): {mito_env.data_dir()}")
+    for k in sorted(os.environ):
+        if k.startswith(("MITOM", "MITOS", "CONDA", "OMP_", "JAVA", "YZZ_")) or k in ("PATH", "LANG", "TMPDIR"):
+            logging.info(f"[ENV] ${k}={os.environ[k]}")
+    try:
+        mem = {ln.split(":")[0]: ln.split()[1] for ln in Path("/proc/meminfo").read_text().splitlines()[:3]}
+        logging.info(f"[ENV] memory {int(mem['MemTotal']) // 1024} MB, available {int(mem['MemAvailable']) // 1024} MB")
+    except (OSError, KeyError, ValueError, IndexError):
+        pass
+    out = Path(getattr(args, "out_root", ".") or ".")
+    try:
+        logging.info(f"[ENV] free disk space in {out}: {shutil.disk_usage(out).free // 2**30} GB")
+    except OSError:
+        pass
 
 
 def run_steps(args: argparse.Namespace) -> List[str]:
@@ -272,7 +330,8 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     new_reports(out_root)
-    setup_root_logger(out_root / "pipeline.log")
+    setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
+    log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
 
@@ -316,7 +375,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
             )
             summary_rows.append(f"{si.sample_name}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{mode}")
         except Exception as exc:
-            logging.error(f"[FINAL_WRITE_FAIL] {si.sample_name}: {exc}")
+            record_event(si.sample_name, f"final GenBank not written: {exc}", logging.ERROR)
             summary.final_write_failed.append(si.sample_name)
 
     write_nonempty_list(reports_dir(out_root) / "annotation_failed.txt",
@@ -346,7 +405,6 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     write_orientation_fallback(out_root, samples)
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
-    logging.info("[DONE]")
     if samples and len(summary.annotation_failed) == len(samples):
         logging.warning(f"[FAIL] every record failed in the annotation core ({len(samples)}): see reports/failed_logs/")
         return 1
@@ -356,7 +414,8 @@ def workflow_annotate(args: argparse.Namespace) -> int:
 def workflow_reorient(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    setup_root_logger(out_root / "pipeline.log")
+    setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
+    log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
 
     in_path  = Path(args.input).resolve()
@@ -403,7 +462,6 @@ def workflow_reorient(args: argparse.Namespace) -> int:
     write_table(out_root / "annotation-summary.tsv", "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok",
                 summary_rows)
     summary.log()
-    logging.info("[DONE]")
     return 0
 
 
@@ -418,7 +476,9 @@ def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     new_reports(out_root)
-    setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w")   # one run, one log
+    setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w",   # one run, one log
+                      debug=getattr(args, "debug", False))
+    log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
     steps = Steps(11)
@@ -436,7 +496,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     split_dir   = out_root / "00.internal_fasta"
     gb_conv_dir = out_root / "00.gb_converted_fasta"
 
-    steps.start("Read input and remove duplicate records")
+    steps.start("input", "Read input and remove duplicate records")
     in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
                                                        orig_dir=out_root / "original_annotation",
                                                        dedup_report=reports_dir(out_root) / "dedup_report.tsv")
@@ -464,7 +524,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     summary = RunSummary()
     check_transl_tables(out_root / "original_annotation", int(args.genetic_code))
 
-    steps.start(f"Round-1 annotation ({ENGINE_LABEL[getattr(args, 'engine', 'native')]}: protein genes, rRNAs, tRNAs)")
+    steps.start("annotate", f"Round-1 annotation ({ENGINE_LABEL[getattr(args, 'engine', 'native')]}: protein genes, rRNAs, tRNAs)")
     results1 = run_annotation_stage(
         samples=samples, phase_dirname="01.anno_round1",
         out_root=out_root, args=args,
@@ -476,7 +536,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                + (f" ({', '.join(summary.annotation_failed[:5])}{' ...' if len(summary.annotation_failed) > 5 else ''})"
                   if summary.annotation_failed else ""))
 
-    steps.start(f"Re-orient: plus strand, sequence starts with {args.which_gene_first} "
+    steps.start("reorient", f"Re-orient: plus strand, sequence starts with {args.which_gene_first} "
                 f"(if missing: {args.fallback_genes})")
 
     logging.info(
@@ -500,9 +560,8 @@ def workflow_run(args: argparse.Namespace) -> int:
             n_ok, n_no, no_gene_ids = reorient_one_gb(
                 best_gb, gb_reor, gb_no_gene, orientation_genes(args), args.force_forward)
             if n_ok == 0 and n_no > 0:
-                logging.warning(
-                    f"[NO_TARGET_GENE] '{si.sample_name}' ({si.internal_id}): "
-                    f"ALL {n_no} record(s) missing '{args.which_gene_first}' — skipping Phase-2")
+                record_event(si.sample_name, f"no orientation gene ({args.which_gene_first}, {args.fallback_genes}) "
+                             f"in its {n_no} sequence(s): kept as annotated, no round 2 ({si.internal_id})")
                 summary.no_target_gene.append(si.sample_name)
                 no_gene_iids.add(si.internal_id)
             elif n_no > 0:
@@ -517,7 +576,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                 gb_to_internal_fasta(gb_reor, reor_fasta_dir / f"{si.internal_id}.fasta",
                                      si.internal_id)
         except Exception as exc:
-            logging.error(f"[REORIENT_FAIL] {si.sample_name} ({si.internal_id}): {exc}")
+            record_event(si.sample_name, f"re-orientation failed ({si.internal_id}): {exc}", logging.ERROR)
             summary.reorient_failed.append(si.sample_name)      # an error, not a record without the gene
             no_gene_iids.add(si.internal_id)
 
@@ -527,7 +586,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                + (f" ({fallback_used} by a fallback gene)" if fallback_used else "")
                + (f", {len(no_gene_iids)} without any orientation gene (kept as annotated)" if no_gene_iids else ""))
 
-    steps.start("Check the annotation after re-orientation; annotate again where it is offset (round 2)")
+    steps.start("round2", "Check the annotation after re-orientation; annotate again where it is offset (round 2)")
     do_phase2 = args.if_reannotation_2 in ("yes", "auto")
     results2:  Dict[str, Dict] = {}
     reannotated_ids: set = set()
@@ -549,15 +608,13 @@ def workflow_run(args: argparse.Namespace) -> int:
         for si in phase2_samples:
             if not results2.get(si.internal_id, {}).get("ok"):
                 n_fail2 += 1
-                logging.warning(
-                    f"[PHASE2_FAIL_FALLBACK] '{si.sample_name}': "
-                    f"phase2 failed, fallback to phase1b reoriented GB")
+                record_event(si.sample_name, "round-2 annotation failed: the shifted round-1 annotation is kept")
         steps.done(f"round 2: {len(phase2_samples) - n_fail2} annotated"
                    + (f", {n_fail2} failed (they keep the shifted round-1 annotation)" if n_fail2 else ""))
     else:
         steps.done("--if_reannotation_2 no: skipped")
 
-    steps.start("Write the annotation; copy the original GenBank header (organism, references ...) back")
+    steps.start("write", "Write the annotation; copy the original GenBank header (organism, references ...) back")
 
     final_dir         = out_root / "04.final_gb"
     no_gene_final_dir = final_dir / f"no_{args.which_gene_first}_gene"
@@ -648,7 +705,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                 summary.metadata_transfer_failed.append(sample)
 
         except Exception as exc:
-            logging.error(f"[FINAL_WRITE_FAIL] {sample}: {exc}")
+            record_event(sample, f"final GenBank not written: {exc}", logging.ERROR)
             summary.final_write_failed.append(sample)
 
     write_table(
@@ -681,21 +738,22 @@ def workflow_run(args: argparse.Namespace) -> int:
     (reports_dir(out_root) / "run_params.json").write_text(
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    steps.start("Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
-    for step in (run_rescue, run_rrna_hmm, run_intron_fix):
-        steps.info(step(args, final_dir, out_root).summary)
+    steps.start("add_missing", "Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
+    for name, step in (("rescue", run_rescue), ("rrna_hmm", run_rrna_hmm), ("introns", run_intron_fix)):
+        steps.info(steps.part(name, step, args, final_dir, out_root).summary)
     n_rot = reorient_after_introns(args, final_dir)
     if n_rot:
         steps.info(f"re-oriented to the first exon : {n_rot} record(s) whose {args.which_gene_first} gained an exon upstream")
     steps.done()
 
-    steps.start("Boundary rules for protein genes and rRNAs, NCBI gene names")
+    steps.start("curate", "Boundary rules for protein genes and rRNAs, NCBI gene names")
     curated = run_curate(args, final_dir, out_root)
     merge_dir = curated.gb_dir
-    steps.done(curated.summary)
+    steps.done(curated.summary, curated.ok)
 
-    steps.start("NCBI check (table2asn) and submission files")
-    steps.done(run_submission(args, merge_dir, out_root).summary if merge_dir != final_dir else curated.summary)
+    steps.start("ncbi", "NCBI check (table2asn) and submission files")
+    submitted = run_submission(args, merge_dir, out_root) if merge_dir != final_dir else curated
+    steps.done(submitted.summary, submitted.ok)
     refresh_summary(out_root, merge_dir)
     all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
         p for p in merge_dir.rglob("*.gbf")
@@ -717,14 +775,16 @@ def workflow_run(args: argparse.Namespace) -> int:
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
 
-    steps.start("Compare with the original annotation")
-    steps.done(run_compare(args, merge_dir, out_root, original=out_root / "original_annotation"
-                           if input_type == "converted_from_gb" else None).summary)
+    steps.start("compare", "Compare with the original annotation")
+    compared = run_compare(args, merge_dir, out_root, original=out_root / "original_annotation"
+                           if input_type == "converted_from_gb" else None)
+    steps.done(compared.summary, compared.ok)
 
-    steps.start("Genome maps (circular plots)")
-    steps.done(run_plots(args, merge_dir, out_root).summary)
+    steps.start("maps", "Genome maps (circular plots)")
+    maps = run_plots(args, merge_dir, out_root)
+    steps.done(maps.summary, maps.ok)
 
-    steps.start("Organise the output")
+    steps.start("output", "Organise the output")
     organize_outputs(out_root, merge_dir, keep=args.keep_intermediate == "yes",
                      reports_named=(f"no_{args.which_gene_first}_samples.txt",))
     for name, what in OUTPUT_LAYOUT:
@@ -733,7 +793,6 @@ def workflow_run(args: argparse.Namespace) -> int:
     steps.done(f"explained in {out_root / 'README.txt'}")
     say("")
     say(f"MitoM finished in {duration(time.time() - steps.run_t0)}: {out_root}")
-    logging.info("[DONE]")
     if total and len(summary.annotation_failed) == total:
         logging.warning(f"[FAIL] every record failed in the annotation core ({total}): see reports/failed_logs/")
         return 1
@@ -882,7 +941,6 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
         log_rows)
     logging.info(
         f"[SUMMARY] files_updated={n_ok}  no_match={n_miss}  failed={n_fail}")
-    logging.info("[DONE]")
     return 0
 
 
@@ -993,6 +1051,10 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--force_forward", action="store_true", default=True,
                         help="RC the sequence when target gene is on minus strand (default: on).")
         sp.add_argument("--no_force_forward", action="store_false", dest="force_forward")
+        sp.add_argument("--debug", action="store_true",
+                        help="Debug mode: DEBUG lines, program versions and the environment in the log; the output of "
+                             "every program in the logs; intermediate files kept (--keep_intermediate yes). "
+                             "`mitom debug OUT` reads the log.")
 
     def add_annotation(sp: argparse.ArgumentParser) -> None:
         g = sp.add_argument_group("Annotation")
@@ -1277,7 +1339,28 @@ def main() -> int:
     if fn is None:
         print(f"Unknown command: {args.cmd}", file=sys.stderr)
         return 2
-    return fn(args)
+    if getattr(args, "debug", False) or debug_mode():     # --debug (or `mitom --debug <command>`: MITOM_DEBUG=1)
+        args.debug = True
+        os.environ["MITOM_DEBUG"] = "1"                   # the programs MitoM starts log what they do too
+        if hasattr(args, "keep_intermediate"):
+            args.keep_intermediate = "yes"
+    t0 = time.time()
+    try:
+        rc = fn(args)
+    except Exception as exc:                 # into the run's log with the traceback (mitom debug reads it), then exit 1
+        if Steps.current is not None:
+            Steps.current.failed(exc)
+        logging.exception(f"[ERROR] {type(exc).__name__}: {exc}")
+        logging.info(f"[DONE] exit=1 {duration(time.time() - t0)}")
+        out = getattr(args, "out_root", None)
+        print(f"MitoM stopped on an error: {type(exc).__name__}: {exc}" + (f"\n  diagnosis: mitom debug {out}" if out else ""),
+              file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        logging.error(f"[ERROR] interrupted (Ctrl-C) after {duration(time.time() - t0)}")
+        raise
+    logging.info(f"[DONE] exit={rc} {duration(time.time() - t0)}")
+    return rc
 
 
 if __name__ == "__main__":

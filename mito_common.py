@@ -372,7 +372,23 @@ def codon_translate(nt, code: int) -> str:
 
 # ── external programs ─────────────────────────────────────────────────────────────────────────────────────────────
 TOOL_LOG = logging.getLogger("mitom.tools")
-STDERR_TAIL = 20                     # lines of a failed program's stderr in the log
+STDERR_TAIL = 20                     # lines of a failed program's stderr in the log ...
+DEBUG_STDERR = 200                   # ... of any program's stderr in debug mode
+STDERR_MARK = "    | "               # each under the [CMD] line, after this (a log line of the program itself stays
+                                     # inside the [CMD] entry for `mitom debug`)
+
+
+def debug_mode() -> bool:
+    """`mitom ... --debug` (MITOM_DEBUG=1, set for every program MitoM starts): log what each program did."""
+    return bool(os.environ.get("MITOM_DEBUG"))
+
+
+if debug_mode() and not TOOL_LOG.handlers:      # a step run by `mitom ... --debug`: the programs it runs, on its stderr
+    _h = logging.StreamHandler()                 # (the workflow keeps that in the step's log; its own run log gets
+    _h.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))   # them through its root logger:
+    TOOL_LOG.addHandler(_h)                      # mitom_log.setup_root_logger removes this handler)
+    TOOL_LOG.setLevel(logging.DEBUG)
+    TOOL_LOG.propagate = False
 
 
 def command_line(cmd) -> str:
@@ -384,9 +400,11 @@ def run_tool(cmd, *, cwd=None, env=None, timeout=None, check: bool = False, capt
              stdout=None, stderr=None) -> subprocess.CompletedProcess:
     """Run an external program: the one way the MitoM modules run programs. Output is captured as text unless
     capture=False (it then goes where this process's output goes) or stdout / stderr are given. Logged at DEBUG level
-    on the 'mitom.tools' logger: '[CMD rc=<exit> <seconds>s] <command line>' (and the folder), with the last
-    STDERR_TAIL lines of stderr when the program failed. Exceptions as subprocess.run (OSError: program not found,
-    TimeoutExpired; CalledProcessError when check=True), each logged before it is raised."""
+    on the 'mitom.tools' logger: '[CMD rc=<exit> <seconds>s] <command line>' (and the folder), then the last
+    STDERR_TAIL lines of stderr when the program failed (DEBUG_STDERR lines of any program in debug mode), each line
+    after STDERR_MARK. Exceptions
+    as subprocess.run (OSError: program not found, TimeoutExpired; CalledProcessError when check=True), each logged
+    before it is raised."""
     args = [str(x) for x in cmd]
     kw = {"cwd": str(cwd) if cwd else None, "env": env, "timeout": timeout, "text": True, "errors": "replace"}
     if stdout is not None or stderr is not None:
@@ -400,9 +418,9 @@ def run_tool(cmd, *, cwd=None, env=None, timeout=None, check: bool = False, capt
     except (OSError, subprocess.SubprocessError) as exc:
         TOOL_LOG.debug(f"[CMD failed {time.time() - t0:.1f}s] {command_line(args)}{where}: {exc!r}")
         raise
-    TOOL_LOG.debug(f"[CMD rc={p.returncode} {time.time() - t0:.1f}s] {command_line(args)}{where}")
-    if p.returncode and isinstance(p.stderr, str) and p.stderr.strip():
-        TOOL_LOG.debug("[CMD stderr] " + "\n".join(p.stderr.strip().splitlines()[-STDERR_TAIL:]))
+    err = p.stderr.strip().splitlines() if (p.returncode or debug_mode()) and isinstance(p.stderr, str) else []
+    TOOL_LOG.debug(f"[CMD rc={p.returncode} {time.time() - t0:.1f}s] {command_line(args)}{where}"
+                   + "".join(f"\n{STDERR_MARK}{ln}" for ln in err[-(DEBUG_STDERR if debug_mode() else STDERR_TAIL):]))
     if check and p.returncode:
         raise subprocess.CalledProcessError(p.returncode, args, p.stdout, p.stderr)
     return p

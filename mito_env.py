@@ -231,6 +231,43 @@ def mitos_refdir(explicit: Optional[str] = None, ref: str = MITOS_REF) -> Option
     return None
 
 
+# conda packages of the programs (the environment of install.sh, env/mitotools.yml): the fix `mitom debug` names
+PACKAGES = {"exonerate": "exonerate", "cmsearch": "infernal", "cmalign": "infernal", "blastx": "blast", "blastp": "blast",
+            "makeblastdb": "blast", "blastn": "blast", "tblastn": "blast", "table2asn": "table2asn", "nhmmer": "hmmer",
+            "hmmbuild": "hmmer", "mafft": "mafft", "aragorn": "aragorn", "tRNAscan-SE": "trnascan-se", "bwa": "bwa",
+            "minimap2": "minimap2", "java": "openjdk=8"}
+VERSION_ARG = {"exonerate": "--version", "cmsearch": "-h", "cmalign": "-h", "nhmmer": "-h", "hmmbuild": "-h",
+               "java": "-version", "mafft": "--version", "aragorn": "-h", "arwen": "-h", "tRNAscan-SE": "-h", "bwa": "",
+               "minimap2": "--version", "runmitos": "--version"}          # others (BLAST, table2asn): -version
+
+
+def install_hint(name: str) -> str:
+    """How to install program `name` into MitoM's environment."""
+    if name == "runmitos":
+        return "optional: MITOS2 in its own conda environment (mamba create -n mitos -c bioconda mitos=2.1.10)"
+    if name in PACKAGES:
+        return (f"bash {HERE / 'install.sh'}, or: mamba install -n mitotools -c conda-forge -c bioconda {PACKAGES[name]}"
+                + ("  (or any system Java >= 8)" if name == "java" else ""))
+    return f"bash {HERE / 'install.sh'}"
+
+
+def program_version(exe: str, name: Optional[str] = None) -> str:
+    """The line with the version number that program `exe` prints (VERSION_ARG; BLAST style -version by default):
+    the first one naming the program or a version, else the first with a number; '' when there is none or it does not
+    answer within 10 s."""
+    import re
+    import subprocess
+    arg = VERSION_ARG.get(name or Path(exe).name, "-version")
+    try:
+        p = subprocess.run([exe] + ([arg] if arg else []), stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                           errors="replace", timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    lines = [ln.strip() for ln in (p.stdout + "\n" + p.stderr).splitlines() if re.search(r"\d+\.\d+", ln)]
+    named = [ln for ln in lines if re.search(rf"version|infernal|hmmer|{re.escape(name or Path(exe).name)}", ln, re.I)]
+    return (named or lines or [""])[0][:100]
+
+
 def biopython_version() -> Optional[str]:
     """Version of Biopython importable by this interpreter, None when it cannot be imported (every MitoM
     script needs it)."""

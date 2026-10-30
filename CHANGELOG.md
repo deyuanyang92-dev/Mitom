@@ -6,6 +6,10 @@ installed one.
 ## Unreleased
 
 ### Added
+- `--debug` (every `mitom` command; also an option of `run`, `import`, `annotate`, `reorient`): DEBUG lines in the
+  log; the environment (MitoM version and git commit, the command as typed, Python, the machine, every program with
+  its version, the Python packages, the config file, reference and data folders, environment variables, memory,
+  free disk space); the output of every program each step runs; intermediate files kept (`work/`).
 - `mitom plot`: the circular genome maps of `run` as a command of their own (`mito_plot.py`); a folder input now
   includes its subfolders and every GenBank suffix (.gb .gbk .gbf .genbank .gbff), as the other step commands.
 - `mitom intron --method both | denovo | ref`: `mitom intron` now adds introns as `run` does, de novo
@@ -14,6 +18,12 @@ installed one.
   `--ref_gb`, `--maxintron` ...) are passed on.
 
 ### Changed
+- The run log (`run.log`, `pipeline.log` of `annotate`) has lines of a fixed form (`mitom_log.py`): `[STEP 6/11 add_missing] start | done | failed <seconds>s`, `[CMD rc=<exit> <seconds>s]
+  <command>` for every program the workflow runs (always, with the end of its stderr when it failed),
+  `[RECORD <name>] ...` for every record that failed or was left out, `[ERROR]` with the whole traceback when a run
+  stops on an error (before, the traceback went to the terminal only),
+  `[DONE] exit=<code> <time>`, `[ENV]` lines with the MitoM version and the command. The programs of the de novo
+  intron step and of the Snakemake backend are logged the same way.
 - One spelling per option, the old one still accepted: `-o / --out` (was `--out_root`, `--out_dir`), `--jobs` (was
   `--max_tasks`), `--refdir` (was `--mitos_refdir`), `--threads` (was `--cpu`), `--manifest_only` (was
   `--manifest-only`).

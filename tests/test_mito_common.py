@@ -128,7 +128,8 @@ def test_run_tool_logs_command_exit_code_time_and_stderr(tmp_path, caplog):
             mc.run_tool([str(tmp_path / "no_such_program")])
     msgs = [r.getMessage() for r in caplog.records if r.name == "mitom.tools"]
     assert any(m.startswith("[CMD rc=0 ") and f"(in {tmp_path})" in m for m in msgs)
-    assert any(m.startswith("[CMD rc=3 ") for m in msgs) and any(m == "[CMD stderr] bad input" for m in msgs)
+    assert any(m.startswith("[CMD rc=3 ") and m.endswith("\n    | bad input") for m in msgs)   # one entry with stderr
+    assert not any("|" in m for m in msgs if m.startswith("[CMD rc=0 "))                    # stderr only on failure
     assert any(m.startswith("[CMD failed ") and "no_such_program" in m for m in msgs)
 
 

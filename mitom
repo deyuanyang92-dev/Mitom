@@ -28,6 +28,9 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
   nuc                nuclear markers in contigs: 18S-ITS1-5.8S-ITS2-28S rDNA, histones H1-H4
                      (fetch / build / annotate)                                        = mito_nuc.py
 
+--debug (any command): DEBUG lines and program versions in the log, every program's output kept, intermediate
+files kept (run / import / annotate).
+
 Typical:  mitom setup
           mitom run -i my_genomes.gb -o out          (clade and genetic code from the GenBank taxonomy)
           mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5
@@ -106,7 +109,12 @@ def main(argv):
             return 1
         py = sys.executable
     os.environ["MITOM_LAUNCHER"] = "1"                 # mitom_pipeline.py then calls itself `mitom <command>`
-    os.execv(py, [py, str(HERE / script), *pre, *argv[1:]])
+    os.environ["MITOM_VERSION"] = VERSION              # in the run log
+    args = argv[1:]
+    if "--debug" in args:                              # debug mode for every program the command starts (mito_common)
+        os.environ["MITOM_DEBUG"] = "1"
+        args = [a for a in args if a != "--debug"]
+    os.execv(py, [py, str(HERE / script), *pre, *args])
     return 0
 
 
