@@ -13,7 +13,7 @@ label the sequence contradicts is changed:
   - jellyfish / hydroids and calcareous sponges (linear mitochondrial genomes, mito_taxa.linear_mtdna) labelled
     circular, no gene across the ends: linear;
   - an unlabelled record no gene at the ends decides: circular with the complete gene set (>= 12 of the 13 protein
-    genes and both rRNAs; >= 21 tRNAs in the phyla that keep all 22), else linear (a partial genome or a contig).
+    genes and both rRNAs), else linear (a partial genome or a contig).
 Before annotation (mitom_inputs): a sequence whose end repeats its start (an assembler's overlap, >= 50 nt) is circular
 and the repeat removed; header words such as GetOrganelle's '(circular)' or NCBI's 'complete genome' / 'partial
 genome' are a label.
@@ -53,11 +53,9 @@ MIN_PCG_COMPLETE = 12   # protein genes of a complete gene set: 13, atp8 absent 
 #                         (nematodes, flatworms, many bivalves, chaetognaths)
 
 
-# phyla whose mitogenomes keep (nearly) all 22 tRNAs: a complete one annotated with fewer than FULL_TRNA is taken for
-# a partial one (benchmark 2026-10-31: 82 complete annelid / chordate / mollusc / nematode genomes 21-23 tRNAs, contigs
-# missing 0.5-2 kb 17-23). Not cnidarians, sponges, placozoans (1-25), arthropods (arachnids lose tRNAs), chaetognaths.
-FULL_TRNA, FULL_TRNA_PHYLA = 21, {"Annelida", "Chordata", "Mollusca", "Nematoda", "Echinodermata", "Brachiopoda",
-                                   "Nemertea", "Bryozoa"}
+# (The tRNA count is reported, not used: a rule ">= 21 tRNAs in phyla that keep all 22" caught 5 of 90 contigs missing
+# 0.5-2 kb but made 2 of 262 complete NCBI genomes linear - a mermithid nematode and a marsupial whose tRNAs are
+# annotated incompletely; benchmark 2026-10-31, wgs_skim_test/mitom_topology.)
 
 
 def gene_set(gb_path) -> set:
@@ -76,15 +74,14 @@ def n_trna(genes: set) -> int:
     return next((int(g.split(":")[1]) for g in genes if g.startswith("tRNA:")), 0)
 
 
-def complete_set(genes: set, phylum: str = "") -> bool:
-    """>= MIN_PCG_COMPLETE of the 13 protein genes and both rRNAs, and in FULL_TRNA_PHYLA >= FULL_TRNA tRNAs."""
+def complete_set(genes: set) -> bool:
+    """>= MIN_PCG_COMPLETE of the 13 protein genes and both rRNAs."""
     from mito_names import PCG
-    return len(genes & PCG) >= MIN_PCG_COMPLETE and {"rrnS", "rrnL"} <= genes \
-        and (phylum not in FULL_TRNA_PHYLA or n_trna(genes) >= FULL_TRNA)
+    return len(genes & PCG) >= MIN_PCG_COMPLETE and {"rrnS", "rrnL"} <= genes
 
 
 def decide(label: str, ends: List[Dict[str, str]], lineage: str = "", unlabelled: bool = False,
-           genes: set = frozenset(), phylum: str = "") -> Tuple[str, str]:
+           genes: set = frozenset()) -> Tuple[str, str]:
     """(topology, reason) of one record from its label, the core's evidence at the ends and its NCBI lineage; an
     unlabelled record (FASTA without topology=) that no gene at the ends decides is circular when it holds the
     complete gene set (complete_set) and linear otherwise (a partial genome or a contig)."""
@@ -104,7 +101,7 @@ def decide(label: str, ends: List[Dict[str, str]], lineage: str = "", unlabelled
         from mito_names import PCG
         n_pcg, rrna = len(genes & PCG), sorted({"rrnS", "rrnL"} & genes)
         found = f"{n_pcg} of 13 protein genes, rRNA {', '.join(rrna) or 'none'}, {n_trna(genes)} tRNAs"
-        if complete_set(genes, phylum):
+        if complete_set(genes):
             return "circular", f"no topology label, no gene cut at the ends, complete gene set ({found})"
         return "linear", f"no topology label, no gene across the ends, gene set incomplete ({found}): partial"
     return label, "as labelled"
@@ -140,8 +137,6 @@ def apply_topology(samples: List[SampleInfo], results: Dict[str, Dict], args: ar
     ones whose round-1 topology differs again, and write reports/topology_decision.tsv. Returns the samples (those
     annotated again with their new topology and FASTA) and the round-1 results (those: the new annotation)."""
     auto = auto_mode(args)
-    from mito_taxa import CLADE_PHYLUM
-    phylum = getattr(args, "phylum", None) or CLADE_PHYLUM.get(getattr(args, "clade", None) or "", "")
     decided: Dict[str, Tuple[str, str]] = {}
     changed: List[SampleInfo] = []
     for si in samples:
@@ -153,7 +148,7 @@ def apply_topology(samples: List[SampleInfo], results: Dict[str, Dict], args: ar
             unlabelled = si.topology_source.startswith(UNLABELLED)
             decided[si.internal_id] = decide(label, read_ends(Path(r["workdir"]), si.internal_id), sample_lineage(si),
                                              unlabelled, gene_set(r["best_gb"]) if unlabelled and r.get("best_gb")
-                                             else frozenset(), phylum)
+                                             else frozenset())
         else:
             decided[si.internal_id] = (si.topology, f"set by --topology {si.topology}" if si.topology != label
                                        else "as labelled")

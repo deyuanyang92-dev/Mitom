@@ -1215,12 +1215,15 @@ def build_parser() -> argparse.ArgumentParser:
     def add_topology(sp: argparse.ArgumentParser) -> None:
         sp.add_argument("--topology", choices=["auto", "label", "circular", "linear"], default="auto",
                         help="Circular or linear. auto (default): as labelled - GenBank LOCUS line; FASTA header "
-                             "topology=circular|linear; else one sequence of >= 10 kb circular, several in a file or a "
-                             "shorter one linear - and the protein genes at the two ends checked against their "
-                             "reference proteins: a gene running from the end across to the start makes the record "
-                             "circular, a gene cut at an end of a circular-labelled record makes it linear, and so do "
-                             "jellyfish / hydroids / calcareous sponges (linear mtDNA) without a gene across the ends; "
-                             "such records are annotated again (reports/topology_decision.tsv). label: the label only. "
+                             "topology=circular|linear; header words ('circular', 'complete genome' / 'partial "
+                             "genome'); an assembler's terminal overlap (removed): circular; else a sequence of >= 10 kb "
+                             "circular (one or several in a file), a shorter one linear - and the protein genes at the "
+                             "two ends checked against their reference proteins: a gene running from the end across to "
+                             "the start makes the record circular, a gene cut at an end of a circular-labelled record "
+                             "makes it linear, and so do jellyfish / hydroids / calcareous sponges (linear mtDNA) without "
+                             "a gene across the ends; an unlabelled record no gene at the ends decides is circular with "
+                             ">= 12 of the 13 protein genes and both rRNAs, else linear; changed records are annotated "
+                             "again (reports/topology_decision.tsv). label: the label only. "
                              "circular / linear: every record.")
 
     def add_engine(sp: argparse.ArgumentParser) -> None:

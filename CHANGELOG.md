@@ -5,6 +5,28 @@ installed one.
 
 ## Unreleased
 
+### Changed
+- Topology without a label (FASTA without topology=): decided from the sequence for every record of >= 10 kb, also
+  when the file holds several (they were all linear: 81 of 83 complete genomes started at a gene boundary stayed
+  linear). In order: a gene across the ends -> circular; a gene cut at an end -> linear; a lineage with linear mtDNA
+  -> linear; else the gene set: >= 12 of the 13 protein genes and both rRNAs -> circular, otherwise linear (partial
+  genome, contig). Before annotation: an assembler's terminal overlap (the end repeats the start, >= 50 nt, not a
+  tandem repeat, as MITObim circules.py / MitoHiFi / NOVOPlasty) -> circular, the repeat removed; header words
+  ('(circular)' of GetOrganelle, NCBI 'complete genome' / 'partial genome' / 'nearly complete') are a label.
+  Benchmark (wgs_skim_test/mitom_topology, 364 unlabelled sequences of 91 NCBI genomes, 7 phyla): 64.4 -> 84.3 %
+  correct; complete genomes 2 -> 81 of 83 (NCBI start), 48 -> 81 (random start); fragments of 3-12 kb 85 -> 89 of 91.
+  Limits: a contig missing only non-coding sequence or tRNAs reads as a complete circle (56 of 91 contigs missing
+  0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
+
+### Fixed
+- End check: a spliced join across the junction (66e0e09) is accepted only when the part it adds aligns by itself on
+  the far side (>= half its residues, >= half the score per residue): contigs were joined to chance matches (atp6
+  with an 800-nt 'intron', annelid nad4 with an 11-kb one). A gene that stops short of the junction with the residues
+  towards it missing is checked spliced too (an intron between the exon and the junction: placozoan nad5). Intron
+  benchmark: the four rotations of 187 records give the unrotated introns (300 of 300 rows each).
+- Threads per record lowered so that the records annotated at once fit the cores (16 x 48 threads on 64 cores ran one
+  record at a time: 148 records in 57 min instead of about 4).
+
 ### Added
 - Documentation kept up with the code: `docs/OPTIONS.md` lists every option of every command as its `-h` prints it
   (`scripts/make_options_doc.py`; `tests/test_docs.py` fails while an option or a command is missing from the docs).

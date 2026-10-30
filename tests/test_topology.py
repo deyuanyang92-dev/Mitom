@@ -333,10 +333,9 @@ def test_unlabelled_record_decided_by_its_gene_set():
     assert mt.decide("circular", [], unlabelled=True, genes=ALL - {"atp8"})[0] == "circular"
     top, why = mt.decide("circular", [], unlabelled=True, genes=ALL - {"atp8", "nad6"})
     assert top == "linear" and "11 of 13 protein genes" in why
-    # phyla that keep all tRNAs: fewer than 21 = a contig that lost some; cnidarians (1-2 tRNAs) not checked
-    assert mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:19"}, phylum="Annelida")[0] == "linear"
-    assert mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:22"}, phylum="Annelida")[0] == "circular"
-    assert mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:2"}, phylum="Cnidaria")[0] == "circular"
+    # the tRNA count is reported, not used (tRNA annotation is incomplete in some lineages)
+    top, why = mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:19"})
+    assert top == "circular" and "19 tRNAs" in why
     assert mt.decide("circular", [], unlabelled=True, genes=ALL - {"rrnS"})[0] == "linear"
     cut = [{"gene": "cox1", "verdict": "cut", "residues": "100-513/513"}]
     assert mt.decide("circular", cut, unlabelled=True, genes=ALL)[0] == "linear"           # a gene cut at an end
