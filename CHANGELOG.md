@@ -18,6 +18,12 @@ installed one.
   (mitom_orient.add_exon_gap_introns). 22 MJ mitogenomes: 13 CHY + 5 CWSC records gain their cox1 intron (checked
   with the spliced protein, read depth and junction reads, and LC677172 / Nephtys cox1 introns), the 4 others are
   unchanged; table2asn 0 errors.
+- The same check missed introns of 6 kb or more lying wholly on one side of the junction (hexacoral nad5 intron,
+  10-12 kb, holding other genes): the spliced re-check now aligns on the whole rest of the circle before the gene,
+  then after it (no intron length limit). Benchmark (193 NCBI records with 309 introns: Cnidaria, Annelida, Placozoa,
+  Porifera; 76 without; intron sites of the record's genus left out): records rotated so the origin lies in an exon,
+  in the middle of an intron or 15 nt inside either end of it give the same introns as the unrotated records (300 of
+  300 rows); before the fix 15 nt inside the right / left end: 232 / 190 of 295 introns found.
 
 ### Added
 - `mitom gb2fasta`: GenBank (.gb .gbk .gbf .gbff .genbank) to FASTA, one file per input or per record (`--split`);

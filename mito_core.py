@@ -521,8 +521,6 @@ END_REACH = 60             # ... and the alignment stops at most this far from t
 END_MEET = 10              # joined: the reference aligned on each side alone, the two pieces meet within this many residues
                            # (a chance extension across a false junction has none: 5 of 20 synthetic partial genomes ran
                            # 35-338 nt across with one alignment) ...
-MAX_INTRON_NT = 6000       # longest intron looked for across the sequence ends (group I / II introns of animal and
-#                            fungal mtDNA: 0.3-5 kb; Nephtys cox1 group II 1,819 nt, Travisia cox1 0.9-1.2 kb)
 END_LONG = 90              # ... or >= this many nt aligned on both sides, the frame open across and no piece of one side
                            # re-aligning residues of the other (a divergent half aligns only with the rest: synthetic
                            # NC_045069.1 nad2, 510 / 372 nt). An alignment across that is neither: no evidence either way
@@ -551,7 +549,6 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
     the reading frame open up to it: they are not) or complete (no evidence). mitom --topology auto decides the
     topology of the record with it."""
     n = len(genome)
-    double = genome + genome                               # the junction lies between double[n - 1] and double[n]
     stops = set(CodonTable.unambiguous_dna_by_id[code].stop_codons)
     rows = []
     for f in feats:
@@ -568,11 +565,15 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
         if not prots:
             continue
         s, e = (f.start + n, f.end + n) if where == "start" else (f.start, f.end)
-        flank = max(0, min(3 * reflen + WINDOW + MAX_INTRON_NT, (n - (e - s)) // 2))   # one copy of the sequence at most;
-        # room for an intron between the gene's part at this end and its rest at the other
-        ws, we = max(0, s - flank), min(2 * n, e + flank)
-        window = double[ws:we] if f.strand == 1 else str(Seq(double[ws:we]).reverse_complement())
-        j = n - ws if f.strand == 1 else we - n            # the junction on the window (gene's strand)
+        def window_of(lo: int, hi: int) -> Tuple[str, int]:
+            """the joined sequence from lo nt before the gene to hi nt after it, and the junction on it (gene's
+            strand); lo + hi <= the rest of the circle (n - gene length), so no position occurs twice"""
+            ws, we = s + n - lo, e + n + hi                # on three copies: the junction at 2n
+            win = (genome * 3)[ws:we]
+            return (win, 2 * n - ws) if f.strand == 1 else (str(Seq(win).reverse_complement()), we - 2 * n)
+        rest = max(0, n - (e - s))                         # the circle outside the gene
+        flank = min(3 * reflen + WINDOW, rest // 2)
+        window, j = window_of(flank, flank)
         best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
         if best is None:
             continue
@@ -592,16 +593,23 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
                 and not any(window[c:c + 3] in stops for c in range(tab - 3, j - 1, -3)):
             # the gene's 3' side runs into the junction, or its 5' side starts there, the frame open up to it: cut -
             # unless the missing residues lie across the junction behind an intron (protein2dna has no introns; a
-            # record started inside a gene with an intron: Travisia cox1, every MJ20260820041 CHY record)
+            # record started inside a gene with an intron: Travisia cox1, every MJ20260820041 CHY record). The intron
+            # may hold other genes and be many kb long (hexacoral nad5: 11-20 kb) and lies wholly on one side of the
+            # gene, so the spliced alignment gets the whole rest of the circle on one side, then on the other: no
+            # intron length limit, no assumption about the side.
             verdict = "cut"
-            spl = exonerate_best(tools["exonerate"], window, {ref: prots[ref]}, code, tmp, log, "protein2genome")
-            if spl is not None:
+            for lo, hi in ((rest, 0), (0, rest)):
+                wide, wj = window_of(lo, hi)
+                spl = exonerate_best(tools["exonerate"], wide, {ref: prots[ref]}, code, tmp, log, "protein2genome")
+                if spl is None:
+                    continue
                 _, sab, sae, stab, stae, _ = spl
                 gained = (qab - sab) + (sae - qae)          # residues aligned beyond the protein2dna alignment
-                if stab < j - END_FLANK and stae > j + END_FLANK and gained >= END_CUT:
-                    qab, qae, tab, tae = sab, sae, stab, stae
-                    before, after = j - tab, tae - j
+                if stab < wj - END_FLANK and stae > wj + END_FLANK and gained >= END_CUT:
+                    qab, qae = sab, sae
+                    before, after = wj - stab, stae - wj
                     verdict = "joined_intron"
+                    break
         else:
             verdict = "complete"
         rows.append(f"{f.name}\t{'+' if f.strand == 1 else '-'}\t{where}\t{ref}\t{qab + 1}-{qae}/{reflen}\t"

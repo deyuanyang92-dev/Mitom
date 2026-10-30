@@ -104,6 +104,19 @@ def test_gene_split_by_an_intron_across_the_ends(monkeypatch):
     assert mt.decide("circular", rows)[0] == "circular" and "intron" in mt.decide("circular", rows)[1]
 
 
+def test_intron_longer_than_half_the_rest_of_the_circle(monkeypatch):
+    """The intron can hold other genes and be most of the record (hexacoral nad5: 11-12 kb of an 18-kb record), wholly
+    on one side of the junction: the spliced re-check gets the rest of the circle on either side, on both strands."""
+    intron = "".join(random.Random(4).choice("ACGT") for _ in range(5000))
+    genome = GENE[300:] + "A" * 200 + GENE[:300] + intron                # rest of the circle 5,500 nt, intron 5,000
+    rows = evidence(monkeypatch, genome, [cds(0, 600, 1, "101-300")])
+    assert (rows[0]["end"], rows[0]["verdict"]) == ("start", "joined_intron")
+    rc = str(Seq(genome).reverse_complement())                          # the same record on the minus strand
+    n = len(rc)
+    rows = evidence(monkeypatch, rc, [cds(n - 600, n, -1, "101-300")])
+    assert rows[0]["verdict"] == "joined_intron"
+
+
 def test_partial_sequence_is_still_cut_with_the_spliced_model(monkeypatch):
     """The rest of the gene is nowhere in the record: protein2genome finds no spliced alignment either -> cut."""
     genome = GENE[300:] + FILLER
