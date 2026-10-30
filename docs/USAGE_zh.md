@@ -168,6 +168,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 | MitoZ 的结果（`.gbf`）或任何已注释的 GenBank | 保留它原来的基因，只做 MitoM 的整理（统一起点、修整边界和名称、NCBI 文件、作图） | `mitom import -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
 | MITOS2 的结果目录 | 同上 | `mitom import -i mitos2_dir/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5` |
 | GenBank（`.gb`、`.gbf` 都行） | 转成 FASTA | `mitom gb2fasta -i sample.gbf -o fasta_out` |
+| 一个或一批已注释的 GenBank（`.gb`、`.gbf` 都行） | NCBI 提交用的特征表 `.tbl` + `.fsa`（可合并、可分开） | `mitom gb2tbl -i final_annotation/ -o ncbi`（加 `--validate` 生成 `.sqn` 并检查） |
 | 一批 GenBank 或 FASTA，可能有重复 | 去掉重复，每个基因组留一条 | `mitom dedup -i in_dir/ -o dedup_out` |
 
 **`.gb` 和 `.gbf` 有什么区别？** 没有区别，都是 GenBank 格式，只是不同软件习惯用的后缀不同（NCBI 用 `.gb`，MitoZ 用 `.gbf`）。MitoM 认 `.gb .gbk .gbf .gbff .genbank` 这几种后缀，可以直接给单个文件，也可以给一个目录（含子目录）。
@@ -241,6 +242,34 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   ```bash
   mitom gb2fasta -i sample.gbf -o fasta_out
   mitom gb2fasta -i fetch_out/Annelida.gb -o fasta_out --split
+  ```
+
+### `mitom gb2tbl`：GenBank 转 NCBI 提交文件（`.tbl` + `.fsa`）
+
+- **做什么**：把已注释的 GenBank（`.gb .gbk .gbf .gbff .genbank`，MitoM 的 `final_annotation/`、MitoZ / MITOS2 / Geneious 的结果、NCBI 下载的记录都行）转成 NCBI 提交需要的 5 列特征表 `.tbl` 和带来源信息的 `.fsa`（BankIt 上传这两个文件；table2asn 用它们生成 `.sqn`）。`-i` 可以给多个文件、多个目录，混在一起也行。
+- **三种输出方式**：
+
+  | 参数 | 输出 |
+  |---|---|
+  | 默认 `--split all` | 所有记录合并成一对文件：`<名字>.tbl` + `<名字>.fsa`（一次批量提交）。名字：`--name` 指定；只给一个文件时用它的文件名；否则 `submission` |
+  | `--split file` | 每个输入文件一对：`<文件名>.tbl` / `.fsa` |
+  | `--split record` | 每条记录一对：`<登录号.版本>.tbl` / `.fsa` |
+
+- **自动处理**：
+  - 同一条记录在几个文件里重复出现，只写一次；
+  - 不同记录用了同一个 ID，自动改名为 `ID_2`、`ID_3`（NCBI 要求一次提交里 ID 唯一）；
+  - ID 中 NCBI 不接受的字符换成 `_`，最长 50 个字符；
+  - 按 `/organelle` 判断线粒体（`[location=mitochondrion] [mgcode=]`）、叶绿体或核基因组（`[gcode=]`）；遗传密码取 CDS 的 `transl_table`；`/db_xref="taxon:"` 写成 `[taxid=]`；
+  - 来源信息（isolate、strain、specimen_voucher、country → geo_loc_name、collection_date、lat_lon、collected_by、haplotype、host、sex、note 等）写进 `.fsa` 表头；`--source_modifiers no` 不写；
+  - 特征表与 `mitom run` 的 `ncbi_submission/` 相同：不完整的端点写成 `<` / `>`，内含子等多段位置逐段写出，不写 `/translation`、`/db_xref`、`/protein_id` 和 MitoM 内部的注释。
+- **`--validate`**：用 NCBI 的 table2asn 检查每对文件，生成 `.sqn`（可直接上传）和 `.val`；每条记录的 ERROR / WARNING 数写在报告里。`--sbt template.sbt` 加提交者模板（在 https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。有 ERROR 时，多半是注释本身的问题（如缺终止密码子），先用 `mitom curate`（或对 MitoZ / MITOS2 结果用 `mitom import`）修整再转。
+- **报告**：`gb2tbl_report.tsv`，每条记录一行：写入的 ID、来源文件、输出文件、物种、长度、拓扑、位置、遗传密码、基因数、警告（改名、缺物种名等），加 `--validate` 时还有 NCBI ERROR / WARNING 数。
+- **示例**：
+  ```bash
+  mitom gb2tbl -i out/final_annotation -o ncbi                    # 全部合并：ncbi/final_annotation.tbl + .fsa
+  mitom gb2tbl -i a.gbf b.gb c.gbk -o ncbi --name batch1          # 三个文件合并：ncbi/batch1.tbl + .fsa
+  mitom gb2tbl -i genomes/ -o ncbi --split file                   # 每个文件一对
+  mitom gb2tbl -i genomes/ -o ncbi --split record --validate --sbt template.sbt   # 每条记录一对 + .sqn
   ```
 
 ### `mitom reorient`：只统一方向和起点

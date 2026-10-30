@@ -11,6 +11,12 @@ installed one.
 - `mitom dedup` takes FASTA too: identical sequences, and versions of one accession when the header's first word is
   an accession (MK123456.1); local names such as NODE_1 are never merged on their name.
 - `mitom fetch --fasta`: a FASTA of the downloaded records next to the GenBank file.
+- `mitom gb2tbl` (`mito_tbl.py`): any annotated GenBank (files and folders, any mix) -> NCBI submission files, the
+  5-column feature table `.tbl` and the `.fsa` with source modifiers: every record in one pair (default), one pair
+  per input file (`--split file`) or per record (`--split record`). A record repeated across inputs is written once,
+  clashing IDs are renamed ID_2 ..., IDs cleaned to NCBI's characters; location (mitochondrion / chloroplast / nucleus),
+  genetic code, taxid and source qualifiers (isolate, voucher, country -> geo_loc_name, collection date ...) in the
+  FASTA headers; `--validate` runs table2asn (`.sqn`, `.val`, errors per record in gb2tbl_report.tsv; `--sbt`).
 - `--topology auto|label|circular|linear` (`mitom run`, `mitom annotate`; default auto): records are annotated as
   labelled (GenBank LOCUS line; FASTA `topology=`; else one sequence >= 10 kb circular, several or shorter linear)
   and the protein genes at the two ends are aligned to their reference protein across the junction

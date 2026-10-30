@@ -14,6 +14,8 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
                      copy NCBI made of it, two versions of one accession, identical sequences = mitom_pipeline.py dedup
   reorient           only turn circular records to one strand and start them at cox1     = mitom_pipeline.py reorient
   gb2fasta           GenBank (.gb .gbf ...) -> FASTA with topology= in the headers       = mitom_pipeline.py gb2fasta
+  gb2tbl             GenBank (.gb .gbf ...) -> NCBI feature table .tbl + .fsa: all records in one pair, or one
+                     per file / per record; --validate makes the .sqn with table2asn    = mito_tbl.py
   annotate           the annotation steps of run, without arranging the output folder    = mitom_pipeline.py annotate
   transfer_metadata  copy the original GenBank header (organism, references ...) onto new annotations
   replace_organism   fix /organism in re-annotated records                              = mitom_pipeline.py <cmd>
@@ -61,6 +63,7 @@ COMMANDS = {
     "rescue": ("mito_rescue.py", []),
     "rrna-hmm": ("mito_rrna_hmm.py", []),
     "validate": ("ncbi_validate.py", []),
+    "gb2tbl": ("mito_tbl.py", []),
     "fetch": ("mito_fetch.py", []),
     "check": ("mito_check.py", []),
     "compare": ("mito_compare.py", []),
