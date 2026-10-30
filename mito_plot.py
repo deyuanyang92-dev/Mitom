@@ -36,7 +36,7 @@ import tempfile
 import textwrap
 import time
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import matplotlib
 import numpy as np
@@ -64,6 +64,7 @@ COLORS = {"COX": "#e34948", "NADH": "#eda100", "ATP": "#008300", "CYTB": "#1baf7
 LEGEND = {"COX": "cytochrome c oxidase (COX)", "NADH": "NADH dehydrogenase (ND)", "ATP": "ATP synthase (ATP)",
           "CYTB": "cytochrome b (CYTB)", "rRNA": "rRNA", "tRNA": "tRNA", "other": "other"}
 GC_HI, GC_LO, SKEW_POS, SKEW_NEG, DEPTH = "#52514e", "#b5b3ab", "#6250d6", "#eb6834", "#e87ba4"
+NONCODING = "#e1e0d9"                         # unannotated stretch: lighter than 'other' (annotated control region)
 TINT = 0.7                                   # opacity of the large skew / depth areas
 INK, MUTED = "#0b0b0b", "#898781"
 OTHER_TYPES = ("D-loop", "misc_feature", "rep_origin", "repeat_region")
@@ -74,6 +75,11 @@ LABEL_GAP, FS_GENE, FS_TRNA = 0.045, 9.5, 8.0
 LINEAR_GAP = np.radians(4)                   # between the end and the start of a linear record
 TICK_ROOM = 0.4                              # no position tick closer than this many steps to the end (its label
                                              # would cover 0 / end: 16 kb of a 16,063 bp record)
+MIN_INTRON = 142                             # a gap between the parts of a joined gene drawn as an intron when it has
+                                             # no intron feature (= mito_intron.MIN_INTRON, MFannot's --minintron;
+                                             # shorter gaps are frameshift joins, e.g. bird nad3)
+MIN_NONCODING = 100                          # default --min_noncoding: shortest unannotated stretch drawn and labelled
+HATCH = "////"
 
 
 def gene_name(f: SeqFeature) -> str:
@@ -131,12 +137,122 @@ def gc_windows(seq: str, circular: bool, window: int = WINDOW, step: int = STEP
     return starts + w / 2, gc, skew
 
 
+def introns(rec: SeqRecord) -> List[Tuple[int, int, int, str]]:
+    """(start, end, strand, label) of every intron: the intron features, and the gaps of >= MIN_INTRON nt between
+    consecutive parts of a joined CDS / rRNA / tRNA on one strand that no intron feature covers (records of tools
+    that write the join only). end > record length for an intron across the origin of a circular record; label
+    '<gene> intron[ k] <length> bp' (k when the gene has several)."""
+    n = len(rec.seq)
+    circular = rec.annotations.get("topology") == "circular"
+    found: List[Tuple[int, int, int, str]] = []
+    for f in rec.features:
+        if f.type == "intron" and f.location is not None:
+            s, length = extent(f.location, n, circular)
+            found.append((s, s + length, f.location.strand or 1, gene_name(f)))
+    explicit = list(found)
+    for f in rec.features:
+        if f.type not in ("CDS", "rRNA", "tRNA") or f.location is None or len(f.location.parts) < 2:
+            continue
+        parts = list(f.location.parts)                            # transcript order
+        for a, b in zip(parts, parts[1:]):
+            if a.strand != b.strand:                              # trans-spliced
+                continue
+            left, right = (a, b) if a.strand != -1 else (b, a)    # the two parts in genome order
+            s, e = int(left.end), int(right.start)
+            if e >= s:
+                length = e - s
+            elif circular and int(right.end) <= int(left.start):  # the join runs across the origin
+                length = n - s + e
+            else:                                                 # parts overlap: a frameshift join
+                continue
+            if length < MIN_INTRON:
+                continue
+            if any(_covered(x, y, s, s + length, n) >= 0.5 * length for x, y, _, _ in explicit):
+                continue                                          # given by an intron feature (one nested in the
+                #                                                   gap, e.g. a hexacoral cox1 intron inside the nad5
+                #                                                   intron, does not count: eval_introns.py's rule)
+            found.append((s, s + length, a.strand or 1, gene_name(f)))
+    count: Dict[str, int] = {}
+    for _, _, _, g in found:
+        count[g] = count.get(g, 0) + 1
+    seen: Dict[str, int] = {}
+    out = []
+    for s, e, strand, g in sorted(found):
+        seen[g] = seen.get(g, 0) + 1
+        k = f" {seen[g]}" if count[g] > 1 else ""
+        out.append((s, e, strand, f"{g + ' ' if g else ''}intron{k} {e - s:,} bp"))
+    return out
+
+
+def _covered(s1: int, e1: int, s2: int, e2: int, n: int) -> int:
+    """nt of the arc [s2, e2) that the arc [s1, e1) covers on a circle of n (ends may exceed n)."""
+    return max(max(0, min(e1 + k, e2) - max(s1 + k, s2)) for k in (0, n, -n))
+
+
+def noncoding(rec: SeqRecord, min_len: int = MIN_NONCODING) -> List[Tuple[int, int]]:
+    """(start, end) of the stretches of >= min_len nt no feature covers (a joined gene covers its introns too);
+    end > record length for a stretch across the origin of a circular record. min_len 0: none."""
+    n = len(rec.seq)
+    if min_len <= 0 or not n:
+        return []
+    circular = rec.annotations.get("topology") == "circular"
+    covered = np.zeros(n, dtype=bool)
+    for f in rec.features:
+        if f.type == "source" or f.location is None:
+            continue
+        s, length = extent(f.location, n, circular)
+        idx = np.arange(s, s + length) % n
+        covered[idx] = True
+    if covered.all():
+        return []
+    runs, start = [], None
+    for i in range(n):
+        if not covered[i] and start is None:
+            start = i
+        elif covered[i] and start is not None:
+            runs.append([start, i])
+            start = None
+    if start is not None:
+        runs.append([start, n])
+    if circular and len(runs) > 1 and runs[0][0] == 0 and runs[-1][1] == n:   # one stretch across the origin
+        runs[-1][1] = n + runs.pop(0)[1]
+    return [(s, e) for s, e in runs if e - s >= min_len]
+
+
 def theta(pos, length: int, circular: bool):
     """Angle (radians, clockwise from the top) of 0-based position(s) `pos`."""
     pos = np.asarray(pos, dtype=float)
     if circular:
         return 2 * np.pi * pos / length
     return LINEAR_GAP / 2 + (2 * np.pi - LINEAR_GAP) * pos / length
+
+
+def extent(loc, length: int, circular: bool) -> Tuple[int, int]:
+    """(start, length in nt) of a feature from its first to its last part in transcript order (GenBank order of a
+    join): a gene across the origin, and an intron given by its two ends only (NCBI hexacoral nad5 introns hold
+    other genes: 10 kb of a 17 kb record) - span() would take the shorter arc the other way round. Parts on both
+    strands (trans-splicing) or out of order on a linear record: span()."""
+    parts = list(loc.parts)
+    if len(parts) == 1:
+        return int(parts[0].start), int(parts[0].end) - int(parts[0].start)
+    strands = {p.strand for p in parts}
+    if len(strands) == 1:
+        s, e = (int(parts[0].start), int(parts[-1].end)) if strands != {-1} else \
+            (int(parts[-1].start), int(parts[0].end))
+        if e > s:
+            return s, e - s
+        if circular:
+            return s, e - s + length
+    return span([(int(p.start), int(p.end)) for p in parts], length, circular)
+
+
+def name_pos(parts: Sequence[Tuple[int, int, Optional[int]]], start: int, length: int, n: int) -> float:
+    """Where a feature's name goes: the middle of its extent, or of its largest part when it has an intron (the
+    middle of a 10-kb intron is far from both exons); a gene merely cut by the origin keeps the middle."""
+    if len(parts) > 1 and sum(e - s for s, e, _ in parts) < length:
+        s, e, _ = max(parts, key=lambda p: p[1] - p[0])
+        return (s + e) / 2
+    return (start + length / 2) % n
 
 
 def span(parts: Sequence[Tuple[int, int]], length: int, circular: bool) -> Tuple[int, int]:
@@ -207,24 +323,27 @@ def _align(phi: float, outward: bool) -> Tuple[str, str]:
     return ha, "bottom" if y > 0.3 else "top" if y < -0.3 else "center"
 
 
-def _label_text(ax, phi: float, r: float, s: str, fontsize: float, outward: bool, unit: float) -> None:
+def _label_text(ax, phi: float, r: float, s: str, fontsize: float, outward: bool, unit: float,
+                color: str = INK) -> None:
     """Label from (phi, r) outwards or inwards: names along the radius (never upside down), codes of 1-2
     characters upright, centred on the radius (so the room fan() gives them is symmetric)."""
     if len(s) <= 2:
         half = (_text_width(s, fontsize) * abs(np.sin(phi)) + fontsize * abs(np.cos(phi))) / 2 / unit
-        ax.text(phi, r + half if outward else r - half, s, fontsize=fontsize, color=INK, ha="center", va="center")
+        ax.text(phi, r + half if outward else r - half, s, fontsize=fontsize, color=color, ha="center", va="center")
         return
     a = 90 - np.degrees(phi)
     right = np.cos(np.radians(a)) > -1e-9
     ha = ("left" if right else "right") if outward else ("right" if right else "left")
-    ax.text(phi, r, s, fontsize=fontsize, color=INK, rotation=a if right else a + 180, rotation_mode="anchor",
+    ax.text(phi, r, s, fontsize=fontsize, color=color, rotation=a if right else a + 180, rotation_mode="anchor",
             ha=ha, va="center")
 
 
-def _draw_genes(ax, rec: SeqRecord, circular: bool, unit: float) -> Tuple[List[str], float]:
-    """Gene blocks and labels; returns the classes drawn and the innermost radius the labels reach."""
+def _draw_genes(ax, rec: SeqRecord, circular: bool, unit: float, min_noncoding: int = MIN_NONCODING
+                ) -> Tuple[List[str], float]:
+    """Gene blocks, introns (hatched), unannotated stretches and labels; returns the classes drawn ('intron',
+    'noncoding' included) and the innermost radius the labels reach."""
     n = len(rec.seq)
-    cats, labels = [], []                                      # labels: angle, text, font size, outside
+    cats, labels = [], []                                      # labels: angle, text, font size, outside, colour
     for f in rec.features:
         cat = category(f) if f.location is not None else None
         if not cat:
@@ -235,7 +354,7 @@ def _draw_genes(ax, rec: SeqRecord, circular: bool, unit: float) -> Tuple[List[s
             bottom = 1.0 if strand == 1 else 1.0 - BLOCK if strand == -1 else 1.0 - BLOCK / 2
             ax.bar(theta(s, n, circular), BLOCK, width=theta(e, n, circular) - theta(s, n, circular), bottom=bottom,
                    align="edge", color=COLORS[cat], edgecolor="white", linewidth=0.5, zorder=3)
-        start, length = span([(s, e) for s, e, _ in parts], n, circular)
+        start, length = extent(f.location, n, circular)
         strand = f.location.strand
         if len(parts) > 1:                                     # line through introns / across the origin
             r = 1.0 + BLOCK / 2 if strand == 1 else 1.0 - BLOCK / 2 if strand == -1 else 1.0
@@ -243,8 +362,20 @@ def _draw_genes(ax, rec: SeqRecord, circular: bool, unit: float) -> Tuple[List[s
             ax.plot(t, np.full(len(t), r), color=COLORS[cat], lw=0.8, zorder=2)
         text = label(f, cat)
         if text:
-            labels.append((float(theta((start + length / 2) % n, n, circular)), text,
-                           FS_TRNA if cat == "tRNA" else FS_GENE, strand != -1))
+            labels.append((float(theta(name_pos(parts, start, length, n), n, circular)), text,
+                           FS_TRNA if cat == "tRNA" else FS_GENE, strand != -1, INK))
+    for s, e, strand, text in introns(rec):                    # hatched in the gene's lane, labelled with length
+        cats.append("intron")
+        ax.bar(theta(s, n, circular), BLOCK, width=theta(e, n, circular) - theta(s, n, circular),
+               bottom=1.0 if strand != -1 else 1.0 - BLOCK, align="edge", facecolor="white", edgecolor=MUTED,
+               hatch=HATCH, linewidth=0, zorder=2.5)
+        # on the other side of the circle than the gene's name (both would sit at the middle of the gene)
+        labels.append((float(theta(((s + e) / 2) % n, n, circular)), text, FS_TRNA, strand == -1, MUTED))
+    for s, e in noncoding(rec, min_noncoding):                 # across the backbone (strand unknown)
+        cats.append("noncoding")
+        ax.bar(theta(s, n, circular), BLOCK, width=theta(e, n, circular) - theta(s, n, circular),
+               bottom=1.0 - BLOCK / 2, align="edge", color=NONCODING, linewidth=0, zorder=2.5)
+        labels.append((float(theta(((s + e) / 2) % n, n, circular)), f"NCR {e - s:,} bp", FS_TRNA, True, MUTED))
     reach = 1.0 - BLOCK
     for outside in (True, False):
         side = [lb for lb in labels if lb[3] == outside]
@@ -252,10 +383,10 @@ def _draw_genes(ax, rec: SeqRecord, circular: bool, unit: float) -> Tuple[List[s
         edge = 1.0 + sign * BLOCK
         r_text = edge + sign * LABEL_GAP
         # angular room: one line of radial text; an upright code its width or height, whichever is larger
-        sizes = [max(1.2 * fs, _text_width(s, fs) if len(s) <= 2 else 0) / unit / r_text for _, s, fs, _ in side]
-        for (t, text, fs, _), p in zip(side, fan([lb[0] for lb in side], sizes)):
+        sizes = [max(1.2 * fs, _text_width(s, fs) if len(s) <= 2 else 0) / unit / r_text for _, s, fs, _, _ in side]
+        for (t, text, fs, _, color), p in zip(side, fan([lb[0] for lb in side], sizes)):
             ax.plot([t, t, p], [edge, edge + sign * LABEL_GAP * 0.4, r_text - sign * 0.008], color=MUTED, lw=0.4)
-            _label_text(ax, p, r_text, text, fs, outside, unit)
+            _label_text(ax, p, r_text, text, fs, outside, unit, color)
             if not outside:
                 reach = min(reach, r_text - max(_text_width(text, fs), 1.2 * fs) / unit)
     return cats, reach
@@ -296,16 +427,19 @@ STYLES = ("circos", "mitom")
 
 
 def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = None,
-                formats: Sequence[str] = ("png", "pdf"), style: str = "circos") -> List[Path]:
+                formats: Sequence[str] = ("png", "pdf"), style: str = "circos",
+                min_noncoding: int = MIN_NONCODING) -> List[Path]:
     """Draw the map of `rec` (depth: per-position read depth, e.g. from depth_from_reads) in `style` - circos (strand
     lanes, after mitoPlotR) or mitom (genes on both sides of one circle, GC content and GC skew rings) - and write
-    <out_dir>/<record id>.<format> for each format (png at 300 dpi); returns the written paths."""
+    <out_dir>/<record id>.<format> for each format (png at 300 dpi); returns the written paths. Introns are hatched
+    and labelled with their length, unannotated stretches of >= min_noncoding nt (0: none) shaded and labelled
+    'NCR <length>'."""
     n = len(rec.seq)
     if depth is not None and len(depth) != n:
         raise ValueError(f"{rec.id}: depth has {len(depth)} values for {n} bp")
     if style not in STYLES:
         raise ValueError(f"unknown map style {style!r} ({', '.join(STYLES)})")
-    fig = (_circos_figure if style == "circos" else _mitom_figure)(rec, depth)
+    fig = (_circos_figure if style == "circos" else _mitom_figure)(rec, depth, min_noncoding)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = re.sub(r"[^\w.-]", "_", rec.id)
@@ -331,7 +465,7 @@ def _polar(n: int, circular: bool):
     return fig, ax, 72 * SIZE / 2 / R_MAX, theta(np.linspace(0, n, 721), n, circular)
 
 
-def _mitom_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
+def _mitom_figure(rec: SeqRecord, depth: Optional[np.ndarray], min_noncoding: int = MIN_NONCODING) -> Figure:
     """The mitom style: genes on both sides of one circle, GC content and GC skew rings, read depth, a kb ruler."""
     n = len(rec.seq)
     circular = rec.annotations.get("topology") == "circular"
@@ -341,7 +475,7 @@ def _mitom_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
     if not circular:                                              # end caps of a linear record
         for t in (theta(0, n, circular), theta(n, n, circular)):
             ax.plot([t, t], [1 - BLOCK - 0.02, 1 + BLOCK + 0.02], color=INK, lw=1.0)
-    cats, reach = _draw_genes(ax, rec, circular, unit)
+    cats, reach = _draw_genes(ax, rec, circular, unit, min_noncoding)
 
     x, gc, skew = gc_windows(str(rec.seq), circular)
     seq = str(rec.seq).upper()
@@ -387,6 +521,9 @@ def _mitom_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
         y -= 0.7 * fs
 
     genes = [Patch(color=COLORS[c], label=LEGEND[c]) for c in COLORS if c in cats]
+    genes += [Patch(facecolor="white", edgecolor=MUTED, hatch=HATCH, lw=0, label="intron")] if "intron" in cats else []
+    genes += [Patch(color=NONCODING, label=f"non-coding region (NCR, unannotated, >= {min_noncoding} nt)")] \
+        if "noncoding" in cats else []
     if genes:
         fig.legend(handles=genes, loc="lower left", frameon=False, fontsize=8, title_fontsize=8, alignment="left",
                    title="genes: + strand outside, - strand inside")
@@ -437,8 +574,10 @@ def _circos_type(cat: str) -> str:
     return "gene" if cat in ("COX", "NADH", "ATP", "CYTB") else cat
 
 
-def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float) -> List[str]:
-    """Strand lanes with the feature blocks, tRNA codes and curved names outside; returns the types drawn."""
+def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float, min_noncoding: int = MIN_NONCODING
+                     ) -> List[str]:
+    """Strand lanes with the feature blocks, introns (hatched), unannotated stretches, tRNA codes and curved names
+    outside; returns the types drawn ('intron', 'noncoding' included)."""
     n = len(rec.seq)
     base = theta(np.linspace(0, n, 721), n, circular)
     for r0 in (R_PLUS, R_MINUS):                                  # the lanes: white, framed
@@ -449,7 +588,7 @@ def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float) -> List[st
         for t in (theta(0, n, circular), theta(n, n, circular)):
             for r0 in (R_PLUS, R_MINUS):
                 ax.plot([t, t], [r0, r0 + LANE], color=INK, lw=EDGE, zorder=2)
-    types, names, codes = [], [], []                              # names / codes: (angle, text)
+    types, names, codes = [], [], []                              # names: (angle, text, size, colour); codes
     for f in rec.features:
         cat = category(f) if f.location is not None else None
         if not cat:
@@ -462,7 +601,7 @@ def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float) -> List[st
                 (R_MINUS, 2 * LANE + LANE_GAP)                    # no strand (control region): both lanes
             ax.bar(theta(s, n, circular), height, width=theta(e, n, circular) - theta(s, n, circular), bottom=bottom,
                    align="edge", color=CIRCOS_COLORS[typ], edgecolor=INK, linewidth=EDGE, zorder=3)
-        start, length = span([(s, e) for s, e, _ in parts], n, circular)
+        start, length = extent(f.location, n, circular)
         if len(parts) > 1:                                        # intron / origin: the parts joined by a line
             strand = f.location.strand
             r = R_PLUS + LANE / 2 if strand == 1 else R_MINUS + LANE / 2 if strand == -1 else R_PLUS - LANE_GAP / 2
@@ -470,7 +609,22 @@ def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float) -> List[st
             ax.plot(t, np.full(len(t), r), color=INK, lw=EDGE, zorder=2)
         text = label(f, cat)
         if text:
-            (codes if typ == "tRNA" else names).append((float(theta((start + length / 2) % n, n, circular)), text))
+            phi = float(theta(name_pos(parts, start, length, n), n, circular))
+            if typ == "tRNA":
+                codes.append((phi, text))
+            else:
+                names.append((phi, text, FS_NAME, INK))
+    for s, e, strand, text in introns(rec):                       # hatched in the gene's lane, labelled
+        types.append("intron")
+        ax.bar(theta(s, n, circular), LANE, width=theta(e, n, circular) - theta(s, n, circular),
+               bottom=R_PLUS if strand != -1 else R_MINUS, align="edge", facecolor="white", edgecolor=MUTED,
+               hatch=HATCH, linewidth=0, zorder=2.5)
+        names.append((float(theta(((s + e) / 2) % n, n, circular)), text, FS_CODE, MUTED))
+    for s, e in noncoding(rec, min_noncoding):                    # both lanes (strand unknown)
+        types.append("noncoding")
+        ax.bar(theta(s, n, circular), 2 * LANE + LANE_GAP, width=theta(e, n, circular) - theta(s, n, circular),
+               bottom=R_MINUS, align="edge", color=NONCODING, linewidth=0, zorder=2.5)
+        names.append((float(theta(((s + e) / 2) % n, n, circular)), f"NCR {e - s:,} bp", FS_CODE, MUTED))
     top = R_PLUS + LANE
     r_code = top + 0.014                                          # tRNA codes: upright, spread, with leader lines
     sizes = [(max(_advance(c, FS_CODE), FS_CODE) + 2) / unit / r_code for _, c in codes]
@@ -479,11 +633,11 @@ def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float) -> List[st
         half = (_advance(c, FS_CODE) * abs(np.sin(p)) + FS_CODE * abs(np.cos(p))) / 2 / unit
         ax.text(p, r_code + half, c, fontsize=FS_CODE, color=INK, ha="center", va="center")
     r_name = r_code + 1.2 * FS_CODE / unit + 0.012                # names: outside the codes, along the circle
-    sizes = [(_advance(x, FS_NAME) + 6) / unit / r_name for _, x in names]
-    for (t, x), p in zip(names, fan([t for t, _ in names], sizes)):
+    sizes = [(_advance(x, fs) + 6) / unit / r_name for _, x, fs, _ in names]
+    for (t, x, fs, color), p in zip(names, fan([t for t, _, _, _ in names], sizes)):
         if abs((p - t + np.pi) % (2 * np.pi) - np.pi) * r_name * unit > 2:   # moved: a leader line to the gene
             ax.plot([t, t, p], [top, r_code - 0.004, r_name - 0.004], color=MUTED, lw=0.4, zorder=2)
-        _curved_text(ax, p, r_name, x, FS_NAME, unit)
+        _curved_text(ax, p, r_name, x, fs, unit, color=color)
     return types
 
 
@@ -498,13 +652,13 @@ def _circos_axis(ax, r: float, n: int, circular: bool, unit: float) -> None:
         _curved_text(ax, t, r - 0.026, str(pos), FS_TICK, unit, outward=False)
 
 
-def _circos_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
+def _circos_figure(rec: SeqRecord, depth: Optional[np.ndarray], min_noncoding: int = MIN_NONCODING) -> Figure:
     """The circos style (after mitoPlotR): strand lanes, names along the circle, position axis, GC content and
     read depth inside, the species in the centre."""
     n = len(rec.seq)
     circular = rec.annotations.get("topology") == "circular"
     fig, ax, unit, base = _polar(n, circular)
-    types = _circos_features(ax, rec, circular, unit)
+    types = _circos_features(ax, rec, circular, unit, min_noncoding)
     r_axis = R_MINUS - 0.022
     _circos_axis(ax, r_axis, n, circular, unit)
 
@@ -546,7 +700,11 @@ def _circos_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
     keys = [t for t in CIRCOS_COLORS if t in types]
     if keys:
         fig.legend(handles=[Patch(facecolor=CIRCOS_COLORS[t], edgecolor=INK, lw=EDGE, label=CIRCOS_LEGEND[t])
-                            for t in keys], loc="lower left", frameon=False, fontsize=8, title_fontsize=8,
+                            for t in keys]
+                   + ([Patch(facecolor="white", edgecolor=MUTED, hatch=HATCH, lw=0, label="intron")]
+                      if "intron" in types else [])
+                   + ([Patch(color=NONCODING, label=f"non-coding region (NCR, unannotated, >= {min_noncoding} nt)")]
+                      if "noncoding" in types else []), loc="lower left", frameon=False, fontsize=8, title_fontsize=8,
                    alignment="left", title="+ strand: outer lane, \u2212 strand: inner lane")
     fig.legend(handles=handles, loc="lower right", frameon=False, fontsize=8, alignment="left")
     return fig
@@ -622,6 +780,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="circos (default, after mitoPlotR): a framed lane per strand, names along the circle, a "
                         "position axis, GC content, read depth; mitom: genes on both sides of one circle, GC content "
                         "and GC skew rings")
+    p.add_argument("--min_noncoding", type=int, default=MIN_NONCODING,
+                   help=f"shortest unannotated stretch shaded and labelled 'NCR <length>' (default {MIN_NONCODING} "
+                        "nt; 0: none)")
     a = p.parse_args(argv)
     src = Path(a.input)
     if not src.exists():
@@ -641,7 +802,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         except RuntimeError as exc:
             print(f"[mito_plot] {rec.id}: {exc}", file=sys.stderr)
             return 1
-        for path in plot_record(rec, Path(a.out_dir), depth, formats, a.style):
+        for path in plot_record(rec, Path(a.out_dir), depth, formats, a.style, a.min_noncoding):
             print(path)
     return 0
 

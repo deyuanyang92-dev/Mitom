@@ -243,3 +243,61 @@ def test_run_plots_depth_ring_from_the_samples_reads(tmp_path):
     args = argparse.Namespace(plot="yes", infq=str(tmp_path / "fq"), fq_position="flat",
                               suffix_fq="_1.fq.gz,_2.fq.gz", threads=1, max_tasks=2)
     assert bm.run_plots(args, d, tmp_path / "o").summary == "2 map(s) in plots/, 1 with read depth"
+
+
+def test_introns_from_features_and_from_joins():
+    """Intron features are drawn as they are; a join without one gives its gaps of >= MIN_INTRON nt (either strand,
+    across the origin too); a gene merely cut by the origin, a frameshift join and a gap covered by an intron feature
+    are no (extra) introns."""
+    rec = genome()
+    n = len(rec.seq)
+    assert mp.introns(rec) == [(3900, 4300, 1, "ND1 intron 400 bp")]      # CYTB across the origin: no intron
+    rec.features = [f for f in rec.features if f.type != "intron"]
+    assert mp.introns(rec) == [(3900, 4300, 1, "ND1 intron 400 bp")]      # the same from the join
+    rec.features += [
+        feat("CDS", CompoundLocation([FeatureLocation(2400, 2700, -1), FeatureLocation(2100, 2200, -1)]), "ND4"),
+        feat("CDS", CompoundLocation([FeatureLocation(1880, 1950, 1), FeatureLocation(1949, 2040, 1)]), "ND3"),
+        feat("CDS", CompoundLocation([FeatureLocation(n - 200, n, 1), FeatureLocation(300, 500, 1)]), "COX3")]
+    got = mp.introns(rec)
+    assert (2200, 2400, -1, "ND4 intron 200 bp") in got                   # minus strand
+    assert (n, n + 300, 1, "COX3 intron 300 bp") in got                   # across the origin
+    assert not [x for x in got if x[3].startswith("ND3")]                 # 1-nt frameshift join
+
+
+def test_noncoding_stretches():
+    rec = genome()
+    assert mp.noncoding(rec) == [(4700, 4800)]                            # the only gap of >= 100 nt
+    assert mp.noncoding(rec, 101) == [] and mp.noncoding(rec, 0) == []
+    lin = genome(topology="linear")                                       # no CYTB: 0..100 and 5568..end free
+    assert mp.noncoding(lin, 100) == [(0, 100), (4700, 4800), (5568, 6000)]
+    circ = genome()
+    circ.features = [f for f in circ.features if f.qualifiers.get("gene") != ["CYTB"]]
+    assert (5568, 6100) in mp.noncoding(circ, 100)                        # one stretch across the origin
+
+
+@pytest.mark.parametrize("style", ["circos", "mitom"])
+def test_intron_and_noncoding_drawn_and_labelled(tmp_path, style):
+    rec = genome()
+    fig = (mp._circos_figure if style == "circos" else mp._mitom_figure)(rec, None, 100)
+    texts = [t.get_text() for t in fig.axes[0].texts]
+    joined = "".join(texts)                                               # circos writes names letter by letter
+    assert "ND1intron400bp" in joined.replace(" ", "") and "NCR100bp" in joined.replace(" ", "")
+    legends = [t.get_text() for leg in fig.legends for t in leg.get_texts()]
+    assert "intron" in legends and any(x.startswith("non-coding region") for x in legends)
+    fig = (mp._circos_figure if style == "circos" else mp._mitom_figure)(rec, None, 0)
+    assert "NCR" not in "".join(t.get_text() for t in fig.axes[0].texts).replace(" ", "")
+
+
+def test_intron_given_by_its_two_ends_longer_than_half_the_record():
+    """NCBI writes a hexacoral nad5 intron that holds other genes as its two ends (NC_010244.2: order(2687..2810,
+    13098..13151) in 17,059 bp): the intron runs from the first to the last part, not the shorter arc the other way;
+    the gene's join likewise."""
+    rec = genome()
+    n = len(rec.seq)
+    rec.features = [f for f in rec.features if f.qualifiers.get("gene") != ["ND1"]] + [
+        feat("CDS", CompoundLocation([FeatureLocation(200, 400, 1), FeatureLocation(4200, 4500, 1)]), "ND5"),
+        feat("intron", CompoundLocation([FeatureLocation(400, 500, 1), FeatureLocation(4100, 4200, 1)],
+                                        operator="order"), "ND5")]
+    assert mp.introns(rec) == [(400, 4200, 1, "ND5 intron 3,800 bp")]
+    assert mp.extent(rec.features[-2].location, n, True) == (200, 4300)
+    assert mp.extent(CompoundLocation([FeatureLocation(5600, n, 1), FeatureLocation(0, 60, 1)]), n, True) == (5600, 460)
