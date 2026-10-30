@@ -10,9 +10,10 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
                      files, genome maps)                                               = mitom_pipeline.py run
   import             the same steps for existing MitoZ / MITOS2 results or any annotated GenBank, without
                      annotating again                                                  = mitom_pipeline.py import
-  dedup              only remove duplicate genomes: the authors' record and the RefSeq NC_ copy NCBI made of
-                     it, two versions of one accession, identical sequences - one is kept   = mitom_pipeline.py dedup
+  dedup              only remove duplicate genomes (GenBank or FASTA): the authors' record and the RefSeq NC_
+                     copy NCBI made of it, two versions of one accession, identical sequences = mitom_pipeline.py dedup
   reorient           only turn circular records to one strand and start them at cox1     = mitom_pipeline.py reorient
+  gb2fasta           GenBank (.gb .gbf ...) -> FASTA with topology= in the headers       = mitom_pipeline.py gb2fasta
   annotate           the annotation steps of run, without arranging the output folder    = mitom_pipeline.py annotate
   transfer_metadata  copy the original GenBank header (organism, references ...) onto new annotations
   replace_organism   fix /organism in re-annotated records                              = mitom_pipeline.py <cmd>
@@ -51,7 +52,7 @@ VERSION = "1.0.0"
 HERE = Path(os.path.realpath(__file__)).parent
 COMMANDS = {
     **{c: ("mitom_pipeline.py", [c]) for c in ("run", "import", "annotate", "reorient", "transfer_metadata",
-                                               "replace_organism", "dedup")},
+                                               "replace_organism", "dedup", "gb2fasta")},
     "setup": ("mito_env.py", ["setup"]),
     "doctor": ("mito_env.py", ["doctor"]),
     "curate": ("mito_curate.py", []),

@@ -120,14 +120,15 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `reports/` | 各步骤报告：`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
 | `run.log` | 全部过程与调用的命令 |
 
-**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`）
+**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`；每个命令的用法和示例见 [使用手册第 6 节](docs/USAGE_zh.md#6-每个命令的用法)，怎么选命令见 [第 5 节](docs/USAGE_zh.md#5-怎么选命令)）
 
 | 命令 | 作用 |
 |---|---|
 | `mitom run` | 完整流程，最常用：从序列到最终注释、NCBI 提交文件和基因组图 |
 | `mitom import` | 已有 MitoZ / MITOS2 结果或已注释的 GenBank：不重新注释，只做后面的整理（统一起点、修整、NCBI 文件、作图） |
-| `mitom fetch` | 从 NCBI 下载某个类群的线粒体全基因组 |
-| `mitom dedup` | 只做“去重”：同一个基因组的多条记录只留一条（说明见第 3 点） |
+| `mitom fetch` | 从 NCBI 下载某个类群的线粒体全基因组（GenBank 格式；加 `--fasta` 同时生成 FASTA） |
+| `mitom dedup` | 只做“去重”：同一个基因组的多条记录只留一条（说明见第 3 点）；GenBank、FASTA 都可以 |
+| `mitom gb2fasta` | GenBank（`.gb`、`.gbf` 都行）转 FASTA，表头带 `topology=`，可直接给 `mitom run` 用 |
 | `mitom reorient` | 只统一方向和起点（转到同一条链，从 cox1 开始） |
 | `mitom annotate` | 与 `run` 相同，但不整理输出目录（给脚本或集群流程调用） |
 | `mitom check` | 检查已有注释有没有问题，只出报告、不改文件 |

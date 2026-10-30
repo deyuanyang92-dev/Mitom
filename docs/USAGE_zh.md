@@ -139,89 +139,190 @@ GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
 | 8 NCBI 校验 | 生成 .fsa / .tbl / .sqn，用 NCBI table2asn 校验 | `ncbi_submission/`，`summary.tsv` 的 `ncbi_errors` 列 |
 | 9 与原注释对比 | GenBank 输入时逐基因对比原注释和 MitoM 注释 | `original_vs_mitom.tsv` |
 | 10 基因组图 | 环状图：基因、GC 含量、GC 偏斜；有测序数据时加深度环 | `plots/` |
-| 11 整理输出 | 把结果整理成固定的目录结构，中间文件删除（`--keep_intermediate yes` 保留到 `work/`） | 见第 6 节 |
+| 11 整理输出 | 把结果整理成固定的目录结构，中间文件删除（`--keep_intermediate yes` 保留到 `work/`） | 见第 7 节 |
 
 ---
 
-## 5. 命令
+## 5. 怎么选命令
 
-`mitom -h` 列出全部命令；`mitom <命令> -h` 显示该命令的全部参数。下面列常用参数和例子。
+### 5.1 常见情况
 
-### 5.1 `mitom run`：完整流程
-
-```bash
-mitom run -i input.gb -o out [--clade auto] [--genetic_code N] [--threads 8] [--jobs 4]
-```
-
-| 参数 | 默认 | 说明 |
+| 我手上有 | 想要 | 用 |
 |---|---|---|
-| `-i / --input` | — | GenBank / FASTA 文件或目录 |
-| `-o / --out` | `mitom_out` | 输出目录 |
-| `--clade` / `--genetic_code` | `auto` | 见 3.3 |
-| `--threads` | min(8, CPU 数) | 每个注释任务的线程数 |
-| `--jobs` | CPU 数 // threads | 同时注释的记录数 |
-| `--engine native\|mitoz\|mitos2` | `native` | 用哪个程序找基因；后续 MitoM 步骤相同 |
-| `--which_gene_first` / `--fallback_genes` | `cox1` / `cox2,cox3,cob,nad1` | 序列起始基因；`--fallback_genes none` 表示找不到时不旋转 |
-| `--if_reannotation_2 auto\|yes\|no` | `auto` | 第二轮注释：只对需要的记录 / 全部 / 不做 |
-| `--intron_fix auto\|yes\|no` | `auto` | 内含子步骤（找到 exonerate 时运行） |
-| `--rrna_hmm auto\|yes\|no` | `auto` | 按门 rRNA HMM 补搜 |
-| `--rrna_method hmm\|cm` | `hmm` | 核心找 rRNA 的方法（精度相同，hmm 更快更省内存） |
-| `--rescue yes\|no` | 不运行 | `yes`：用 MITOS2 补回缺失基因（需装 MITOS2） |
-| `--curate yes\|no` | `yes` | 边界规则和 NCBI 基因名 |
-| `--sbt template.sbt` | — | NCBI 提交者模板，用于 .sqn |
-| `--plot yes\|no` | `yes` | 环状基因组图 |
-| `--infq <目录>` | — | 双端 FASTQ（按样本名匹配），基因组图加测序深度环 |
-| `--keep_intermediate yes` | `no` | 保留中间文件到 `work/` |
-| `--scheduler_backend auto\|threads\|snakemake` | `auto` | 并行方式；集群可用 Snakemake（`--smk_extra '--profile slurm'`） |
+| 还没有数据，想要某类群的 NCBI 线粒体基因组 | 下载 | `mitom fetch --taxon Annelida -o fetch_out`（得到 GenBank；加 `--fasta` 同时得到 FASTA） |
+| NCBI 下载的 GenBank（`.gb`） | MitoM 的统一注释 | `mitom run -i fetch_out/Annelida.gb -o out` |
+| 自己组装的 FASTA | 注释 | `mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5` |
+| MitoZ 的结果（`.gbf`） | 用 MitoM 重新注释（只用它的序列） | `mitom run -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
+| MitoZ 的结果（`.gbf`）或任何已注释的 GenBank | 保留它原来的基因，只做 MitoM 的整理（统一起点、修整边界和名称、NCBI 文件、作图） | `mitom import -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
+| MITOS2 的结果目录 | 同上 | `mitom import -i mitos2_dir/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5` |
+| GenBank（`.gb`、`.gbf` 都行） | 转成 FASTA | `mitom gb2fasta -i sample.gbf -o fasta_out` |
+| 一批 GenBank 或 FASTA，可能有重复 | 去掉重复，每个基因组留一条 | `mitom dedup -i in_dir/ -o dedup_out` |
 
-### 5.2 `mitom import`：导入已有注释
+**`.gb` 和 `.gbf` 有什么区别？** 没有区别，都是 GenBank 格式，只是不同软件习惯用的后缀不同（NCBI 用 `.gb`，MitoZ 用 `.gbf`）。MitoM 认 `.gb .gbk .gbf .gbff .genbank` 这几种后缀，可以直接给单个文件，也可以给一个目录（含子目录）。
 
-对已有的 MitoZ 结果（结果目录或 .gbf）、MITOS2 结果目录（需要基因组 FASTA，`--fasta`）或任何已注释的 GenBank，运行 MitoM 的后续步骤（方向、补漏、内含子、边界规则、NCBI 文件、基因组图），不重新注释。参数与 `run` 相同，另有 `--fasta`（MITOS2 的基因组序列）和 `--topology auto|circular|linear`。
+**`run` 和 `import` 的区别：** `run` 只用输入的序列，所有基因都由 MitoM 重新注释，原来的注释留在 `original_annotation/` 里供对比；`import` 保留输入里已有的基因注释，只做后面的整理步骤。想要统一、可比的注释，用 `run`；只想把别的软件的结果整理成 NCBI 可提交的格式，用 `import`。
 
-```bash
-mitom import -i mitos2_result_dir/ --fasta genome.fasta -o out --clade Arthropoda --genetic_code 5
-mitom import -i sample.gbf -o out --clade Mollusca --genetic_code 5          # MitoZ 结果
-```
-
-### 5.3 单独的流程步骤
-
-| 命令 | 用途 | 例子 |
-|---|---|---|
-| `mitom annotate` | 与 `run` 相同的注释和后续步骤，但不整理输出目录（保留工作目录结构，日志为 `pipeline.log`），供脚本或集群流程调用 | `mitom annotate -i a.fasta -o out --clade Mollusca --genetic_code 5` |
-| `mitom reorient` | 只旋转 / 转正链 | `mitom reorient -i a.gb -o out` |
-| `mitom dedup` | 只去重 | `mitom dedup -i gb_dir/ -o out` |
-| `mitom transfer_metadata` | 把原 GenBank 表头复制到重新注释的文件 | `mitom transfer_metadata -m original.gb -n new.gb -o out` |
-| `mitom replace_organism` | 修正 `/organism` | `mitom replace_organism -h` |
-
-### 5.4 各功能模块
-
-| 命令 | 用途 | 例子 |
-|---|---|---|
-| `mitom curate` | 边界规则 + NCBI 基因名 | `mitom curate -i gb_dir/ -o out --genetic_code 5` |
-| `mitom intron` | 内含子：从头识别，再按近缘记录的内含子位点修正 / 补充（`--method denovo` 或 `ref` 只做其一） | `mitom intron -i gb_dir/ -o out --genetic_code 4` |
-| `mitom trna` | 多方法 tRNA 注释与比较（MitoM-ML、ARWEN、ARAGORN、原注释，可加 MITOS2） | `mitom trna -i a.gb -o out --genetic_code 5` |
-| `mitom rrna-hmm search` | 用按门 HMM 补搜缺失的 12S/16S（原地修改） | `mitom rrna-hmm search -i gb_dir/` |
-| `mitom rescue` | 用 MITOS2 补回缺失基因（原地修改） | `mitom rescue -i gb_dir/ --genetic_code 5` |
-| `mitom validate` | NCBI table2asn 校验，生成 .fsa / .tbl / .sqn | `mitom validate -i gb_dir/ -o out` |
-| `mitom plot` | 环状基因组图；`--fq1/--fq2` 加深度环 | `mitom plot -i a.gb -o maps --fq1 r1.fq.gz --fq2 r2.fq.gz` |
-| `mitom check` | 审核已有注释，列出需要重新注释的记录 | `mitom check -i gb_dir/ -o check_out` |
-| `mitom compare` | 原注释与 MitoM 注释逐基因对比 | `mitom compare --original a.gb --mitom out/final_annotation -o cmp` |
-| `mitom fetch` | 从 NCBI 下载线粒体全基因组 | `mitom fetch --taxon Annelida -o fetch_out --email you@example.com` |
-| `mitom setup` / `mitom doctor` | 参考数据 / 环境检查 | 见第 1 节 |
-
-### 5.5 `mitom nuc`：核 rDNA 与组蛋白
-
-```bash
-mitom nuc annotate -i scaffolds.fasta -o nuc_out [--genes rdna,histone] [--threads 8]
-mitom nuc fetch -o nuc_refs                     # 从 NCBI 下载参考记录（可选，自建参考库）
-mitom nuc build --gb nuc_refs/rdna.gb nuc_refs/histone.gb -o my_lib   # 自建参考库
-```
-
-在任意 contig（SPAdes 全基因组组装、GetOrganelle 的 rDNA 单元、PCR 片段、GenBank 记录）中注释 18S、ITS1、5.8S、ITS2、28S 和 H1、H2A、H2B、H3、H4；多拷贝的 rDNA 片段拼成每个基因一条共识序列。全基因组组装（0.1–1.7 Gb）在默认 8 线程下 6 秒至 2.2 分钟，内存不超过 2 GB（30 个 SPAdes 组装实测）。输出：`nuc_features.tsv`（每个特征一行）、`nuc_annotation.gb`、`genes/<基因>.fasta`、`consensus/<基因>.fasta` 和 `consensus.tsv`、`submission/`（NCBI 提交文件）、`nuc.log`。
+**为什么推荐 GenBank 而不是 FASTA？** GenBank 记录自带物种分类，MitoM 能据此自动选类群和遗传密码；原记录的物种、文献、标本信息也会复制到结果里。FASTA 只有序列，必须手动给 `--clade` 和 `--genetic_code`。
 
 ---
 
-## 6. 输出
+## 6. 每个命令的用法
+
+每个命令都可以加 `-h` 查看全部参数，例如 `mitom run -h`。参数名在各命令里一致：`-i` 输入、`-o` 输出目录、`--threads` 线程数、`--jobs` 同时处理的记录数、`--refdir` 参考数据目录。
+
+### `mitom run`：完整流程（最常用）
+
+- **做什么**：从序列到最终注释、NCBI 提交文件和基因组图，11 个步骤见第 4 节。
+- **输入**：GenBank（推荐）或 FASTA；单个文件或目录。一次只能是同一个门（见 3.3）。
+- **输出**：见第 7 节（`final_annotation/`、`ncbi_submission/`、`plots/`、`reports/`、`run.log` 等）。
+- **示例**：
+  ```bash
+  mitom run -i fetch_out/Annelida.gb -o out                              # GenBank：类群和遗传密码自动判断
+  mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5    # FASTA：要写明类群和遗传密码
+  mitom run -i genomes/ -o out --threads 4 --jobs 8                      # 目录：8 条同时注释，每条 4 线程
+  mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5 --engine mitoz   # 用 MitoZ 找基因（需另装）
+  ```
+- **常用参数**：`--clade`、`--genetic_code`（见 3.3）；`--threads`、`--jobs`；`--engine native|mitoz|mitos2`；`--sbt template.sbt`（NCBI 提交者模板）；`--infq <FASTQ 目录>`（基因组图加测序深度）；`--keep_intermediate yes`（保留中间文件）；`--debug`（调试模式，见第 8 节）。
+
+### `mitom import`：整理已有注释，不重新注释
+
+- **做什么**：保留输入里已有的基因（MitoZ / MITOS2 结果或任何已注释的 GenBank），做统一起点、补漏、内含子、修整边界和名称、NCBI 文件、作图。
+- **输入**：MitoZ 结果目录或 `.gbf`；MITOS2 结果目录（要用 `--fasta` 给基因组序列）；已注释的 GenBank。
+- **输出**：与 `run` 相同。
+- **示例**：
+  ```bash
+  mitom import -i mitoz_results/ -o out --clade Mollusca --genetic_code 5
+  mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5
+  ```
+
+### `mitom fetch`：从 NCBI 下载线粒体全基因组
+
+- **做什么**：按类群名或分类号（或自定义 Entrez 检索式）下载完整线粒体基因组。
+- **输入**：`--taxon Annelida`（或分类号 `6340`），或 `--query '...'`。
+- **输出**：`<名称>.gb`（全部记录，GenBank 格式）、`fetch_report.tsv`（每条记录一行）、`query.txt`、`fetch.log`；加 `--fasta` 时另有 `<名称>.fasta`。
+- **下载的是什么格式？** GenBank（`.gb`）。它带物种分类和原记录信息，是 `mitom run` 最好的输入。需要 FASTA 时加 `--fasta`，或之后用 `mitom gb2fasta` 转。
+- **示例**：
+  ```bash
+  mitom fetch --taxon Annelida -o fetch_out --email you@example.com          # RefSeq + GenBank 记录
+  mitom fetch --taxon Annelida -o fetch_out --refseq_only                    # 只要 NC_ 参考记录
+  mitom fetch --taxon Annelida -o fetch_out --fasta                          # 同时生成 Annelida.fasta
+  mitom fetch --taxon Annelida -o fetch_out --dry_run                        # 只看有多少条，不下载
+  ```
+- **说明**：同一目录再次运行时只下载新增的记录。NCBI 要求留邮箱（`--email`，或环境变量 `NCBI_EMAIL`）；有 API key 时（`--api_key`）下载更快。默认同时下载 RefSeq（`NC_`）和作者提交的 GenBank 记录，同一个基因组可能有两条，`mitom run` 会自动去重（或先用 `mitom dedup`）。
+
+### `mitom dedup`：去重（同一个基因组只留一条）
+
+- **做什么**：同一个基因组在 NCBI 里常有不止一条记录——作者提交的原始记录（如 `MK123456`）和 NCBI 照它复制出来的参考记录（`NC_` 开头）；同一个登录号的新旧版本（`.1`、`.2`）；或不同登录号但序列完全相同。去重后每个基因组只留一条：留 `NC_`、留新版本、相同序列留一条。`mitom run` 会自动做这一步，`dedup` 用于只想去重、不注释的时候。
+- **输入**：GenBank 和 / 或 FASTA（文件或目录）。FASTA 没有记录信息，只按两条规则：序列完全相同的留一条；表头第一个词是带版本号的登录号（如 `MK123456.1`）时，同一登录号留新版本。`NODE_1` 这类自己起的名字不会因为重名被当成重复。
+- **输出**：`dedup.gb`（保留的 GenBank 记录）、`dedup.fasta`（保留的全部记录；GenBank 来的记录表头带 `topology=`）、`dedup_report.tsv`（每条输入记录：保留还是去掉、原因、保留的是哪一条）。
+- **示例**：
+  ```bash
+  mitom dedup -i fetch_out/Annelida.gb -o dedup_out
+  mitom dedup -i my_fastas/ -o dedup_out
+  ```
+
+### `mitom gb2fasta`：GenBank 转 FASTA
+
+- **做什么**：把 GenBank（`.gb`、`.gbf` 等）转成 FASTA。
+- **输出**：每个输入文件一个 `<文件名>.fasta`；加 `--split` 时每条记录一个 `<登录号>.fasta`。表头格式 `>登录号.版本 定义行 topology=circular|linear`，可直接作为 `mitom run` 的输入。
+- **示例**：
+  ```bash
+  mitom gb2fasta -i sample.gbf -o fasta_out
+  mitom gb2fasta -i fetch_out/Annelida.gb -o fasta_out --split
+  ```
+
+### `mitom reorient`：只统一方向和起点
+
+- **做什么**：环状记录转到 cox1 所在的链，并从 cox1 开始（没有 cox1 时依次用 cox2、cox3、cob、nad1）；线状记录不旋转。
+- **示例**：`mitom reorient -i genomes.gb -o reorient_out`
+- **常用参数**：`--which_gene_first cox1`、`--fallback_genes cox2,cox3,cob,nad1`。
+
+### `mitom annotate`：注释，但不整理输出目录
+
+- **做什么**：与 `run` 做的事相同，但保留工作目录结构（日志为 `pipeline.log`），给脚本或集群流程调用。一般用户用 `run` 即可。
+- **示例**：`mitom annotate -i contigs.fasta -o out --clade Mollusca --genetic_code 5`
+
+### `mitom check`：检查已有注释
+
+- **做什么**：只检查、不修改，列出有问题的记录（例如 NCBI 下载记录的原注释是否缺基因、有内部终止密码子、tRNA 太少等）。
+- **输出**：`check_report.tsv`（每条记录 ok / flagged）、`check_details.tsv`（每个问题一行）。
+- **示例**：`mitom check -i fetch_out/Annelida.gb -o check_out`
+
+### `mitom compare`：比较原注释和 MitoM 的注释
+
+- **做什么**：逐个基因比较两份注释（相同 / 端点不同 / 只有一方有……）。`run` 在第 9 步已自动做了这一比较（`original_vs_mitom.tsv`）。
+- **示例**：`mitom compare --original fetch_out/Annelida.gb --mitom out/final_annotation -o compare_out`
+
+### `mitom curate`：修整基因边界和名称
+
+- **做什么**：按 NCBI 规范修整蛋白基因的起止密码子、rRNA 端点、基因重叠和基因名。`run` 的第 7 步就是它。
+- **示例**：`mitom curate -i annotated_dir/ -o curated --genetic_code 5`
+- **输出**：修整后的 GenBank 和 `curation_report.tsv`（每一处修改的规则和原因）。
+
+### `mitom intron`：加内含子
+
+- **做什么**：先从头识别（MFannot 方法），再按近缘记录的内含子位点修正 / 补充，与 `run` 第 6 步相同；`--method denovo` 或 `--method ref` 只做其中一步。
+- **示例**：`mitom intron -i annotated_dir/ -o intron_out --genetic_code 4`
+- **输出**：加了内含子的 GenBank、`intron_report.tsv`、`intron_ref_report.tsv`。
+
+### `mitom trna`：多种方法注释 tRNA 并比较
+
+- **做什么**：用 MitoM-ML、ARWEN、ARAGORN（及原注释，装了 MITOS2 时也用它）分别找 tRNA，再选出最终结果并列出各方法的异同。
+- **示例**：`mitom trna -i sample.gb -o trna_out --genetic_code 5`
+
+### `mitom rrna-hmm`：补搜 12S / 16S rRNA
+
+- **做什么**：对还缺 rRNA 的记录，用按门建立的 rRNA 模型补搜（`run` 第 6 步会自动做）。`search` 直接修改输入目录里的文件；`build` 用于重建模型库。
+- **示例**：`mitom rrna-hmm search -i annotated_dir/`
+
+### `mitom rescue`：用 MITOS2 补回漏掉的基因
+
+- **做什么**：对缺基因的记录跑 MITOS2，把它找到而 MitoM 漏掉的基因加回来（不改已有的基因）。需另装 MITOS2；直接修改输入目录里的文件。
+- **示例**：`mitom rescue -i annotated_dir/ --genetic_code 5`
+
+### `mitom validate`：NCBI 检查与提交文件
+
+- **做什么**：用 NCBI 的 table2asn 检查每条记录，生成 `.fsa`、`.tbl`、`.sqn` 和检查结果。`run` 的第 8 步就是它。
+- **示例**：`mitom validate -i out/final_annotation -o ncbi_check`
+
+### `mitom plot`：环状基因组图
+
+- **做什么**：每条记录画一张环状图（基因、GC 含量、GC 偏斜）；给出测序数据时加一圈测序深度。
+- **示例**：
+  ```bash
+  mitom plot -i out/final_annotation -o maps
+  mitom plot -i sample.gb -o maps --fq1 reads_1.fq.gz --fq2 reads_2.fq.gz
+  ```
+
+### `mitom nuc`：全基因组组装中的核 rDNA 与组蛋白
+
+- **做什么**：在 contig（SPAdes 全基因组组装、GetOrganelle 的 rDNA 单元、PCR 片段、GenBank 记录）中注释 18S、ITS1、5.8S、ITS2、28S 和 H1、H2A、H2B、H3、H4，并把多拷贝的片段拼成每个基因一条共识序列。
+- **示例**：
+  ```bash
+  mitom nuc annotate -i scaffolds.fasta -o nuc_out                    # rDNA + 组蛋白
+  mitom nuc annotate -i scaffolds.fasta -o nuc_out --genes rdna       # 只要 rDNA
+  ```
+- **输出**：`nuc_features.tsv`（每个特征一行）、`nuc_annotation.gb`、`genes/<基因>.fasta`、`consensus/<基因>.fasta` 和 `consensus.tsv`、`submission/`（NCBI 提交文件）、`nuc.log`。
+- **用时**：0.1–1.7 Gb 的全基因组组装，默认 8 线程 6 秒至 2.2 分钟。
+
+### `mitom debug`：出问题时定位原因
+
+- **做什么**：读运行日志，告诉你哪一步、哪条记录、哪个程序出错，并给出错误信息、缺的程序和复现命令。详见第 8 节。
+- **示例**：`mitom debug out`
+
+### `mitom transfer_metadata` / `mitom replace_organism`
+
+- **做什么**：把原 GenBank 记录的表头（物种、文献、标本信息）复制到重新注释的文件里 / 修正 `/organism`。`run` 已自动做这两步，一般不需要单独用。
+- **示例**：`mitom transfer_metadata -m original.gb -n new.gb -o out`
+
+### `mitom setup` / `mitom doctor`
+
+- `mitom setup`：下载参考数据 refseq89m、准备 tRNA 模型、写配置（安装时已自动运行）。
+- `mitom doctor`：检查每一步需要的程序是否都找到，缺什么、怎么装。
+
+---
+
+## 7. 输出
 
 ```
 out/
@@ -257,9 +358,9 @@ out/
 
 ---
 
-## 7. 调试与排错
+## 8. 调试与排错
 
-### 7.1 先看 `mitom debug`
+### 8.1 先看 `mitom debug`
 
 ```bash
 mitom debug out              # out = 输出目录（或直接给 run.log 的路径）
@@ -280,7 +381,7 @@ mitom debug out              # out = 输出目录（或直接给 run.log 的路�
 
 退出码：0 = 没有发现问题，1 = 发现问题，2 = 找不到 MitoM 日志。
 
-### 7.2 调试模式 `--debug`
+### 8.2 调试模式 `--debug`
 
 任何 `mitom` 命令都可以加 `--debug`：
 
@@ -291,7 +392,7 @@ mitom debug out
 
 调试模式额外记录：运行环境（MitoM 版本和 git 提交、命令原文、Python、机器、每个外部程序的路径和版本、Python 包版本、配置文件、参考数据和数据目录、相关环境变量、内存和磁盘空间），每一步内部调用的每个程序及其完整输出（包括注释核心内部的 blastx、exonerate、cmsearch 等），并保留全部中间文件（`work/`）。“单独运行失败的程序”这条复现命令要用到中间文件，所以请在调试模式下使用。
 
-### 7.3 日志格式
+### 8.3 日志格式
 
 `run.log`（`annotate` 为 `pipeline.log`）的每一行都有固定格式，便于查找：
 
@@ -306,13 +407,13 @@ mitom debug out
 
 手工查找：`grep -n "rc=[1-9]" out/run.log` 列出所有失败的程序；`grep -n "\[RECORD" out/run.log` 列出有问题的记录；出错记录的注释核心日志在 `out/reports/failed_logs/`。
 
-### 7.4 报告问题
+### 8.4 报告问题
 
 请附上 `mitom debug out` 的输出，以及加 `--debug` 重跑后的 `out/run.log`。
 
 ---
 
-## 8. 常见问题
+## 9. 常见问题
 
 | 现象 | 原因与处理 |
 |---|---|
@@ -326,7 +427,7 @@ mitom debug out
 
 ---
 
-## 9. 精度（摘要）
+## 10. 精度（摘要）
 
 详见 [METHODS.md](METHODS.md) 和 `benchmark/results/`。
 
@@ -337,7 +438,7 @@ mitom debug out
 
 ---
 
-## 10. 引用
+## 11. 引用
 
 使用 MitoM 时请同时引用它调用的软件（MITOS2 参考数据、MiTFi、MFannot、Infernal、BLAST+、Exonerate、HMMER、table2asn、Biopython 等），见 [../CITATION.cff](../CITATION.cff) 和 README 的“引用”一节。
 

@@ -3,6 +3,21 @@
 Notable changes of MitoM. Versions follow semantic versioning (major.minor.patch); `mitom --version` prints the
 installed one.
 
+## Unreleased
+
+### Added
+- `mitom gb2fasta`: GenBank (.gb .gbk .gbf .gbff .genbank) to FASTA, one file per input or per record (`--split`);
+  headers `>ACCESSION.V definition topology=circular|linear`, ready for `mitom run`.
+- `mitom dedup` takes FASTA too: identical sequences, and versions of one accession when the header's first word is
+  an accession (MK123456.1); local names such as NODE_1 are never merged on their name.
+- `mitom fetch --fasta`: a FASTA of the downloaded records next to the GenBank file.
+
+### Changed
+- `dedup.fasta` headers carry `topology=circular|linear` (without it `mitom run` takes the records of a multi-record
+  FASTA for linear contigs).
+- Help and docs in plain words: every command with a usage section (docs/USAGE_zh.md sections 5-6), what dedup
+  does, a note that MitoM is still being tested and used inside the group.
+
 ## 1.0.0 - 2026-10-30
 
 ### Added

@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import GB_SUFFIXES, safe_name
+from mito_common import GB_SUFFIXES, safe_name, topology_from_header
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS
 from mitom_metadata import _normalize_acc, gb_record_accession
 
@@ -172,10 +172,32 @@ def refseq_source_accessions(rec: "SeqRecord") -> List[str]:
     return out
 
 
+# a FASTA record takes part in the accession rules only when its first word is an accession (MK123456.1, NC_012345.1):
+# local names such as NODE_1 or sample_3 recur in unrelated assemblies
+_FASTA_ACC_RE = re.compile(r"^(?:[A-Z]{2}_\d{6,9}|[A-Z]{1,6}\d{5,9})(?:\.\d+)?$")
+
+
+def record_format(path: Path) -> str:
+    """'fasta' or 'genbank' for one input file (suffix, else its first line)."""
+    return "fasta" if _is_fasta_file(path) else "genbank" if _is_gb_file(path) else _sniff_input_type(path)
+
+
+def collect_sequence_files(src: Path) -> List[Path]:
+    """The GenBank and FASTA files of an input (the file itself, or every such file below a folder), sorted."""
+    if src.is_file():
+        return [src.resolve()]
+    if src.is_dir():
+        return sorted(p.resolve() for p in src.rglob("*") if p.is_file() and (_is_gb_file(p) or _is_fasta_file(p)))
+    return []
+
+
 def dedup_gb_records(
     gb_files: List[Path],
     dedup_report_path: Optional[Path] = None,
 ) -> Tuple[List[GbRecordMeta], Dict[str, Path], Dict]:
+    """One record per genome from GenBank and / or FASTA files: (1) same accession -> newest version; (2) a RefSeq
+    NC_ record replaces the INSDC submission named in its COMMENT (GenBank only); (3) identical sequence -> one copy
+    (RefSeq first). FASTA records take part in (1) only when their first header word is an accession."""
     import hashlib
 
     stats: Dict = {
@@ -191,17 +213,22 @@ def dedup_gb_records(
     dropped: List[Tuple[GbRecordMeta, str, str]] = []     # (record, reason, accession kept instead)
 
     for gb_path in gb_files:
+        fmt = record_format(gb_path)
         try:
-            records = list(SeqIO.parse(str(gb_path), "genbank"))
+            records = list(SeqIO.parse(str(gb_path), fmt))
         except Exception as exc:
             logging.warning(f"[DEDUP] Cannot parse {gb_path}: {exc}")
             stats["parse_errors"] += 1
             continue
 
-        for rec in records:
+        for i, rec in enumerate(records):
             stats["total_in"] += 1
-            acc_ver  = gb_record_accession(rec)
-            acc_base = _normalize_acc(acc_ver) or acc_ver
+            if fmt == "fasta":
+                acc_ver  = rec.id
+                acc_base = (_normalize_acc(acc_ver) or acc_ver) if _FASTA_ACC_RE.match(acc_ver) else f"{gb_path}#{i}"
+            else:
+                acc_ver  = gb_record_accession(rec)
+                acc_base = _normalize_acc(acc_ver) or acc_ver
             ver_int  = _gb_version_int(rec)
 
             try:
@@ -217,7 +244,8 @@ def dedup_gb_records(
                 continue
 
             seq_hash = hashlib.md5(seq_str.encode()).hexdigest()
-            topo     = rec.annotations.get("topology", "circular").lower()
+            topo     = (topology_from_header(rec.description) if fmt == "fasta"
+                        else rec.annotations.get("topology", "circular").lower())
             if topo not in ("circular", "linear"):
                 topo = "circular"
 

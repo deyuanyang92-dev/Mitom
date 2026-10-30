@@ -58,7 +58,8 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (command_line, debug_mode, GB_SUFFIXES, old_spelling, reports_dir, run_tool,  # noqa: E402,F401
+from mito_common import (command_line, debug_mode, GB_SUFFIXES, gb_fasta_record, iter_gb_files, old_spelling,  # noqa: E402,F401
+                         reports_dir, run_tool,  # noqa: F401
                          safe_copy, safe_name, write_nonempty_list, write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
                        CLADE_CODES, CLADE_PHYLUM, EXTRA_CLADES, METAZOAN_PHYLA, no_upstream_atg,  # noqa: F401
@@ -74,7 +75,7 @@ from mitom_metadata import (_acc_variants, build_metadata_index, build_organism_
                             replace_organism_in_gb_file, replace_organism_in_record, _similarity,  # noqa: F401
                             _split_gb_records, _split_meta_body, _sync_organism_qualifier,  # noqa: F401
                             transfer_gb_metadata_file)  # noqa: F401
-from mitom_inputs import (auto_clade, check_transl_tables, collect_genbank_files,  # noqa: E402,F401
+from mitom_inputs import (auto_clade, check_transl_tables, collect_genbank_files, collect_sequence_files, record_format,  # noqa: E402,F401
                           convert_gb_to_fasta_for_annotation, dedup_gb_records, _FASTA_EXTS,  # noqa: F401
                           find_fq_pair_for_sample, _GB_EXTS, _gb_version_int, GbRecordMeta,  # noqa: F401
                           header_first_token, infer_topology_from_description, _is_fasta_file,  # noqa: F401
@@ -947,19 +948,49 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
 
 
 def workflow_dedup(args: argparse.Namespace) -> int:
-    """Standalone deduplication: dedup.gb, dedup.fasta, dedup_report.tsv."""
+    """Standalone deduplication of GenBank and / or FASTA input: dedup.gb (the kept GenBank records), dedup.fasta
+    (every kept record; GenBank ones as >ACCESSION.V definition topology=..., FASTA ones unchanged),
+    dedup_report.tsv."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     setup_root_logger(out_root / "dedup.log", debug=getattr(args, "debug", False))
     log_environment(args)
-    files = collect_genbank_files(Path(args.input).resolve())
+    files = collect_sequence_files(Path(args.input).resolve())
+    if not files:
+        print(f"mitom dedup: no GenBank or FASTA file in {args.input}", file=sys.stderr)
+        return 2
     kept, _, stats = dedup_gb_records(files, dedup_report_path=out_root / "dedup_report.tsv")
-    recs = [m.record for m in kept]
-    SeqIO.write(recs, str(out_root / "dedup.gb"), "genbank")
-    SeqIO.write(recs, str(out_root / "dedup.fasta"), "fasta")
+    gb = [m.record for m in kept if record_format(m.source_file) == "genbank"]
+    if gb:
+        SeqIO.write(gb, str(out_root / "dedup.gb"), "genbank")
+    SeqIO.write([gb_fasta_record(m.record) if record_format(m.source_file) == "genbank" else m.record for m in kept],
+                str(out_root / "dedup.fasta"), "fasta")
     logging.info(f"[DEDUP] in={stats['total_in']} kept={stats['kept']} no_seq={stats['no_sequence']} "
                  f"dup_exact={stats['dup_exact']} dup_version={stats['dup_version']} "
                  f"dup_refseq={stats['dup_refseq']} dup_seq={stats['dup_seq']} -> {out_root}")
+    return 0
+
+
+def workflow_gb2fasta(args: argparse.Namespace) -> int:
+    """GenBank (any GenBank suffix: NCBI .gb, MitoZ .gbf ...) -> FASTA: one <name>.fasta per input file, or one
+    <accession>.fasta per record with --split; headers >ACCESSION.V definition topology=circular|linear, ready for
+    `mitom run` (the topology tag keeps genomes circular in a multi-record FASTA)."""
+    files = iter_gb_files(Path(args.input))
+    if not files:
+        print(f"mitom gb2fasta: no GenBank file in {args.input} (suffixes {', '.join(GB_SUFFIXES)})", file=sys.stderr)
+        return 2
+    out = Path(args.out_root)
+    out.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for f in files:
+        recs = [gb_fasta_record(r) for r in SeqIO.parse(str(f), "genbank")]
+        n += len(recs)
+        if args.split:
+            for r in recs:
+                SeqIO.write([r], str(out / f"{safe_name(r.id)}.fasta"), "fasta")
+        elif recs:
+            SeqIO.write(recs, str(out / f"{f.stem}.fasta"), "fasta")
+    print(f"[gb2fasta] {n} record(s) from {len(files)} GenBank file(s) -> {out}", file=sys.stderr)
     return 0
 
 
@@ -1269,9 +1300,25 @@ def build_parser() -> argparse.ArgumentParser:
                     "(NC_...), two versions of one accession (MK123456.1 / .2), or another accession with an "
                     "identical sequence. One record per genome is kept: the NC_ record, the newest version. "
                     "dedup_report.tsv: every input record, kept or dropped, why, and the record kept instead.")
-    dd.add_argument("-i", "--input", required=True, help="GenBank file or directory.")
+    dd.add_argument("-i", "--input", required=True,
+                    help="GenBank and / or FASTA file or folder. FASTA records: identical sequences, and versions of one "
+                         "accession when the header's first word is an accession (MK123456.1); other names are never "
+                         "merged.")
     dd.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="dedup_out", help="Output folder (default: dedup_out).")
     old_spelling(dd, "--out_root", "out_root")
+
+    # ── gb2fasta ──────────────────────────────────────────────────────────
+    g2 = sub.add_parser(
+        "gb2fasta",
+        help="GenBank (.gb .gbk .gbf .gbff .genbank) -> FASTA, headers with topology= for mitom run.",
+        description="Convert GenBank files (NCBI .gb, MitoZ .gbf ...) to FASTA: one <name>.fasta per input file, or "
+                    "one <accession>.fasta per record with --split. Headers: >ACCESSION.V definition "
+                    "topology=circular|linear - the topology tag keeps a circular genome circular when `mitom run` "
+                    "reads several records from one FASTA file.")
+    g2.add_argument("-i", "--input", required=True, help="GenBank file or folder (subfolders included).")
+    g2.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="gb2fasta_out",
+                    help="Output folder (default: gb2fasta_out).")
+    g2.add_argument("--split", action="store_true", help="One FASTA file per record (<accession>.fasta).")
 
     # ── intron ────────────────────────────────────────────────────────────
     it = sub.add_parser(
@@ -1343,6 +1390,7 @@ def main() -> int:
         "transfer_metadata": workflow_transfer_metadata,
         "replace_organism":  workflow_replace_organism,
         "dedup":             workflow_dedup,
+        "gb2fasta":          workflow_gb2fasta,
         "intron":            workflow_intron,
     }
     fn = dispatch.get(args.cmd)

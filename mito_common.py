@@ -137,6 +137,21 @@ def read_fasta(path) -> Iterator[SeqRecord]:
         yield SeqRecord(Seq("".join(parts)), id=(head.split() or [""])[0], description=head)
 
 
+FASTA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
+
+
+def gb_fasta_record(rec: SeqRecord) -> SeqRecord:
+    """A GenBank record as FASTA for `mitom run` and other tools: >ACCESSION.V definition topology=circular|linear.
+    The topology tag keeps a circular genome circular when several records share one FASTA file (without it they
+    count as contigs: linear, mitom_inputs.MIN_CIRCULAR_LEN); no tag when the LOCUS line gives no topology."""
+    rid = rec.id if rec.id and rec.id not in (".", "<unknown id>") else (rec.name or "record")
+    definition = (rec.description or "").strip().rstrip(".").strip()
+    topology = str(rec.annotations.get("topology", "")).lower()
+    words = [w for w in (definition if definition != "<unknown description>" else "",
+                         f"topology={topology}" if topology in ("circular", "linear") else "") if w]
+    return SeqRecord(rec.seq, id=rid, name=rid, description=" ".join(words))
+
+
 def topology_from_header(description: str) -> str:
     """linear when the FASTA header says topology=linear, else circular (the annotation core's rule)."""
     return "linear" if re.search(r"topology\s*=\s*linear", description or "", re.I) else "circular"

@@ -11,13 +11,14 @@ Usage:
   mitom fetch --taxon Annelida -o fetch_out                 # name or taxid, RefSeq + GenBank
   mitom fetch --taxon 6340 --refseq_only -o fetch_out       # RefSeq (NC_) only
   mitom fetch --query 'Nereididae[Organism] AND mitochondrion[Filter] AND "complete genome"[Title]' -o out
+  mitom fetch --taxon Annelida -o fetch_out --fasta      # also fetch_out/Annelida.fasta
   then:  mitom dedup -i fetch_out/Annelida.gb -o dedup_out     or     mitom run -i fetch_out/Annelida.gb -o out
 
 NCBI asks for an e-mail with every E-utilities request (--email, $NCBI_EMAIL, or "ncbi_email" in the
 mito_env config file) and allows 10 requests/s with an API key (--api_key, $NCBI_API_KEY, "ncbi_api_key")
 instead of 3/s without.
 
-Outputs in -o:  <name>.gb  fetch_report.tsv  query.txt  fetch.log
+Outputs in -o:  <name>.gb  fetch_report.tsv  query.txt  fetch.log  (+ <name>.fasta with --fasta)
 """
 from __future__ import annotations
 
@@ -36,7 +37,7 @@ from Bio import Entrez, SeqIO
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
-from mito_common import old_spelling, write_tsv  # noqa: E402
+from mito_common import gb_fasta_record, old_spelling, write_tsv  # noqa: E402
 
 ESEARCH_PAGE = 10000          # NCBI maximum retmax of one esearch request
 ACC_BATCH = 500               # UIDs per efetch rettype=acc request
@@ -224,6 +225,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--email", help="E-mail for NCBI E-utilities (or $NCBI_EMAIL / config ncbi_email).")
     ap.add_argument("--api_key", help="NCBI API key (or $NCBI_API_KEY / config ncbi_api_key).")
     ap.add_argument("--dry_run", action="store_true", help="Only print the query and the record count.")
+    ap.add_argument("--fasta", action="store_true",
+                    help="Also write <name>.fasta (every record of <name>.gb; headers >ACCESSION.V definition "
+                         "topology=circular|linear, ready for mitom run). GenBank stays the main output: its "
+                         "taxonomy sets the clade and genetic code, its header is copied into the results.")
     args = ap.parse_args(argv)
 
     out = Path(args.out_dir)
@@ -265,6 +270,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         logging.info(f"[FETCH] --max {args.max}: downloading the first {len(todo)}")
     n = download(todo, gb_path) if todo else 0
     total = write_report(gb_path, out / "fetch_report.tsv")
+    if args.fasta and gb_path.exists():
+        fa_path = out / f"{name}.fasta"
+        SeqIO.write((gb_fasta_record(r) for r in SeqIO.parse(str(gb_path), "genbank")), str(fa_path), "fasta")
+        logging.info(f"[FETCH] FASTA of the {total} records: {fa_path}")
     logging.info(f"[FETCH] done: {n} new, {total} records in {gb_path}, report {out / 'fetch_report.tsv'}")
     return 0
 
