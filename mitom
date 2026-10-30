@@ -27,9 +27,11 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
                                                                                        = mito_plot.py
   nuc                nuclear markers in contigs: 18S-ITS1-5.8S-ITS2-28S rDNA, histones H1-H4
                      (fetch / build / annotate)                                        = mito_nuc.py
+  debug              what happened in a run: its status, step times, failed records and the first error,
+                     failing commands, missing programs, NCBI errors, a command to reproduce = mito_debug.py
 
 --debug (any command): DEBUG lines and program versions in the log, every program's output kept, intermediate
-files kept (run / import / annotate).
+files kept (run / import / annotate); then `mitom debug OUT` explains the run.
 
 Typical:  mitom setup
           mitom run -i my_genomes.gb -o out          (clade and genetic code from the GenBank taxonomy)
@@ -59,6 +61,7 @@ COMMANDS = {
     "compare": ("mito_compare.py", []),
     "plot": ("mito_plot.py", []),
     "nuc": ("mito_nuc.py", []),
+    "debug": ("mito_debug.py", []),
 }
 
 

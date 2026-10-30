@@ -13,7 +13,8 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / "tests" / "data"
 COMMANDS = ("run", "import", "annotate", "reorient", "transfer_metadata", "replace_organism", "dedup", "setup",
-            "curate", "intron", "trna", "rescue", "rrna-hmm", "validate", "fetch", "check", "compare", "nuc")
+            "curate", "intron", "trna", "rescue", "rrna-hmm", "validate", "fetch", "check", "compare", "nuc", "plot",
+            "debug")
 
 
 @pytest.fixture(scope="module")

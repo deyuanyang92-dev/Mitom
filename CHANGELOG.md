@@ -6,6 +6,13 @@ installed one.
 ## Unreleased
 
 ### Added
+- `mitom debug <output folder | log file>` (`mito_debug.py`): what happened in a run, from its log - status (finished
+  with its exit code, stopped on an error with the step and the end of the traceback, or did not finish), the time
+  of each step and of its parts, every record that failed or was left out with the first error of its own log,
+  every program that failed (exit code, time, folder, end of its stderr; with `--debug` also the programs that
+  failed inside the annotation core), missing programs and how to install them, NCBI ERRORs, warnings grouped by
+  kind, and commands to reproduce (the run in debug mode, the failed program by hand, a failed record alone).
+  Exit code 0 (no problem), 1 (problems found), 2 (no MitoM log). Reads the logs of MitoM 1.0.0 too.
 - `--debug` (every `mitom` command; also an option of `run`, `import`, `annotate`, `reorient`): DEBUG lines in the
   log; the environment (MitoM version and git commit, the command as typed, Python, the machine, every program with
   its version, the Python packages, the config file, reference and data folders, environment variables, memory,
@@ -18,10 +25,11 @@ installed one.
   `--ref_gb`, `--maxintron` ...) are passed on.
 
 ### Changed
-- The run log (`run.log`, `pipeline.log` of `annotate`) has lines of a fixed form (`mitom_log.py`): `[STEP 6/11 add_missing] start | done | failed <seconds>s`, `[CMD rc=<exit> <seconds>s]
+- The run log (`run.log`, `pipeline.log` of `annotate`) has lines of a fixed form that `mitom debug` reads
+  (`mitom_log.py`): `[STEP 6/11 add_missing] start | done | failed <seconds>s`, `[CMD rc=<exit> <seconds>s]
   <command>` for every program the workflow runs (always, with the end of its stderr when it failed),
   `[RECORD <name>] ...` for every record that failed or was left out, `[ERROR]` with the whole traceback when a run
-  stops on an error (before, the traceback went to the terminal only),
+  stops on an error (before, the traceback went to the terminal only; now the terminal names `mitom debug OUT`),
   `[DONE] exit=<code> <time>`, `[ENV]` lines with the MitoM version and the command. The programs of the de novo
   intron step and of the Snakemake backend are logged the same way.
 - One spelling per option, the old one still accepted: `-o / --out` (was `--out_root`, `--out_dir`), `--jobs` (was

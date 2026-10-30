@@ -28,7 +28,7 @@ def _tools_present():
 def test_help_lists_commands():
     p = run("-h")
     assert p.returncode == 0
-    for c in ("run", "doctor", "curate", "intron", "trna", "rescue", "rrna-hmm", "validate", "plot"):
+    for c in ("run", "doctor", "curate", "intron", "trna", "rescue", "rrna-hmm", "validate", "plot", "debug"):
         assert c in p.stdout, c
 
 
