@@ -83,6 +83,63 @@ def test_fasta_header_modifiers(tmp_path):
     assert mito_tbl.clean_id("my sample/1 (A)") == "my_sample_1__A_" and len(mito_tbl.clean_id("x" * 80)) == 50
 
 
+def test_cleaning_for_ncbi(tmp_path):
+    """What other programs leave in GenBank files and NCBI does not take: editor qualifiers, a non-INSDC feature key,
+    non-ASCII text, a feature past the end - cleaned and reported (stress tests 2026-10-30)."""
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    cds = next(f for f in rec.features if f.type == "CDS")
+    cds.qualifiers.update(created_by=["User"], label=["COX1"], ApEinfo_fwdcolor=["#85dae9"],
+                          note=["collected by M\u00fcller \u6d4b\u8bd5 5 \u00b5m, \u201cK\u00f6ln\u201d"])
+    rec.features.append(SeqFeature(FeatureLocation(8000, 8300, 1), type="ORF", qualifiers={}))
+    rec.features.append(SeqFeature(FeatureLocation(len(rec) - 50, len(rec) + 40, 1), type="misc_feature"))
+    clean, warn = mito_tbl.clean_record(rec)
+    c = next(f for f in clean.features if f.type == "CDS")
+    assert not {"created_by", "label", "ApEinfo_fwdcolor"} & set(c.qualifiers)
+    assert c.qualifiers["note"] == ['collected by Muller 5 um, "Koln"']
+    assert any(f.type == "misc_feature" and f.qualifiers.get("note") == ["ORF"] for f in clean.features)
+    text = "; ".join(warn)
+    assert "ORF x1" in text and "created_by x1" in text and "made ASCII" in text and "past the end" in text
+    rec.features.append(SeqFeature(FeatureLocation(100, 100, 1), type="misc_feature", qualifiers={"note": ["site"]}))
+    site = next(f for f in mito_tbl.clean_record(rec)[0].features if f.qualifiers.get("note") == ["site"])
+    assert (int(site.location.start), int(site.location.end)) == (99, 101)             # 100^101 -> 100..101
+    trna = next(f for f in rec.features if f.type == "tRNA")
+    trna.qualifiers["codon_recognized"] = ["UUA"]                  # older NCBI tRNA qualifier, table2asn takes it
+    assert "codon_recognized" in next(f for f in mito_tbl.clean_record(rec)[0].features if f.type == "tRNA").qualifiers
+
+
+def test_broken_inputs_are_reported_and_skipped(tmp_path):
+    (tmp_path / "half.gb").write_text((DATA / "NC_000931.gb").read_text()[:6000])
+    (tmp_path / "contig.gb").write_text(
+        "LOCUS       XX000001                 500 bp    DNA     linear   INV 01-JAN-2020\n"
+        "DEFINITION  contig-only record.\nACCESSION   XX000001\nVERSION     XX000001.1\n"
+        "FEATURES             Location/Qualifiers\n     source          1..500\n"
+        "                     /organism=\"Testus testus\"\nCONTIG      join(XX000002.1:1..500)\n//\n")
+    (tmp_path / "good.gb").write_text((DATA / "NC_000933.gb").read_text())
+    assert mito_tbl.main(["-i", str(tmp_path), "-o", str(tmp_path / "o")]) == 0          # the good file is written
+    rows = report(tmp_path / "o")
+    assert [r["seq_id"] for r in rows if r["output"] != "skipped"] == ["NC_000933.1"]
+    skipped = " ".join(r["warnings"] for r in rows if r["output"] == "skipped")
+    assert "not readable as GenBank" in skipped and "has no sequence" in skipped
+    assert mito_tbl.main(["-i", str(tmp_path / "half.gb"), "-o", str(tmp_path / "x")]) == 2
+
+
+def test_genetic_code_from_option_or_taxonomy():
+    rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    for f in rec.features:
+        f.qualifiers.pop("transl_table", None)
+    code, warn = mito_tbl.record_code(rec, None)
+    assert code == 5 and "assumed (Annelida)" in warn and "[mgcode=5]" in mito_tbl.defline(rec, "X", True, code)
+    assert mito_tbl.record_code(rec, 9) == (9, "")
+    vert = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    for f in vert.features:
+        f.qualifiers.pop("transl_table", None)
+    vert.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Vertebrata"]
+    assert mito_tbl.record_code(vert, None)[0] == 2
+    vert.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Tunicata", "Ascidiacea"]
+    assert mito_tbl.record_code(vert, None)[0] == 13
+
+
 def test_no_genbank_input(tmp_path):
     assert mito_tbl.main(["-i", str(tmp_path / "nothing"), "-o", str(tmp_path / "o")]) == 2
 

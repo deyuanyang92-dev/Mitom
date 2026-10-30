@@ -262,6 +262,13 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   - 按 `/organelle` 判断线粒体（`[location=mitochondrion] [mgcode=]`）、叶绿体或核基因组（`[gcode=]`）；遗传密码取 CDS 的 `transl_table`；`/db_xref="taxon:"` 写成 `[taxid=]`；
   - 来源信息（isolate、strain、specimen_voucher、country → geo_loc_name、collection_date、lat_lon、collected_by、haplotype、host、sex、note 等）写进 `.fsa` 表头；`--source_modifiers no` 不写；
   - 特征表与 `mitom run` 的 `ncbi_submission/` 相同：不完整的端点写成 `<` / `>`，内含子等多段位置逐段写出，不写 `/translation`、`/db_xref`、`/protein_id` 和 MitoM 内部的注释。
+- **自动清理**（别的软件留在 GenBank 里、NCBI 不收的东西；每一处修改都写进报告）：
+  - 不在 INSDC 标准里的限定词（Geneious 的 `/created_by`、`/modified_by`，SnapGene / ApE 的 `/label`、`/ApEinfo_*` 等）去掉；不在标准里的特征类型（如 Geneious 的 `ORF`）改成 `misc_feature`，原类型写进 note；
+  - 文字转成 ASCII（NCBI 只收 ASCII，否则报 NonAsciiAsn 错误）：Müller → Muller，µm → um，弯引号、长破折号换成普通字符；中文等无法转换的字符去掉（报告里会提示，提交前请自行翻译）；
+  - 超出序列末端的特征、两个碱基之间的位点（`100^101`，写成前后 2 nt 的区间，与 NCBI 的 gbf2tbl 相同）在报告中列出；
+  - 读不了的文件（不完整的 GenBank）、没有序列的记录（CONTIG / WGS 主记录）报告并跳过，其余文件照常输出；
+  - 遗传密码取 CDS 的 `/transl_table`；没有时用 `--genetic_code N`，不给则按分类信息取该门常用的线粒体密码，并在报告中提示。
+- **与同类工具的对比**（14 个刁钻样例，NCBI table2asn 判定，2026-10-30，`benchmark/results/gb2tbl_stress_2026-10-30/`）：12 个有效样例全部 0 个 ERROR；NCBI 自己的 `gbf2tbl` 在跨原点基因（正、负链）、不完整端点、非 ASCII 文字、编辑软件导出的记录上共报 16 个 ERROR，且因 FASTA 不带 `[mgcode=]` 每条记录有 13–14 个遗传密码警告；缺序列和损坏的文件它输出坏记录或什么都不输出，`gb2tbl` 报告并跳过。
 - **`--validate`**：用 NCBI 的 table2asn 检查每对文件，生成 `.sqn`（可直接上传）和 `.val`；每条记录的 ERROR / WARNING 数写在报告里。`--sbt template.sbt` 加提交者模板（在 https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。有 ERROR 时，多半是注释本身的问题（如缺终止密码子），先用 `mitom curate`（或对 MitoZ / MITOS2 结果用 `mitom import`）修整再转。
 - **报告**：`gb2tbl_report.tsv`，每条记录一行：写入的 ID、来源文件、输出文件、物种、长度、拓扑、位置、遗传密码、基因数、警告（改名、缺物种名等），加 `--validate` 时还有 NCBI ERROR / WARNING 数。
 - **示例**：
@@ -270,6 +277,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   mitom gb2tbl -i a.gbf b.gb c.gbk -o ncbi --name batch1          # 三个文件合并：ncbi/batch1.tbl + .fsa
   mitom gb2tbl -i genomes/ -o ncbi --split file                   # 每个文件一对
   mitom gb2tbl -i genomes/ -o ncbi --split record --validate --sbt template.sbt   # 每条记录一对 + .sqn
+  mitom gb2tbl -i geneious_export.gb -o ncbi --genetic_code 5     # 记录里没有 /transl_table 时指定遗传密码
   ```
 
 ### `mitom reorient`：只统一方向和起点

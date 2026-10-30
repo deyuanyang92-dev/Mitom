@@ -17,6 +17,11 @@ installed one.
   clashing IDs are renamed ID_2 ..., IDs cleaned to NCBI's characters; location (mitochondrion / chloroplast / nucleus),
   genetic code, taxid and source qualifiers (isolate, voucher, country -> geo_loc_name, collection date ...) in the
   FASTA headers; `--validate` runs table2asn (`.sqn`, `.val`, errors per record in gb2tbl_report.tsv; `--sbt`).
+  Cleaned for NCBI and reported: qualifiers outside INSDC (Geneious / SnapGene / ApE) left out, non-INSDC feature keys
+  as misc_feature, text made ASCII, features past the end and 100^101 sites flagged; unreadable files and records
+  without sequence skipped with a message; `--genetic_code` (else the phylum's code when no /transl_table). Stress
+  test against NCBI's gbf2tbl (14 cases, table2asn): 0 ERROR in every valid case vs 16 for gbf2tbl
+  (benchmark/results/gb2tbl_stress_2026-10-30/).
 - `--topology auto|label|circular|linear` (`mitom run`, `mitom annotate`; default auto): records are annotated as
   labelled (GenBank LOCUS line; FASTA `topology=`; else one sequence >= 10 kb circular, several or shorter linear)
   and the protein genes at the two ends are aligned to their reference protein across the junction
