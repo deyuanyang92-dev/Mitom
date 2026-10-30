@@ -350,7 +350,7 @@ def run_plots(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRes
     s1, s2 = parse_suffix_fq(args.suffix_fq) if infq else ("", "")
     jobs = [(gbf, out_root / "plots",
              [str(x) for x in find_fq_pair_for_sample(gbf.stem, infq, args.fq_position, s1, s2) if x] if infq else [],
-             int(args.threads), getattr(args, "plot_style", "mitom")) for gbf in sorted(gb_dir.rglob("*.gbf"))]
+             int(args.threads), getattr(args, "plot_style", "circos")) for gbf in sorted(gb_dir.rglob("*.gbf"))]
     n = depth_n = 0
     ok = True
     try:

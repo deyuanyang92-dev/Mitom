@@ -349,7 +349,7 @@ OUTPUT_LAYOUT = [
     ("original_vs_mitom.tsv", "original vs MitoM annotation, one row per gene"),
     ("summary.tsv", "one row per record: gene counts, orientation, round, NCBI errors"),
     ("ncbi_submission/", "NCBI submission files per record (.fsa .tbl .sqn) and table2asn results"),
-    ("plots/", "circular genome map per record (.png, .pdf; --plot_style mitom or circos): genes, GC content, read depth with --infq"),
+    ("plots/", "circular genome map per record (.png, .pdf; --plot_style circos or mitom): genes, GC content, read depth with --infq"),
     ("reports/", "one report per step (deduplication, round-2 decisions, curation, ...)"),
     ("run.log", "everything the run did, with all commands"),
     ("work/", "intermediate files (only with --keep_intermediate yes)"),

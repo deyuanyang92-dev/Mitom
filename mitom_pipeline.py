@@ -1108,12 +1108,12 @@ def build_parser() -> argparse.ArgumentParser:
         old_spelling(g, "--mitos_refdir", "mitos_refdir")
         g.add_argument("--plot", choices=["yes", "no"], default="yes",
                        help="Circular genome map per record (mito_plot.py, matplotlib) -> plots/<record>.png and .pdf: "
-                            "genes by strand and type, GC content, GC skew; with --infq also the read depth (minimap2 when installed, else bwa mem). "
+                            "genes by strand and type, GC content; with --infq also the read depth (minimap2 when installed, else bwa mem). "
                             "Default yes (about 2 s per record, --jobs in parallel).")
-        g.add_argument("--plot_style", choices=["mitom", "circos"], default="mitom",
-                       help="Map style: mitom (default) = genes on both sides of one circle, GC content and GC skew rings; "
-                            "circos (after mitoPlotR) = a framed lane per strand, names along the circle, a position axis, "
-                            "GC content, read depth.")
+        g.add_argument("--plot_style", choices=["circos", "mitom"], default="circos",
+                       help="Map style: circos (default, after mitoPlotR) = a framed lane per strand, names along the "
+                            "circle, a position axis, GC content, read depth; mitom = genes on both sides of one circle, "
+                            "GC content and GC skew rings.")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",
                        help="yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and "
                             "NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/")

@@ -100,7 +100,7 @@ def test_span_and_fan():
 def test_plot_record_writes_png_and_pdf(tmp_path, topology):
     rec = genome(topology=topology)
     depth = np.linspace(10, 50, len(rec.seq)) if topology == "linear" else None
-    paths = mp.plot_record(rec, tmp_path, depth=depth)
+    paths = mp.plot_record(rec, tmp_path, depth=depth, style="mitom")      # (circos: test_circos_style)
     assert [p.name for p in paths] == ["TEST1.1.png", "TEST1.1.pdf"]
     assert paths[0].read_bytes()[:4] == b"\x89PNG" and paths[1].read_bytes()[:4] == b"%PDF"
     assert all(p.stat().st_size > 10000 for p in paths)

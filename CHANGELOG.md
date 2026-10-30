@@ -19,10 +19,11 @@ installed one.
   sponges (linear mtDNA) are annotated as linear unless a gene runs across their ends. Changed records are annotated
   again; `reports/topology_decision.tsv` gives each record's label, topology and reason.
 
-- Genome maps in a second style, `mitom plot --style circos` / `mitom run --plot_style circos`, after mitoPlotR
-  (K. Onthank, MIT licence): a framed lane per strand, blocks coloured by type, names written along the circle, a
-  position axis, GC content, read depth in 25 nt bins scaled to the 99th percentile with the mean as a dashed line,
-  the organism in the centre; tRNA codes added and colour-blind-safe hues. Examples: docs/images/.
+- Genome maps in a new style, the default (`mitom plot --style circos`, `mitom run --plot_style circos`), after
+  mitoPlotR (K. Onthank, MIT licence): a framed lane per strand, blocks coloured by type, names written along the
+  circle, a position axis, GC content, read depth in 25 nt bins scaled to the 99th percentile with the mean as a
+  dashed line, the organism in the centre; tRNA codes added and colour-blind-safe hues. The previous maps:
+  `--style mitom` / `--plot_style mitom`. Examples: docs/images/.
 
 ### Changed
 - `dedup.fasta` headers carry `topology=circular|linear` (without it `mitom run` takes the records of a multi-record

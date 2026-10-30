@@ -28,7 +28,7 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
   fetch              download complete mitogenomes from NCBI by taxon / query          = mito_fetch.py
   check              audit existing GenBank annotation; lists records to re-annotate   = mito_check.py
   compare            original annotation vs MitoM, gene by gene                       = mito_compare.py
-  plot               circular genome maps: genes, GC content, GC skew; read depth with --fq1 / --fq2
+  plot               circular genome maps (--style circos / mitom): genes, GC content; read depth with --fq1 / --fq2
                                                                                        = mito_plot.py
   nuc                nuclear markers in contigs: 18S-ITS1-5.8S-ITS2-28S rDNA, histones H1-H4
                      (fetch / build / annotate)                                        = mito_nuc.py

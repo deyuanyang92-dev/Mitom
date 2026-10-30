@@ -85,7 +85,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 7. **修整**：按 NCBI 规范修整基因的起止位置和基因名（每一处修改都记在 `reports/curation_report.tsv`）。
 8. **NCBI 检查**：用 NCBI 的 table2asn 检查每条记录，生成可提交的文件（`ncbi_submission/`）。
 9. **对比原注释**：GenBank 输入时，逐个基因比较原注释和新注释（`original_vs_mitom.tsv`）。
-10. **作图**：每条记录一张环状基因组图（`plots/`）；`--plot_style circos` 换成借鉴 mitoPlotR 的环道样式（示例见 [docs/images](docs/images/)）。
+10. **作图**：每条记录一张环状基因组图（`plots/`），默认借鉴 mitoPlotR 的环道样式（示例见 [docs/images](docs/images/)）；`--plot_style mitom` 用原来的样式。
 11. **整理输出**：结果整理到固定的目录结构里（见下面的输出表）。
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `run.log`：
@@ -115,7 +115,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `original_annotation/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与上面对应，便于前后对比 |
 | `original_vs_mitom.tsv` | 原注释 vs MitoM，每个基因一行：same / ends_differ / only_original / only_mitom … |
 | `summary.tsv` | 每条记录一行：基因数、cox1 起始、用了第几轮注释、是否迁回原 header、NCBI ERROR 数 |
-| `plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：基因按链和类别着色（正链在外、负链在内），向内依次为 GC 含量、GC skew；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot no` 不画 |
+| `plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：每条链一个环道（正链在外、负链在内），基因按类别着色、名字沿圆弧书写，向内依次为坐标轴、GC 含量；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot_style mitom` 用原来的样式（另有 GC skew 环），`--plot no` 不画 |
 | `ncbi_submission/` | 每条的 NCBI 提交文件 `.fsa/.tbl/.sqn` 与 table2asn 结果；`submission_summary.tsv` ERROR 为 0 的可直接提交 |
 | `reports/` | 各步骤报告：`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
 | `run.log` | 全部过程与调用的命令 |
@@ -139,7 +139,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `mitom rrna-hmm` | 补搜缺失的 12S / 16S rRNA |
 | `mitom rescue` | 用 MITOS2 补回漏掉的基因（需另装 MITOS2） |
 | `mitom validate` | 用 NCBI 的 table2asn 检查，生成提交文件 |
-| `mitom plot` | 画环状基因组图（`--style mitom` 默认，或 `--style circos`） |
+| `mitom plot` | 画环状基因组图（`--style circos` 默认，或 `--style mitom`） |
 | `mitom nuc` | 在全基因组组装中注释核 rDNA（18S–28S）和组蛋白基因 |
 | `mitom debug` | 出问题时读日志，告诉你哪一步、哪条记录、哪个程序出错 |
 | `mitom transfer_metadata` / `replace_organism` | 把原记录的物种、文献等信息复制到新注释 / 修正物种名 |
@@ -175,7 +175,7 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 | 仍缺的 12S/16S 用按门建立的 rRNA HMM 补搜（`mito_rrna_hmm.py`，库 `models/rrna_hmm/`，nhmmer；只在常规方法找不到时启用） | MitoM 自有步骤（思路参考 EMMA 的 nhmmer rRNA 模型） |
 | 蛋白基因与 rRNA 端点校正（`mito_curate.py`）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
 | 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
-| 基因组圈图（`mito_plot.py`：基因、GC 含量、GC skew，可选测序深度） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
+| 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度；默认样式借鉴 mitoPlotR） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
 | 用 MitoZ / MITOS2 注释（`--engine mitoz\|mitos2`）或导入它们已有的结果（`mitom import`；`mito_engines.py`） | 可选：MitoZ、MITOS2 需自己安装 |
 | 蛋白基因、rRNA、tRNA 识别 | 注释核心 `mito_core.py`（blastx + exonerate 蛋白基因，按门 rRNA profile HMM，MitoM-ML tRNA：分支协方差模型 + 学习的判别器与端点，未调用的 tRNA 家族由 MiTFi 补，脊椎动物取 MiTFi 端点） |
 

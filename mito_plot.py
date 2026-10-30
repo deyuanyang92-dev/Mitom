@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """mito_plot.py - circular map of an annotated mitochondrial genome (MitoM), drawn with matplotlib.
 
-Replaces the MitoZ / circos map. From the outside in:
+Two styles. circos (default, --style circos), after mitoPlotR (K. Onthank, github.com/KirtOnthank/mitoPlotR, MIT
+licence): a framed lane per strand (+ outside, - inside) with blocks coloured by type (protein gene, tRNA, rRNA,
+other), gene names along the circle outside, tRNA codes, a position axis, GC content, read depth in 25 nt bins
+scaled to the 99th percentile with the mean as a dashed line, the organism in the centre.
+
+mitom (--style mitom; the default until 2026-10-30), from the outside in:
   genes       + strand outside the backbone circle, - strand inside, coloured by class (COX, NADH, ATP, CYTB,
               rRNA, tRNA; other = D-loop, misc_feature, rep_origin, repeat_region and CDS of other names, e.g.
               intron ORFs). Protein genes and rRNAs are labelled by /gene, tRNAs by their one-letter code (L1 / L2,
@@ -15,14 +20,9 @@ Replaces the MitoZ / circos map. From the outside in:
   centre      organism, length, topology, accession; a kb ruler runs inside the innermost ring
 Position 1 is at the top and positions run clockwise; a linear record leaves a gap between its end and start.
 
-Style circos (--style circos), after mitoPlotR (K. Onthank, github.com/KirtOnthank/mitoPlotR, MIT licence): a framed
-lane per strand (+ outside, - inside) with blocks coloured by type (protein gene, tRNA, rRNA, other), gene names
-along the circle outside, tRNA codes, a position axis, GC content, read depth in 25 nt bins scaled to the 99th
-percentile with the mean as a dashed line, the organism in the centre.
-
 Usage:
   mitom plot -i <GenBank file or folder> -o <out_dir> [--fq1 R1.fq.gz [--fq2 R2.fq.gz]] [--threads N]
-             [--formats png,pdf] [--style mitom|circos]         (= python3 mito_plot.py ...)
+             [--formats png,pdf] [--style circos|mitom]         (= python3 mito_plot.py ...)
 Every record of the GenBank file, or of every GenBank file in the folder and its subfolders (.gb .gbk .gbf .genbank
 .gbff), becomes <out_dir>/<record id>.png (300 dpi) and .pdf; reads are used only when the input holds one record.
 """
@@ -292,13 +292,13 @@ def _ruler(ax, r: float, length: int, circular: bool, base: np.ndarray) -> None:
         ax.text(t, r - 0.025, text, fontsize=7, color=MUTED, ha=ha, va=va)
 
 
-STYLES = ("mitom", "circos")
+STYLES = ("circos", "mitom")
 
 
 def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = None,
-                formats: Sequence[str] = ("png", "pdf"), style: str = "mitom") -> List[Path]:
-    """Draw the map of `rec` (depth: per-position read depth, e.g. from depth_from_reads) in `style` - mitom (genes
-    on both sides of one circle, GC content and GC skew rings) or circos (strand lanes, after mitoPlotR) - and write
+                formats: Sequence[str] = ("png", "pdf"), style: str = "circos") -> List[Path]:
+    """Draw the map of `rec` (depth: per-position read depth, e.g. from depth_from_reads) in `style` - circos (strand
+    lanes, after mitoPlotR) or mitom (genes on both sides of one circle, GC content and GC skew rings) - and write
     <out_dir>/<record id>.<format> for each format (png at 300 dpi); returns the written paths."""
     n = len(rec.seq)
     if depth is not None and len(depth) != n:
@@ -618,10 +618,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--fq2", help="mates of --fq1")
     p.add_argument("--threads", type=int, default=1, help="aligner threads (minimap2, else bwa mem; default 1)")
     p.add_argument("--formats", default="png,pdf", help="comma-separated (default png,pdf)")
-    p.add_argument("--style", choices=STYLES, default="mitom",
-                   help="mitom (default): genes on both sides of one circle, GC content and GC skew rings; circos "
-                        "(after mitoPlotR): a framed lane per strand, names along the circle, a position axis, GC "
-                        "content, read depth")
+    p.add_argument("--style", choices=STYLES, default="circos",
+                   help="circos (default, after mitoPlotR): a framed lane per strand, names along the circle, a "
+                        "position axis, GC content, read depth; mitom: genes on both sides of one circle, GC content "
+                        "and GC skew rings")
     a = p.parse_args(argv)
     src = Path(a.input)
     if not src.exists():
