@@ -7,8 +7,11 @@ c06_partial_ends                mitom: E  0 W  1 [W:TranslExceptx1]  ncbi: E  2 
 c07_qualifiers                  mitom: E  0 W  1 [W:UnnecessaryExceptionx1]  ncbi: E  6 W 14 [W:GenCodeMismatchx13, F:NonAsciiAsnx6, W:UnnecessaryExceptionx1]
 c08_editor_junk                 mitom: E  0 W  0 []  ncbi: E  4 W 15 [W:GenCodeMismatchx13, W:IllegalDbXrefx2, E:IllegalDbXrefx2, E:GeneIdMismatchx2]
 c09_zero_length_site            mitom: E  0 W  0 []  ncbi: E  0 W 13 [W:GenCodeMismatchx13]
-c10_no_source_no_organism       mitom: E  0 W  1 [W:UnwantedCompleteFlagx1]  ncbi: E  0 W  1 [W:BioSourceMissingx1]
+c10_no_source_no_organism       mitom: E  0 W  1 [W:BioSourceNeedsChromosomex1]  ncbi: E  0 W  1 [W:BioSourceMissingx1]
 c11_no_sequence                 mitom: no output  ncbi: E  1 W  1 [W:ShortSeqx1, F:NoOrgFoundx1]
 c12_truncated_file              mitom: no output  ncbi: no output
 c13_beyond_end                  mitom: E  0 W  0 []  ncbi: E  0 W 13 [W:GenCodeMismatchx13]
 c14_odd_id_lowercase_iupac      mitom: E  0 W  0 []  ncbi: E  0 W 13 [W:GenCodeMismatchx13]
+c15_ena_embl                    mitom: E  0 W  0 []  ncbi: no output
+c16_no_products                 mitom: E  0 W 24 [W:GeneXrefWithoutGenex24]  ncbi: E 31 W 57 [W:GeneXrefWithoutGenex24, W:MissingTrnaAAx18, E:TrnaCodonWrongx14, E:MissingProteinNamex13]
+c17_latin1                      mitom: E  0 W  0 []  ncbi: E  4 W 13 [W:GenCodeMismatchx13, F:NonAsciiAsnx4]

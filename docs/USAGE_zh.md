@@ -168,7 +168,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 | MitoZ 的结果（`.gbf`）或任何已注释的 GenBank | 保留它原来的基因，只做 MitoM 的整理（统一起点、修整边界和名称、NCBI 文件、作图） | `mitom import -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
 | MITOS2 的结果目录 | 同上 | `mitom import -i mitos2_dir/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5` |
 | GenBank（`.gb`、`.gbf` 都行） | 转成 FASTA | `mitom gb2fasta -i sample.gbf -o fasta_out` |
-| 一个或一批已注释的 GenBank（`.gb`、`.gbf` 都行） | NCBI 提交用的特征表 `.tbl` + `.fsa`（可合并、可分开） | `mitom gb2tbl -i final_annotation/ -o ncbi`（加 `--validate` 生成 `.sqn` 并检查） |
+| 一个或一批已注释的 GenBank / EMBL（`.gb`、`.gbf`、`.embl` 都行） | NCBI 提交用的特征表 `.tbl` + `.fsa`（可合并、可分开） | `mitom gb2tbl -i final_annotation/ -o ncbi`（加 `--validate` 生成 `.sqn` 并检查） |
 | 一批 GenBank 或 FASTA，可能有重复 | 去掉重复，每个基因组留一条 | `mitom dedup -i in_dir/ -o dedup_out` |
 
 **`.gb` 和 `.gbf` 有什么区别？** 没有区别，都是 GenBank 格式，只是不同软件习惯用的后缀不同（NCBI 用 `.gb`，MitoZ 用 `.gbf`）。MitoM 认 `.gb .gbk .gbf .gbff .genbank` 这几种后缀，可以直接给单个文件，也可以给一个目录（含子目录）。
@@ -244,9 +244,9 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   mitom gb2fasta -i fetch_out/Annelida.gb -o fasta_out --split
   ```
 
-### `mitom gb2tbl`：GenBank 转 NCBI 提交文件（`.tbl` + `.fsa`）
+### `mitom gb2tbl`：GenBank / EMBL 转 NCBI 提交文件（`.tbl` + `.fsa`）
 
-- **做什么**：把已注释的 GenBank（`.gb .gbk .gbf .gbff .genbank`，MitoM 的 `final_annotation/`、MitoZ / MITOS2 / Geneious 的结果、NCBI 下载的记录都行）转成 NCBI 提交需要的 5 列特征表 `.tbl` 和带来源信息的 `.fsa`（BankIt 上传这两个文件；table2asn 用它们生成 `.sqn`）。`-i` 可以给多个文件、多个目录，混在一起也行。
+- **做什么**：把已注释的 GenBank（`.gb .gbk .gbf .gbff .genbank`）或 EMBL / ENA（`.embl .ebl .ena`）文件转成 NCBI 提交需要的 5 列特征表 `.tbl` 和带来源信息的 `.fsa`（BankIt 上传这两个文件；table2asn 用它们生成 `.sqn`）。MitoM 的 `final_annotation/`、MitoZ / MITOS2 / Geneious 的结果、NCBI 或 ENA 下载的记录都行；格式按文件内容判断（`LOCUS` / `ID` 行）。`-i` 可以给多个文件、多个目录，混在一起也行；`-i -` 从管道读入（如 `efetch -db nuccore -id NC_000931 -format gb | mitom gb2tbl -i - -o ncbi`）。
 - **三种输出方式**：
 
   | 参数 | 输出 |
@@ -259,24 +259,37 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   - 同一条记录在几个文件里重复出现，只写一次；
   - 不同记录用了同一个 ID，自动改名为 `ID_2`、`ID_3`（NCBI 要求一次提交里 ID 唯一）；
   - ID 中 NCBI 不接受的字符换成 `_`，最长 50 个字符；
-  - 按 `/organelle` 判断线粒体（`[location=mitochondrion] [mgcode=]`）、叶绿体或核基因组（`[gcode=]`）；遗传密码取 CDS 的 `transl_table`；`/db_xref="taxon:"` 写成 `[taxid=]`；
-  - 来源信息（isolate、strain、specimen_voucher、country → geo_loc_name、collection_date、lat_lon、collected_by、haplotype、host、sex、note 等）写进 `.fsa` 表头；`--source_modifiers no` 不写；
+  - 按 `/organelle` 判断线粒体（`[location=mitochondrion] [mgcode=]`）、叶绿体或核基因组（`[gcode=]`）；遗传密码取 CDS 的 `transl_table`；`/db_xref="taxon:"` 写成 `[taxid=]`；物种名取 source 特征的 `/organism`（EMBL 的 OS 行带俗名，不用）；
+  - 来源信息（isolate、strain、specimen_voucher、country → geo_loc_name、collection_date、lat_lon、collected_by、isolation_source、haplotype、host、sex、note 等）写进 `.fsa` 表头；`--source_modifiers no` 不写；
+  - 原记录的 DEFINITION 作为 `.fsa` 的标题（与 NCBI 的 gbf2fsa 相同）；`topology=linear` 这类占位文字（MitoZ）不用，报告中提示；序列每行 70 个碱基；
   - 特征表与 `mitom run` 的 `ncbi_submission/` 相同：不完整的端点写成 `<` / `>`，内含子等多段位置逐段写出，不写 `/translation`、`/db_xref`、`/protein_id` 和 MitoM 内部的注释。
-- **自动清理**（别的软件留在 GenBank 里、NCBI 不收的东西；每一处修改都写进报告）：
+- **自己的来源信息与产物名**（吸收 GB2sequin 的来源信息表、产物表和 table2asn 的 `.src` / `-j`）：
+  - `--source_table samples.tsv`：每条记录一行，制表符分隔（NCBI 的 `.src`）或 CSV（Excel 另存为 CSV 即可）。第一列是记录：写入的 ID、带或不带版本号的登录号、LOCUS 名或文件名（不含后缀）都行；其余列是 NCBI 的来源修饰符，列名不分大小写，空格、下划线、连字符都一样：isolate、specimen_voucher（写 voucher 也行）、country / geo_loc_name、collection_date、lat_lon、altitude、collected_by、identified_by、isolation_source、host、sex、tissue_type、dev_stage、haplotype、note、bioproject、biosample 等；organism、location（mitochondrion / chloroplast / genomic）、topology、genetic_code、definition 也能改。改了物种名时，原来的 taxid 去掉，标题里的旧物种名一起换掉。
+    ```
+    Sequence_ID	isolate	specimen_voucher	country	collection_date	lat_lon
+    sample1	PD-1	QDU-2024-01	China: Qingdao	2024-05-01	36.06 N 120.38 E
+    NC_000931	PD-7	QDU-2024-07	China: Weihai	2024-05-03	37.50 N 122.11 E
+    ```
+    NCBI 不认识的列（如 Family、Depth）不写进去，在报告和屏幕上列出；location 列如果写的是采样地（如 Qingdao）也不写，并提示用 geo_loc_name；表里没有对应记录的行、没有表行的记录都会提示。
+  - `--modifiers "[location=mitochondrion] [topology=circular]"`：对所有记录生效（同 table2asn 的 `-j`）；同一项以 `--source_table` 为准，两者都优先于记录本身。
+  - 产物名：CDS、tRNA、rRNA 缺 `/product` 时，按基因名补上线粒体基因的标准名称（cox1 → cytochrome c oxidase subunit I、trnL1 → tRNA-Leu、rrnL → 16S ribosomal RNA；tRNA 也可从 `/anticodon` 读出氨基酸）。CDS 缺产物名是 NCBI 的 ERROR（SEQ_FEAT.MissingProteinName）。认不出的基因在报告中列出。
+  - `--product_table genes.tsv`：两列「基因名、产物名」（第一行可以是 `gene	product`），按 `/gene`（不分大小写）设置或改写 CDS、tRNA、rRNA 的产物名，如 `cox1	cytochrome c oxidase subunit 1`、`orf314	hypothetical protein`。
+- **自动清理**（别的软件留在文件里、NCBI 不收的东西；每一处修改都写进报告）：
   - 不在 INSDC 标准里的限定词（Geneious 的 `/created_by`、`/modified_by`，SnapGene / ApE 的 `/label`、`/ApEinfo_*` 等）去掉；不在标准里的特征类型（如 Geneious 的 `ORF`）改成 `misc_feature`，原类型写进 note；
-  - 文字转成 ASCII（NCBI 只收 ASCII，否则报 NonAsciiAsn 错误）：Müller → Muller，µm → um，弯引号、长破折号换成普通字符；中文等无法转换的字符去掉（报告里会提示，提交前请自行翻译）；
+  - 文字转成 ASCII（NCBI 只收 ASCII，否则报 NonAsciiAsn 错误）：Müller → Muller，µm → um，弯引号、长破折号换成普通字符；中文等无法转换的字符去掉（报告里会提示，提交前请自行翻译）；文件按 UTF-8 读，不行再按 Windows-1252 / Latin-1（老的 Windows 软件）；
   - 超出序列末端的特征、两个碱基之间的位点（`100^101`，写成前后 2 nt 的区间，与 NCBI 的 gbf2tbl 相同）在报告中列出；
   - 读不了的文件（不完整的 GenBank）、没有序列的记录（CONTIG / WGS 主记录）报告并跳过，其余文件照常输出；
-  - 遗传密码取 CDS 的 `/transl_table`；没有时用 `--genetic_code N`，不给则按分类信息取该门常用的线粒体密码，并在报告中提示。
-- **与同类工具的对比**（14 个刁钻样例，NCBI table2asn 判定，2026-10-30，`benchmark/results/gb2tbl_stress_2026-10-30/`）：12 个有效样例全部 0 个 ERROR；NCBI 自己的 `gbf2tbl` 在跨原点基因（正、负链）、不完整端点、非 ASCII 文字、编辑软件导出的记录上共报 16 个 ERROR，且因 FASTA 不带 `[mgcode=]` 每条记录有 13–14 个遗传密码警告；缺序列和损坏的文件它输出坏记录或什么都不输出，`gb2tbl` 报告并跳过。
+  - 遗传密码取 CDS 的 `/transl_table`；没有时用 `--genetic_code N`（或来源信息表的 genetic_code 列），都不给则按分类信息取该门常用的线粒体密码（被囊动物 13、文昌鱼 5），并在报告中提示。
+- **与同类工具的对比**（17 个刁钻样例，NCBI table2asn 判定，2026-10-30，`benchmark/results/gb2tbl_stress_2026-10-30/`）：15 个有效样例 `gb2tbl` 全部 0 个 ERROR；NCBI 自己的 `gbf2tbl` + `gbf2fsa` 在跨原点基因（正、负链）、不完整端点、非 ASCII 文字、编辑软件导出、缺产物名、Latin-1 编码的记录上共报 51 个 ERROR，读不了 EMBL 文件，且因 FASTA 不带 `[mgcode=]` 每条记录有 13–14 个遗传密码警告；缺序列和损坏的文件它输出坏记录或什么都不输出，`gb2tbl` 报告并跳过。
 - **`--validate`**：用 NCBI 的 table2asn 检查每对文件，生成 `.sqn`（可直接上传）和 `.val`；每条记录的 ERROR / WARNING 数写在报告里。`--sbt template.sbt` 加提交者模板（在 https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。有 ERROR 时，多半是注释本身的问题（如缺终止密码子），先用 `mitom curate`（或对 MitoZ / MITOS2 结果用 `mitom import`）修整再转。
-- **报告**：`gb2tbl_report.tsv`，每条记录一行：写入的 ID、来源文件、输出文件、物种、长度、拓扑、位置、遗传密码、基因数、警告（改名、缺物种名等），加 `--validate` 时还有 NCBI ERROR / WARNING 数。
+- **报告**：`gb2tbl_report.tsv`，每条记录一行：写入的 ID、来源文件、输出文件、物种、长度、拓扑、位置、遗传密码、基因数、警告（改名、缺物种名、补的产物名等），加 `--validate` 时还有 NCBI ERROR / WARNING 数；跳过的文件（`skipped`）和来源信息表的提示（`note`）也各占一行。
 - **示例**：
   ```bash
   mitom gb2tbl -i out/final_annotation -o ncbi                    # 全部合并：ncbi/final_annotation.tbl + .fsa
-  mitom gb2tbl -i a.gbf b.gb c.gbk -o ncbi --name batch1          # 三个文件合并：ncbi/batch1.tbl + .fsa
+  mitom gb2tbl -i a.gbf b.gb c.embl -o ncbi --name batch1         # 三个文件合并：ncbi/batch1.tbl + .fsa
   mitom gb2tbl -i genomes/ -o ncbi --split file                   # 每个文件一对
   mitom gb2tbl -i genomes/ -o ncbi --split record --validate --sbt template.sbt   # 每条记录一对 + .sqn
+  mitom gb2tbl -i genomes/ -o ncbi --source_table samples.tsv --modifiers "[topology=circular]" --validate
   mitom gb2tbl -i geneious_export.gb -o ncbi --genetic_code 5     # 记录里没有 /transl_table 时指定遗传密码
   ```
 

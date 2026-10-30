@@ -36,6 +36,12 @@ installed one.
   without sequence skipped with a message; `--genetic_code` (else the phylum's code when no /transl_table). Stress
   test against NCBI's gbf2tbl (14 cases, table2asn): 0 ERROR in every valid case vs 16 for gbf2tbl
   (benchmark/results/gb2tbl_stress_2026-10-30/).
+  Taken over from the other converters: EMBL / ENA input and `-i -` for a pipe (GB2sequin, gbf2tbl); `--source_table`
+  (one row per record, NCBI .src or CSV; columns by modifier name, others reported) and `--modifiers` for all records
+  (GB2sequin's source modifier table, table2asn -src-file / -j); missing /product of mitochondrial genes filled from
+  the gene name or /anticodon, `--product_table` (GB2sequin's gene product table); the DEFINITION as the FASTA title
+  and 70-column sequence lines (gbf2fsa); Windows-1252 / Latin-1 files read. Stress test now 17 cases: 0 ERROR in all 15 valid ones
+  vs 51 for gbf2tbl + gbf2fsa, which read no EMBL.
 - `--topology auto|label|circular|linear` (`mitom run`, `mitom annotate`; default auto): records are annotated as
   labelled (GenBank LOCUS line; FASTA `topology=`; else one sequence >= 10 kb circular, several or shorter linear)
   and the protein genes at the two ends are aligned to their reference protein across the junction

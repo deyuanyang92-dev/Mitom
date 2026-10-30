@@ -5,8 +5,8 @@ M=/media/deyuan/18T_B/yzz/MitoM
 B=/home/deyuan/miniforge3/envs/busco/bin
 T2A=/home/deyuan/miniforge3/envs/mitotools/bin/table2asn
 rm -rf $R/mitom $R/ncbi; mkdir -p $R/mitom $R/ncbi
-for f in $R/in/*.gb; do
-  c=$(basename $f .gb)
+for f in $R/in/*.gb $R/in/*.embl; do
+  c=$(basename $f); c=${c%.*}
   # MitoM: one file -> one pair named after the file, validated
   $M/mitom gb2tbl -i $f -o $R/mitom/$c --validate > $R/mitom/$c.log 2>&1; echo "mitom $c exit=$?" >> $R/mitom/exits.txt
   # NCBI EDirect: gbf2tbl + gbf2fsa, then table2asn on the pair

@@ -40,13 +40,13 @@ def safe_name(s: str) -> str:
 GB_SUFFIXES = (".gb", ".gbk", ".gbf", ".genbank", ".gbff")
 
 
-def iter_gb_files(path) -> List[Path]:
-    """GenBank files of an input: the file itself, or every file with a GenBank suffix (GB_SUFFIXES, any case) below a
+def iter_gb_files(path, suffixes=GB_SUFFIXES) -> List[Path]:
+    """GenBank files of an input: the file itself, or every file with a GenBank suffix (suffixes, any case) below a
     folder, sorted; [] for a path that does not exist."""
     p = Path(path)
     if p.is_file():
         return [p]
-    return sorted(x for x in p.rglob("*") if x.is_file() and x.suffix.lower() in GB_SUFFIXES)
+    return sorted(x for x in p.rglob("*") if x.is_file() and x.suffix.lower() in suffixes)
 
 
 def write_tsv(path, columns, rows) -> None:

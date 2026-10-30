@@ -131,3 +131,25 @@ p.id = p.name = "MySample#1/A"
 s = str(p.seq).lower()
 p.seq = Seq(s[:500] + "nnnnnnnnnn" + s[510:2000] + "rykm" + s[2004:])
 write("c14_odd_id_lowercase_iupac", p)
+# c15: a real ENA EMBL file (AF178678, Platynereis dumerilii; curl https://www.ebi.ac.uk/ena/browser/api/embl/AF178678)
+ena = R / "download_ena" / "AF178678.embl"
+if ena.is_file():
+    (OUT / "c15_ena_embl.embl").write_text(ena.read_text())
+# c16: an editor export with gene names only, no /product (tRNA-Leu -> /gene="trnL", rRNAs rrnS / rrnL)
+AA3 = {"Ala": "A", "Arg": "R", "Asn": "N", "Asp": "D", "Cys": "C", "Gln": "Q", "Glu": "E", "Gly": "G", "His": "H",
+       "Ile": "I", "Leu": "L", "Lys": "K", "Met": "M", "Phe": "F", "Pro": "P", "Ser": "S", "Thr": "T", "Trp": "W",
+       "Tyr": "Y", "Val": "V"}
+u = copy.deepcopy(ann)
+for f in u.features:
+    if f.type in ("CDS", "tRNA", "rRNA"):
+        prod = f.qualifiers.pop("product")[0]
+        if f.type == "tRNA":
+            f.qualifiers["gene"] = ["trn" + AA3[prod[5:8]]]
+        elif f.type == "rRNA":
+            f.qualifiers["gene"] = ["rrnS" if prod.startswith("small") else "rrnL"]
+write("c16_no_products", u)
+# c17: a file in Latin-1 (older Windows programs): u-umlaut and o-umlaut as single bytes
+v = copy.deepcopy(ann)
+next(f for f in v.features if f.type == "source").qualifiers.update(collected_by=["J. Müller"], country=["Germany: Köln"])
+write("c17_latin1", v)
+(OUT / "c17_latin1.gb").write_bytes((OUT / "c17_latin1.gb").read_text().encode("latin-1"))

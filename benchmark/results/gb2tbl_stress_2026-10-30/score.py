@@ -8,7 +8,7 @@ sys.path.insert(0, "/media/deyuan/18T_B/yzz/MitoM")
 import ncbi_validate as nv
 
 R = Path(__file__).resolve().parent
-for case in sorted(p.stem for p in (R / "in").glob("*.gb")):
+for case in sorted(p.stem for p in (R / "in").glob("*") if p.suffix in (".gb", ".embl")):
     line = [f"{case:30s}"]
     for tool in ("mitom", "ncbi"):
         vals = list((R / tool / case).glob("*.val"))

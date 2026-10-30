@@ -129,7 +129,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `mitom fetch` | 从 NCBI 下载某个类群的线粒体全基因组（GenBank 格式；加 `--fasta` 同时生成 FASTA） |
 | `mitom dedup` | 只做“去重”：同一个基因组的多条记录只留一条（说明见第 3 点）；GenBank、FASTA 都可以 |
 | `mitom gb2fasta` | GenBank（`.gb`、`.gbf` 都行）转 FASTA，表头带 `topology=`，可直接给 `mitom run` 用 |
-| `mitom gb2tbl` | GenBank 转 NCBI 提交用的特征表 `.tbl` + `.fsa`：多个文件 / 目录，全部合并、每个文件一对或每条记录一对；`--validate` 用 table2asn 生成 `.sqn` 并检查 |
+| `mitom gb2tbl` | GenBank / EMBL 转 NCBI 提交用的特征表 `.tbl` + `.fsa`：多个文件 / 目录，全部合并、每个文件一对或每条记录一对；`--source_table` 批量填来源信息，缺的产物名自动补；`--validate` 用 table2asn 生成 `.sqn` 并检查 |
 | `mitom reorient` | 只统一方向和起点（转到同一条链，从 cox1 开始） |
 | `mitom annotate` | 与 `run` 相同，但不整理输出目录（给脚本或集群流程调用） |
 | `mitom check` | 检查已有注释有没有问题，只出报告、不改文件 |

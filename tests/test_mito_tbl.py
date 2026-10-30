@@ -1,20 +1,24 @@
-"""mitom gb2tbl (mito_tbl.py, 2026-10-30): GenBank -> NCBI feature table (.tbl) + FASTA with source modifiers (.fsa);
-all records in one pair, one per input file or one per record; repeated records, ID clashes, modifiers, validation.
+"""mitom gb2tbl (mito_tbl.py, 2026-10-30): GenBank / EMBL -> NCBI feature table (.tbl) + FASTA with source modifiers
+(.fsa); all records in one pair, one per input file or one per record; repeated records, ID clashes, modifiers, the
+source table, --modifiers, products, titles, cleaning, validation.
 
 Run: python3 -m pytest -q tests/test_mito_tbl.py   (the --validate test needs table2asn)
 """
 import copy
 import csv
+import io
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 from Bio import SeqIO
+from Bio.Seq import Seq
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import mito_env  # noqa: E402
+import mito_names  # noqa: E402
 import mito_tbl  # noqa: E402
 
 DATA = HERE / "data"
@@ -140,6 +144,110 @@ def test_genetic_code_from_option_or_taxonomy():
     assert mito_tbl.record_code(vert, None)[0] == 13
 
 
+def test_embl_stdin_and_latin1_inputs(tmp_path, monkeypatch):
+    """GB2sequin reads EMBL / ENA files, NCBI's gbf2tbl reads a pipe; older Windows programs write Latin-1."""
+    src = tmp_path / "in"
+    src.mkdir()
+    SeqIO.write(SeqIO.read(str(DATA / "NC_000931.gb"), "genbank"), str(src / "pd.embl"), "embl")
+    assert mito_tbl.main(["-i", str(src / "pd.embl"), "-o", str(tmp_path / "e")]) == 0
+    assert mito_tbl.main(["-i", str(DATA / "NC_000931.gb"), "-o", str(tmp_path / "g")]) == 0
+    assert (tmp_path / "e" / "pd.tbl").read_text() == (tmp_path / "g" / "NC_000931.tbl").read_text()
+    assert mito_tbl.main(["-i", str(src), "-o", str(tmp_path / "d")]) == 0               # a folder: .embl found
+    assert (tmp_path / "d" / "submission.tbl").is_file()
+    monkeypatch.setattr(sys, "stdin", io.StringIO((DATA / "NC_000933.gb").read_text()))
+    assert mito_tbl.main(["-i", "-", "-o", str(tmp_path / "s"), "--split", "file"]) == 0
+    assert ">Feature NC_000933.1" in (tmp_path / "s" / "stdin.tbl").read_text()
+    text = (DATA / "NC_000931.gb").read_text().replace(
+        '/organism="Platynereis dumerilii"', '/organism="Platynereis dumerilii"\n                     '
+        '/collected_by="J. M\u00fcller"', 1)
+    (tmp_path / "l1.gb").write_bytes(text.encode("latin-1"))
+    assert mito_tbl.main(["-i", str(tmp_path / "l1.gb"), "-o", str(tmp_path / "l")]) == 0
+    fsa = (tmp_path / "l" / "l1.fsa").read_text().splitlines()
+    assert "[collected-by=J. Muller]" in fsa[0] and max(len(x) for x in fsa[1:]) == 70       # lines of 70, as NCBI
+    (tmp_path / "w.gb").write_bytes(text.replace("J. M\u00fcller", "J. \u201cM\u00fcller\u201d").encode("cp1252"))
+    assert mito_tbl.main(["-i", str(tmp_path / "w.gb"), "-o", str(tmp_path / "w")]) == 0      # Windows-1252 quotes
+    assert '[collected-by=J. "Muller"]' in headers(tmp_path / "w" / "w.fsa")[0]
+
+
+def test_title_from_definition():
+    rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    assert mito_tbl.defline(rec, "X", True).endswith("[taxid=6359] Platynereis dumerilii mitochondrion, complete genome")
+    for junk in ("topology=linear.", ".", "NC_000931.1", ""):                    # MitoZ writes 'topology=linear'
+        rec.description = junk
+        assert mito_tbl.title(rec) == ""
+    rec.description = "Xus yus [sample 1] mitochondrion, complete genome."
+    assert mito_tbl.title(rec) == "Xus yus (sample 1) mitochondrion, complete genome"
+
+
+def test_source_table_and_modifiers(tmp_path):
+    """GB2sequin's source modifier table / table2asn's .src and -j: per record and for all, the table winning."""
+    (tmp_path / "samples.tsv").write_text(
+        "Sequence_ID\tIsolate\tCountry\tVoucher\tLocation\tFamily\tcollection_date\tDefinition\n"
+        "NC_000933\tMS-1\tChina: Qingdao\tQD [1]\tQingdao\tMetridiidae\t2024-05-01\t\n"
+        "NC_000931.1\tPD-7\t\t\tmitochondrion\t\t\tPlatynereis dumerilii isolate PD-7 mitochondrion, complete genome\n"
+        "nothere\tX\t\t\t\t\t\t\n")
+    assert mito_tbl.main(["-i", str(DATA / "NC_000933.gb"), str(DATA / "NC_000931.gb"), "-o", str(tmp_path / "o"),
+                          "--source_table", str(tmp_path / "samples.tsv"),
+                          "--modifiers", "[isolate=ALL] [sex=female] [colour=red]"]) == 0
+    h = {x.split()[0]: x for x in headers(tmp_path / "o" / "submission.fsa")}
+    a, b = h[">NC_000933.1"], h[">NC_000931.1"]
+    assert "[isolate=MS-1]" in a and "[isolate=ALL]" not in a and "[sex=female]" in a and "[sex=female]" in b
+    for mod in ("[geo_loc_name=China: Qingdao]", "[specimen-voucher=QD (1)]", "[collection-date=2024-05-01]",
+                "[location=mitochondrion]"):
+        assert mod in a, mod
+    assert "Metridiidae" not in a and "Qingdao]" not in a.split("geo_loc_name")[0]
+    assert "[isolate=PD-7]" in b and b.endswith("] Platynereis dumerilii isolate PD-7 mitochondrion, complete genome")
+    text = " ".join(r["warnings"] for r in report(tmp_path / "o"))
+    for msg in ("location 'Qingdao' left out", "not NCBI source modifiers left out: Family", "row nothere matches no "
+                "record", "colour is not an NCBI source modifier"):
+        assert msg in text, msg
+    (tmp_path / "org.csv").write_text("id,organism,topology,genetic_code\nNC_000931,Platynereis massiliensis,linear,9\n")
+    assert mito_tbl.main(["-i", str(DATA / "NC_000931.gb"), "-o", str(tmp_path / "m"), "--source_table",
+                          str(tmp_path / "org.csv")]) == 0
+    h = headers(tmp_path / "m" / "NC_000931.fsa")[0]
+    assert "[organism=Platynereis massiliensis]" in h and "[taxid=" not in h and "[mgcode=9]" in h
+    assert "[topology=linear]" in h and "[completeness=" not in h
+    assert h.endswith("] Platynereis massiliensis mitochondrion, complete genome")
+    assert report(tmp_path / "m")[0]["organism"] == "Platynereis massiliensis"
+
+
+def no_products(path):
+    """NC_000931 as an editor export with gene names and no /product: tRNA-Leu -> /gene="trnL", small / large subunit
+    rRNA -> rrnS / rrnL."""
+    rec = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")
+    for f in rec.features:
+        if f.type in ("CDS", "tRNA", "rRNA"):
+            prod = f.qualifiers.pop("product")[0]
+            if f.type == "tRNA":
+                f.qualifiers["gene"] = ["trn" + mito_names.AA3[prod[5:8]]]
+            elif f.type == "rRNA":
+                f.qualifiers["gene"] = ["rrnS" if prod.startswith("small") else "rrnL"]
+    SeqIO.write(rec, str(path), "genbank")
+
+
+def test_products_filled_or_from_table(tmp_path):
+    no_products(tmp_path / "noprod.gb")
+    (tmp_path / "prod.tsv").write_text("gene\tproduct\ncox1\tcytochrome c oxidase subunit 1\n")
+    assert mito_tbl.main(["-i", str(tmp_path / "noprod.gb"), "-o", str(tmp_path / "o"), "--product_table",
+                          str(tmp_path / "prod.tsv")]) == 0
+    tbl = (tmp_path / "o" / "noprod.tbl").read_text()
+    for prod in ("cytochrome c oxidase subunit 1", "cytochrome c oxidase subunit II", "NADH dehydrogenase subunit 4L",
+                 "cytochrome b", "tRNA-Asn", "tRNA-Leu", "12S ribosomal RNA", "16S ribosomal RNA"):
+        assert f"\t\t\tproduct\t{prod}\n" in tbl, prod
+    w = report(tmp_path / "o")[0]["warnings"]
+    assert "1 product(s) set from the product table" in w and "36 missing product(s) filled" in w   # 12 + 22 + 2
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    rec = SeqRecord(Seq("A" * 300), id="T")
+    rec.features = [SeqFeature(FeatureLocation(0, 60, 1), type="tRNA",
+                               qualifiers={"anticodon": ["(pos:30..32,aa:Leu,seq:taa)"]}),
+                    SeqFeature(FeatureLocation(70, 130, 1), type="tRNA"),
+                    SeqFeature(FeatureLocation(140, 290, 1), type="CDS", qualifiers={"gene": ["orf150"]})]
+    w = "; ".join(mito_tbl.fill_products(rec, {}))
+    assert rec.features[0].qualifiers["product"] == ["tRNA-Leu"]                 # from the /anticodon
+    assert "no product and the gene not recognised: tRNA x1, CDS x1 (a CDS without one is an NCBI ERROR" in w
+
+
 def test_no_genbank_input(tmp_path):
     assert mito_tbl.main(["-i", str(tmp_path / "nothing"), "-o", str(tmp_path / "o")]) == 2
 
@@ -151,6 +259,16 @@ def test_validate_makes_sqn_and_counts_errors(tmp_path):
     assert (tmp_path / "v" / "submission.sqn").is_file()
     errs = {r["seq_id"]: int(r["NCBI_ERROR"]) for r in report(tmp_path / "v")}
     assert errs["NC_000933.1"] == 0 and errs["KY753833"] > 0                      # raw MitoZ: missing stop codons
+
+
+@pytest.mark.skipif(not mito_env.find("table2asn"), reason="table2asn not found")
+def test_validate_with_filled_products_and_a_broken_file(tmp_path):
+    no_products(tmp_path / "noprod.gb")                     # CDS without /product: SEQ_FEAT.MissingProteinName
+    (tmp_path / "half.gb").write_text((DATA / "NC_000931.gb").read_text()[:6000])
+    assert mito_tbl.main(["-i", str(tmp_path / "noprod.gb"), str(tmp_path / "half.gb"), "-o", str(tmp_path / "v"),
+                          "--validate", "--modifiers", "[isolation-source=marine sediment]"]) == 0
+    rows = [r for r in report(tmp_path / "v") if r["output"] not in ("skipped", "note")]
+    assert [(r["seq_id"], r["NCBI_ERROR"]) for r in rows] == [("NC_000931.1", "0")]
 
 
 def test_mitom_command(tmp_path):
