@@ -299,10 +299,10 @@ def count_rows(table: Path, column: Optional[str] = None, value: Any = None) -> 
     return sum(c == value or str(c).startswith(str(value)) for c in cells)
 
 
-def _plot_file(job: Tuple[Path, Path, List[str], int]) -> Tuple[int, int, List[str]]:
+def _plot_file(job: Tuple[Path, Path, List[str], int, str]) -> Tuple[int, int, List[str]]:
     """run_plots worker, one final GenBank file: (maps written, maps with read depth, messages for the log)."""
     import mito_plot
-    gbf, out, reads, threads = job
+    gbf, out, reads, threads, style = job
     n = depth_n = 0
     msgs: List[str] = []
     for rec in SeqIO.parse(str(gbf), "genbank"):
@@ -314,7 +314,7 @@ def _plot_file(job: Tuple[Path, Path, List[str], int]) -> Tuple[int, int, List[s
             except Exception as exc:                       # noqa: BLE001  (a figure must not end the run)
                 msgs.append(f"[PLOT] {rec.id}: no depth ring ({exc})")
         try:
-            mito_plot.plot_record(rec, out, depth=depth)
+            mito_plot.plot_record(rec, out, depth=depth, style=style)
             n += 1
         except Exception as exc:                           # noqa: BLE001
             msgs.append(f"[PLOT] {rec.id}: {exc!r}")
@@ -350,7 +350,7 @@ def run_plots(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRes
     s1, s2 = parse_suffix_fq(args.suffix_fq) if infq else ("", "")
     jobs = [(gbf, out_root / "plots",
              [str(x) for x in find_fq_pair_for_sample(gbf.stem, infq, args.fq_position, s1, s2) if x] if infq else [],
-             int(args.threads)) for gbf in sorted(gb_dir.rglob("*.gbf"))]
+             int(args.threads), getattr(args, "plot_style", "mitom")) for gbf in sorted(gb_dir.rglob("*.gbf"))]
     n = depth_n = 0
     ok = True
     try:

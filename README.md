@@ -85,7 +85,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 7. **修整**：按 NCBI 规范修整基因的起止位置和基因名（每一处修改都记在 `reports/curation_report.tsv`）。
 8. **NCBI 检查**：用 NCBI 的 table2asn 检查每条记录，生成可提交的文件（`ncbi_submission/`）。
 9. **对比原注释**：GenBank 输入时，逐个基因比较原注释和新注释（`original_vs_mitom.tsv`）。
-10. **作图**：每条记录一张环状基因组图（`plots/`）。
+10. **作图**：每条记录一张环状基因组图（`plots/`）；`--plot_style circos` 换成借鉴 mitoPlotR 的环道样式（示例见 [docs/images](docs/images/)）。
 11. **整理输出**：结果整理到固定的目录结构里（见下面的输出表）。
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `run.log`：
@@ -139,7 +139,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `mitom rrna-hmm` | 补搜缺失的 12S / 16S rRNA |
 | `mitom rescue` | 用 MITOS2 补回漏掉的基因（需另装 MITOS2） |
 | `mitom validate` | 用 NCBI 的 table2asn 检查，生成提交文件 |
-| `mitom plot` | 画环状基因组图 |
+| `mitom plot` | 画环状基因组图（`--style mitom` 默认，或 `--style circos`） |
 | `mitom nuc` | 在全基因组组装中注释核 rDNA（18S–28S）和组蛋白基因 |
 | `mitom debug` | 出问题时读日志，告诉你哪一步、哪条记录、哪个程序出错 |
 | `mitom transfer_metadata` / `replace_organism` | 把原记录的物种、文献等信息复制到新注释 / 修正物种名 |

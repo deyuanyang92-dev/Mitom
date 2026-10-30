@@ -108,6 +108,49 @@ def test_plot_record_writes_png_and_pdf(tmp_path, topology):
         mp.plot_record(rec, tmp_path, depth=np.ones(10))
 
 
+@pytest.mark.parametrize("topology", ["circular", "linear"])
+def test_circos_style(tmp_path, topology):
+    """--style circos (after mitoPlotR, 2026-10-30): a lane per strand, names along the circle, axis, GC content,
+    read depth; an unknown style is an error."""
+    rec = genome(topology=topology)
+    depth = np.linspace(10, 50, len(rec.seq))
+    paths = mp.plot_record(rec, tmp_path, depth=depth, formats=("png", "pdf"), style="circos")
+    assert [p.name for p in paths] == ["TEST1.1.png", "TEST1.1.pdf"] and all(p.stat().st_size > 10000 for p in paths)
+    fig = mp._circos_figure(rec, depth)
+    texts = [t.get_text() for t in fig.axes[0].texts]
+    assert "".join(t for t in texts if len(t) == 1).count("C") >= 2      # names written letter by letter (COX1 ...)
+    assert "Testus syntheticus" in texts and f"{len(rec.seq):,} bp, {topology}" in texts
+    legends = [t.get_text() for leg in fig.legends for t in leg.get_texts()]
+    assert {"protein gene", "tRNA", "rRNA"} <= set(legends) and any(x.startswith("mean depth") for x in legends)
+    with pytest.raises(ValueError):
+        mp.plot_record(rec, tmp_path, style="fancy")
+
+
+def test_curved_text_reads_left_to_right():
+    """Letters along the circle: clockwise on the upper half (rotation -angle), counter-clockwise and turned on the
+    lower half, so a name reads left to right everywhere (circos 'bending.outside')."""
+    from matplotlib.figure import Figure
+    fig = Figure()
+    ax = fig.add_subplot(projection="polar")
+    w = mp._curved_text(ax, 0.0, 1.0, "ND5", 10, 200)
+    top = [(t.get_position()[0], t.get_rotation()) for t in ax.texts]
+    assert w > 0 and [a for a, _ in top] == sorted(a for a, _ in top)           # upper half: angles increase
+    mp._curved_text(ax, np.pi, 1.0, "ND5", 10, 200)
+    low = [t.get_position()[0] for t in ax.texts[3:]]
+    assert low == sorted(low, reverse=True)                                    # lower half: angles decrease
+    assert all(abs((t.get_rotation() + 180) % 360 - 180) < 3 for t in ax.texts[3:])   # bottom: upright after the turn
+
+
+def test_origin_tick_not_on_top_of_zero():
+    """No position tick right before the end of a circular record (16 kb of 16,063 bp covered '0')."""
+    from matplotlib.figure import Figure
+    fig = Figure()
+    ax = fig.add_subplot(projection="polar")
+    mp._circos_axis(ax, 0.9, 16063, True, 200)
+    labels = "".join(t.get_text() for t in ax.texts)
+    assert "16000" not in labels and "14000" in labels and labels.startswith("0")
+
+
 def write_fastq(path, reads):
     with gzip.open(path, "wt") as fh:
         for i, s in enumerate(reads):

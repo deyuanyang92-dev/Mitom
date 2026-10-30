@@ -15,9 +15,14 @@ Replaces the MitoZ / circos map. From the outside in:
   centre      organism, length, topology, accession; a kb ruler runs inside the innermost ring
 Position 1 is at the top and positions run clockwise; a linear record leaves a gap between its end and start.
 
+Style circos (--style circos), after mitoPlotR (K. Onthank, github.com/KirtOnthank/mitoPlotR, MIT licence): a framed
+lane per strand (+ outside, - inside) with blocks coloured by type (protein gene, tRNA, rRNA, other), gene names
+along the circle outside, tRNA codes, a position axis, GC content, read depth in 25 nt bins scaled to the 99th
+percentile with the mean as a dashed line, the organism in the centre.
+
 Usage:
   mitom plot -i <GenBank file or folder> -o <out_dir> [--fq1 R1.fq.gz [--fq2 R2.fq.gz]] [--threads N]
-             [--formats png,pdf]                                 (= python3 mito_plot.py ...)
+             [--formats png,pdf] [--style mitom|circos]         (= python3 mito_plot.py ...)
 Every record of the GenBank file, or of every GenBank file in the folder and its subfolders (.gb .gbk .gbf .genbank
 .gbff), becomes <out_dir>/<record id>.png (300 dpi) and .pdf; reads are used only when the input holds one record.
 """
@@ -42,7 +47,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from matplotlib.textpath import TextPath
+from matplotlib.font_manager import FontProperties
+from matplotlib.textpath import TextPath, text_to_path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
@@ -66,6 +72,8 @@ SIZE, R_MAX = 10.0, 1.36                     # figure inches; axes radius in dat
 BLOCK, TRACK, TRACK_GAP = 0.075, 0.12, 0.03  # gene block height on each side; ring height; space between rings
 LABEL_GAP, FS_GENE, FS_TRNA = 0.045, 9.5, 8.0
 LINEAR_GAP = np.radians(4)                   # between the end and the start of a linear record
+TICK_ROOM = 0.4                              # no position tick closer than this many steps to the end (its label
+                                             # would cover 0 / end: 16 kb of a 16,063 bp record)
 
 
 def gene_name(f: SeqFeature) -> str:
@@ -272,7 +280,8 @@ def _ruler(ax, r: float, length: int, circular: bool, base: np.ndarray) -> None:
     """Circle with position ticks (about 6-12), labels inside it; a linear record's ends are marked start / end."""
     step = next((s for s in (100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000) if length / s <= 12), 100000)
     ax.plot(base, np.full(len(base), r), color=MUTED, lw=0.5)
-    ticks = [(p, f"{p / 1000:g} kb" if step >= 1000 else f"{p} bp") for p in range(step, length, step)]
+    ticks = [(p, f"{p / 1000:g} kb" if step >= 1000 else f"{p} bp") for p in range(step, length, step)
+             if length - p >= TICK_ROOM * step]                 # (not on top of 0 / end)
     ticks = ([(0, "0")] if circular else [(0, "start"), (length, "end")]) + ticks
     for pos, text in ticks:
         t = float(theta(pos, length, circular))
@@ -283,14 +292,35 @@ def _ruler(ax, r: float, length: int, circular: bool, base: np.ndarray) -> None:
         ax.text(t, r - 0.025, text, fontsize=7, color=MUTED, ha=ha, va=va)
 
 
+STYLES = ("mitom", "circos")
+
+
 def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = None,
-                formats: Sequence[str] = ("png", "pdf")) -> List[Path]:
-    """Draw the map of `rec` (depth: per-position read depth, e.g. from depth_from_reads) and write
+                formats: Sequence[str] = ("png", "pdf"), style: str = "mitom") -> List[Path]:
+    """Draw the map of `rec` (depth: per-position read depth, e.g. from depth_from_reads) in `style` - mitom (genes
+    on both sides of one circle, GC content and GC skew rings) or circos (strand lanes, after mitoPlotR) - and write
     <out_dir>/<record id>.<format> for each format (png at 300 dpi); returns the written paths."""
     n = len(rec.seq)
-    circular = rec.annotations.get("topology") == "circular"
     if depth is not None and len(depth) != n:
         raise ValueError(f"{rec.id}: depth has {len(depth)} values for {n} bp")
+    if style not in STYLES:
+        raise ValueError(f"unknown map style {style!r} ({', '.join(STYLES)})")
+    fig = (_circos_figure if style == "circos" else _mitom_figure)(rec, depth)
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stem = re.sub(r"[^\w.-]", "_", rec.id)
+    written = []
+    with matplotlib.rc_context({"pdf.fonttype": 42}):           # editable text in the PDF
+        for fmt in formats:
+            path = out_dir / f"{stem}.{fmt}"
+            fig.savefig(path, dpi=300, facecolor="white")
+            written.append(path)
+    return written
+
+
+def _polar(n: int, circular: bool):
+    """Figure with one polar axes over it (position 1 at the top, clockwise; backbone radius 1), points per data
+    unit and the angles of a full ring."""
     fig = Figure(figsize=(SIZE, SIZE))
     FigureCanvasAgg(fig)
     ax = fig.add_axes((0, 0, 1, 1), projection="polar")
@@ -298,8 +328,14 @@ def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = Non
     ax.set_theta_direction(-1)
     ax.set_ylim(0, R_MAX)
     ax.set_axis_off()
-    unit = 72 * SIZE / 2 / R_MAX                                  # points per data unit
-    base = theta(np.linspace(0, n, 721), n, circular)            # angles of a full ring
+    return fig, ax, 72 * SIZE / 2 / R_MAX, theta(np.linspace(0, n, 721), n, circular)
+
+
+def _mitom_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
+    """The mitom style: genes on both sides of one circle, GC content and GC skew rings, read depth, a kb ruler."""
+    n = len(rec.seq)
+    circular = rec.annotations.get("topology") == "circular"
+    fig, ax, unit, base = _polar(n, circular)
 
     ax.plot(base, np.ones(len(base)), color=MUTED, lw=0.8, zorder=1)
     if not circular:                                              # end caps of a linear record
@@ -356,17 +392,164 @@ def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = Non
                    title="genes: + strand outside, - strand inside")
     fig.legend(handles=handles, loc="lower right", frameon=False, fontsize=8, title_fontsize=8, alignment="left",
                title=f"rings (GC: {WINDOW} nt windows, step {STEP} nt)")
+    return fig
 
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    stem = re.sub(r"[^\w.-]", "_", rec.id)
-    written = []
-    with matplotlib.rc_context({"pdf.fonttype": 42}):           # editable text in the PDF
-        for fmt in formats:
-            path = out_dir / f"{stem}.{fmt}"
-            fig.savefig(path, dpi=300, facecolor="white")
-            written.append(path)
-    return written
+
+# ── circos style: after mitoPlotR (K. Onthank, MIT licence, github.com/KirtOnthank/mitoPlotR) ────────────────────
+# Its layout - a framed lane per strand (+ outside, - inside) with feature blocks coloured by type, names written
+# along the circle outside, a position axis, binned read depth, the species in the centre - with its green / blue /
+# red replaced by the validated hues below (its red / green pair is too close for deuteranopia: dE 7.8, these 9.2),
+# and tRNA codes, GC content and the mean depth added.
+CIRCOS_COLORS = {"gene": "#1baf7a", "tRNA": "#2a78d6", "rRNA": "#eb6834", "other": "#c3c2b7"}
+CIRCOS_LEGEND = {"gene": "protein gene", "tRNA": "tRNA", "rRNA": "rRNA", "other": "other (control region ...)"}
+LANE, LANE_GAP, EDGE = 0.07, 0.012, 0.4       # strand lane height; between the lanes; outline width (pt)
+R_PLUS = 1.0                                  # + strand lane: R_PLUS .. R_PLUS + LANE
+R_MINUS = R_PLUS - LANE_GAP - LANE            # - strand lane: R_MINUS .. R_MINUS + LANE
+FS_NAME, FS_CODE, FS_TICK = 10.0, 7.5, 7.5
+DEPTH_BIN, DEPTH_CAP = 25, 0.99               # read depth: mean of 25 nt bins, scaled to the 99th percentile
+DEPTH_INK, MEAN_LINE = "#52514e", "#e34948"
+
+
+def _advance(s: str, fontsize: float) -> float:
+    """Advance width of `s` in points (letters placed one by one along a circle)."""
+    return text_to_path.get_text_width_height_descent(s, FontProperties(size=fontsize), ismath=False)[0] if s else 0.0
+
+
+def _curved_text(ax, phi: float, r: float, s: str, fontsize: float, unit: float, outward: bool = True,
+                 color: str = INK) -> float:
+    """`s` written along the circle of radius r and centred on angle phi, as circos' bending text: left to right on
+    the upper half (letters upright) and on the lower half (turned), the letters outside r (outward) or inside it.
+    Returns its angular width."""
+    upper = np.cos(phi) >= 0
+    total = _advance(s, fontsize)
+    va = ("bottom" if upper else "top") if outward else ("top" if upper else "bottom")
+    for i, ch in enumerate(s):
+        if ch.isspace():
+            continue
+        x = (_advance(s[:i], fontsize) + _advance(s[:i + 1], fontsize)) / 2 - total / 2   # from the label centre
+        a = phi + x / (r * unit) if upper else phi - x / (r * unit)
+        ax.text(a, r, ch, fontsize=fontsize, color=color, rotation=-np.degrees(a) + (0 if upper else 180),
+                rotation_mode="anchor", ha="center", va=va)
+    return total / (r * unit)
+
+
+def _circos_type(cat: str) -> str:
+    return "gene" if cat in ("COX", "NADH", "ATP", "CYTB") else cat
+
+
+def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float) -> List[str]:
+    """Strand lanes with the feature blocks, tRNA codes and curved names outside; returns the types drawn."""
+    n = len(rec.seq)
+    base = theta(np.linspace(0, n, 721), n, circular)
+    for r0 in (R_PLUS, R_MINUS):                                  # the lanes: white, framed
+        ax.fill_between(base, r0, r0 + LANE, color="white", zorder=1)
+        for r in (r0, r0 + LANE):
+            ax.plot(base, np.full(len(base), r), color=INK, lw=EDGE, zorder=2)
+    if not circular:                                              # a linear record's ends close the lanes
+        for t in (theta(0, n, circular), theta(n, n, circular)):
+            for r0 in (R_PLUS, R_MINUS):
+                ax.plot([t, t], [r0, r0 + LANE], color=INK, lw=EDGE, zorder=2)
+    types, names, codes = [], [], []                              # names / codes: (angle, text)
+    for f in rec.features:
+        cat = category(f) if f.location is not None else None
+        if not cat:
+            continue
+        typ = _circos_type(cat)
+        types.append(typ)
+        parts = [(int(p.start), int(p.end), p.strand) for p in f.location.parts]
+        for s, e, strand in parts:
+            bottom, height = (R_PLUS, LANE) if strand == 1 else (R_MINUS, LANE) if strand == -1 else \
+                (R_MINUS, 2 * LANE + LANE_GAP)                    # no strand (control region): both lanes
+            ax.bar(theta(s, n, circular), height, width=theta(e, n, circular) - theta(s, n, circular), bottom=bottom,
+                   align="edge", color=CIRCOS_COLORS[typ], edgecolor=INK, linewidth=EDGE, zorder=3)
+        start, length = span([(s, e) for s, e, _ in parts], n, circular)
+        if len(parts) > 1:                                        # intron / origin: the parts joined by a line
+            strand = f.location.strand
+            r = R_PLUS + LANE / 2 if strand == 1 else R_MINUS + LANE / 2 if strand == -1 else R_PLUS - LANE_GAP / 2
+            t = theta(np.linspace(start, start + length, 100), n, circular)
+            ax.plot(t, np.full(len(t), r), color=INK, lw=EDGE, zorder=2)
+        text = label(f, cat)
+        if text:
+            (codes if typ == "tRNA" else names).append((float(theta((start + length / 2) % n, n, circular)), text))
+    top = R_PLUS + LANE
+    r_code = top + 0.014                                          # tRNA codes: upright, spread, with leader lines
+    sizes = [(max(_advance(c, FS_CODE), FS_CODE) + 2) / unit / r_code for _, c in codes]
+    for (t, c), p in zip(codes, fan([t for t, _ in codes], sizes)):
+        ax.plot([t, t, p], [top, top + 0.004, r_code - 0.002], color=MUTED, lw=0.4, zorder=2)
+        half = (_advance(c, FS_CODE) * abs(np.sin(p)) + FS_CODE * abs(np.cos(p))) / 2 / unit
+        ax.text(p, r_code + half, c, fontsize=FS_CODE, color=INK, ha="center", va="center")
+    r_name = r_code + 1.2 * FS_CODE / unit + 0.012                # names: outside the codes, along the circle
+    sizes = [(_advance(x, FS_NAME) + 6) / unit / r_name for _, x in names]
+    for (t, x), p in zip(names, fan([t for t, _ in names], sizes)):
+        if abs((p - t + np.pi) % (2 * np.pi) - np.pi) * r_name * unit > 2:   # moved: a leader line to the gene
+            ax.plot([t, t, p], [top, r_code - 0.004, r_name - 0.004], color=MUTED, lw=0.4, zorder=2)
+        _curved_text(ax, p, r_name, x, FS_NAME, unit)
+    return types
+
+
+def _circos_axis(ax, r: float, n: int, circular: bool, unit: float) -> None:
+    """Position axis (mitoPlotR's circos.axis): a circle, about 8 ticks pointing inwards, numbers along the circle."""
+    step = next((s for s in (500, 1000, 2000, 5000, 10000, 20000, 50000) if n / s <= 9), 100000)
+    base = theta(np.linspace(0, n, 721), n, circular)
+    ax.plot(base, np.full(len(base), r), color=INK, lw=0.8)
+    for pos in [p for p in range(0, n, step) if p == 0 or n - p >= TICK_ROOM * step] + ([] if circular else [n]):
+        t = float(theta(pos, n, circular))
+        ax.plot([t, t], [r, r - 0.018], color=INK, lw=0.8)
+        _curved_text(ax, t, r - 0.026, str(pos), FS_TICK, unit, outward=False)
+
+
+def _circos_figure(rec: SeqRecord, depth: Optional[np.ndarray]) -> Figure:
+    """The circos style (after mitoPlotR): strand lanes, names along the circle, position axis, GC content and
+    read depth inside, the species in the centre."""
+    n = len(rec.seq)
+    circular = rec.annotations.get("topology") == "circular"
+    fig, ax, unit, base = _polar(n, circular)
+    types = _circos_features(ax, rec, circular, unit)
+    r_axis = R_MINUS - 0.022
+    _circos_axis(ax, r_axis, n, circular, unit)
+
+    x, gc, _ = gc_windows(str(rec.seq), circular)                 # GC content: area over the track's baseline
+    x, gc = _closed(x, n, circular, gc)
+    lo, hi = float(gc.min()), float(gc.max())
+    r0, h = r_axis - 0.075 - TRACK, TRACK
+    ax.fill_between(theta(x, n, circular), r0, r0 + (gc - lo) / max(hi - lo, 1e-9) * h, color=GC_LO, lw=0)
+    ax.plot(base, np.full(len(base), r0), color=MUTED, lw=0.4)
+    handles = [Patch(facecolor=GC_LO, lw=0, label=f"GC content {100 * lo:.0f}-{100 * hi:.0f} % ({WINDOW} nt windows)")]
+    inner = r0
+    if depth is not None:                                         # read depth: bars of DEPTH_BIN nt, capped
+        d = np.asarray(depth, dtype=float)
+        edges = np.arange(0, n + DEPTH_BIN, DEPTH_BIN).clip(max=n)
+        edges = edges[np.r_[True, np.diff(edges) > 0]]
+        binned = np.add.reduceat(d, edges[:-1]) / np.diff(edges)
+        cap = max(float(np.quantile(binned, DEPTH_CAP)), 1.0)
+        r0 = inner - 0.03 - 2 * TRACK
+        top = r0 + np.minimum(binned / cap, 1) * 2 * TRACK
+        ax.fill_between(theta(edges, n, circular), r0, np.append(top, top[-1]), step="post", color=DEPTH_INK, lw=0)
+        ax.plot(base, np.full(len(base), r0 + min(d.mean() / cap, 1) * 2 * TRACK), color=MEAN_LINE, lw=0.8,
+                ls=(0, (4, 3)))
+        handles += [Patch(facecolor=DEPTH_INK, lw=0, label=f"read depth ({DEPTH_BIN} nt bins, top = {cap:,.0f}x)"),
+                    Line2D([], [], color=MEAN_LINE, lw=0.8, ls=(0, (4, 3)), label=f"mean depth {d.mean():,.0f}x")]
+        inner = r0
+
+    organism = rec.annotations.get("organism")
+    organism = organism if organism and organism != "." else ""
+    lines = [(s, 17.0, "italic", INK) for s in textwrap.wrap(organism or rec.id, 20)]
+    lines += [("mitochondrial genome", 11.0, "normal", INK),
+              (f"{n:,} bp, {'circular' if circular else 'linear'}", 11.0, "normal", INK)]
+    lines += [(rec.id, 9.0, "normal", MUTED)] if organism else []
+    y = sum(1.45 * fs for _, fs, _, _ in lines) / 2              # points above the centre
+    for s, fs, style, color in lines:
+        y -= 0.725 * fs
+        ax.text(0.5, 0.5 + y / (72 * SIZE), s, transform=ax.transAxes, fontsize=fs, style=style, color=color,
+                ha="center", va="center")
+        y -= 0.725 * fs
+    keys = [t for t in CIRCOS_COLORS if t in types]
+    if keys:
+        fig.legend(handles=[Patch(facecolor=CIRCOS_COLORS[t], edgecolor=INK, lw=EDGE, label=CIRCOS_LEGEND[t])
+                            for t in keys], loc="lower left", frameon=False, fontsize=8, title_fontsize=8,
+                   alignment="left", title="+ strand: outer lane, \u2212 strand: inner lane")
+    fig.legend(handles=handles, loc="lower right", frameon=False, fontsize=8, alignment="left")
+    return fig
 
 
 def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.ndarray:
@@ -435,6 +618,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--fq2", help="mates of --fq1")
     p.add_argument("--threads", type=int, default=1, help="aligner threads (minimap2, else bwa mem; default 1)")
     p.add_argument("--formats", default="png,pdf", help="comma-separated (default png,pdf)")
+    p.add_argument("--style", choices=STYLES, default="mitom",
+                   help="mitom (default): genes on both sides of one circle, GC content and GC skew rings; circos "
+                        "(after mitoPlotR): a framed lane per strand, names along the circle, a position axis, GC "
+                        "content, read depth")
     a = p.parse_args(argv)
     src = Path(a.input)
     if not src.exists():
@@ -454,7 +641,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         except RuntimeError as exc:
             print(f"[mito_plot] {rec.id}: {exc}", file=sys.stderr)
             return 1
-        for path in plot_record(rec, Path(a.out_dir), depth, formats):
+        for path in plot_record(rec, Path(a.out_dir), depth, formats, a.style):
             print(path)
     return 0
 

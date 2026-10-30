@@ -299,12 +299,21 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 
 ### `mitom plot`：环状基因组图
 
-- **做什么**：每条记录画一张环状图（基因、GC 含量、GC 偏斜）；给出测序数据时加一圈测序深度。
+- **做什么**：每条记录画一张环状图（PNG 300 dpi 和 PDF，PDF 中文字可编辑）；给出测序数据时加一圈测序深度。两种样式：
+  - `--style mitom`（默认）：正链基因画在圆外侧、负链在内侧，按功能着色（COX、ND、ATP、CYTB、rRNA、tRNA），外加 GC 含量环和 GC 偏斜环。
+  - `--style circos`：借鉴 mitoPlotR（K. Onthank，MIT 许可）。每条链一个带边框的环道（外环正链、内环负链），按类型着色（蛋白基因、tRNA、rRNA），基因名沿圆弧书写，有坐标轴、GC 含量环；测序深度按 25 nt 分箱，以 99 分位数为满刻度，红色虚线标出平均深度；物种名在中心。颜色换成了色盲友好的配色。
 - **示例**：
   ```bash
   mitom plot -i out/final_annotation -o maps
-  mitom plot -i sample.gb -o maps --fq1 reads_1.fq.gz --fq2 reads_2.fq.gz
+  mitom plot -i out/final_annotation -o maps --style circos
+  mitom plot -i sample.gb -o maps --fq1 reads_1.fq.gz --fq2 reads_2.fq.gz --style circos
+  mitom run -i genomes.gb -o out --plot_style circos          # 注释时直接用 circos 样式出图
   ```
+- **样式模板**（mitoPlotR 的示例基因组 *Octopus rubescens* 及其测序深度，由 MitoM 注释）：
+
+  | `--style circos` | `--style mitom` |
+  |---|---|
+  | ![circos](images/map_circos.png) | ![mitom](images/map_mitom.png) |
 
 ### `mitom nuc`：全基因组组装中的核 rDNA 与组蛋白
 
@@ -855,6 +864,7 @@ Outputs and matching:
 | `--intron_fix` | `run`, `annotate` | 内含子：从头识别（MFannot 方法，`mito_intron.py`）+ 近缘位点迁移（`mito_intron_ref.py`，位点库 `models/intron_sites.*`）：`auto`（默认，找到 exonerate 即运行）/ `yes` / `no` | Introns: de novo (MFannot method) + site transfer from annotated relatives: `auto` (default) / `yes` / `no` |
 | `--curate`, `--sbt` | `run`, `annotate` | 端点校正 + NCBI 命名 + 提交文件（默认 `yes`）；`--sbt` 为 NCBI 提交者模板 | Curation + NCBI names + submission files (default `yes`); `--sbt` submitter template |
 | `--plot` | `run`, `annotate` | 每条记录的基因组圈图 `plots/<记录>.png`、`.pdf`（`mito_plot.py`）：`yes`（默认，每条约 1 秒）/ `no` | Circular genome map per record (`plots/`): `yes` (default) / `no` |
+| `--plot_style` | `run`, `annotate`, `import` | 圈图样式：`mitom`（默认：基因在一个圆的两侧、GC 含量和 GC 偏斜环）/ `circos`（借鉴 mitoPlotR：每条链一个环道、基因名沿圆弧、坐标轴、GC 含量、测序深度）；效果见 `mitom plot` 一节 | Map style: `mitom` (default) or `circos` (after mitoPlotR: a lane per strand, names along the circle, axis, GC content, read depth) |
 | `--infq`, `--fq_position`, `--suffix_fq` | `run`, `annotate` | 可选双端 FASTQ，只用于圈图的测序深度环（bwa mem，装有 minimap2 时用它）；`--suffix_fq` 必须有两个逗号分隔后缀 | Optional paired FASTQ, only for the read depth ring of the genome maps (bwa mem, or minimap2 when installed); suffix list must contain two comma-separated values |
 | `--scheduler_backend` | `run`, `annotate` | `auto` / `threads` / `snakemake`，默认 `auto` | Scheduler backend, default `auto` |
 | `--snakemake_bin`, `--smk_cores`, `--smk_mem_mb`, `--smk_latency_wait`, `--smk_extra` | `run`, `annotate` | Snakemake 后端参数；数值项必须为正整数 | Snakemake backend options; numeric values must be positive integers |
