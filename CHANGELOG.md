@@ -14,7 +14,7 @@ installed one.
 - Circular genome maps (`mito_plot.py`, `--plot`, default yes): genes by strand and class, GC content, GC skew; read
   depth with `--infq` (bwa; minimap2 when it is installed, about 8x faster).
 - `mitom setup`: downloads the MITOS2 reference data refseq89m (md5 checked) and writes the config file.
-- `mitom --version`, `CHANGELOG.md`, tests on GitHub Actions (`.github/workflows/tests.yml`), a bioconda recipe
+- `mitom --version`, `CHANGELOG.md`, a bioconda recipe
   (`packaging/bioconda/`).
 - Introns from the intron sites of annotated relatives (`mito_intron_ref.py`, run after `mito_intron.py`; report
   `intron_ref_report.tsv`): the site library `models/intron_sites.*` (79 KB) is built from a gold standard of all 193
