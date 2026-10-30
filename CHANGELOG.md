@@ -5,6 +5,20 @@ installed one.
 
 ## Unreleased
 
+### Fixed
+- Runs of several records were 4-100x slow: NumPy / OpenBLAS / OpenMP (tRNA classifier) started one thread per
+  machine core in every process. Capped to 1 thread unless the user set them (mito_env): 22 annelid mitogenomes in
+  154 s (7 s each), 4 records 47 min -> 34 s on a 128-core machine.
+- A gene with an intron across the origin of a circular record (record started in exon 2: annelid cox1 group II
+  introns, MJ20260820041 CHY / *Travisia*, CWSC / Nephtyidae): `--topology auto` saw exon 2 stop at the junction
+  (protein2dna has no introns) and made the record linear, so the intron was never annotated (cox1 = exon 2 only:
+  1,287 or 848 nt). The end check now aligns the gene again with exonerate protein2genome when it looks cut
+  (verdict `joined_intron` -> circular); the de novo intron's description is kept on the CDS while the intron
+  crosses the origin and the intron feature is restored after the record is rotated to the gene's first exon
+  (mitom_orient.add_exon_gap_introns). 22 MJ mitogenomes: 13 CHY + 5 CWSC records gain their cox1 intron (checked
+  with the spliced protein, read depth and junction reads, and LC677172 / Nephtys cox1 introns), the 4 others are
+  unchanged; table2asn 0 errors.
+
 ### Added
 - `mitom gb2fasta`: GenBank (.gb .gbk .gbf .gbff .genbank) to FASTA, one file per input or per record (`--split`);
   headers `>ACCESSION.V definition topology=circular|linear`, ready for `mitom run`.

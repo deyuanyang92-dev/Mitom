@@ -33,6 +33,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional
 
+# Numerical libraries (NumPy / OpenBLAS / OpenMP of scikit-learn, used by the tRNA classifier) start one thread per
+# machine core in every process unless told otherwise. `mitom run` annotates several records at once, each process
+# with --threads for the external tools: on a 128-core machine 4 records ran 99 s instead of 26 s (OMP_NUM_THREADS=1),
+# and a whole `mitom run` of 4 mitogenomes took 47 min. MitoM's numerical work is small; the external programs use
+# --threads. Set before NumPy / scikit-learn are imported (every module imports mito_env first); values the user set
+# are kept.
+for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS",
+             "VECLIB_MAXIMUM_THREADS"):
+    os.environ.setdefault(_var, "1")
+
 HERE = Path(__file__).resolve().parent
 MITOS_REF = "refseq89m"
 REF_URL = "https://zenodo.org/records/4284483/files/refseq89m.tar.bz2"      # MITOS2 reference data, 19.6 MB

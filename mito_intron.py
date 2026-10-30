@@ -1192,6 +1192,7 @@ def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[d
     return name
 
 
+INTRON_NOTE = "intron across the origin of the record"   # CDS note of a dropped intron (see model_across_origin)
 UNTYPED_MIN_SPLICE = 14     # untyped introns: type-I splice score needed to be written (benchmark: true >=14.5, false <=12.5)
 UNTYPED_MIN_COVERAGE = 0.8  # untyped introns: share of the homolog the model must align (true 0.98, false 0.65)
 
@@ -1304,8 +1305,16 @@ def model_across_origin(rec, gene: str, cand: dict, chain: List[Report], lib, li
                         qualifiers=move_position_qualifiers(f.qualifiers, L, -d))     # /transl_except moves too
              for f in rot.features if id(f) not in before_ids]
     # an intron across the origin would be a join, which NCBI rejects (table2asn SEQ_FEAT.MultiIntervalIntron): it is
-    # given by the CDS join only (as NCBI's NC_027106.1 nad5)
-    added = [f for f in added if not (f.type == "intron" and len(f.location.parts) > 1)]
+    # given by the CDS join only (as NCBI's NC_027106.1 nad5). Its description stays on the CDS (INTRON_NOTE): when
+    # the record is rotated to the gene's first exon (mitom_orient.reorient_after_introns) the intron lies inside the
+    # record again and gets its feature back (MJ20260820041 CHY cox1 group II intron: lost before)
+    crossing = [f for f in added if f.type == "intron" and len(f.location.parts) > 1]
+    for f in crossing:
+        cds = next((c for c in added if c.type == "CDS" and c.qualifiers.get("gene") == f.qualifiers.get("gene")), None)
+        if cds is not None:
+            cds.qualifiers.setdefault("note", []).append(
+                f"{INTRON_NOTE} {f.qualifiers.get('number', ['?'])[0]}: {'; '.join(f.qualifiers.get('note', []))}")
+    added = [f for f in added if f not in crossing]
     if gone or added:
         rec.features = sorted([f for i, f in enumerate(rec.features) if i not in gone] + added,
                               key=lambda f: (int(f.location.start), f.type != "source", f.type != "gene"))

@@ -1869,6 +1869,10 @@ def _apply_model(rec, G: Genome, m: GeneModel, code: int, origin_introns: bool) 
     q: Dict[str, List[str]] = {"gene": [name]}
     if ftype == "CDS":
         q.update({"codon_start": ["1"], "transl_table": [str(code)], "product": [product], "note": [note]})
+        # the de novo step's description of an intron across the origin (mito_intron.INTRON_NOTE: type, E-value,
+        # splice score) stays with the gene: mitom_orient restores the intron feature from it after rotation
+        q["note"] += [x for f in old if f.type == "CDS" for x in f.qualifiers.get("note", [])
+                      if x.startswith("intron across the origin of the record")]
         for k, v in ({} if m.partial3 else stop_qualifiers(rec, loc, code)).items():
             q[k] = q.get(k, []) + v
         q["translation"] = [m.protein]

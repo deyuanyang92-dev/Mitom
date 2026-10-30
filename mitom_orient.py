@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
@@ -322,6 +323,48 @@ def write_orientation_fallback(out_root: Path, samples: List["SampleInfo"]) -> N
     write_nonempty_table(reports_dir(out_root) / "oriented_by_fallback.txt", "sample_name\tstart_gene", rows)
 
 
+def add_exon_gap_introns(rec: "SeqRecord") -> int:
+    """Intron features for the gaps between consecutive exons of a spliced CDS that lie inside the record and have no
+    intron feature (introns across the origin are left out by mito_intron and restored here once the record is
+    rotated): /gene and /number from the CDS, /note from its "intron across the origin" note when it has one.
+    Returns the number added."""
+    from Bio.SeqFeature import FeatureLocation
+    from mito_intron import INTRON_NOTE
+    have = [f for f in rec.features if f.type == "intron"]
+    added = []
+    for cds in [f for f in rec.features if f.type == "CDS" and len(f.location.parts) > 1]:
+        parts = list(cds.location.parts)                      # transcript order
+        gene = cds.qualifiers.get("gene", [""])[0]
+        notes, ref_notes = {}, {}
+        for x in cds.qualifiers.get("note", []):
+            if x.startswith(INTRON_NOTE):              # mito_intron (de novo): type, E-value, splice score
+                k, _, txt = x[len(INTRON_NOTE):].partition(":")
+                notes[k.strip()] = txt.strip()
+            m = re.match(r"intron (\d+) \([^)]*\) crosses the origin: given by the join only; (.*)", x)
+            if m:                                      # mito_intron_ref: where the site is known from
+                ref_notes[m.group(1)] = m.group(2)
+        for k, (a, b) in enumerate(zip(parts, parts[1:]), 1):
+            if a.strand != b.strand:
+                continue
+            s, e = (int(a.end), int(b.start)) if a.strand != -1 else (int(b.end), int(a.start))
+            if not 0 < e - s < len(rec.seq) // 2 or s >= e:     # across the origin, abutting or not a gap
+                continue
+            if any(int(h.location.start) < e and int(h.location.end) > s for h in have + added):
+                continue
+            q = {"gene": [gene], "number": [str(k)]}
+            q["note"] = ["; ".join(x for x in (notes.get(str(k)), ref_notes.get(str(k))) if x)
+                         or "intron between the exons of the CDS"]
+            added.append(SeqFeature(FeatureLocation(s, e, strand=a.strand), type="intron", qualifiers=q))
+        if added:                                      # the introns are features now: the crossing notes are stale
+            cds.qualifiers["note"] = [x for x in cds.qualifiers.get("note", []) if not x.startswith(INTRON_NOTE)
+                                      and "crosses the origin: given by the join only" not in x]
+    if added:
+        rec.features = sorted(rec.features + added, key=lambda f: (int(f.location.start), f.type != "source",
+                                                                   f.type != "gene"))
+        logging.info(f"[REORIENT_INTRON] {rec.id}: {len(added)} intron feature(s) restored inside the record")
+    return len(added)
+
+
 def reorient_after_introns(args: argparse.Namespace, final_dir: Path) -> int:
     """The intron step can turn the orientation gene into exons across the origin: MitoM rotated the record to the
     core's piece of cox1, and when that piece is exon 2, exon 1 and the intron lie at the record's end (annelid cox1
@@ -338,6 +381,7 @@ def reorient_after_introns(args: argparse.Namespace, final_dir: Path) -> int:
             if pos:
                 recs[i], changed = rotate_record(rec, pos), True
                 n += 1
+                add_exon_gap_introns(recs[i])
                 logging.info(f"[REORIENT_INTRON] {rec.id}: {feat.qualifiers.get('gene', ['?'])[0]} starts at {pos + 1} "
                              "after the intron step: rotated to its first exon")
         if changed:

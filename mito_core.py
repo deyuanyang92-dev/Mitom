@@ -201,19 +201,20 @@ def exonerate_code(code: int) -> str:
                    for c in (a + b + d for a in "TCAG" for b in "TCAG" for d in "TCAG"))
 
 
-def exonerate_best(exonerate: str, window: str, prots: Dict[str, str], code: int, tmp: Path, log) \
-        -> Optional[Tuple[str, int, int, int, int, float]]:
-    """Best protein2dna alignment of the reference proteins on the window (plus strand):
-    (ref, qab, qae, tab, tae, score); coordinates 0-based half-open."""
+def exonerate_best(exonerate: str, window: str, prots: Dict[str, str], code: int, tmp: Path, log,
+                   model: Optional[str] = None) -> Optional[Tuple[str, int, int, int, int, float]]:
+    """Best alignment of the reference proteins on the window (plus strand) with the EXONERATE_MODEL (or `model`,
+    e.g. protein2genome for a gene split by an intron): (ref, qab, qae, tab, tae, score); 0-based half-open."""
+    model = model or EXONERATE_MODEL
     (tmp / "w.fa").write_text(f">w\n{window}\n")
     best = None
     for rid, seq in prots.items():
         (tmp / "q.fa").write_text(f">{rid}\n{seq}\n")
         try:
-            p = run([exonerate, "--model", EXONERATE_MODEL, "--geneticcode", exonerate_code(code), "--bestn", "1", "--showalignment", "no",
+            p = run([exonerate, "--model", model, "--geneticcode", exonerate_code(code), "--bestn", "1", "--showalignment", "no",
                  "--showvulgar", "no", "--score", str(EXONERATE_MIN_SCORE),
                  "--ryo", "RYO\t%qi\t%ql\t%qab\t%qae\t%tab\t%tae\t%s\t%tS\n",
-                 *(["--exhaustive", "yes"] if EXONERATE_MODEL.endswith("bestfit") else []),   # non-local models need full DP
+                 *(["--exhaustive", "yes"] if model.endswith("bestfit") else []),   # non-local models need full DP
                  str(tmp / "q.fa"), str(tmp / "w.fa")], log)
         except RuntimeError as exc:                        # one bad reference must not lose the gene
             log.warning(f"[core] exonerate with {rid}: {exc}")
@@ -520,6 +521,8 @@ END_REACH = 60             # ... and the alignment stops at most this far from t
 END_MEET = 10              # joined: the reference aligned on each side alone, the two pieces meet within this many residues
                            # (a chance extension across a false junction has none: 5 of 20 synthetic partial genomes ran
                            # 35-338 nt across with one alignment) ...
+MAX_INTRON_NT = 6000       # longest intron looked for across the sequence ends (group I / II introns of animal and
+#                            fungal mtDNA: 0.3-5 kb; Nephtys cox1 group II 1,819 nt, Travisia cox1 0.9-1.2 kb)
 END_LONG = 90              # ... or >= this many nt aligned on both sides, the frame open across and no piece of one side
                            # re-aligning residues of the other (a divergent half aligns only with the rest: synthetic
                            # NC_045069.1 nad2, 510 / 372 nt). An alignment across that is neither: no evidence either way
@@ -565,7 +568,8 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
         if not prots:
             continue
         s, e = (f.start + n, f.end + n) if where == "start" else (f.start, f.end)
-        flank = max(0, min(3 * reflen + WINDOW, (n - (e - s)) // 2))   # one copy of the sequence at most
+        flank = max(0, min(3 * reflen + WINDOW + MAX_INTRON_NT, (n - (e - s)) // 2))   # one copy of the sequence at most;
+        # room for an intron between the gene's part at this end and its rest at the other
         ws, we = max(0, s - flank), min(2 * n, e + flank)
         window = double[ws:we] if f.strand == 1 else str(Seq(double[ws:we]).reverse_complement())
         j = n - ws if f.strand == 1 else we - n            # the junction on the window (gene's strand)
@@ -586,8 +590,18 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
                 and not any(window[c:c + 3] in stops for c in range(tae, j - 2, 3)) \
                 or j - END_FLANK < tab <= j + END_REACH and qab >= END_CUT \
                 and not any(window[c:c + 3] in stops for c in range(tab - 3, j - 1, -3)):
-            # the gene's 3' side runs into the junction, or its 5' side starts there, the frame open up to it
+            # the gene's 3' side runs into the junction, or its 5' side starts there, the frame open up to it: cut -
+            # unless the missing residues lie across the junction behind an intron (protein2dna has no introns; a
+            # record started inside a gene with an intron: Travisia cox1, every MJ20260820041 CHY record)
             verdict = "cut"
+            spl = exonerate_best(tools["exonerate"], window, {ref: prots[ref]}, code, tmp, log, "protein2genome")
+            if spl is not None:
+                _, sab, sae, stab, stae, _ = spl
+                gained = (qab - sab) + (sae - qae)          # residues aligned beyond the protein2dna alignment
+                if stab < j - END_FLANK and stae > j + END_FLANK and gained >= END_CUT:
+                    qab, qae, tab, tae = sab, sae, stab, stae
+                    before, after = j - tab, tae - j
+                    verdict = "joined_intron"
         else:
             verdict = "complete"
         rows.append(f"{f.name}\t{'+' if f.strand == 1 else '-'}\t{where}\t{ref}\t{qab + 1}-{qae}/{reflen}\t"

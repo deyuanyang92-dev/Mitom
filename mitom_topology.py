@@ -8,7 +8,8 @@ label the sequence contradicts is changed:
   - a gene runs from the end across to the start (its reference aligned >= 30 nt on both sides of the junction):
     circular - a circular genome labelled linear, or an assembly started inside a gene in a multi-sequence FASTA;
   - a circular-labelled record whose gene stops at an end with >= 30 residues of its protein missing, not found at
-    the other end: linear - a partial sequence;
+    the other end: linear - a partial sequence; found at the other end behind an intron (exonerate protein2genome,
+    verdict joined_intron): circular - a record started inside a gene with an intron (Travisia cox1);
   - jellyfish / hydroids and calcareous sponges (linear mitochondrial genomes, mito_taxa.linear_mtdna) labelled
     circular, no gene across the ends: linear.
 A changed record is annotated again with its new topology (02.anno_topology/); every record's label, topology and
@@ -45,9 +46,10 @@ def read_ends(workdir: Path, internal_id: str) -> List[Dict[str, str]]:
 
 def decide(label: str, ends: List[Dict[str, str]], lineage: str = "") -> Tuple[str, str]:
     """(topology, reason) of one record from its label, the core's evidence at the ends and its NCBI lineage."""
-    joined = next((r for r in ends if r["verdict"] == "joined"), None)
+    joined = next((r for r in ends if r["verdict"] in ("joined", "joined_intron")), None)
     if joined:
-        return "circular", (f"{joined['gene']} runs across the sequence ends (its reference protein aligns "
+        how = " with an intron (aligned spliced)" if joined["verdict"] == "joined_intron" else ""
+        return "circular", (f"{joined['gene']} runs across the sequence ends{how} (its reference protein aligns "
                             f"{joined['before_nt']} nt before and {joined['after_nt']} nt after the junction)")
     cut = next((r for r in ends if r["verdict"] == "cut"), None)
     if label == "circular" and cut:

@@ -33,7 +33,14 @@ def fake_exonerate(gene: str, trim: int = 0):
     """exonerate_best stand-in: the whole gene where the window holds it (ends joined), else its longest 5' part at
     the window's end or 3' part at its start (the gene cut by the junction); trim: nt of a 5' part not aligned at its
     end (exonerate drops the last codons of a gene cut by a sequence end)."""
-    def best(exonerate, window, prots, code, tmp, log):
+    def best(exonerate, window, prots, code, tmp, log, model=None):
+        if model == "protein2genome":                     # spliced: the gene's two parts with an insertion between
+            for k in range(90, len(gene) - 89, 3):
+                i = window.find(gene[:k])
+                j = window.find(gene[k:], i + k + 1) if i >= 0 else -1
+                if i >= 0 and j > i + k:
+                    return "ref1", 0, 300, i, j + len(gene) - k, 900.0
+            return None
         i = window.find(gene)
         if i >= 0:
             return "ref1", 0, 300, i, i + len(gene), 900.0
@@ -84,6 +91,24 @@ def test_gene_cut_at_the_end_of_a_partial_sequence(monkeypatch):
     genome = FILLER + GENE[:600]
     rows = evidence(monkeypatch, genome, [cds(len(genome) - 600, len(genome), 1, "1-200")])
     assert (rows[0]["residues"], rows[0]["after_nt"], rows[0]["verdict"]) == ("1-200/300", "0", "cut")
+
+
+def test_gene_split_by_an_intron_across_the_ends(monkeypatch):
+    """A circular record started inside a gene with an intron (Travisia cox1: exon 2 at the start, exon 1 and the
+    intron at the end; every MJ20260820041 CHY record): protein2dna stops at the junction, protein2genome aligns the
+    gene across it with the intron -> joined_intron (circular), not cut (linear)."""
+    intron = "".join(random.Random(3).choice("ACGT") for _ in range(1100))
+    genome = GENE[300:] + FILLER + GENE[:300] + intron                # exon 2 | ... | exon 1, intron | (junction)
+    rows = evidence(monkeypatch, genome, [cds(0, 600, 1, "101-300")])
+    assert (rows[0]["end"], rows[0]["verdict"]) == ("start", "joined_intron")
+    assert mt.decide("circular", rows)[0] == "circular" and "intron" in mt.decide("circular", rows)[1]
+
+
+def test_partial_sequence_is_still_cut_with_the_spliced_model(monkeypatch):
+    """The rest of the gene is nowhere in the record: protein2genome finds no spliced alignment either -> cut."""
+    genome = GENE[300:] + FILLER
+    rows = evidence(monkeypatch, genome, [cds(0, 600, 1, "101-300")])
+    assert rows[0]["verdict"] == "cut"
 
 
 def test_alignment_trimmed_short_of_the_end(monkeypatch):
@@ -257,3 +282,26 @@ def test_restored_header_keeps_the_annotated_topology():
         "LOCUS       NC_035740              17024 bp    DNA     linear   INV 03-APR-2023"
     back = keep_topology(keep_topology(meta, new), meta)
     assert back == meta
+
+
+def test_intron_features_restored_after_rotation():
+    """An intron across the origin is given by the CDS join only (no multi-interval intron); once the record starts
+    at the gene's first exon the gap is inside the record and gets its feature back, with the de novo description;
+    a gap that still crosses the origin gets none."""
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    import mitom_orient
+    from mito_intron import INTRON_NOTE
+    note = f"{INTRON_NOTE} 1: group II intron (Rfam RF00029)"
+    loc = CompoundLocation([FeatureLocation(0, 273, 1), FeatureLocation(1415, 2687, 1)])
+    rec = SeqRecord(Seq("A" * 17000), id="r", annotations={"topology": "circular"},
+                    features=[SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"], "note": [note]})])
+    assert mitom_orient.add_exon_gap_introns(rec) == 1
+    intron = next(f for f in rec.features if f.type == "intron")
+    assert (int(intron.location.start), int(intron.location.end)) == (273, 1415)
+    assert intron.qualifiers["note"] == ["group II intron (Rfam RF00029)"]
+    assert not any(x.startswith(INTRON_NOTE) for f in rec.features for x in f.qualifiers.get("note", []))
+    across = CompoundLocation([FeatureLocation(16000, 17000, 1), FeatureLocation(0, 300, 1)])   # still across
+    rec2 = SeqRecord(Seq("A" * 17000), id="r2", annotations={"topology": "circular"},
+                     features=[SeqFeature(across, type="CDS", qualifiers={"gene": ["COX1"]})])
+    assert mitom_orient.add_exon_gap_introns(rec2) == 0
