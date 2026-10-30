@@ -158,6 +158,12 @@ def test_report_of_a_run_stopped_by_an_error_killed_or_clean(tmp_path, capsys):
         """)                                                    # a log of MitoM 1.0.0
     assert mito_debug.main([str(old)]) == 0
     assert " 1/11 -               135.0 s  done    1 records to annotate" in capsys.readouterr().out
+    old_failed = write_run(tmp_path / "old_failed", """\
+        2026-10-28 10:00:00,007 [INFO] [DONE]
+        2026-10-28 10:00:00,008 [WARNING] [FAIL] every record failed in the annotation core (1): see reports/failed_logs/
+        """)                                                    # 1.0.0 wrote this after [DONE]
+    assert mito_debug.main([str(old_failed)]) == 1
+    assert "FAILED (exit 1): every record failed" in capsys.readouterr().out
     assert mito_debug.main([str(tmp_path / "nothing_here")]) == 2
 
 

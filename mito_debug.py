@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import re
 import shlex
 import sys
@@ -47,7 +46,7 @@ STEP_OLD = re.compile(r"^\[Step (\d+)/(\d+)\] (.*)$")                      # log
 END_OLD = re.compile(r"^-> (.*?)\s*\((?:(\d+) h )?(?:(\d+) min )?(?:(\d+) s)?\)$", re.S)
 MISSING = [re.compile(r"MitoM needs (\S+) for (.+?) \("), re.compile(r"\[core\] (\S+) not found"),
            re.compile(r"\[mito_\w+\] missing ([\w, -]+?) \("), re.compile(r"(MiTFi) \(mitfi_import\.jar")]
-ERRORISH = re.compile(r"Error\b|ERROR|\bfailed\b|not found|No such file|[Kk]illed|[Mm]emory")
+ERRORISH = re.compile(r"Error\b|ERROR|\bfailed\b|not found|No such file|[Kk]illed|out of memory|Cannot allocate memory")
 FAILED_LISTS = {"annotation_failed.txt": "annotation failed", "final_write_failed.txt": "final GenBank not written",
                 "reorient_failed.txt": "re-orientation failed", "metadata_transfer_failed.txt": "header transfer failed"}
 
@@ -72,7 +71,6 @@ class Run:
     end: str = ""
     version: str = ""
     command: str = ""
-    params: Dict = field(default_factory=dict)
     exit: Optional[int] = None
     error: str = ""                    # the exception the run stopped on, with the end of its traceback
     steps: List[Step] = field(default_factory=list)
@@ -122,22 +120,18 @@ def split_cmd(text: str) -> Dict:
 def parse(log: Path, out: Path) -> Run:
     run = Run(log=log, out=out)
     steps: Dict[Tuple[int, str], Step] = {}
+    old_done = False                                       # MitoM 1.0.0: '[DONE]' without the exit code
     rows = entries(log)
     if rows:
         run.start, run.end = rows[0][0], rows[-1][0]
-    for t, level, text in rows:
+    for _, level, text in rows:
         first = text.split("\n", 1)[0]
         if re.match(r"\[ENV\] MitoM (\d|\?)", first):         # [ENV] MitoM <version>  <folder>, git <commit>
             run.version = first[len("[ENV] MitoM "):]
         elif first.startswith("[ENV] command: "):
             run.command = first[len("[ENV] command: "):]
-        elif first.startswith("[PARAMS]"):
-            try:
-                run.params = json.loads(text.split("\n", 1)[1])
-            except (IndexError, ValueError):
-                pass
         if STEP.match(first):
-            n, total, key, rest = STEP.match(text).groups()
+            n, total, key, rest = STEP.match(first).groups()
             st = steps.setdefault((int(n), key), Step(int(n), int(total), key))
             if rest.startswith("start: "):
                 st.title = rest[len("start: "):]
@@ -160,7 +154,7 @@ def parse(log: Path, out: Path) -> Run:
             st.seconds = 3600 * int(h or 0) + 60 * int(mi or 0) + int(sec or 0)
             continue
         if first == "[DONE]":                              # MitoM 1.0.0: the end of a run, without its exit code
-            run.exit = 1 if any("every record failed" in n for n in run.notes) else 0
+            old_done = True
             continue
         if CMD.match(first):
             c = split_cmd(text)
@@ -195,6 +189,8 @@ def parse(log: Path, out: Path) -> Run:
         elif level in ("WARNING", "ERROR", "CRITICAL"):
             tag = re.match(r"^(\[[A-Z0-9_ ]+\])", first)
             run.warnings.setdefault(tag.group(1) if tag else first[:50], []).append(first)
+    if run.exit is None and old_done:                      # 1.0.0 wrote '[FAIL] every record failed' after [DONE]
+        run.exit = 1 if any("every record failed" in n for n in run.notes) else 0
     return run
 
 
