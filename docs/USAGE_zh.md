@@ -1,5 +1,7 @@
 # MitoM 使用手册
 
+> **说明**：MitoM 目前仍在测试中，是本团队内部使用的软件，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
+
 MitoM（命令 `mitom`）注释动物线粒体基因组：找出 13 个蛋白基因、2 个 rRNA、22 个 tRNA 和内含子，统一方向和起点，按 NCBI 规范修整边界和基因名，生成可直接提交 NCBI 的文件和环状基因组图。另有一个独立功能 `mitom nuc`：在全基因组组装的 contig 中注释核 rDNA（18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。
 
 本手册按使用顺序编排：安装 → 快速开始 → 输入 → 流程 → 各命令 → 输出 → 调试排错 → 常见问题。方法细节与评测见 [METHODS.md](METHODS.md)，版本变化见 [../CHANGELOG.md](../CHANGELOG.md)。
@@ -111,9 +113,15 @@ GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
 | `Platyhelminthes-flatworms` | 需给（通常 9） | |
 | `Animal` | 需给 | 其他门：用全动物参考库 |
 
-### 3.4 去重
+### 3.4 去重（同一个基因组只注释一次）
 
-同一序列出现多次时只保留一条：RefSeq（`NC_`）记录与它所复制的 INSDC 记录同时存在时保留 `NC_`。依据写在 `reports/dedup_report.tsv`。
+从 NCBI 下载的记录里，同一个基因组常常出现不止一次：
+
+- 作者提交的原始记录（如 `MK123456`）和 NCBI 照它复制出来的参考记录（RefSeq，编号以 `NC_` 开头），两条序列一样；
+- 同一个登录号的新旧两个版本（如 `MK123456.1` 和 `MK123456.2`）；
+- 不同登录号、但序列完全相同的记录。
+
+`mitom run` 先把这些重复去掉，每个基因组只注释一次：留 `NC_` 记录、留新版本、相同序列只留一条。每条输入记录保留还是去掉、为什么去掉、保留的是哪一条，写在 `reports/dedup_report.tsv`。只想去重、不注释时用 `mitom dedup -i 输入 -o 输出`。
 
 ---
 
@@ -121,10 +129,10 @@ GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
 
 | 步骤 | 做什么 | 结果 / 报告 |
 |---|---|---|
-| 1 读入与去重 | 读 GenBank / FASTA，去掉重复记录，给每条记录一个内部短 ID | `reports/dedup_report.tsv` |
+| 1 读入与去重 | 读 GenBank / FASTA；同一个基因组的多条记录只留一条（见 3.4）；给每条记录一个内部短 ID | `reports/dedup_report.tsv` |
 | 2 第一轮注释 | 注释核心 `mito_core.py`（或 `--engine mitoz / mitos2`）：蛋白基因（blastx 定位 + exonerate 定边界）、rRNA（按门的 profile HMM）、tRNA（MitoM-ML + MiTFi） | — |
 | 3 统一方向 | 环状记录转到正链并以 cox1 起始；没有 cox1 时依次用 cox2、cox3、cob、nad1（`--fallback_genes`） | `reports/oriented_by_fallback.txt`、`reports/no_cox1_samples.txt` |
-| 4 第二轮 | 旋转后检查：基因原来跨序列两端、旋转改变了基因、标准基因缺失等，只对这些记录重新注释 | `reports/reannotation_decision.tsv` |
+| 4 需要时再注释一次 | 转动起点后，原来跨在序列首尾两端的基因会被接起来；这类记录，以及转动后有基因受影响、或缺了标准基因的记录，再注释一遍，其余记录不用重做 | `reports/reannotation_decision.tsv` |
 | 5 写结果 | 写 GenBank，并把原记录的表头（物种、文献、标本）复制回来 | `reports/metadata_transfer_log.tsv` |
 | 6 补漏 | 可选 MITOS2 补回漏掉的基因；仍缺的 12S/16S 用按门的 rRNA HMM 补搜；内含子：从头识别 + 近缘位点迁移 | `reports/rescue_report.tsv`、`rrna_hmm_report.tsv`、`intron_report.tsv`、`intron_ref_report.tsv` |
 | 7 边界与命名 | 蛋白基因起止密码子、rRNA 端点、重叠、NCBI 基因名等规则 | `reports/curation_report.tsv` |

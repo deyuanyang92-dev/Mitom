@@ -10,8 +10,12 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
                      files, genome maps)                                               = mitom_pipeline.py run
   import             the same steps for existing MitoZ / MITOS2 results or any annotated GenBank, without
                      annotating again                                                  = mitom_pipeline.py import
-  annotate | reorient | transfer_metadata | replace_organism | dedup
-                     single parts of the workflow                                      = mitom_pipeline.py <cmd>
+  dedup              only remove duplicate genomes: the authors' record and the RefSeq NC_ copy NCBI made of
+                     it, two versions of one accession, identical sequences - one is kept   = mitom_pipeline.py dedup
+  reorient           only turn circular records to one strand and start them at cox1     = mitom_pipeline.py reorient
+  annotate           the annotation steps of run, without arranging the output folder    = mitom_pipeline.py annotate
+  transfer_metadata  copy the original GenBank header (organism, references ...) onto new annotations
+  replace_organism   fix /organism in re-annotated records                              = mitom_pipeline.py <cmd>
   doctor             which external programs are found; --write-config saves them      = mito_env.py doctor
   curate             boundary rules + NCBI names on GenBank files                     = mito_curate.py
   intron             introns as run adds them: de novo (MFannot method), then the intron sites of annotated

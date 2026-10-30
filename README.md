@@ -1,5 +1,8 @@
 # MitoM：动物线粒体基因组注释 / Annotation of animal mitochondrial genomes
 
+> **说明**：MitoM 目前仍在测试中，是本团队内部使用的软件，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
+> MitoM is still being tested and is used inside our group only; check the results before publishing or submitting them.
+
 MitoM（命令 `mitom`）找出动物线粒体基因组的 13 个蛋白基因、2 个 rRNA、22 个 tRNA 和内含子，统一方向与起点，
 按 NCBI 规范修整边界和基因名，生成可直接提交 NCBI 的文件和环状基因组图；`mitom nuc` 在全基因组组装中注释核 rDNA
 （18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。完整使用手册见 **[docs/USAGE_zh.md](docs/USAGE_zh.md)**。
@@ -50,8 +53,8 @@ MitoZ、MITOS2 不随 MitoM 安装；装了它们时，MitoM 可以调用它们�
 # 从 NCBI 下载某类群的全部完整线粒体基因组（RefSeq + GenBank；--refseq_only 只要 NC_；--query 自定义检索式）
 mitom fetch --taxon Annelida -o fetch_out            # -> fetch_out/Annelida.gb + fetch_report.tsv（可重复运行，只补新记录）
 
-# GenBank 输入（推荐）：去重（同一基因组保留 NC_）→ 全部用 MitoM 注释 → cox1 定向 → 定向后有问题的才第二轮注释 → 校正 → NCBI 校验
-mitom run -i fetch_out/Annelida.gb -o out            # 不论 NCBI 原注释好坏，每条都按同一流程重新注释
+# GenBank 输入（推荐）：每条记录都重新注释（不管原来有没有注释），结果在 out/；run 做了哪些事见下面第 3 点
+mitom run -i fetch_out/Annelida.gb -o out
 
 # FASTA 输入（没有分类信息）：不写 --clade 时沿用 Annelida 蛋白库并警告；其他类群请写明类群库和遗传密码
 mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5
@@ -70,6 +73,20 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 `--sbt template.sbt`（NCBI 提交者模板）。`--threads` 默认 `min(8, CPU 数)`，`--jobs` 默认 `CPU 数 // threads`；`--clade auto` 遇到分类信息里没有已知门名（只有纲级名如 `Vertebrata`、`Gastropoda` 会按所属门处理）、含多个门、或各条记录 CDS 的 `transl_table` 不一致时报错（给 `--clade` / `--genetic_code` 即可）。
 
 **3. 运行过程与结果 / What you see and what you get**
+
+**`mitom run` 做了什么 / What `mitom run` does**（终端按这些步骤显示进度）
+
+1. **读入并去重**：同一个基因组在 NCBI 里常有两条记录——作者提交的原始记录（如 `MK123456`）和 NCBI 照它复制出来的参考记录（RefSeq，编号以 `NC_` 开头），序列一样；同一个登录号也可能有新旧两个版本。MitoM 每个基因组只注释一次：优先留 `NC_` 记录、留新版本、完全相同的序列只留一条。去掉了哪些、为什么，写在 `reports/dedup_report.tsv`。
+2. **注释**：找出 13 个蛋白基因、2 个 rRNA、22 个 tRNA。不管原记录有没有注释、注释得好不好，都按同一方法重新注释。
+3. **统一起点**：环状基因组转到同一条链，并从 cox1 开始（没有 cox1 时依次用 cox2、cox3、cob、nad1）。
+4. **需要时再注释一次**：转动起点后，原来跨在序列首尾两端的基因会被接起来，这类记录（以及转动后有基因受影响、或缺了标准基因的记录）再注释一遍；其余记录不用重做。每条记录的判断写在 `reports/reannotation_decision.tsv`。
+5. **写回原记录信息**：GenBank 输入时，把原记录的物种、文献、标本等信息复制到新注释里。
+6. **补漏**：仍缺的 12S / 16S rRNA 再补搜一次；加上内含子；装了 MITOS2 并加 `--rescue yes` 时还会用它补回漏掉的基因。
+7. **修整**：按 NCBI 规范修整基因的起止位置和基因名（每一处修改都记在 `reports/curation_report.tsv`）。
+8. **NCBI 检查**：用 NCBI 的 table2asn 检查每条记录，生成可提交的文件（`ncbi_submission/`）。
+9. **对比原注释**：GenBank 输入时，逐个基因比较原注释和新注释（`original_vs_mitom.tsv`）。
+10. **作图**：每条记录一张环状基因组图（`plots/`）。
+11. **整理输出**：结果整理到固定的目录结构里（见下面的输出表）。
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `run.log`：
 
@@ -103,19 +120,34 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `reports/` | 各步骤报告：`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
 | `run.log` | 全部过程与调用的命令 |
 
-**4. 单独步骤 / Single steps**：`mitom -h` 列出全部命令（`fetch`、`dedup`、`check`、`curate`、`intron`、`trna`、`rescue`、`rrna-hmm`、`validate` 等），
-`mitom <命令> -h` 查看参数。
+**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`）
+
+| 命令 | 作用 |
+|---|---|
+| `mitom run` | 完整流程，最常用：从序列到最终注释、NCBI 提交文件和基因组图 |
+| `mitom import` | 已有 MitoZ / MITOS2 结果或已注释的 GenBank：不重新注释，只做后面的整理（统一起点、修整、NCBI 文件、作图） |
+| `mitom fetch` | 从 NCBI 下载某个类群的线粒体全基因组 |
+| `mitom dedup` | 只做“去重”：同一个基因组的多条记录只留一条（说明见第 3 点） |
+| `mitom reorient` | 只统一方向和起点（转到同一条链，从 cox1 开始） |
+| `mitom annotate` | 与 `run` 相同，但不整理输出目录（给脚本或集群流程调用） |
+| `mitom check` | 检查已有注释有没有问题，只出报告、不改文件 |
+| `mitom compare` | 逐个基因比较原注释和 MitoM 的注释 |
+| `mitom curate` | 只修整基因起止和基因名（NCBI 规范） |
+| `mitom intron` | 只加内含子 |
+| `mitom trna` | 用多种方法注释 tRNA 并相互比较 |
+| `mitom rrna-hmm` | 补搜缺失的 12S / 16S rRNA |
+| `mitom rescue` | 用 MITOS2 补回漏掉的基因（需另装 MITOS2） |
+| `mitom validate` | 用 NCBI 的 table2asn 检查，生成提交文件 |
+| `mitom plot` | 画环状基因组图 |
+| `mitom nuc` | 在全基因组组装中注释核 rDNA（18S–28S）和组蛋白基因 |
+| `mitom debug` | 出问题时读日志，告诉你哪一步、哪条记录、哪个程序出错 |
+| `mitom transfer_metadata` / `replace_organism` | 把原记录的物种、文献等信息复制到新注释 / 修正物种名 |
+| `mitom setup` / `mitom doctor` | 下载参考数据（安装时已自动运行）/ 检查需要的程序是否都装好 |
 
 **注释审核报告 / Annotation audit report**：`mitom check -i genomes.gb -o check_out` 审核已有注释（只出报告，不改文件；
 可用于查看 NCBI 下载记录的原注释问题，或检查最终结果），`check_report.tsv` 每条一行（ok / flagged），`check_details.tsv` 列出每个问题。ERROR（触发重注）：无注释、缺蛋白基因或
 rRNA、基因重复、内部终止子、长度非 3 倍数且无 transl_except、基因长度异常、基因重叠 > 100 nt、tRNA 少于 22（`--min_trna`）；
-WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。`mitom run` 不使用原注释：去重后每条记录都按同一流程用 MitoM
-重新注释；cox1 定向后由 `--if_reannotation_2`（默认 `auto`）检查，注释因定向出现偏移或问题的记录才做第二轮注释。
-去重报告 `dedup_report.tsv` 每条一行，
-`reason` 列给出丢弃依据（同 accession 取新版本 / RefSeq 记录 COMMENT 注明由该 GenBank 记录生成 / 序列完全相同），`related` 列给出保留的记录。
-
-**默认流程 / Default workflow**：（`fetch` 下载 →）GenBank 去重 → 注释（MitoM 核心 `mito_core.py`：蛋白基因、rRNA、tRNA）→ cox1 定向 → 定向后检查，有问题的第二轮注释 →
-元数据迁回 →（`--rescue yes` 且装有 MITOS2 时）补回漏注基因 → 仍缺的 12S/16S 用按门 HMM 补搜 → 内含子 → 端点校正与 NCBI 命名 → NCBI 校验与提交文件 → 基因组圈图。
+WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。
 
 **5. 出问题时 / When something goes wrong**
 

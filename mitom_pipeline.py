@@ -1187,7 +1187,9 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--preserve_phase1_metadata", choices=["yes", "no"], default="no")
 
     # ── reorient ──────────────────────────────────────────────────────────
-    r = sub.add_parser("reorient", help="Reorient GenBank files to start at a target gene.")
+    r = sub.add_parser("reorient", help="Reorient GenBank files to start at a target gene.",
+                       description="Turn circular records to the strand of the target gene (default cox1) and start "
+                                   "them at it; fallback genes when it is missing; linear records are not rotated.")
     add_common(r)
 
     # ── run ───────────────────────────────────────────────────────────────
@@ -1261,7 +1263,12 @@ def build_parser() -> argparse.ArgumentParser:
     dd = sub.add_parser(
         "dedup",
         help="Deduplicate GenBank records (same accession / older version / RefSeq copy of an "
-             "INSDC submission / identical sequence; RefSeq NC_ kept) and write GenBank + FASTA.")
+             "INSDC submission / identical sequence; RefSeq NC_ kept) and write GenBank + FASTA.",
+        description="Remove duplicate genomes, as `run` does before annotating. The same genome is often in NCBI "
+                    "more than once: the authors' record (e.g. MK123456) and the RefSeq copy NCBI made of it "
+                    "(NC_...), two versions of one accession (MK123456.1 / .2), or another accession with an "
+                    "identical sequence. One record per genome is kept: the NC_ record, the newest version. "
+                    "dedup_report.tsv: every input record, kept or dropped, why, and the record kept instead.")
     dd.add_argument("-i", "--input", required=True, help="GenBank file or directory.")
     dd.add_argument("-o", "--out", dest="out_root", metavar="OUT", default="dedup_out", help="Output folder (default: dedup_out).")
     old_spelling(dd, "--out_root", "out_root")
