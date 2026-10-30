@@ -144,7 +144,6 @@ def test_rotation_and_reverse_complement_move_transl_except_and_anticodon():
     """2026-10-30 (integration audit): /transl_except and /anticodon (pos:...) kept their old positions when a record
     was rotated (re-orientation, the rotation after the intron step, `mitom import` of NCBI records) or turned to the
     plus strand: the NCBI submission files then named the wrong bases."""
-    from Bio.SeqFeature import CompoundLocation
     seq = "".join("ACGT"[(i * 7 + i // 3) % 4] for i in range(3000))
     seq = seq[:2994] + "ACTAAT"                                          # the CDS ends with a T at the record end
     r = SeqRecord(Seq(seq), id="R1", name="R1", description="")
