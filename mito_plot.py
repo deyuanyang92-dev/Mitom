@@ -54,6 +54,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import command_line, iter_gb_files, old_spelling, STDERR_MARK, STDERR_TAIL, TOOL_LOG  # noqa: E402
+from mito_ncr import MIN_LEN as MIN_NONCODING, extent, is_ncr, noncoding, span  # noqa: E402,F401
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000
 CIGAR = re.compile(r"(\d+)([MIDNSHP=X])")
@@ -78,7 +79,6 @@ TICK_ROOM = 0.4                              # no position tick closer than this
 MIN_INTRON = 142                             # a gap between the parts of a joined gene drawn as an intron when it has
                                              # no intron feature (= mito_intron.MIN_INTRON, MFannot's --minintron;
                                              # shorter gaps are frameshift joins, e.g. bird nad3)
-MIN_NONCODING = 100                          # default --min_noncoding: shortest unannotated stretch drawn and labelled
 HATCH = "////"
 
 
@@ -97,6 +97,8 @@ def category(f: SeqFeature) -> Optional[str]:
             if re.fullmatch(pat, g):
                 return cat
         return "other"
+    if is_ncr(f):                                # MitoM's NCR features: drawn as non-coding regions
+        return None
     return "other" if f.type in OTHER_TYPES else None
 
 
@@ -189,61 +191,12 @@ def _covered(s1: int, e1: int, s2: int, e2: int, n: int) -> int:
     return max(max(0, min(e1 + k, e2) - max(s1 + k, s2)) for k in (0, n, -n))
 
 
-def noncoding(rec: SeqRecord, min_len: int = MIN_NONCODING) -> List[Tuple[int, int]]:
-    """(start, end) of the stretches of >= min_len nt no feature covers (a joined gene covers its introns too);
-    end > record length for a stretch across the origin of a circular record. min_len 0: none."""
-    n = len(rec.seq)
-    if min_len <= 0 or not n:
-        return []
-    circular = rec.annotations.get("topology") == "circular"
-    covered = np.zeros(n, dtype=bool)
-    for f in rec.features:
-        if f.type == "source" or f.location is None:
-            continue
-        s, length = extent(f.location, n, circular)
-        idx = np.arange(s, s + length) % n
-        covered[idx] = True
-    if covered.all():
-        return []
-    runs, start = [], None
-    for i in range(n):
-        if not covered[i] and start is None:
-            start = i
-        elif covered[i] and start is not None:
-            runs.append([start, i])
-            start = None
-    if start is not None:
-        runs.append([start, n])
-    if circular and len(runs) > 1 and runs[0][0] == 0 and runs[-1][1] == n:   # one stretch across the origin
-        runs[-1][1] = n + runs.pop(0)[1]
-    return [(s, e) for s, e in runs if e - s >= min_len]
-
-
 def theta(pos, length: int, circular: bool):
     """Angle (radians, clockwise from the top) of 0-based position(s) `pos`."""
     pos = np.asarray(pos, dtype=float)
     if circular:
         return 2 * np.pi * pos / length
     return LINEAR_GAP / 2 + (2 * np.pi - LINEAR_GAP) * pos / length
-
-
-def extent(loc, length: int, circular: bool) -> Tuple[int, int]:
-    """(start, length in nt) of a feature from its first to its last part in transcript order (GenBank order of a
-    join): a gene across the origin, and an intron given by its two ends only (NCBI hexacoral nad5 introns hold
-    other genes: 10 kb of a 17 kb record) - span() would take the shorter arc the other way round. Parts on both
-    strands (trans-splicing) or out of order on a linear record: span()."""
-    parts = list(loc.parts)
-    if len(parts) == 1:
-        return int(parts[0].start), int(parts[0].end) - int(parts[0].start)
-    strands = {p.strand for p in parts}
-    if len(strands) == 1:
-        s, e = (int(parts[0].start), int(parts[-1].end)) if strands != {-1} else \
-            (int(parts[-1].start), int(parts[0].end))
-        if e > s:
-            return s, e - s
-        if circular:
-            return s, e - s + length
-    return span([(int(p.start), int(p.end)) for p in parts], length, circular)
 
 
 def name_pos(parts: Sequence[Tuple[int, int, Optional[int]]], start: int, length: int, n: int) -> float:
@@ -253,21 +206,6 @@ def name_pos(parts: Sequence[Tuple[int, int, Optional[int]]], start: int, length
         s, e, _ = max(parts, key=lambda p: p[1] - p[0])
         return (s + e) / 2
     return (start + length / 2) % n
-
-
-def span(parts: Sequence[Tuple[int, int]], length: int, circular: bool) -> Tuple[int, int]:
-    """(start, length in nt) of the shortest arc covering all `parts`; on a circular record it may run across the
-    origin (start + length > record length)."""
-    ps = sorted(parts)
-    start, end = ps[0][0], max(e for _, e in ps)
-    if not circular:
-        return start, end - start
-    best, reach = (start + length - end, 0), ps[0][1]          # widest empty arc: across the origin, or a gap
-    for i in range(1, len(ps)):
-        best = max(best, (ps[i][0] - reach, i))
-        reach = max(reach, ps[i][1])
-    gap, i = best
-    return (ps[i][0], length - gap) if i else (start, end - start)
 
 
 def spread(targets: Sequence[float], sizes: Sequence[float]) -> List[float]:
@@ -371,11 +309,12 @@ def _draw_genes(ax, rec: SeqRecord, circular: bool, unit: float, min_noncoding: 
                hatch=HATCH, linewidth=0, zorder=2.5)
         # on the other side of the circle than the gene's name (both would sit at the middle of the gene)
         labels.append((float(theta(((s + e) / 2) % n, n, circular)), text, FS_TRNA, strand == -1, MUTED))
-    for s, e in noncoding(rec, min_noncoding):                 # across the backbone (strand unknown)
+    for k, (s, e) in enumerate(noncoding(rec, min_noncoding), 1):   # across the backbone (strand unknown);
+        #                                                            numbered as in the GenBank (mito_ncr.add_ncr)
         cats.append("noncoding")
         ax.bar(theta(s, n, circular), BLOCK, width=theta(e, n, circular) - theta(s, n, circular),
                bottom=1.0 - BLOCK / 2, align="edge", color=NONCODING, linewidth=0, zorder=2.5)
-        labels.append((float(theta(((s + e) / 2) % n, n, circular)), f"NCR {e - s:,} bp", FS_TRNA, True, MUTED))
+        labels.append((float(theta(((s + e) / 2) % n, n, circular)), f"NCR{k} {e - s:,} bp", FS_TRNA, True, MUTED))
     reach = 1.0 - BLOCK
     for outside in (True, False):
         side = [lb for lb in labels if lb[3] == outside]
@@ -620,11 +559,11 @@ def _circos_features(ax, rec: SeqRecord, circular: bool, unit: float, min_noncod
                bottom=R_PLUS if strand != -1 else R_MINUS, align="edge", facecolor="white", edgecolor=MUTED,
                hatch=HATCH, linewidth=0, zorder=2.5)
         names.append((float(theta(((s + e) / 2) % n, n, circular)), text, FS_CODE, MUTED))
-    for s, e in noncoding(rec, min_noncoding):                    # both lanes (strand unknown)
+    for k, (s, e) in enumerate(noncoding(rec, min_noncoding), 1):   # both lanes (strand unknown)
         types.append("noncoding")
         ax.bar(theta(s, n, circular), 2 * LANE + LANE_GAP, width=theta(e, n, circular) - theta(s, n, circular),
                bottom=R_MINUS, align="edge", color=NONCODING, linewidth=0, zorder=2.5)
-        names.append((float(theta(((s + e) / 2) % n, n, circular)), f"NCR {e - s:,} bp", FS_CODE, MUTED))
+        names.append((float(theta(((s + e) / 2) % n, n, circular)), f"NCR{k} {e - s:,} bp", FS_CODE, MUTED))
     top = R_PLUS + LANE
     r_code = top + 0.014                                          # tRNA codes: upright, spread, with leader lines
     sizes = [(max(_advance(c, FS_CODE), FS_CODE) + 2) / unit / r_code for _, c in codes]

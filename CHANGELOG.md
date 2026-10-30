@@ -5,7 +5,23 @@ installed one.
 
 ## Unreleased
 
+### Added
+- Non-coding regions (mito_ncr.py; `run` / `annotate` / `import` `--ncr yes|no`, default yes, `--ncr_min_len`,
+  default 100): every stretch of >= 100 nt no feature covers is written as misc_feature
+  /note="non-coding region NCR<k>, <length> bp: no gene annotated (MitoM)" (the unnamed control region, sequence that
+  may hold unidentified genes - it showed in neither the GenBank record nor the map); a joined gene covers its
+  introns. table2asn: no new message (22 MJ20260820041 records: 0 ERROR, the same 18 WARNING). 20 NCBI Hesionidae
+  mitogenomes: 33 NCRs, 24,280 nt; where NCBI annotated the record, the same stretches (Sirsoe methanicola 2,641 nt,
+  one with a 288-codon ORF), plus NCBI's control-region features.
+- Genome maps: introns hatched and labelled with gene and length (intron features, or the gaps of >= 142 nt of a
+  join); non-coding regions shaded and labelled NCR<k> as in the GenBank (`mitom plot --min_noncoding`, 0: none);
+  the name of a gene with an intron on its largest exon. On the 270 records of the intron benchmark the maps find
+  the 311 introns eval_introns.py counts.
+
 ### Fixed
+- Genome maps: a joined feature spans its first to its last part in transcript order. An intron NCBI gives by its
+  two ends that holds other genes (hexacoral nad5, 10 kb of 17 kb) was taken the short way round the circle, and
+  the line joining the gene's exons with it.
 - Runs of several records were 4-100x slow: NumPy / OpenBLAS / OpenMP (tRNA classifier) started one thread per
   machine core in every process. Capped to 1 thread unless the user set them (mito_env): 22 annelid mitogenomes in
   154 s (7 s each), 4 records 47 min -> 34 s on a 128-core machine.

@@ -281,7 +281,7 @@ def test_intron_and_noncoding_drawn_and_labelled(tmp_path, style):
     fig = (mp._circos_figure if style == "circos" else mp._mitom_figure)(rec, None, 100)
     texts = [t.get_text() for t in fig.axes[0].texts]
     joined = "".join(texts)                                               # circos writes names letter by letter
-    assert "ND1intron400bp" in joined.replace(" ", "") and "NCR100bp" in joined.replace(" ", "")
+    assert "ND1intron400bp" in joined.replace(" ", "") and "NCR1100bp" in joined.replace(" ", "")
     legends = [t.get_text() for leg in fig.legends for t in leg.get_texts()]
     assert "intron" in legends and any(x.startswith("non-coding region") for x in legends)
     fig = (mp._circos_figure if style == "circos" else mp._mitom_figure)(rec, None, 0)

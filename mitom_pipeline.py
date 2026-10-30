@@ -104,7 +104,8 @@ from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_g
 from mitom_topology import apply_topology, linear_lineages_first  # noqa: E402
 from mitom_steps import (count_rows, intron_denovo_cmd, INTRON_LABEL, intron_ref_cmd, optional_step,  # noqa: E402,F401
                          _plot_file, run_compare, run_curate, run_curate_and_submit, run_intron_fix,  # noqa: F401
-                         run_intron_ref, run_plots, run_rescue, run_rrna_hmm, run_submission, StepResult)  # noqa: F401
+                         run_intron_ref, run_ncr, run_plots, run_rescue, run_rrna_hmm, run_submission,  # noqa: F401
+                         StepResult)  # noqa: F401
 
 
 # ── environment preflight ────────────────────────────────────────────────────────────────────────────────────────────
@@ -758,6 +759,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     steps.start("curate", "Boundary rules for protein genes and rRNAs, NCBI gene names")
     curated = run_curate(args, final_dir, out_root)
     merge_dir = curated.gb_dir
+    steps.info(f"non-coding regions : {run_ncr(args, merge_dir, out_root).summary}")
     steps.done(curated.summary, curated.ok)
 
     steps.start("ncbi", "NCBI check (table2asn) and submission files")
@@ -1114,6 +1116,13 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Map style: circos (default, after mitoPlotR) = a framed lane per strand, names along the "
                             "circle, a position axis, GC content, read depth; mitom = genes on both sides of one circle, "
                             "GC content and GC skew rings.")
+        g.add_argument("--ncr", choices=["yes", "no"], default="yes",
+                       help="yes (default): every stretch of >= --ncr_min_len nt no feature covers becomes a "
+                            "misc_feature /note=\"non-coding region NCR<k>, <length> bp: no gene annotated (MitoM)\" "
+                            "in the GenBank and NCBI files, shaded and labelled on the maps (unnamed control region, "
+                            "sequence that may hold unidentified genes); no: none (mito_ncr.py)")
+        g.add_argument("--ncr_min_len", type=int, default=100,
+                       help="shortest non-coding region written (nt, default 100; intergenic spacers are shorter)")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",
                        help="yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and "
                             "NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/")

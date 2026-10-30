@@ -60,9 +60,11 @@ def optional_step(tag: str, line: Optional[Callable[[argparse.Namespace, Path, P
 
 
 def run_curate_and_submit(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
-    """Curation (run_curate) and, when the records were curated, the NCBI submission files (run_submission); the
-    result is the curation's (gb_dir: 05.curated/, or the input folder with --curate no or when curation failed)."""
+    """Curation (run_curate), non-coding regions (run_ncr) and, when the records were curated, the NCBI submission
+    files (run_submission); the result is the curation's (gb_dir: 05.curated/, or the input folder with --curate no
+    or when curation failed)."""
     cur = run_curate(args, gb_dir, out_root)
+    logging.info(f"[NCR] {run_ncr(args, cur.gb_dir, out_root).summary}")
     if cur.gb_dir != gb_dir:
         run_submission(args, cur.gb_dir, out_root)
     return cur
@@ -94,6 +96,28 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
         shutil.move(str(cur / "curation_report.tsv"), str(report))
     return StepResult(f"{count_rows(report)} changes, each with rule and reason in reports/curation_report.tsv",
                       gb_dir=cur)
+
+
+@optional_step("NCR")
+def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
+    """mito_ncr.add_ncr on every final record in gb_dir, in place: a misc_feature 'non-coding region NCR<k>' per
+    stretch of >= --ncr_min_len nt no feature covers (--ncr no: none)."""
+    if getattr(args, "ncr", "yes") == "no":
+        return StepResult("skipped (--ncr no)")
+    here = Path(__file__).resolve().parent
+    if str(here) not in sys.path:
+        sys.path.insert(0, str(here))
+    from mito_ncr import add_ncr, is_ncr, MIN_LEN
+    min_len = int(getattr(args, "ncr_min_len", MIN_LEN))
+    n_rec = n_ncr = nt = 0
+    for gbf in sorted(gb_dir.rglob("*.gbf")):
+        recs = list(SeqIO.parse(str(gbf), "genbank"))
+        for rec in recs:
+            n_rec, n_ncr = n_rec + 1, n_ncr + add_ncr(rec, min_len)
+            nt += sum(len(f) for f in rec.features if is_ncr(f))
+        SeqIO.write(recs, str(gbf), "genbank")
+    return StepResult(f"{n_ncr} non-coding regions of >= {min_len} nt ({nt:,} nt) in {n_rec} records "
+                      "(misc_feature 'non-coding region NCR<k>'; --ncr no: none)")
 
 
 def _submission_line(out_root: Path) -> str:
@@ -305,7 +329,7 @@ def count_rows(table: Path, column: Optional[str] = None, value: Any = None) -> 
 def _plot_file(job: Tuple[Path, Path, List[str], int, str]) -> Tuple[int, int, List[str]]:
     """run_plots worker, one final GenBank file: (maps written, maps with read depth, messages for the log)."""
     import mito_plot
-    gbf, out, reads, threads, style = job
+    gbf, out, reads, threads, style, min_ncr = job
     n = depth_n = 0
     msgs: List[str] = []
     for rec in SeqIO.parse(str(gbf), "genbank"):
@@ -317,7 +341,7 @@ def _plot_file(job: Tuple[Path, Path, List[str], int, str]) -> Tuple[int, int, L
             except Exception as exc:                       # noqa: BLE001  (a figure must not end the run)
                 msgs.append(f"[PLOT] {rec.id}: no depth ring ({exc})")
         try:
-            mito_plot.plot_record(rec, out, depth=depth, style=style)
+            mito_plot.plot_record(rec, out, depth=depth, style=style, min_noncoding=min_ncr)
             n += 1
         except Exception as exc:                           # noqa: BLE001
             msgs.append(f"[PLOT] {rec.id}: {exc!r}")
@@ -353,7 +377,9 @@ def run_plots(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRes
     s1, s2 = parse_suffix_fq(args.suffix_fq) if infq else ("", "")
     jobs = [(gbf, out_root / "plots",
              [str(x) for x in find_fq_pair_for_sample(gbf.stem, infq, args.fq_position, s1, s2) if x] if infq else [],
-             int(args.threads), getattr(args, "plot_style", "circos")) for gbf in sorted(gb_dir.rglob("*.gbf"))]
+             int(args.threads), getattr(args, "plot_style", "circos"),
+             0 if getattr(args, "ncr", "yes") == "no" else int(getattr(args, "ncr_min_len", 100)))   # maps = GenBank
+            for gbf in sorted(gb_dir.rglob("*.gbf"))]
     n = depth_n = 0
     ok = True
     try:

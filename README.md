@@ -85,8 +85,9 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 7. **修整**：按 NCBI 规范修整基因的起止位置和基因名（每一处修改都记在 `reports/curation_report.tsv`）。
 8. **NCBI 检查**：用 NCBI 的 table2asn 检查每条记录，生成可提交的文件（`ncbi_submission/`）。
 9. **对比原注释**：GenBank 输入时，逐个基因比较原注释和新注释（`original_vs_mitom.tsv`）。
-10. **作图**：每条记录一张环状基因组图（`plots/`），默认借鉴 mitoPlotR 的环道样式（示例见 [docs/images](docs/images/)）；`--plot_style mitom` 用原来的样式。
-11. **整理输出**：结果整理到固定的目录结构里（见下面的输出表）。
+10. **作图**：每条记录一张环状基因组图（`plots/`），默认借鉴 mitoPlotR 的环道样式（示例见 [docs/images](docs/images/)）；`--plot_style mitom` 用原来的样式。内含子画斜线并标注长度，非编码区画浅灰并标注 NCR 编号和长度。
+11. **非编码区**（`--ncr yes`，默认）：≥ `--ncr_min_len`（默认 100）nt、没有任何注释覆盖的区段写成 misc_feature `non-coding region NCR<k>, <长度> bp`，GenBank、NCBI 提交文件和圈图里都能看到（未命名的控制区、可能含未知基因的序列）；`--ncr no` 不写。
+12. **整理输出**：结果整理到固定的目录结构里（见下面的输出表）。
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `run.log`：
 
