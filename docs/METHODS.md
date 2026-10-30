@@ -19,7 +19,8 @@ MitoM 各模块的方法、设计依据和历次评测（2026-10）。使用方�
 - 把原始 GenBank header metadata 转移回最终结果。
 - 修复核心输出中 `FEATURES source` 的 `/organism=`。
 - 输出最终 `.gbf`、统计表、日志、失败列表和合并文件。
-- 每条记录画基因组圈图（基因、GC 含量、GC skew；给 reads 时加测序深度）。
+- 把 ≥ 100 nt、没有任何注释覆盖的区段写成非编码区（NCR）misc_feature（`mito_ncr.py`，见下文）。
+- 每条记录画基因组圈图（默认借鉴 mitoPlotR 的环道样式：基因、GC 含量，给 reads 时加测序深度；内含子画斜线并标长度，非编码区画浅灰）。
 
 It can:
 
@@ -32,7 +33,8 @@ It can:
 - Restore original GenBank header metadata.
 - Restore `/organism=` inside `FEATURES source`.
 - Write final `.gbf` files, summary tables, logs, failure lists, and merged GenBank archives.
-- Draw a circular genome map per record (genes, GC content, GC skew; read depth when reads are given).
+- Write stretches of >= 100 nt no feature covers as non-coding region (NCR) misc_features (`mito_ncr.py`, below).
+- Draw a circular genome map per record (by default in the lane layout of mitoPlotR: genes, GC content, read depth when reads are given; introns hatched with their length, non-coding regions shaded).
 
 
 ## 注释后校正 / Post-annotation curation (mito_curate.py)
@@ -44,7 +46,7 @@ It can:
 | P1 | (i) 起始密码子取离上游基因最近且不重叠者 | 起点与上游 tRNA/rRNA 或同框 PCG 重叠 → 后移到第一个起始密码子，但只在 15 nt 内有起始密码子时才移动，否则保留重叠（173 条多类群真值：≤15 nt 的移动对 31 错 12，更远的移动对 14 错 28）；起点放在一个完整同链 tRNA 的上游（基因前三分之一包住整个 tRNA，如蚌类 nad1 包住 trnL2）→ 移到该 tRNA 之后第一个同框起始密码子；首密码子非起始密码子时才向上游找；`--aggressive_start_genes` 列出的基因总是按准则找最上游——默认为空，`mitom run` 只在环节动物 clade 传 `ND5,ND4L`（环节动物 benchmark 7/7 正确；其他类群 173 条里错 52 对 17）；`--aggressive_start` 对所有基因如此 |
 | P11 | (i) 的补充：起始密码子的选择 | P1 之后，在 P1 的起点前后 30 个密码子内、读码框连续的所有起始密码子中，取 NCBI 记录会选的那个：梯度提升树（`mito_start.py`，模型 `models/start_model/start_model.json`，纯 JSON 树，不用 pickle）根据密码子、与上游特征的距离及其类型和链、核心工具的比对（N 端缺多少残基、覆盖度）、基因、门打分。训练：1,683 条留一基准记录的候选（`benchmark/train_start_model.py`）。按科交叉验证：起点与 NCBI 完全一致 89.1 → 90.7 %（节肢 77.8 → 82.3 %，刺胞 79.8 → 83.2 %，软体 79.5 → 81.3 %，环节 91.5 → 92.9 %，脊索 97.3 → 97.9 %）；`--start_model no` 关闭 |
 | P2 | (ii) 同链同框 PCG 不可重叠（不同框可以，如 atp8-atp6、nad4L-nad4） | 只报告 |
-| P3 | (iii) 第一个完整终止密码子，或紧接下游 tRNA 前的 T/TA 不完整终止（tRNA 间断模型） | 完整终止落在下游同链 tRNA 内 ≥3 nt → 截到 tRNA 前并加 `/transl_except` 与 polyA note（真值：伸入 1–2 nt 时 NCBI 保留完整终止 130:57，≥5 nt 时多用 T/TA）；完整终止仅与 tRNA 重叠 1–2 nt 时保留；下游无 tRNA 而完整终止伸入下一个同链蛋白基因 > 30 nt（环节动物 > 10 nt，`--abbreviated_pcg_overlap`，与原点处 O1 一致；atp8-atp6、nad4L-nad4 除外；真值：11–30 nt 内保留完整终止 17:6，更深则 T/TA 为主；本地全部 NCBI 记录中 11–30 nt 的情形：环节动物 T/TA 142:43，刺胞动物 5:109，软体动物 12:66）→ 不延伸：保留原 T/TA 末端（如 cox1→cox2），否则取下一基因前的 T/TA（如 nad6→cob）；核心工具已注释的、伸入下一基因的完整终止不回缩；已是 T/TA 结尾的基因不会为了 90 nt 内的完整终止伸入其他特征（rRNA、反链 tRNA）> 10 nt；注释末端停在第一个完整终止之前、且中间没有任何已注释基因 → 延伸到该终止（≤ 600 nt；核心工具在分化大的类群丢了 C 端同源区：nad5/nad4/nad2/cox1 短 100–500 nt；多类群 benchmark 52 例中 50 例延伸后与 NCBI 完全一致）；会把整个同链 tRNA 包进去、且 tRNA 前没有 T/TA 的基因 → 结束在该 tRNA 之前（3′ partial） |
+| P3 | (iii) 第一个完整终止密码子，或紧接下游 tRNA 前的 T/TA 不完整终止（tRNA 间断模型） | 完整终止落在下游同链 tRNA 内 ≥3 nt → 截到 tRNA 前并加 `/transl_except` 与 polyA note（真值：伸入 1–2 nt 时 NCBI 保留完整终止 130:57，≥5 nt 时多用 T/TA）；完整终止仅与 tRNA 重叠 1–2 nt 时保留；下游无 tRNA 而完整终止伸入下一个同链蛋白基因 > 30 nt（环节动物 > 10 nt，`--abbreviated_pcg_overlap`，与原点处 O1 一致；atp8-atp6、nad4L-nad4 除外；真值：11–30 nt 内保留完整终止 17:6，更深则 T/TA 为主；本地全部 NCBI 记录中 11–30 nt 的情形：环节动物 T/TA 142:43，刺胞动物 5:109，软体动物 12:66）→ 不延伸：保留原 T/TA 末端（如 cox1→cox2），否则取下一基因前的 T/TA（如 nad6→cob）；核心工具已注释的、伸入下一基因的完整终止不回缩；已是 T/TA 结尾的基因不会为了 90 nt 内的完整终止伸入其他特征（rRNA、反链 tRNA）> 10 nt；注释末端停在第一个完整终止之前、且中间没有任何已注释基因 → 延伸到该终止（≤ 600 nt；核心工具在分化大的类群丢了 C 端同源区：nad5/nad4/nad2/cox1 短 100–500 nt；多类群 benchmark 52 例中 50 例延伸后与 NCBI 完全一致）；会把整个同链 tRNA 包进去、且 tRNA 前没有 T/TA 的基因 → 结束在该 tRNA 之前（3′ partial）；脊椎动物（`--abbreviated_overlap`，`mitom run` 对 Chordata 自动加）：完整终止伸入下游同链 tRNA 1–2 nt 时也改为 T/TA，但伸入下一个蛋白基因时保留完整终止（NCBI 脊椎动物记录 atp6 的 TAA 与 cox3 的 ATG 共用 A；1,719 条留一基准记录只重跑校正：两端一致 17,727 → 17,951，80.0 → 81.0 %；脊索动物多对 294、少对 70，辐鳍鱼 atp6 两种写法都有 104 : 60，鸟类 86 : 2，哺乳类 60 : 2；其他门不变；完全不用该规则 17,373） |
 | D1 | — | 同一蛋白基因在不同位置注释两次（MitoZ 遇重复区）→ 只保留完整、较长、靠前的一份；另一条链上与之重叠、不完整或含内部终止的同名拷贝（反义链假阳性）也删除 |
 | P7 | — | 起点与终点不在同一读码框（内部终止，NCBI ERROR）→ 取两者中较长的开放读码框：保留起点到第一个终止，或保留终止、在其读码框内取离原起点最近的起始密码子；新 ORF 不足原长一半时不改，只报告（多类群 benchmark：内部终止 14 → 5） |
 | P8 | — | 起点与终点同框但有内部终止（起点越过终止子放在上游，或终点越过基因的终止子）→ 取"原起点到第一个终止"与"最后一个内部终止之后的第一个起始密码子到原终点"中较长者（≥ 原长一半） |
@@ -77,6 +79,12 @@ mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds 
 
 剩余差异主要来自 tRNA 边界与 NCBI 不同（NCBI 的 T/TA 终止落在其 tRNA 前），以及 rRNA 写法惯例（NCBI 多为两侧填满；trim 模式按准则不扩展）。准则来自腹足类，此处在环节动物上验证，软体动物数据尚未测试。
 
+## 非编码区 / Non-coding regions (mito_ncr.py)
+
+每条记录中 ≥ `--ncr_min_len`（默认 100）nt、没有任何特征覆盖的区段写成 misc_feature `/note="non-coding region NCR<k>, <长度> bp: no gene annotated (MitoM)"`：按在记录中的顺序编号，跨原点的写成 join；带内含子的基因覆盖它的内含子；再次运行时替换旧的 NCR。这一步在校正之后（`run` / `annotate` / `import`；`--ncr no` 不写，圈图也不画）。未命名的控制区、可能含未识别基因的序列因此在 GenBank、NCBI 提交文件和圈图里都看得到。
+
+验证（2026-10-30）：22 条 MJ20260820041 记录写出 26 个 NCR，table2asn 0 ERROR，WARNING 与不写 NCR 时相同（18 个）；20 条 NCBI 的 Hesionidae 线粒体基因组 33 个 NCR（24,280 nt），在 NCBI 有注释的记录上，与 NCBI 未注释的区段（如 *Sirsoe methanicola* 2,641 nt，其中一段含 288 个密码子的 ORF）及其控制区特征一致。
+
 ## 环状还是线状 / Topology (mitom_topology.py, mito_core.py --check_ends)
 
 **问题**：标签不一定对。本地 NCBI 记录中，669 条环节动物“complete genome”有 64 条标为 linear，1,050 条 RefSeq 完整基因组有 19 条标为 linear，
@@ -94,6 +102,7 @@ NCBI ERROR 都是 0；结果不同的 20 条中，12 条是 nad2 紧接 cox1 时
 |---|---|---|
 | joined | 参考蛋白跨接点比对，两侧各 ≥ 30 nt；并且两侧各自单独也能比对上、到达接点、残基首尾相接（相差 ≤ 10），或两侧各 ≥ 90 nt、读码框不断、两侧单独的比对不互相矛盾 | 两端是连着的：环状 |
 | cut | 比对停在接点 60 nt 内，那一侧缺 ≥ 30 个残基，读码框一直开放到接点 | 基因被端点截断：部分序列，线状 |
+| joined_intron | 看似 cut，但用 exonerate protein2genome（允许内含子）在接点前、后剩下的整圈序列上各再比对一次，缺的残基在另一端比对上（中间隔着跨接点的内含子，长度不限） | 两端是连着的：环状；内含子照常注释 |
 | complete | 其他：完整基因、N/C 端分化未比对上，或跨接点的比对只是偶然延伸（两侧单独比对接不上又不够长） | 不作判断，按标签 |
 
 有 joined → 环状；标为环状而有 cut → 线状；标为环状的水母类（Hydrozoa、Scyphozoa、Cubozoa、Staurozoa）和钙质海绵（线状线粒体基因组）没有 joined → 线状，
@@ -115,6 +124,8 @@ MitoZ / MITOS2 / `mitom import` 的注释没有核心的比对证据，按标签
 | 去掉 1,500 nt（一个蛋白基因的后半段及其后）、标为 circular（部分序列） | 16/20 判为线状，4 条证据不足按标签 | — |
 | ↳ 被缺口截断的基因：写成不完整 / 被错误地跨两端接起来 | 16 / 0 | 6 / 2 |
 | ↳ 缺口以外的蛋白基因两端一致 | 160 | 159 |
+
+**跨接点的内含子**（2026-10-30）：组装从带内含子基因的第 2 个外显子开始时（环节动物 cox1 的 II 类内含子：MJ20260820041 的 CHY / *Travisia*、CWSC / Nephtyidae），protein2dna 比对不允许内含子，外显子 2 停在接点，原先判为 cut、按线状注释，内含子从未被注释（cox1 只有外显子 2：1,287 或 848 nt）。现在看似 cut 的基因再用 protein2genome 比对（判定 joined_intron → 环状）；从头识别的内含子在跨原点时把描述留在 CDS 上，记录旋转到该基因第一个外显子后恢复内含子特征（`mitom_orient.add_exon_gap_introns`）。22 条 MJ 线粒体基因组：13 条 CHY + 5 条 CWSC 得到 cox1 内含子（用剪接后的蛋白、测序深度、跨接点 reads 以及 LC677172 / *Nephtys* 的 cox1 内含子核实），其余 4 条不变，table2asn 0 ERROR。整段位于接点一侧的 ≥ 6 kb 内含子（六放珊瑚 nad5 内含子 10–12 kb，内含其他基因）原先漏掉，重新比对改为在基因前、后剩下的整圈序列上进行（不限内含子长度）。内含子基准（193 条 NCBI 记录、309 个内含子，刺胞、环节、扁盘、海绵动物；另 76 条无内含子；去掉本属的位点）：把记录旋转到原点落在外显子中、内含子中间或距内含子两端 15 nt 处，得到的内含子与未旋转时相同（300 / 300 行）；修正前原点距内含子右 / 左端 15 nt 时只找到 295 个中的 232 / 190 个。
 
 早期版本的判定（只要求接点两侧各比对上 30 nt）在部分序列上有 5 条误判为 joined（比对偶然越过假接点 35–338 nt），加上“两侧单独比对首尾相接，或两侧各 ≥ 90 nt 且读码框不断”后为 0；
 比对在离端点 20–21 nt 处被 exonerate 截短的基因，按“缺的残基放不下”判断是否位于端点，因此仍被检查。
@@ -351,6 +362,26 @@ NCBI 提交校验（table2asn 1.28 `-V vb -Z`，2026-10-25）：多鳞虫 + 沙�
 沙蚕科 NCBI 没有分段注释的完整单元（只有整段 misc_RNA 的 PP239203 *Perinereis wilsoni*），用 Geneious 注释的 23007-1 对照：
 各边界相差 0–3 nt，28S 3' 端 mitom 在保守端 ...GATTTGT，Geneious 早 271 nt。
 
+
+## GenBank / EMBL 转 NCBI 提交文件 / Submission files (mito_tbl.py, `mitom gb2tbl`)
+
+把任何已注释的 GenBank / EMBL 转成 NCBI 的 5 列特征表 `.tbl` 和带来源修饰符的 `.fsa`（可全部合并、每个文件一对或每条记录一对），并可用 table2asn 生成 `.sqn`。与同类工具比较（2026-10-30）后吸收了它们的长处：GB2sequin（CHLOROBOX）的 EMBL 输入、来源信息表（`--source_table`，即 table2asn 的 `.src`）和产物名表（`--product_table`）；NCBI EDirect gbf2tbl / gbf2fsa 的管道输入、把 DEFINITION 作为 FASTA 标题、每行 70 个碱基。另外：缺 `/product` 的线粒体基因按基因名或 `/anticodon` 补上（CDS 缺产物名是 NCBI 的 ERROR MissingProteinName）；去掉 INSDC 之外的限定词（Geneious、SnapGene、ApE 留下的）和非 ASCII 文字；跨原点、不完整端点照 NCBI 写法；读不了的文件、无序列的记录报告并跳过。来源修饰符名逐个用 table2asn 1.28 核实过（`voucher`、`title`、`definition` 它不认，故分别映射或另作处理）。
+
+**压力测试**（17 个刁钻样例，每个都经 table2asn 判定；`benchmark/results/gb2tbl_stress_2026-10-30/`）：
+
+| 样例 | 考什么 | MitoM gb2tbl ERROR | NCBI gbf2tbl + gbf2fsa ERROR |
+|---|---|---|---|
+| c01–c03、c09、c13、c14 | 普通记录、内含子、脊椎动物负链、`100^101` 位点、超出末端的特征、怪 ID / 小写 / IUPAC | 0 | 0 |
+| c04 / c05 | 跨原点基因（正链 / 负链） | 0 | 2 / 2（SeqLocOrder） |
+| c06 | 不完整端点 | 0 | 2（NoStop、SuspiciousFrame） |
+| c07 / c17 | 非 ASCII 文字 / Latin-1 编码的文件 | 0 / 0 | 6 / 4（NonAsciiAsn） |
+| c08 | 编辑软件导出的私有限定词 | 0 | 4（IllegalDbXref、GeneIdMismatch） |
+| c10 | 没有 source、没有物种名 | 0 | 0 |
+| c15 | 真实的 ENA EMBL 文件（AF178678） | 0 | 读不了，没有输出 |
+| c16 | 编辑软件导出：只有基因名、没有产物名 | 0 | 31（MissingProteinName、TrnaCodonWrong 等） |
+| c11 / c12 | 没有序列的记录 / 截断的文件 | 报告并跳过 | 输出坏记录 / 没有输出 |
+
+15 个有效样例 gb2tbl 全部 0 ERROR，gbf2tbl + gbf2fsa 共 51 个；后者的 FASTA 不带 `[mgcode=]`，每条记录另有 13–14 个遗传密码警告。GB2sequin 只有网页版，未实测；Wolflab gb2tbl.py、Loman genbank_to_tbl.py 是 Python 2 脚本，只处理单条记录，不支持不完整端点和多段位置（读代码判断）。
 
 ## 流程图 / Flowcharts
 

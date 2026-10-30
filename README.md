@@ -121,7 +121,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `reports/` | 各步骤报告：`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
 | `run.log` | 全部过程与调用的命令 |
 
-**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`；每个命令的用法和示例见 [使用手册第 6 节](docs/USAGE_zh.md#6-每个命令的用法)，怎么选命令见 [第 5 节](docs/USAGE_zh.md#5-怎么选命令)）
+**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；每个命令的用法和示例见 [使用手册第 6 节](docs/USAGE_zh.md#6-每个命令的用法)，怎么选命令见 [第 5 节](docs/USAGE_zh.md#5-怎么选命令)）
 
 | 命令 | 作用 |
 |---|---|
@@ -160,7 +160,7 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 ```
 
 **文档 / Documentation**：完整使用手册 [docs/USAGE_zh.md](docs/USAGE_zh.md)（安装、输入、流程、每个命令、输出、调试、常见问题）；
-方法与评测 [docs/METHODS.md](docs/METHODS.md)；版本变化 [CHANGELOG.md](CHANGELOG.md)；评测数据 `benchmark/results/`。
+全部命令与参数 [docs/OPTIONS.md](docs/OPTIONS.md)；方法与评测 [docs/METHODS.md](docs/METHODS.md)；版本变化 [CHANGELOG.md](CHANGELOG.md)；评测数据 `benchmark/results/`。
 
 ## MitoM：声明、致谢与引用 / Statement, acknowledgements and citation
 
@@ -175,9 +175,12 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 | 内含子（`mito_intron.py` 按 MFannot 方法从头识别 + `mito_intron_ref.py` 近缘位点迁移） | MitoM 自有步骤（从头识别方法来自 MFannot；位点库由 193 条核实的 NCBI 记录构建） |
 | 漏注基因从 MITOS2 救回（`mito_rescue.py`，可选：`--rescue yes`，需另装 MITOS2） | MitoM 自有步骤 |
 | 仍缺的 12S/16S 用按门建立的 rRNA HMM 补搜（`mito_rrna_hmm.py`，库 `models/rrna_hmm/`，nhmmer；只在常规方法找不到时启用） | MitoM 自有步骤（思路参考 EMMA 的 nhmmer rRNA 模型） |
-| 蛋白基因与 rRNA 端点校正（`mito_curate.py`）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
+| 蛋白基因与 rRNA 端点校正（`mito_curate.py`；起始密码子另由从 NCBI 记录学习的模型挑选，规则 P11）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
+| 环状 / 线状核对（`mitom_topology.py`、`mito_core.py --check_ends`：两端的基因跨接点再比对；跨接点的内含子用 protein2genome） | MitoM 自有步骤 |
+| 非编码区（`mito_ncr.py`：≥ 100 nt 无注释的区段写成 NCR misc_feature） | MitoM 自有步骤 |
 | 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
-| 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度；默认样式借鉴 mitoPlotR） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
+| 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度，内含子画斜线、非编码区画浅灰；默认样式借鉴 mitoPlotR） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
+| GenBank / EMBL 转 NCBI 提交文件（`mito_tbl.py`，`mitom gb2tbl`） | MitoM 自有步骤（来源信息表、产物名表的做法借鉴 GB2sequin；管道输入、定义行借鉴 NCBI gbf2tbl / gbf2fsa） |
 | 用 MitoZ / MITOS2 注释（`--engine mitoz\|mitos2`）或导入它们已有的结果（`mitom import`；`mito_engines.py`） | 可选：MitoZ、MITOS2 需自己安装 |
 | 蛋白基因、rRNA、tRNA 识别 | 注释核心 `mito_core.py`（blastx + exonerate 蛋白基因，按门 rRNA profile HMM，MitoM-ML tRNA：分支协方差模型 + 学习的判别器与端点，未调用的 tRNA 家族由 MiTFi 补，脊椎动物取 MiTFi 端点） |
 
@@ -221,9 +224,9 @@ The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn 
 
 **致谢 / Acknowledgements**
 
-感谢 MitoZ、MITOS2/MITOS、MiTFi、MFannot、Infernal、BLAST+、GeneWise、Exonerate、NCBI table2asn、Biopython 等软件的作者。没有他们的工作，就没有本软件。
+感谢 MitoZ、MITOS2/MITOS、MiTFi、MFannot、Infernal、BLAST+、GeneWise、Exonerate、NCBI table2asn、Biopython、mitoPlotR（圈图样式）、GB2sequin（提交文件转换的做法）等软件的作者。没有他们的工作，就没有本软件。
 
-We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, GeneWise, Exonerate, NCBI table2asn, Biopython and the other tools listed below. This software would not exist without their work.
+We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, GeneWise, Exonerate, NCBI table2asn, Biopython, mitoPlotR (map layout), GB2sequin (submission file conversion) and the other tools listed below. This software would not exist without their work.
 
 **引用 / Citation**
 

@@ -6,6 +6,12 @@ installed one.
 ## Unreleased
 
 ### Added
+- Documentation kept up with the code: `docs/OPTIONS.md` lists every option of every command as its `-h` prints it
+  (`scripts/make_options_doc.py`; `tests/test_docs.py` fails while an option or a command is missing from the docs).
+  The manual, methods and README now cover the `joined_intron` end check, the vertebrate stop rule, the learned start
+  codon (P11), non-coding regions, the new map drawing (hatched introns, NCR shading) and gb2tbl's stress test; the
+  example maps in `docs/images/` are redrawn by the current code, with a new one for introns and NCRs
+  (`map_introns.png`, *Metridium senile*).
 - Non-coding regions (mito_ncr.py; `run` / `annotate` / `import` `--ncr yes|no`, default yes, `--ncr_min_len`,
   default 100): every stretch of >= 100 nt no feature covers is written as misc_feature
   /note="non-coding region NCR<k>, <length> bp: no gene annotated (MitoM)" (the unnamed control region, sequence that
