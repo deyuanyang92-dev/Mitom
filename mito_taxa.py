@@ -57,6 +57,13 @@ def abbreviated_overlap(clade: Optional[str]) -> List[str]:
     return ["--abbreviated_overlap"] if (clade or "").lower().startswith("chordata") else []
 
 
+def abbreviated_pcg_overlap(clade: Optional[str]) -> List[str]:
+    """mito_curate.py --abbreviated_pcg_overlap for annelids: NCBI annelid records end a gene whose complete stop lies
+    11-30 nt inside the next same-strand protein gene with T / TA before it (142 vs 43 records; other phyla keep the
+    complete stop: Cnidaria 109 vs 5, Mollusca 66 vs 12) - nad2 before cox1 above all."""
+    return ["--abbreviated_pcg_overlap"] if (clade or "").lower().startswith("annelida") else []
+
+
 def no_upstream_atg(clade: Optional[str]) -> List[str]:
     """mito_curate.py --no_upstream_atg for nematodes and arthropods, whose genes often start with TTG / ATT / ATA
     (moving such starts to an upstream ATG: 6 right, 14 wrong in the leave-out benchmark; other phyla +37)."""

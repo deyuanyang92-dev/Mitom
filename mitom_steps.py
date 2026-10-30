@@ -21,7 +21,7 @@ from Bio import SeqIO
 
 from mito_common import reports_dir, run_tool, write_table
 from mitom_log import record_event
-from mito_taxa import abbreviated_overlap, aggressive_start_genes, no_upstream_atg
+from mito_taxa import abbreviated_overlap, abbreviated_pcg_overlap, aggressive_start_genes, no_upstream_atg
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
 
 
@@ -79,6 +79,7 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
                   "--genetic_code", str(int(args.genetic_code)), "--no_validate",
                   "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None)),
                   *abbreviated_overlap(getattr(args, "clade", None)),
+                  *abbreviated_pcg_overlap(getattr(args, "clade", None)),
                   *no_upstream_atg(getattr(args, "clade", None))])
     if p.returncode:
         logging.error(f"[CURATE] failed (exit {p.returncode}): {p.stderr[-300:]} - final files left uncurated")

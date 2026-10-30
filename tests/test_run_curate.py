@@ -28,6 +28,7 @@ def test_run_curate_passes_the_clade_option(tmp_path, monkeypatch):
     assert out.gb_dir == tmp_path / "05.curated" and out.ok
     i = seen[0].index("--aggressive_start_genes")
     assert seen[0][i + 1] == "ND5,ND4L"
+    assert "--abbreviated_pcg_overlap" in seen[0]                 # annelids: T / TA before the next protein gene
     args.clade = "Nematoda"
     bm.run_curate(args, tmp_path / "04.final_gb", tmp_path)
     assert seen[1][seen[1].index("--aggressive_start_genes") + 1] == ""
@@ -47,6 +48,12 @@ def test_native_core_by_default_engines_optional():
 def test_abbreviated_overlap_only_for_chordata():
     assert bm.abbreviated_overlap("Chordata") == ["--abbreviated_overlap"]
     assert bm.abbreviated_overlap("Annelida-segmented-worms") == [] and bm.abbreviated_overlap(None) == []
+
+
+def test_abbreviated_pcg_overlap_only_for_annelids():
+    from mito_taxa import abbreviated_pcg_overlap
+    assert abbreviated_pcg_overlap("Annelida-segmented-worms") == ["--abbreviated_pcg_overlap"]
+    assert abbreviated_pcg_overlap("Mollusca") == [] == abbreviated_pcg_overlap("Cnidaria") == abbreviated_pcg_overlap(None)
 
 
 def test_no_upstream_atg_for_nematodes_and_arthropods():

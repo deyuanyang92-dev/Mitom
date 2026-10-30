@@ -116,6 +116,11 @@ MAX_FEATURE_OVERLAP = 10    # P3: a complete stop may reach this far into the ne
 MAX_PCG_OVERLAP = 30        # P3: a complete stop may reach this far into the next same-strand protein gene (173-record
                             # truth: 11-30 nt inside, complete stop 17 vs T/TA 6; 31-50 nt 6 vs 6; deeper T/TA) (NCBI annelid
                             # records: cox1-cox2, nad6-cob end with T/TA instead; atp8-atp6 / nad4L-nad4 overlap by design)
+                            # - except annelids (--abbreviated_pcg_overlap: MAX_FEATURE_OVERLAP, as O1 at the origin):
+                            # all local NCBI records 2026-10-30, a complete stop 11-30 nt inside the next same-strand
+                            # protein gene: Annelida T/TA 142 vs complete 43 (nad2 before cox1 115 vs 32), Cnidaria 5 vs
+                            # 109, Mollusca 12 vs 66, Arthropoda 40 vs 65; curation A/B on 1,718 leave-out records:
+                            # annelid protein genes exact 7357 -> 7413 (nad2 +41, nad6 +21), no other phylum changed
 BICISTRONIC = {("ATP8", "ATP6"), ("ND4L", "ND4")}
 FRAMESHIFT_WINDOW = 30      # P9: nt around the annotated start / end searched for the start / stop codon of the join
 FRAMESHIFT_MAX_TRIM = 0.85  # P9 only when no single-frame repair (P7 / P8) keeps this fraction of the CDS (2026-10 runs, 162 CDS
@@ -347,18 +352,19 @@ class Curator:
         down = self.downstream_gene_start(f)
         nfs, nfs_type = self.next_feature(f)           # nearest feature downstream, either strand
         reach = None                                   # furthest position a complete stop may reach (None: no limit)
+        pcg_overlap = MAX_FEATURE_OVERLAP if getattr(self.a, "abbreviated_pcg_overlap", False) else MAX_PCG_OVERLAP
         if nfs is not None:
-            reach = nfs - 1 + (MAX_PCG_OVERLAP if down is not None and nfs == down else MAX_FEATURE_OVERLAP)
+            reach = nfs - 1 + (pcg_overlap if down is not None and nfs == down else MAX_FEATURE_OVERLAP)
         tail_b = (b - new_a + 1) % 3
         has_tail = tail_b in (1, 2) and s[b - tail_b:b] == ("T", "TA")[tail_b - 1]   # annotated end is an abbreviated stop
         reach_hard = reach                             # the same bound ignoring an rRNA start (branch 4, as in branch 3): R1
         if nfs_type == "rRNA" and not has_tail:        # fills the rRNA to the short CDS end first (review record B: end
             nfs_h = self.next_feature(f, types=("tRNA", "CDS"))[0]   # 150 nt short, reach = rRNA start + 10 blocked the
             reach_hard = None if nfs_h is None else \
-                nfs_h - 1 + (MAX_PCG_OVERLAP if nfs_h == down else MAX_FEATURE_OVERLAP)   # extension) and trims it back after
+                nfs_h - 1 + (pcg_overlap if nfs_h == down else MAX_FEATURE_OVERLAP)   # extension) and trims it back after
         why_end = ""
         if down and (trna is None or down < trna) and (nfs is None or nfs >= down) and b < down \
-                and first_stop is not None and new_a < down and first_stop - 2 > down - 1 + MAX_PCG_OVERLAP:
+                and first_stop is not None and new_a < down and first_stop - 2 > down - 1 + pcg_overlap:
             # no feature before the next gene, the annotated end lies before it and the first complete stop
             # lies well inside it: do not extend (an annotated complete stop that already overlaps the next
             # gene is kept: NCBI records show both patterns, 24 complete-stop overlaps > 10 nt and 28 T/TA
@@ -379,7 +385,8 @@ class Curator:
                             (f" ({gap:+d} nt spacer)" if gap else "")
                         break
                 else:
-                    if not self.overlap_fallback(first_stop, down):
+                    # (annelids, --abbreviated_pcg_overlap: no T / TA before the gene - the complete stop as elsewhere)
+                    if not self.overlap_fallback(first_stop, down) and first_stop - 2 > down - 1 + MAX_PCG_OVERLAP:
                         self.log(f, "P4", old, old, "complete stop inside the downstream gene, no abbreviated stop before it - check manually")
                     else:
                         new_b, why_end = first_stop, f"first complete stop, {first_stop - down + 1} nt into the downstream gene (no abbreviated stop before it)"
@@ -1191,6 +1198,10 @@ def main(argv=None) -> int:
     p.add_argument("--abbreviated_overlap", action="store_true",
                    help="P3: a complete stop overlapping the next same-strand tRNA / gene by 1-2 nt becomes the T / TA "
                         "before it (vertebrate RefSeq convention; mitom run sets it for the Chordata clade)")
+    p.add_argument("--abbreviated_pcg_overlap", action="store_true",
+                   help="P3: a complete stop more than 10 nt inside the next same-strand protein gene becomes the T / TA "
+                        "before it, as O1 at the origin (NCBI annelid records; others allow 30 nt; mitom run sets it "
+                        "for the Annelida clade)")
     p.add_argument("--aggressive_start_genes", default="",
                    help="Genes whose start is always moved to the in-frame start codon nearest the preceding gene "
                         "(default none; `mitom run` passes ND5,ND4L for the Annelida clade). Benchmark 2026-10: right "

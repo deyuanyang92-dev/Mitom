@@ -17,6 +17,12 @@ installed one.
   FASTA for linear contigs).
 - Help and docs in plain words: every command with a usage section (docs/USAGE_zh.md sections 5-6), what dedup
   does, a note that MitoM is still being tested and used inside the group.
+- Annelids (`--clade` Annelida): a protein gene whose first complete stop lies 11-30 nt inside the next same-strand
+  protein gene ends with T / TA before it, as at the sequence origin (`mito_curate.py --abbreviated_pcg_overlap`;
+  NCBI annelid records 142 vs 43, mostly nad2 before cox1 and nad6 before cob; other phyla keep the complete stop:
+  Cnidaria 109 vs 5, Mollusca 66 vs 12). Curation of 1,718 leave-out benchmark records: annelid protein genes with
+  both ends as NCBI 7,357 -> 7,414, no other phylum changed. The same nad2 no longer depends on whether the record
+  was rotated.
 
 ## 1.0.0 - 2026-10-30
 

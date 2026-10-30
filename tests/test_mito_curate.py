@@ -937,6 +937,22 @@ def test_abbreviated_overlap_vertebrate_convention():
         assert int(_by(rec, "CDS", "COX3").location.end) == end, flag
 
 
+def test_abbreviated_pcg_overlap_annelid_nad2_before_cox1():
+    """--abbreviated_pcg_overlap (Annelida): nad2 ends with T right before cox1 when its first complete stop lies
+    11-30 nt inside cox1 (NCBI annelid records 142 vs 43; LC726510.1 and nine more linear records of the 2026-10-30
+    topology experiment); without the option the complete stop 23 nt into cox1 is taken (other phyla: 30 nt allowed).
+    Both ways when no T / TA lies before cox1: the complete stop."""
+    from Bio.SeqFeature import FeatureLocation
+    nad2 = "ATG" + "GCC" * 100 + "T"                                  # 304 nt: ...GCC + T (abbreviated stop)
+    cox1 = "ATG" + "GCAGCAGCAGCAGCAGC" + "TAA" + "GCC" * 100          # nad2's frame: TAA at cox1 21..23
+    for last, flag, end in (("T", True, 334), ("T", False, 357), ("C", True, 357)):
+        seq = "C" * 30 + nad2[:-1] + last + cox1 + "C" * 30
+        rec = _mkrec(seq, [("CDS", FeatureLocation(30, 334, 1), "ND2"),
+                           ("CDS", FeatureLocation(334, 334 + len(cox1), 1), "COX1")])
+        _curate_rec(rec, abbreviated_pcg_overlap=flag)
+        assert int(_by(rec, "CDS", "ND2").location.end) == end, (last, flag)
+
+
 def test_upstream_atg_for_non_atg_start():
     """P1: a non-ATG start (ATT) with an in-frame ATG upstream, open frame, after the preceding tRNA -> the ATG (leave-out
     benchmark +37 starts); --no_upstream_atg (nematodes, arthropods) keeps ATT; an ATG start is never moved."""
