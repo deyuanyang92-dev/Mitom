@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as cf
 import logging
+import os
 import sys
 import threading
 import time
@@ -175,6 +176,19 @@ def annotate_one(
     return internal_id, True, workdir, own if own.is_file() else None
 
 
+def fit_threads(args: argparse.Namespace, backend: str, n: int) -> None:
+    """--threads per record lowered so that the records annotated at once (--jobs, at most n) fit the cores (Snakemake:
+    --smk_cores; threads: the CPUs): 16 records x 48 threads with 64 cores ran one record at a time (2026-10-31: 148
+    records in 57 min instead of about 4)."""
+    cores = int(getattr(args, "smk_cores", 0) or 0) if backend == "snakemake" else (os.cpu_count() or 8)
+    jobs = max(1, min(int(getattr(args, "max_tasks", 1) or 1), n))
+    fit = max(1, (cores or (os.cpu_count() or 8)) // jobs)
+    if int(getattr(args, "threads", 1) or 1) > fit:
+        logging.warning(f"[ANNOT_STAGE] --threads {args.threads} x {jobs} records at a time exceeds {cores} cores: "
+                        f"{fit} thread(s) per record, so that {jobs} records run at once")
+        args.threads = fit
+
+
 def run_annotation_stage(
     *, samples: List[SampleInfo], phase_dirname: str, out_root: Path,
     args: argparse.Namespace, fasta_selector,
@@ -187,6 +201,7 @@ def run_annotation_stage(
         # peak memory of a one-record run): threads then
         backend = "snakemake" if snakemake_available(getattr(args, "snakemake_bin", None)) \
                   and len(samples) > int(getattr(args, "max_tasks", 1) or 1) else "threads"
+    fit_threads(args, backend, len(samples))
     logging.info(f"[ANNOT_STAGE] phase={phase_dirname}  backend={backend}  n={len(samples)}")
     global _STAGE_PROGRESS
     _STAGE_PROGRESS = Progress(STAGE_LABEL.get(phase_dirname, phase_dirname), len(samples))

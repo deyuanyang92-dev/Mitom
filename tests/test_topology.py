@@ -353,3 +353,25 @@ def test_gene_set_of_an_annotation(tmp_path):
     SeqIO.write(r, str(tmp_path / "x.gb"), "genbank")
     assert mt.gene_set(tmp_path / "x.gb") == {"cox1", "rrnL"}
     assert mt.gene_set(tmp_path / "missing.gb") == set()
+
+
+def test_threads_fit_the_cores():
+    """--threads x records at once > cores made Snakemake run one record at a time: threads per record lowered."""
+    from mitom_stage import fit_threads
+    a = argparse.Namespace(threads=48, max_tasks=16, smk_cores=64)
+    fit_threads(a, "snakemake", 148)
+    assert a.threads == 4
+    a = argparse.Namespace(threads=48, max_tasks=16, smk_cores=64)
+    fit_threads(a, "snakemake", 1)                      # one record: all cores for it
+    assert a.threads == 48
+    a = argparse.Namespace(threads=2, max_tasks=24, smk_cores=64)
+    fit_threads(a, "snakemake", 148)                    # fits: unchanged
+    assert a.threads == 2
+
+
+def test_threads_fit_the_cpus_with_the_threads_backend(monkeypatch):
+    import mitom_stage
+    monkeypatch.setattr(mitom_stage.os, "cpu_count", lambda: 32)
+    a = argparse.Namespace(threads=8, max_tasks=16)
+    mitom_stage.fit_threads(a, "threads", 100)
+    assert a.threads == 2
