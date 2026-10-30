@@ -333,6 +333,10 @@ def test_unlabelled_record_decided_by_its_gene_set():
     assert mt.decide("circular", [], unlabelled=True, genes=ALL - {"atp8"})[0] == "circular"
     top, why = mt.decide("circular", [], unlabelled=True, genes=ALL - {"atp8", "nad6"})
     assert top == "linear" and "11 of 13 protein genes" in why
+    # phyla that keep all tRNAs: fewer than 21 = a contig that lost some; cnidarians (1-2 tRNAs) not checked
+    assert mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:19"}, phylum="Annelida")[0] == "linear"
+    assert mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:22"}, phylum="Annelida")[0] == "circular"
+    assert mt.decide("circular", [], unlabelled=True, genes=ALL | {"tRNA:2"}, phylum="Cnidaria")[0] == "circular"
     assert mt.decide("circular", [], unlabelled=True, genes=ALL - {"rrnS"})[0] == "linear"
     cut = [{"gene": "cox1", "verdict": "cut", "residues": "100-513/513"}]
     assert mt.decide("circular", cut, unlabelled=True, genes=ALL)[0] == "linear"           # a gene cut at an end
@@ -351,7 +355,7 @@ def test_gene_set_of_an_annotation(tmp_path):
                   SeqFeature(FeatureLocation(90, 200, 1), type="rRNA", qualifiers={"product": ["16S ribosomal RNA"]}),
                   SeqFeature(FeatureLocation(200, 260, 1), type="tRNA", qualifiers={"gene": ["trnL1"]})]
     SeqIO.write(r, str(tmp_path / "x.gb"), "genbank")
-    assert mt.gene_set(tmp_path / "x.gb") == {"cox1", "rrnL"}
+    assert mt.gene_set(tmp_path / "x.gb") == {"cox1", "rrnL", "tRNA:1"}
     assert mt.gene_set(tmp_path / "missing.gb") == set()
 
 
@@ -375,3 +379,30 @@ def test_threads_fit_the_cpus_with_the_threads_backend(monkeypatch):
     a = argparse.Namespace(threads=8, max_tasks=16)
     mitom_stage.fit_threads(a, "threads", 100)
     assert a.threads == 2
+
+
+def test_header_words_give_the_topology():
+    from mitom_inputs import header_hint
+    assert header_hint("NC_064058.1 Sirsoe methanicola mitochondrion, complete genome")[0] == "circular"
+    assert header_hint("1+,2-,3+(circular)")[0] == "circular"                       # GetOrganelle path
+    assert header_hint("KU672397.1 Hirudo verbana mitochondrion, partial genome")[0] == "linear"
+    assert header_hint("LC726566.1 Metaphire soulensis mitochondrial DNA, nearly complete genome")[0] == "linear"
+    assert header_hint("contig_7 non-circular")[0] is None and header_hint("contig_7 len=15000")[0] is None
+
+
+def test_terminal_overlap_found_and_removed(tmp_path):
+    """An assembler's circular overlap (the end repeats the start): circular, the repeated end removed; a chance
+    match shorter than MIN_OVERLAP, or none, is no overlap."""
+    from mitom_inputs import terminal_overlap
+    rnd = random.Random(5)
+    body = "".join(rnd.choice("ACGT") for _ in range(12000))
+    assert terminal_overlap(body + body[:300]) == 300
+    assert terminal_overlap(body + body[:20]) == 0 and terminal_overlap(body) == 0
+    fa = tmp_path / "asm.fa"
+    fa.write_text(f">ctg1\n{body + body[:300]}\n>ctg2\n{body[:11000]}\n")
+    samples, _ = split_or_sanitize_fastas([fa], tmp_path / "s", True, 15)
+    first = SeqIO.read(str(samples[0].internal_fasta), "fasta")
+    assert len(first.seq) == 12000 and samples[0].topology == "circular"
+    assert samples[0].topology_source == "terminal overlap of 300 nt (removed)"
+    assert samples[1].topology_source == "FASTA without topology=: decided from the sequence"
+    assert terminal_overlap("ACGT" * 4000) == 0                    # a tandem repeat at both ends: no overlap

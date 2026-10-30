@@ -538,6 +538,32 @@ def side_pieces(window: str, j: int, prots: Dict[str, str], code: int, tools: di
     return out
 
 
+FAR_COVER, FAR_SCORE = 0.5, 0.5   # the part a spliced alignment adds across the junction, aligned alone: >= half
+#                                   its residues, at >= half the score per residue of the gene's part at the junction
+
+
+def far_part_aligns(exonerate: str, wide: str, wj: int, prot: str, spliced: Tuple[int, int], near: Tuple[int, int],
+                    near_score: float, code: int, tmp: Path, log) -> bool:
+    """The residues a spliced alignment (spliced: reference residues sab, sae) adds to the gene's part at the junction
+    (near: qab, qae, protein2dna score near_score) align by themselves on the far side of the junction (the window's
+    part before wj for missing 5' residues, after it for 3' ones): >= FAR_COVER of them, at >= FAR_SCORE of the near
+    part's score per residue. protein2genome over the whole rest of a circle otherwise joins a cut gene to a chance
+    match anywhere (contigs, 2026-10-31: atp6 with an 800-nt 'intron', annelid nad4 with an 11-kb one)."""
+    per_res = near_score / max(1, near[1] - near[0])
+    for a, b, region in ((spliced[0], near[0], wide[:wj]), (near[1], spliced[1], wide[wj:])):
+        if b - a < END_CUT:                                   # nothing (or little) added on this side
+            continue
+        hit = exonerate_best(exonerate, region, {"far": prot[a:b]}, code, tmp, log)
+        if hit is None:
+            return False
+        aligned = hit[2] - hit[1]
+        if aligned < FAR_COVER * (b - a) or hit[5] / max(1, aligned) < FAR_SCORE * per_res:
+            log.info(f"[core] spliced alignment across the junction rejected: residues {a + 1}-{b} align alone over "
+                     f"{aligned} residues at score {hit[5]:.0f} (gene part {per_res:.1f} per residue)")
+            return False
+    return True
+
+
 def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, tools: dict, tmp: Path, log) -> List[str]:
     """CDS at the sequence ends - across the origin, or nearer an end than its missing residues need (+ END_TOUCH):
     the sequence joined end to start and the CDS's reference protein (the one its note names) aligned again across the
@@ -605,7 +631,9 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
                     continue
                 _, sab, sae, stab, stae, _ = spl
                 gained = (qab - sab) + (sae - qae)          # residues aligned beyond the protein2dna alignment
-                if stab < wj - END_FLANK and stae > wj + END_FLANK and gained >= END_CUT:
+                if stab < wj - END_FLANK and stae > wj + END_FLANK and gained >= END_CUT \
+                        and far_part_aligns(tools["exonerate"], wide, wj, prots[ref], (sab, sae), (qab, qae), best[5],
+                                            code, tmp, log):
                     qab, qae = sab, sae
                     before, after = wj - stab, stae - wj
                     verdict = "joined_intron"

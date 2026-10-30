@@ -465,6 +465,52 @@ MIN_CIRCULAR_LEN = 10000    # an unlabelled FASTA record shorter than this is a 
 UNLABELLED = "FASTA without topology=: "   # start of the topology_source of an unlabelled record
 
 
+MIN_OVERLAP = 50   # nt the end of a sequence must repeat its start to count as an assembly's circular overlap
+# words of a FASTA header that tell the topology when there is no topology=: GetOrganelle '(circular)', NCBI
+# 'complete genome' / 'partial genome' / 'nearly complete'; checked in this order (partial first)
+HEADER_HINTS = ((r"\b(partial (genome|sequence)|nearly complete|incomplete|linear)\b", "linear"),
+                (r"(?<!non-)(?<!not )\bcircular\b|\bcircularized\b|\bcomplete genome\b", "circular"))
+
+
+def header_hint(desc: str) -> Tuple[Optional[str], str]:
+    """(topology, the words) a FASTA header's text gives (HEADER_HINTS); (None, '') when it gives none."""
+    low = (desc or "").lower()
+    for pat, topo in HEADER_HINTS:
+        m = re.search(pat, low)
+        if m:
+            return topo, m.group(0)
+    return None, ""
+
+
+def terminal_overlap(seq: str, min_len: int = MIN_OVERLAP) -> int:
+    """Length of the longest end of `seq` that repeats its start (>= min_len nt, at most a quarter of the sequence,
+    leaving >= MIN_CIRCULAR_LEN nt, not itself a tandem repeat; 0: none) -
+    the overlap an assembler leaves on a circular molecule (MITObim circules.py, MitoHiFi, NOVOPlasty trim it).
+    Prefix function of start + separator + end, linear in the length."""
+    s = seq.upper()
+    m = len(s) // 4                                           # an overlap is a small part of the molecule
+    if m < min_len:
+        return 0
+    k = _prefix_function(s[:m] + "\x00" + s[-m:])[-1]
+    if k < min_len or len(s) - k < MIN_CIRCULAR_LEN:
+        return 0
+    if k - _prefix_function(s[:k])[-1] < k // 2:             # the overlap is a tandem repeat itself (period < k/2):
+        return 0                                              # both ends in one repeat array, not a closed circle
+    return k
+
+
+def _prefix_function(t: str) -> List[int]:
+    pi = [0] * len(t)
+    for i in range(1, len(t)):
+        k = pi[i - 1]
+        while k and t[i] != t[k]:
+            k = pi[k - 1]
+        if t[i] == t[k]:
+            k += 1
+        pi[i] = k
+    return pi
+
+
 def infer_topology_from_description(desc: str) -> str:
     m = re.search(r"topology\s*=\s*(circular|linear)", (desc or "").lower())
     return m.group(1) if m else "circular"
@@ -555,6 +601,18 @@ def split_or_sanitize_fastas(
             tagged   = re.search(r"topology\s*=\s*(circular|linear)", desc.lower())
             source   = "GenBank LOCUS line" if orig_gb_path and tagged else "FASTA header" if tagged else \
                        UNLABELLED + "decided from the sequence"
+            hint, words = (None, "") if tagged else header_hint(desc)
+            if hint:                                  # assembler / NCBI words: a label the ends can still overturn
+                topo, tagged = hint, True
+                source = f"FASTA header text '{words}'"
+            k = terminal_overlap(str(rec.seq)) if not orig_gb_path and topo == "circular" else 0
+            if k:                                     # an assembler's overlap: circular, the repeated end removed
+                logging.warning(f"[TOPOLOGY] {orig_token}: its last {k} nt repeat its first {k} nt (assembly overlap "
+                                f"of a circular molecule): removed, {len(rec.seq) - k} nt annotated as circular")
+                rec = rec[:len(rec.seq) - k]
+                topo, tagged = "circular", True
+                source = f"terminal overlap of {k} nt (removed)" + ("" if source.startswith(UNLABELLED)
+                                                                     else f"; {source}")
             if topo == "circular" and not tagged and len(rec.seq) < MIN_CIRCULAR_LEN:
                 # too short for a whole mitogenome: a contig (rotating / joining across a false origin cuts genes)
                 topo = "linear"
