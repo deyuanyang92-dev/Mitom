@@ -604,6 +604,25 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
         if best is None:
             continue
         ref, qab, qae, tab, tae, _ = best
+
+        def spliced_join(qab: int, qae: int, score: float, ref: str = ref) -> Optional[Tuple[int, int, int, int]]:
+            """The gene aligned spliced (exonerate protein2genome) across the junction: (qab, qae, nt before, nt after)
+            when it gains >= END_CUT residues there that align by themselves on the far side (far_part_aligns), else
+            None. protein2dna has no introns: a record started inside a gene with an intron (Travisia cox1, every
+            MJ20260820041 CHY record). The intron may hold other genes and be many kb long (hexacoral nad5: 11-20
+            kb) and lies wholly on one side, so the whole rest of the circle on one side, then on the other: no
+            intron length limit, no assumption about the side."""
+            for lo, hi in ((rest, 0), (0, rest)):
+                wide, wj = window_of(lo, hi)
+                spl = exonerate_best(tools["exonerate"], wide, {ref: prots[ref]}, code, tmp, log, "protein2genome")
+                if spl is None:
+                    continue
+                _, sab, sae, stab, stae, _ = spl
+                if stab < wj - END_FLANK and stae > wj + END_FLANK and (qab - sab) + (sae - qae) >= END_CUT \
+                        and far_part_aligns(tools["exonerate"], wide, wj, prots[ref], (sab, sae), (qab, qae), score,
+                                            code, tmp, log):
+                    return sab, sae, wj - stab, stae - wj
+            return None
         before, after = j - tab, tae - j
         if before >= END_FLANK and after >= END_FLANK:     # an alignment across the junction
             pieces = side_pieces(window, j, prots, code, tools, tmp, log)
@@ -618,28 +637,21 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
                 or j - END_FLANK < tab <= j + END_REACH and qab >= END_CUT \
                 and not any(window[c:c + 3] in stops for c in range(tab - 3, j - 1, -3)):
             # the gene's 3' side runs into the junction, or its 5' side starts there, the frame open up to it: cut -
-            # unless the missing residues lie across the junction behind an intron (protein2dna has no introns; a
-            # record started inside a gene with an intron: Travisia cox1, every MJ20260820041 CHY record). The intron
-            # may hold other genes and be many kb long (hexacoral nad5: 11-20 kb) and lies wholly on one side of the
-            # gene, so the spliced alignment gets the whole rest of the circle on one side, then on the other: no
-            # intron length limit, no assumption about the side.
+            # unless the missing residues lie across the junction behind an intron (spliced_join)
             verdict = "cut"
-            for lo, hi in ((rest, 0), (0, rest)):
-                wide, wj = window_of(lo, hi)
-                spl = exonerate_best(tools["exonerate"], wide, {ref: prots[ref]}, code, tmp, log, "protein2genome")
-                if spl is None:
-                    continue
-                _, sab, sae, stab, stae, _ = spl
-                gained = (qab - sab) + (sae - qae)          # residues aligned beyond the protein2dna alignment
-                if stab < wj - END_FLANK and stae > wj + END_FLANK and gained >= END_CUT \
-                        and far_part_aligns(tools["exonerate"], wide, wj, prots[ref], (sab, sae), (qab, qae), best[5],
-                                            code, tmp, log):
-                    qab, qae = sab, sae
-                    before, after = wj - stab, stae - wj
-                    verdict = "joined_intron"
-                    break
+            joined = spliced_join(qab, qae, best[5])
+            if joined:
+                qab, qae, before, after = joined
+                verdict = "joined_intron"
         else:
             verdict = "complete"
+            # the gene stops short of the junction, the residues towards it missing: an intron may lie between it
+            # and the junction (placozoan nad5: the exon ends 624 nt before it) - the same spliced check
+            if tae <= j and reflen - qae >= END_CUT or tab >= j and qab >= END_CUT:
+                joined = spliced_join(qab, qae, best[5])
+                if joined:
+                    qab, qae, before, after = joined
+                    verdict = "joined_intron"
         rows.append(f"{f.name}\t{'+' if f.strand == 1 else '-'}\t{where}\t{ref}\t{qab + 1}-{qae}/{reflen}\t"
                     f"{before}\t{after}\t{verdict}\n")
         log.info(f"[core] {f.name} at the sequence {where}: reference aligned {before} nt before / {after} nt after "

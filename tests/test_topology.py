@@ -406,3 +406,18 @@ def test_terminal_overlap_found_and_removed(tmp_path):
     assert samples[0].topology_source == "terminal overlap of 300 nt (removed)"
     assert samples[1].topology_source == "FASTA without topology=: decided from the sequence"
     assert terminal_overlap("ACGT" * 4000) == 0                    # a tandem repeat at both ends: no overlap
+
+
+def test_exon_short_of_the_junction_joined_behind_an_intron(monkeypatch):
+    """The exon at the end stops 400 nt before the junction, an intron between it and the junction (placozoan
+    NC_015309.1 nad5, 2026-10-31): not 'cut', still checked spliced -> joined_intron; a fragment whose rest is
+    nowhere stays complete."""
+    rnd = random.Random(9)
+    intron = "".join(rnd.choice("ACGT") for _ in range(400))
+    genome = intron + GENE[300:] + FILLER + GENE[:300] + intron[::-1]
+    n = len(genome)
+    rows = evidence(monkeypatch, genome, [cds(n - 700, n - 400, 1, "1-100")])
+    assert (rows[0]["end"], rows[0]["verdict"]) == ("end", "joined_intron")
+    part = FILLER + GENE[:300] + intron[::-1]
+    rows = evidence(monkeypatch, part, [cds(len(part) - 700, len(part) - 400, 1, "1-100")])
+    assert rows[0]["verdict"] == "complete"
