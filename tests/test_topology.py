@@ -420,3 +420,24 @@ def test_exon_short_of_the_junction_joined_behind_an_intron(monkeypatch):
     part = FILLER + GENE[:300] + intron[::-1]
     rows = evidence(monkeypatch, part, [cds(len(part) - 700, len(part) - 400, 1, "1-100")])
     assert rows[0]["verdict"] == "complete"
+
+
+def test_sample_lineage_is_the_records_own_in_a_multi_record_file(tmp_path):
+    """2026-10-31 (NC test run): in a GenBank file of several records every sample took the FIRST record's lineage, so
+    Metridium senile (Anthozoa, circular) after Aurelia aurita (Scyphozoa) was made linear as a jellyfish."""
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+    from mitom_inputs import SampleInfo
+    from mitom_stage import sample_lineage
+    recs = []
+    for acc, tax in (("NC_008446.1", ["Eukaryota", "Metazoa", "Cnidaria", "Scyphozoa"]),
+                     ("NC_000933.1", ["Eukaryota", "Metazoa", "Cnidaria", "Anthozoa"])):
+        r = SeqRecord(Seq("ACGT" * 10), id=acc, name=acc.split(".")[0], description="x")
+        r.annotations.update(molecule_type="DNA", taxonomy=tax, accessions=[acc.split(".")[0]], sequence_version=1)
+        recs.append(r)
+    gb = tmp_path / "two.gb"
+    SeqIO.write(recs, str(gb), "genbank")
+    fa = tmp_path / "x.fasta"
+    lin = {acc: sample_lineage(SampleInfo(acc, acc, f"S{k}", "circular", fa, fa, gb))
+           for k, acc in enumerate(("NC_008446.1", "NC_000933.1"))}
+    assert lin == {"NC_008446.1": "Eukaryota;Metazoa;Cnidaria;Scyphozoa", "NC_000933.1": "Eukaryota;Metazoa;Cnidaria;Anthozoa"}

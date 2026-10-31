@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures as cf
+import functools
 import logging
 import os
 import sys
@@ -52,15 +53,34 @@ def sample_lineage(si: "SampleInfo") -> str:
     projects/invert_trna)."""
     if not si.orig_gb_path:
         return ""
-    from Bio import SeqIO
     try:
-        for rec in SeqIO.parse(str(si.orig_gb_path), "genbank"):
-            tax = [t for t in rec.annotations.get("taxonomy", []) if t]
-            if tax:
-                return ";".join(tax)
+        lineages = _file_lineages(str(si.orig_gb_path), os.path.getmtime(si.orig_gb_path))
+    except OSError:
+        return ""
+    # the sample's own record of a multi-record file (2026-10-31: every record took the first record's lineage)
+    for key in (si.orig_token, si.sample_name, safe_name(si.orig_token)):
+        if key in lineages:
+            return lineages[key]
+    return lineages.get("", "")
+
+
+@functools.lru_cache(maxsize=64)
+def _file_lineages(path: str, mtime: float = 0.0) -> Dict[str, str]:
+    """{record id / name / accession.version: lineage} of the records of a GenBank file ('' = the lineage when the
+    file has one record); read once per file (and modification time)."""
+    from mitom_metadata import gb_record_accession
+    out: Dict[str, str] = {}
+    try:
+        recs = list(SeqIO.parse(path, "genbank"))
     except (OSError, ValueError):
-        pass
-    return ""
+        return out
+    for rec in recs:
+        tax = ";".join(t for t in rec.annotations.get("taxonomy", []) if t)
+        for key in (rec.id, rec.name, safe_name(rec.id), gb_record_accession(rec)):
+            out.setdefault(key, tax)
+    if len(recs) == 1:
+        out[""] = out.get(recs[0].id, "")
+    return out
 
 
 def native_core_cmd(fasta_file: Path, workdir: Path, internal_id: str, args, lineage: str = "") -> List[str]:
