@@ -1,0 +1,358 @@
+orig: 270 runs, ok 270, not ok 0 ; median 57 s, max 287 s per record
+exon: 252 runs, ok 252, not ok 0 ; median 61 s, max 409 s per record
+old_exon: 252 runs, ok 252, not ok 0 ; median 58 s, max 455 s per record
+intron: 187 runs, ok 187, not ok 0 ; median 62 s, max 196 s per record
+old_intron: 187 runs, ok 187, not ok 0 ; median 59 s, max 176 s per record
+near3: 187 runs, ok 187, not ok 0 ; median 74 s, max 206 s per record
+old_near3: 187 runs, ok 187, not ok 0 ; median 79 s, max 188 s per record
+near5: 187 runs, ok 187, not ok 0 ; median 102 s, max 213 s per record
+old_near5: 187 runs, ok 187, not ok 0 ; median 99 s, max 229 s per record
+
+## origin inside the gene: exon (187 records)
+set	group	NCBI_introns	found	exact	within6nt	more6nt	missed	false_introns
+orig	all	299	295	199	79	17	4	1
+orig	dev	62	60	28	23	9	2	1
+orig	dev:Annelida	17	17	0	9	8	0	0
+orig	dev:Cnidaria	34	34	24	10	0	0	0
+orig	dev:Placozoa	11	9	4	4	1	2	1
+orig	new	237	235	171	56	8	2	0
+orig	new:Cnidaria	234	232	169	56	7	2	0
+orig	new:Porifera	3	3	2	0	1	0	0
+exon	all	299	295	199	79	17	4	1
+exon	dev	62	60	28	23	9	2	1
+exon	dev:Annelida	17	17	0	9	8	0	0
+exon	dev:Cnidaria	34	34	24	10	0	0	0
+exon	dev:Placozoa	11	9	4	4	1	2	1
+exon	new	237	235	171	56	8	2	0
+exon	new:Cnidaria	234	232	169	56	7	2	0
+exon	new:Porifera	3	3	2	0	1	0	0
+old_exon	all	299	295	199	79	17	4	1
+old_exon	dev	62	60	28	23	9	2	1
+old_exon	dev:Annelida	17	17	0	9	8	0	0
+old_exon	dev:Cnidaria	34	34	24	10	0	0	0
+old_exon	dev:Placozoa	11	9	4	4	1	2	1
+old_exon	new	237	235	171	56	8	2	0
+old_exon	new:Cnidaria	234	232	169	56	7	2	0
+old_exon	new:Porifera	3	3	2	0	1	0	0
+
+new MitoM, unrotated vs exon: 300 identical rows, 0 differ
+
+## origin inside the gene: intron (187 records)
+set	group	NCBI_introns	found	exact	within6nt	more6nt	missed	false_introns
+orig	all	299	295	199	79	17	4	1
+orig	dev	62	60	28	23	9	2	1
+orig	dev:Annelida	17	17	0	9	8	0	0
+orig	dev:Cnidaria	34	34	24	10	0	0	0
+orig	dev:Placozoa	11	9	4	4	1	2	1
+orig	new	237	235	171	56	8	2	0
+orig	new:Cnidaria	234	232	169	56	7	2	0
+orig	new:Porifera	3	3	2	0	1	0	0
+intron	all	299	295	199	79	17	4	1
+intron	dev	62	60	28	23	9	2	1
+intron	dev:Annelida	17	17	0	9	8	0	0
+intron	dev:Cnidaria	34	34	24	10	0	0	0
+intron	dev:Placozoa	11	9	4	4	1	2	1
+intron	new	237	235	171	56	8	2	0
+intron	new:Cnidaria	234	232	169	56	7	2	0
+intron	new:Porifera	3	3	2	0	1	0	0
+old_intron	all	299	295	199	79	17	4	1
+old_intron	dev	62	60	28	23	9	2	1
+old_intron	dev:Annelida	17	17	0	9	8	0	0
+old_intron	dev:Cnidaria	34	34	24	10	0	0	0
+old_intron	dev:Placozoa	11	9	4	4	1	2	1
+old_intron	new	237	235	171	56	8	2	0
+old_intron	new:Cnidaria	234	232	169	56	7	2	0
+old_intron	new:Porifera	3	3	2	0	1	0	0
+
+new MitoM, unrotated vs intron: 300 identical rows, 0 differ
+
+## origin inside the gene: near3 (187 records)
+set	group	NCBI_introns	found	exact	within6nt	more6nt	missed	false_introns
+orig	all	299	295	199	79	17	4	1
+orig	dev	62	60	28	23	9	2	1
+orig	dev:Annelida	17	17	0	9	8	0	0
+orig	dev:Cnidaria	34	34	24	10	0	0	0
+orig	dev:Placozoa	11	9	4	4	1	2	1
+orig	new	237	235	171	56	8	2	0
+orig	new:Cnidaria	234	232	169	56	7	2	0
+orig	new:Porifera	3	3	2	0	1	0	0
+near3	all	299	249	141	74	34	50	3
+near3	dev	62	57	25	23	9	5	1
+near3	dev:Annelida	17	17	0	9	8	0	0
+near3	dev:Cnidaria	34	31	21	10	0	3	0
+near3	dev:Placozoa	11	9	4	4	1	2	1
+near3	new	237	192	116	51	25	45	2
+near3	new:Cnidaria	234	189	114	51	24	45	2
+near3	new:Porifera	3	3	2	0	1	0	0
+old_near3	all	299	232	136	65	31	67	3
+old_near3	dev	62	47	25	14	8	15	1
+old_near3	dev:Annelida	17	9	0	2	7	8	0
+old_near3	dev:Cnidaria	34	30	21	9	0	4	0
+old_near3	dev:Placozoa	11	8	4	3	1	3	1
+old_near3	new	237	185	111	51	23	52	2
+old_near3	new:Cnidaria	234	184	110	51	23	50	2
+old_near3	new:Porifera	3	1	1	0	0	2	0
+
+new MitoM, unrotated vs near3: 235 identical rows, 67 differ
+   ('NC_003522.1', '3155..15082', False) exact 3155..15082 missed 
+   ('NC_006898.1', '3155..14646', False) exact 3155..14646 missed 
+   ('NC_007224.1', '2757..12296', False) exact 2757..12296 gt6 2757..8204
+   ('NC_007225.1', '2757..12295', False) exact 2757..12295 gt6 2757..8204
+   ('NC_007226.1', '2757..12296', False) exact 2757..12296 gt6 2757..8204
+   ('NC_008160.1', '721..12256', False) exact 721..12256 missed 
+   ('NC_008161.1', '712..9969', False) exact 712..9969 gt6 712..6157
+   ('NC_008162.1', '712..11156', False) exact 712..11156 missed 
+   ('NC_008163.1', '712..11347', False) exact 712..11347 gt6 712..6159
+   ('NC_008165.1', '721..11849', False) exact 721..11849 missed 
+   ('NC_009797.1', '2699..13561', False) exact 2699..13561 gt6 2699..9640
+   ('NC_009798.1', '2700..13562', False) exact 2700..13562 gt6 2700..9641
+   ('NC_010244.2', '2687..13151', False) exact 2687..13151 missed 
+   ('NC_010245.2', '2685..13121', False) exact 2685..13121 missed 
+   ('NC_011160.1', '2720..13134', False) exact 2720..13134 gt6 2720..9105
+   ('NC_011162.1', '2719..13301', False) exact 2719..13301 gt6 2719..9375
+   ('NC_015641.1', '3177..15042', False) le6 3178..15043 missed 
+   ('NC_015642.1', '2658..12095', False) le6 2659..12096 gt6 2659..8127
+   ('NC_018364.1', '711..10850', False) le6 712..10851 gt6 712..6235
+   ('NC_020049.1', '2733..12896', False) exact 2733..12896 gt6 2733..8180
+   ('NC_022823.1', '3154..15223', False) exact 3154..15223 missed 
+   ('NC_022824.1', '3154..15225', False) exact 3154..15225 missed 
+   ('NC_022825.1', '3154..15224', False) exact 3154..15224 missed 
+   ('NC_022826.1', '3154..15310', False) exact 3154..15310 missed 
+   ('NC_022827.1', '3154..15223', False) exact 3154..15223 missed 
+   ('NC_022828.1', '3154..15109', False) exact 3154..15109 missed 
+   ('NC_022829.1', '3154..15086', False) exact 3154..15086 missed 
+   ('NC_022830.1', '3154..15223', False) exact 3154..15223 missed 
+   ('NC_022831.1', '3154..15225', False) exact 3154..15225 missed 
+   ('NC_022832.1', '3154..15225', False) exact 3154..15225 missed 
+   ('NC_022833.1', '3154..15224', False) exact 3154..15224 missed 
+   ('NC_024089.1', '3153..15383', False) exact 3153..15383 missed 
+   ('NC_024090.1', '3104..14898', False) exact 3104..14898 missed 
+   ('NC_024091.1', '3153..15469', False) exact 3153..15469 missed 
+   ('NC_024092.1', '3105..14899', False) exact 3105..14899 missed 
+   ('NC_026527.1', '721..11849', False) exact 721..11849 missed 
+   ('NC_029696.1', '3178..15199', False) exact 3178..15199 missed 
+   ('NC_034916.1', '2724..12870', False) exact 2724..12870 gt6 2724..8171
+   ('NC_035879.1', '2760..13761', False) exact 2760..13761 missed 
+   ('NC_037359.1', '3085..14572', False) exact 3085..14572 missed 
+   ('NC_040136.1', '3156..14776', False) exact 3156..14776 missed 
+   ('NC_040137.1', '3153..14643', False) exact 3153..14643 missed 
+   ('NC_042481.1', '2752..12149', False) exact 2752..12149 gt6 2752..8192
+   ('NC_042742.1', '3154..15129', False) exact 3154..15129 missed 
+   ('NC_042795.1', '2760..13002', False) exact 2760..13002 missed 
+   ('NC_044074.1', '2682..12830', False) exact 2682..12830 gt6 2682..8129
+   ('NC_046690.1', '2757..12998', False) exact 2757..12998 gt6 2757..8204
+   ('NC_056275.1', '673..10636', False) gt6 658..10600 missed 
+   ('NC_065774.1', '712..11727', False) gt6 712..11751 gt6 712..6309
+   ('NC_065775.1', '712..10136', False) exact 712..10136 missed 
+   ('NC_072168.1', '3154..14642', False) exact 3154..14642 missed 
+   ('NC_072224.1', '3154..15226', False) exact 3154..15226 missed 
+   ('NC_072225.1', '3154..15224', False) exact 3154..15224 missed 
+   ('NC_077265.1', '3153..15478', False) exact 3153..15478 missed 
+   ('NC_077518.1', '2711..13171', False) exact 2711..13171 gt6 2711..8157
+   ('NC_081188.1', '3154..15310', False) exact 3154..15310 missed 
+   ('NC_081341.1', '3154..15224', False) exact 3154..15224 missed 
+   ('NC_081452.1', '3154..15310', False) exact 3154..15310 missed 
+   ('NC_081453.1', '3154..15110', False) exact 3154..15110 missed 
+   ('NC_081454.1', '3154..15225', False) exact 3154..15225 missed 
+   ('NC_081455.1', '3153..15223', False) exact 3153..15223 missed 
+   ('NC_082917.1', '3178..14909', False) exact 3178..14909 missed 
+   ('NC_082918.1', '3178..14909', False) exact 3178..14909 missed 
+   ('NC_083272.1', '10896..22745', False) le6 10899..22748 missed 
+   ('NC_088089.1', '2710..12848', False) le6 2711..12849 gt6 2711..8234
+   ('NC_015641.1', '3178..6984', True) None None fp 3178..6984
+   ('NC_035879.1', '2760..8207', True) None None fp 2760..8207
+
+## origin inside the gene: near5 (187 records)
+set	group	NCBI_introns	found	exact	within6nt	more6nt	missed	false_introns
+orig	all	299	295	199	79	17	4	1
+orig	dev	62	60	28	23	9	2	1
+orig	dev:Annelida	17	17	0	9	8	0	0
+orig	dev:Cnidaria	34	34	24	10	0	0	0
+orig	dev:Placozoa	11	9	4	4	1	2	1
+orig	new	237	235	171	56	8	2	0
+orig	new:Cnidaria	234	232	169	56	7	2	0
+orig	new:Porifera	3	3	2	0	1	0	0
+near5	all	299	295	199	79	17	4	1
+near5	dev	62	60	28	23	9	2	1
+near5	dev:Annelida	17	17	0	9	8	0	0
+near5	dev:Cnidaria	34	34	24	10	0	0	0
+near5	dev:Placozoa	11	9	4	4	1	2	1
+near5	new	237	235	171	56	8	2	0
+near5	new:Cnidaria	234	232	169	56	7	2	0
+near5	new:Porifera	3	3	2	0	1	0	0
+old_near5	all	299	190	139	35	16	109	12
+old_near5	dev	62	40	18	14	8	22	4
+old_near5	dev:Annelida	17	15	0	8	7	2	0
+old_near5	dev:Cnidaria	34	16	14	2	0	18	3
+old_near5	dev:Placozoa	11	9	4	4	1	2	1
+old_near5	new	237	150	121	21	8	87	8
+old_near5	new:Cnidaria	234	148	120	21	7	86	8
+old_near5	new:Porifera	3	2	1	0	1	1	0
+
+new MitoM, unrotated vs near5: 300 identical rows, 0 differ
+
+## rows not found / false in the rotated runs of the new MitoM
+exon	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3178..3567	3220..3555	
+exon	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18130..18394	18095..18395	
+exon	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3173..3562	3215..3550	
+exon	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18126..18390	18091..18391	
+exon	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3169..3558	3211..3546	
+exon	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18122..18386	18087..18387	
+exon	LC661358.1	dev	Annelida	Notomastus sp. GK-2021	gt6	cox1	1115..1417	1127..1429	
+exon	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	16824..17511		no candidate in intron_report.tsv
+exon	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	gt6	nad5	21844..22593	21885..22631	
+exon	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	38112..50185		no candidate in intron_report.tsv
+exon	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	fp	rrnL		28239..29469	no candidate in intron_report.tsv
+exon	NC_010217.1	new	Porifera	Plakinastrella cf. onkodes DVL-2011	gt6	cox1	11554..11935	11547..11934	
+exon	NC_027610.1	new	Cnidaria	Alicia sansibarensis	gt6	nad5	13234..15381	13224..15381	
+exon	NC_027615.1	new	Cnidaria	Cylista ornata	gt6	nad5	7667..9337	7658..9337	
+exon	NC_037177.1	new	Cnidaria	Anemonia viridis	missed	nad5	718..941		candidate 718..2443 (ND5, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I intr
+exon	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	nad5	718..2374	718..2398	
+exon	NC_045515.1	new	Cnidaria	Diadumene lineata	missed	cox1	13790..14702		candidate 14682..15533 (COX1, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I 
+exon	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	cox1	14704..15537	14682..15533	
+exon	NC_056275.1	new	Cnidaria	Paraconotrochus antarcticus	gt6	nad5	673..10636	658..10600	
+exon	NC_065774.1	new	Cnidaria	Heterocyathus sulcatus	gt6	nad5	712..11727	712..11751	
+exon	NC_086801.1	new	Cnidaria	Parazoanthus axinellae	gt6	cox1	11545..13711	11545..13672	
+exon	PP895295.1	dev	Annelida	Chaetopterus sp. h JL-2024	gt6	cox1	8120..8385	8112..8401	
+intron	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3178..3567	3220..3555	
+intron	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18130..18394	18095..18395	
+intron	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3173..3562	3215..3550	
+intron	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18126..18390	18091..18391	
+intron	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3169..3558	3211..3546	
+intron	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18122..18386	18087..18387	
+intron	LC661358.1	dev	Annelida	Notomastus sp. GK-2021	gt6	cox1	1115..1417	1127..1429	
+intron	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	16824..17511		no candidate in intron_report.tsv
+intron	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	gt6	nad5	21844..22593	21885..22631	
+intron	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	38112..50185		no candidate in intron_report.tsv
+intron	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	fp	rrnL		28239..29469	no candidate in intron_report.tsv
+intron	NC_010217.1	new	Porifera	Plakinastrella cf. onkodes DVL-2011	gt6	cox1	11554..11935	11547..11934	
+intron	NC_027610.1	new	Cnidaria	Alicia sansibarensis	gt6	nad5	13234..15381	13224..15381	
+intron	NC_027615.1	new	Cnidaria	Cylista ornata	gt6	nad5	7667..9337	7658..9337	
+intron	NC_037177.1	new	Cnidaria	Anemonia viridis	missed	nad5	718..941		candidate 718..2443 (ND5, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I intr
+intron	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	nad5	718..2374	718..2398	
+intron	NC_045515.1	new	Cnidaria	Diadumene lineata	missed	cox1	13790..14702		candidate 14682..15533 (COX1, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I 
+intron	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	cox1	14704..15537	14682..15533	
+intron	NC_056275.1	new	Cnidaria	Paraconotrochus antarcticus	gt6	nad5	673..10636	658..10600	
+intron	NC_065774.1	new	Cnidaria	Heterocyathus sulcatus	gt6	nad5	712..11727	712..11751	
+intron	NC_086801.1	new	Cnidaria	Parazoanthus axinellae	gt6	cox1	11545..13711	11545..13672	
+intron	PP895295.1	dev	Annelida	Chaetopterus sp. h JL-2024	gt6	cox1	8120..8385	8112..8401	
+near3	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3178..3567	3220..3555	
+near3	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18130..18394	18095..18395	
+near3	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3173..3562	3215..3550	
+near3	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18126..18390	18091..18391	
+near3	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3169..3558	3211..3546	
+near3	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18122..18386	18087..18387	
+near3	LC661358.1	dev	Annelida	Notomastus sp. GK-2021	gt6	cox1	1115..1417	1127..1429	
+near3	NC_003522.1	new	Cnidaria	Acropora tenuis	missed	nad5	3155..15082		no candidate in intron_report.tsv
+near3	NC_006898.1	new	Cnidaria	Anacropora matthai	missed	nad5	3155..14646		no candidate in intron_report.tsv
+near3	NC_007224.1	new	Cnidaria	Orbicella annularis	gt6	nad5	2757..12296	2757..8204	
+near3	NC_007225.1	new	Cnidaria	Orbicella franksi	gt6	nad5	2757..12295	2757..8204	
+near3	NC_007226.1	new	Cnidaria	Orbicella faveolata	gt6	nad5	2757..12296	2757..8204	
+near3	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	16824..17511		no candidate in intron_report.tsv
+near3	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	gt6	nad5	21844..22593	21885..22631	
+near3	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	38112..50185		no candidate in intron_report.tsv
+near3	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	fp	rrnL		28239..29469	no candidate in intron_report.tsv
+near3	NC_008160.1	new	Cnidaria	Agaricia humilis	missed	nad5	721..12256		candidate 720..4134 (nad5, low, written=no): model overlaps existing ND2 CDS (different gene) | intron, type not identif
+near3	NC_008161.1	new	Cnidaria	Astrangia sp. JVK-2006	gt6	nad5	712..9969	712..6157	
+near3	NC_008162.1	new	Cnidaria	Colpophyllia natans	missed	nad5	712..11156		no candidate in intron_report.tsv
+near3	NC_008163.1	new	Cnidaria	Mussa angulosa	gt6	nad5	712..11347	712..6159	
+near3	NC_008165.1	new	Cnidaria	Pavona clavus	missed	nad5	721..11849		no candidate in intron_report.tsv
+near3	NC_009797.1	new	Cnidaria	Pocillopora damicornis	gt6	nad5	2699..13561	2699..9640	
+near3	NC_009798.1	new	Cnidaria	Pocillopora grandis	gt6	nad5	2700..13562	2700..9641	
+near3	NC_010217.1	new	Porifera	Plakinastrella cf. onkodes DVL-2011	gt6	cox1	11554..11935	11547..11934	
+near3	NC_010244.2	new	Cnidaria	Seriatopora hystrix	missed	nad5	2687..13151		no candidate in intron_report.tsv
+near3	NC_010245.2	new	Cnidaria	Seriatopora caliendrum	missed	nad5	2685..13121		no candidate in intron_report.tsv
+near3	NC_011160.1	new	Cnidaria	Madracis myriaster	gt6	nad5	2720..13134	2720..9105	
+near3	NC_011162.1	new	Cnidaria	Stylophora pistillata	gt6	nad5	2719..13301	2719..9375	
+near3	NC_015641.1	new	Cnidaria	Fimbriaphyllia ancora	missed	nad5	3177..15042		no candidate in intron_report.tsv
+near3	NC_015641.1	new	Cnidaria	Fimbriaphyllia ancora	fp	nad5		3178..6984	no candidate in intron_report.tsv
+near3	NC_015642.1	new	Cnidaria	Polycyathus sp. MFL-2011	gt6	nad5	2658..12095	2659..8127	
+near3	NC_018364.1	new	Cnidaria	Madrepora oculata	gt6	nad5	711..10850	712..6235	
+near3	NC_020049.1	new	Cnidaria	Platygyra carnosa	gt6	nad5	2733..12896	2733..8180	
+near3	NC_022823.1	new	Cnidaria	Acropora humilis	missed	nad5	3154..15223		no candidate in intron_report.tsv
+near3	NC_022824.1	new	Cnidaria	Acropora muricata	missed	nad5	3154..15225		no candidate in intron_report.tsv
+near3	NC_022825.1	dev	Cnidaria	Acropora horrida	missed	nad5	3154..15224		no candidate in intron_report.tsv
+near3	NC_022826.1	new	Cnidaria	Acropora hyacinthus	missed	nad5	3154..15310		no candidate in intron_report.tsv
+near3	NC_022827.1	new	Cnidaria	Acropora aspera	missed	nad5	3154..15223		no candidate in intron_report.tsv
+near3	NC_022828.1	new	Cnidaria	Acropora florida	missed	nad5	3154..15109		no candidate in intron_report.tsv
+near3	NC_022829.1	dev	Cnidaria	Acropora yongei	missed	nad5	3154..15086		no candidate in intron_report.tsv
+near3	NC_022830.1	new	Cnidaria	Acropora digitifera	missed	nad5	3154..15223		no candidate in intron_report.tsv
+near3	NC_022831.1	new	Cnidaria	Acropora nasuta	missed	nad5	3154..15225		no candidate in intron_report.tsv
+near3	NC_022832.1	new	Cnidaria	Acropora divaricata	missed	nad5	3154..15225		no candidate in intron_report.tsv
+near3	NC_022833.1	new	Cnidaria	Acropora robusta	missed	nad5	3154..15224		no candidate in intron_report.tsv
+near3	NC_024089.1	new	Cnidaria	Isopora togianensis	missed	nad5	3153..15383		no candidate in intron_report.tsv
+near3	NC_024090.1	new	Cnidaria	Astreopora explanata	missed	nad5	3104..14898		no candidate in intron_report.tsv
+near3	NC_024091.1	new	Cnidaria	Isopora palifera	missed	nad5	3153..15469		no candidate in intron_report.tsv
+near3	NC_024092.1	new	Cnidaria	Astreopora myriophthalma	missed	nad5	3105..14899		no candidate in intron_report.tsv
+near3	NC_026527.1	new	Cnidaria	Pavona decussata	missed	nad5	721..11849		no candidate in intron_report.tsv
+near3	NC_027610.1	new	Cnidaria	Alicia sansibarensis	gt6	nad5	13234..15381	13224..15381	
+near3	NC_027615.1	new	Cnidaria	Cylista ornata	gt6	nad5	7667..9337	7658..9337	
+near3	NC_029696.1	new	Cnidaria	Galaxea fascicularis	missed	nad5	3178..15199		no candidate in intron_report.tsv
+near3	NC_034916.1	new	Cnidaria	Favites pentagona	gt6	nad5	2724..12870	2724..8171	
+near3	NC_035879.1	new	Cnidaria	Favites abdita	missed	nad5	2760..13761		no candidate in intron_report.tsv
+near3	NC_035879.1	new	Cnidaria	Favites abdita	fp	nad5		2760..8207	no candidate in intron_report.tsv
+near3	NC_037177.1	new	Cnidaria	Anemonia viridis	missed	nad5	718..941		candidate 718..2443 (ND5, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I intr
+near3	NC_037359.1	dev	Cnidaria	Montipora aequituberculata	missed	nad5	3085..14572		no candidate in intron_report.tsv
+near3	NC_040136.1	new	Cnidaria	Alveopora japonica	missed	nad5	3156..14776		no candidate in intron_report.tsv
+near3	NC_040137.1	new	Cnidaria	Montipora efflorescens	missed	nad5	3153..14643		no candidate in intron_report.tsv
+near3	NC_042481.1	new	Cnidaria	Plesiastrea versipora	gt6	nad5	2752..12149	2752..8192	
+near3	NC_042742.1	new	Cnidaria	Acropora valida	missed	nad5	3154..15129		no candidate in intron_report.tsv
+near3	NC_042795.1	new	Cnidaria	Hydnophora exesa	missed	nad5	2760..13002		no candidate in intron_report.tsv
+near3	NC_044074.1	new	Cnidaria	Dipsastraea rotumana	gt6	nad5	2682..12830	2682..8129	
+near3	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	nad5	718..2374	718..2398	
+near3	NC_045515.1	new	Cnidaria	Diadumene lineata	missed	cox1	13790..14702		candidate 14682..15533 (COX1, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I 
+near3	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	cox1	14704..15537	14682..15533	
+near3	NC_046690.1	new	Cnidaria	Dipsastraea favus	gt6	nad5	2757..12998	2757..8204	
+near3	NC_056275.1	new	Cnidaria	Paraconotrochus antarcticus	missed	nad5	673..10636		no candidate in intron_report.tsv
+near3	NC_065774.1	new	Cnidaria	Heterocyathus sulcatus	gt6	nad5	712..11727	712..6309	
+near3	NC_065775.1	new	Cnidaria	Trochocyathus caryophylloides	missed	nad5	712..10136		no candidate in intron_report.tsv
+near3	NC_072168.1	new	Cnidaria	Montipora vietnamensis	missed	nad5	3154..14642		no candidate in intron_report.tsv
+near3	NC_072224.1	new	Cnidaria	Acropora intermedia	missed	nad5	3154..15226		no candidate in intron_report.tsv
+near3	NC_072225.1	new	Cnidaria	Acropora microphthalma	missed	nad5	3154..15224		no candidate in intron_report.tsv
+near3	NC_077265.1	new	Cnidaria	Isopora brueggemanni	missed	nad5	3153..15478		no candidate in intron_report.tsv
+near3	NC_077518.1	new	Cnidaria	Homophyllia bowerbanki	gt6	nad5	2711..13171	2711..8157	
+near3	NC_081188.1	new	Cnidaria	Acropora subulata	missed	nad5	3154..15310		no candidate in intron_report.tsv
+near3	NC_081341.1	new	Cnidaria	Acropora nana	missed	nad5	3154..15224		no candidate in intron_report.tsv
+near3	NC_081452.1	new	Cnidaria	Acropora cytherea	missed	nad5	3154..15310		no candidate in intron_report.tsv
+near3	NC_081453.1	new	Cnidaria	Acropora millepora	missed	nad5	3154..15110		no candidate in intron_report.tsv
+near3	NC_081454.1	new	Cnidaria	Acropora pulchra	missed	nad5	3154..15225		no candidate in intron_report.tsv
+near3	NC_081455.1	new	Cnidaria	Acropora turaki	missed	nad5	3153..15223		no candidate in intron_report.tsv
+near3	NC_082917.1	new	Cnidaria	Galaxea astreata	missed	nad5	3178..14909		no candidate in intron_report.tsv
+near3	NC_082918.1	new	Cnidaria	Galaxea paucisepta	missed	nad5	3178..14909		no candidate in intron_report.tsv
+near3	NC_083272.1	new	Cnidaria	Acropora cervicornis	missed	nad5	10896..22745		no candidate in intron_report.tsv
+near3	NC_086801.1	new	Cnidaria	Parazoanthus axinellae	gt6	cox1	11545..13711	11545..13672	
+near3	NC_088089.1	new	Cnidaria	Madrepora piresae	gt6	nad5	2710..12848	2711..8234	
+near3	PP895295.1	dev	Annelida	Chaetopterus sp. h JL-2024	gt6	cox1	8120..8385	8112..8401	
+near5	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3178..3567	3220..3555	
+near5	KY742027.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18130..18394	18095..18395	
+near5	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3173..3562	3215..3550	
+near5	KY774370.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18126..18390	18091..18391	
+near5	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad1	3169..3558	3211..3546	
+near5	KY774371.1	dev	Annelida	Decemunciger sp. AB-2017	gt6	nad4	18122..18386	18087..18387	
+near5	LC661358.1	dev	Annelida	Notomastus sp. GK-2021	gt6	cox1	1115..1417	1127..1429	
+near5	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	16824..17511		no candidate in intron_report.tsv
+near5	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	gt6	nad5	21844..22593	21885..22631	
+near5	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	missed	cox1	38112..50185		no candidate in intron_report.tsv
+near5	NC_008151.3	dev	Placozoa	Trichoplax adhaerens	fp	rrnL		28239..29469	no candidate in intron_report.tsv
+near5	NC_010217.1	new	Porifera	Plakinastrella cf. onkodes DVL-2011	gt6	cox1	11554..11935	11547..11934	
+near5	NC_027610.1	new	Cnidaria	Alicia sansibarensis	gt6	nad5	13234..15381	13224..15381	
+near5	NC_027615.1	new	Cnidaria	Cylista ornata	gt6	nad5	7667..9337	7658..9337	
+near5	NC_037177.1	new	Cnidaria	Anemonia viridis	missed	nad5	718..941		candidate 718..2443 (ND5, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I intr
+near5	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	nad5	718..2374	718..2398	
+near5	NC_045515.1	new	Cnidaria	Diadumene lineata	missed	cox1	13790..14702		candidate 14682..15533 (COX1, high, written=yes): all introns typed (Rfam), spliced CDS without internal stop | group I 
+near5	NC_045515.1	new	Cnidaria	Diadumene lineata	gt6	cox1	14704..15537	14682..15533	
+near5	NC_056275.1	new	Cnidaria	Paraconotrochus antarcticus	gt6	nad5	673..10636	658..10600	
+near5	NC_065774.1	new	Cnidaria	Heterocyathus sulcatus	gt6	nad5	712..11727	712..11751	
+near5	NC_086801.1	new	Cnidaria	Parazoanthus axinellae	gt6	cox1	11545..13711	11545..13672	
+near5	PP895295.1	dev	Annelida	Chaetopterus sp. h JL-2024	gt6	cox1	8120..8385	8112..8401	
+
+## topology verdicts in the runs (reports/topology_decision.tsv)
+orig {'circular': 267, 'linear': 3}
+exon {'circular': 252}
+old_exon {'circular': 252}
+intron {'circular': 187}
+old_intron {'circular': 187}
+near3 {'circular': 106, 'linear': 65, 'circular via intron': 16}
+old_near3 {'circular': 106, 'linear': 81}
+near5 {'circular via intron': 94, 'circular': 93}
+old_near5 {'linear': 94, 'circular': 93}

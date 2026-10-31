@@ -1,0 +1,365 @@
+seq_id	kind	truth	called	ok	pcg	rrna	trna	reason
+PQ279307_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+PQ279307_rot	circ_rot	linear	circular	NO	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 1211 nt before and 142 nt after the junction)
+PQ279307_frag	frag	linear	linear	yes	4	2	12	as labelled
+PQ279307_gap	gap	linear	linear	yes	12	2	18	as labelled
+NC_082191_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_082191_rot	circ_rot	circular	circular	yes	13	2	22	cox2 runs across the sequence ends (its reference protein aligns 254 nt before and 430 nt after the junction)
+NC_082191_frag	frag	linear	linear	yes	6	1	11	as labelled
+NC_082191_gap	gap	linear	linear	yes	11	2	19	as labelled
+NC_025335_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_025335_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 114 nt before and 867 nt after the junction)
+NC_025335_frag	frag	linear	linear	yes	5	0	4	as labelled
+NC_025335_gap	gap	linear	linear	yes	11	2	19	as labelled
+NC_037947_orig	circ_orig	circular	linear	NO	13	2	23	as labelled
+NC_037947_rot	circ_rot	circular	circular	yes	13	2	23	nad5 runs across the sequence ends (its reference protein aligns 1461 nt before and 258 nt after the junction)
+NC_037947_frag	frag	linear	linear	yes	6	0	8	as labelled
+NC_037947_gap	gap	linear	linear	yes	13	2	22	as labelled
+PQ131216_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+PQ131216_rot	circ_rot	linear	linear	yes	13	2	22	as labelled
+PQ131216_frag	frag	linear	linear	yes	3	1	6	as labelled
+PQ131216_gap	gap	linear	linear	yes	13	2	21	as labelled
+NC_082997_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_082997_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 686 nt before and 1138 nt after the junction)
+NC_082997_frag	frag	linear	linear	yes	6	0	12	as labelled
+NC_082997_gap	gap	linear	linear	yes	12	2	17	as labelled
+KT726961_orig	circ_orig	circular	linear	NO	13	2	21	as labelled
+KT726961_rot	circ_rot	circular	circular	yes	13	2	21	cox1 runs across the sequence ends (its reference protein aligns 212 nt before and 1297 nt after the junction)
+KT726961_frag	frag	linear	linear	yes	4	2	11	as labelled
+KT726961_gap	gap	linear	linear	yes	11	2	20	as labelled
+KY753835_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+KY753835_rot	circ_rot	linear	linear	yes	13	2	22	as labelled
+KY753835_frag	frag	linear	linear	yes	12	0	16	as labelled
+KY753835_gap	gap	linear	linear	yes	11	2	21	as labelled
+NC_027831_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_027831_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1050 nt before and 666 nt after the junction)
+NC_027831_frag	frag	linear	circular	NO	4	2	13	atp6 runs across the sequence ends (its reference protein aligns 98 nt before and 451 nt after the junction)
+NC_027831_gap	gap	linear	linear	yes	13	1	19	as labelled
+NC_065161_orig	circ_orig	circular	linear	NO	11	2	0	as labelled
+NC_065161_rot	circ_rot	circular	linear	NO	10	2	0	as labelled
+NC_065161_frag	frag	linear	linear	yes	6	0	0	as labelled
+NC_065161_gap	gap	linear	linear	yes	10	2	0	as labelled
+NC_056170_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_056170_rot	circ_rot	circular	circular	yes	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 1257 nt before and 300 nt after the junction)
+NC_056170_frag	frag	linear	linear	yes	9	2	15	as labelled
+NC_056170_gap	gap	linear	linear	yes	12	2	19	as labelled
+NC_010636_orig	circ_orig	circular	linear	NO	18	2	22	as labelled
+NC_010636_rot	circ_rot	circular	circular	yes	18	2	22	nad5 runs across the sequence ends (its reference protein aligns 1353 nt before and 342 nt after the junction)
+NC_010636_frag	frag	linear	linear	yes	6	0	2	as labelled
+NC_010636_gap	gap	linear	linear	yes	17	2	21	as labelled
+NC_070077_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_070077_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 580 nt before and 335 nt after the junction)
+NC_070077_frag	frag	linear	linear	yes	6	2	11	as labelled
+NC_070077_gap	gap	linear	linear	yes	12	2	22	as labelled
+OR935904_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+OR935904_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1154 nt before and 562 nt after the junction)
+OR935904_frag	frag	linear	linear	yes	6	2	12	as labelled
+OR935904_gap	gap	linear	linear	yes	13	2	22	as labelled
+OM203184_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+OM203184_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+OM203184_frag	frag	linear	linear	yes	4	2	11	as labelled
+OM203184_gap	gap	linear	linear	yes	12	2	21	as labelled
+MG873458_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+MG873458_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1267 nt before and 446 nt after the junction)
+MG873458_frag	frag	linear	linear	yes	6	2	12	as labelled
+MG873458_gap	gap	linear	linear	yes	11	2	14	as labelled
+NC_057074_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_057074_rot	circ_rot	circular	circular	yes	13	2	22	cox3 runs across the sequence ends (its reference protein aligns 49 nt before and 728 nt after the junction)
+NC_057074_frag	frag	linear	linear	yes	1	2	5	as labelled
+NC_057074_gap	gap	linear	linear	yes	13	2	22	as labelled
+NC_006894_orig	circ_orig	circular	linear	NO	13	2	23	as labelled
+NC_006894_rot	circ_rot	circular	linear	NO	13	2	23	as labelled
+NC_006894_frag	frag	linear	linear	yes	6	0	9	as labelled
+NC_006894_gap	gap	linear	linear	yes	12	2	23	as labelled
+LC726502_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+LC726502_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 475 nt before and 662 nt after the junction)
+LC726502_frag	frag	linear	linear	yes	7	1	11	as labelled
+LC726502_gap	gap	linear	linear	yes	13	2	18	as labelled
+KU672397_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+KU672397_rot	circ_rot	linear	circular	NO	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 270 nt before and 1062 nt after the junction)
+KU672397_frag	frag	linear	linear	yes	5	2	8	as labelled
+KU672397_gap	gap	linear	linear	yes	12	2	20	as labelled
+NC_065055_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_065055_rot	circ_rot	circular	circular	yes	13	2	22	cox3 runs across the sequence ends (its reference protein aligns 142 nt before and 641 nt after the junction)
+NC_065055_frag	frag	linear	linear	yes	10	0	7	as labelled
+NC_065055_gap	gap	linear	linear	yes	12	2	17	as labelled
+NC_067864_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_067864_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+NC_067864_frag	frag	linear	linear	yes	10	1	15	as labelled
+NC_067864_gap	gap	linear	linear	yes	13	2	17	as labelled
+NC_027524_orig	circ_orig	circular	linear	NO	8	2	1	as labelled
+NC_027524_rot	circ_rot	circular	linear	NO	8	2	1	as labelled
+NC_027524_frag	frag	linear	linear	yes	5	2	0	as labelled
+NC_027524_gap	gap	linear	linear	yes	7	2	1	as labelled
+NC_039987_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_039987_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 813 nt before and 141 nt after the junction)
+NC_039987_frag	frag	linear	linear	yes	8	0	8	as labelled
+NC_039987_gap	gap	linear	linear	yes	13	2	22	as labelled
+LC726566_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+LC726566_rot	circ_rot	linear	circular	NO	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 1294 nt before and 245 nt after the junction)
+LC726566_frag	frag	linear	linear	yes	7	2	15	as labelled
+LC726566_gap	gap	linear	linear	yes	13	2	22	as labelled
+NC_008828_orig	circ_orig	circular	linear	NO	14	2	17	as labelled
+NC_008828_rot	circ_rot	circular	linear	NO	14	2	17	as labelled
+NC_008828_frag	frag	linear	linear	yes	5	0	6	as labelled
+NC_008828_gap	gap	linear	linear	yes	13	2	16	as labelled
+NC_038175_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_038175_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 239 nt before and 898 nt after the junction)
+NC_038175_frag	frag	linear	linear	yes	13	0	17	as labelled
+NC_038175_gap	gap	linear	linear	yes	11	2	21	as labelled
+OQ807206_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+OQ807206_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 157 nt before and 962 nt after the junction)
+OQ807206_frag	frag	linear	linear	yes	10	2	16	as labelled
+OQ807206_gap	gap	linear	linear	yes	13	2	20	as labelled
+NC_066398_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_066398_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+NC_066398_frag	frag	linear	linear	yes	3	0	5	as labelled
+NC_066398_gap	gap	linear	linear	yes	13	1	20	as labelled
+LC726534_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+LC726534_rot	circ_rot	linear	circular	NO	13	2	22	cob runs across the sequence ends (its reference protein aligns 550 nt before and 587 nt after the junction)
+LC726534_frag	frag	linear	linear	yes	9	1	12	as labelled
+LC726534_gap	gap	linear	linear	yes	11	2	19	as labelled
+MN102127_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+MN102127_rot	circ_rot	circular	circular	yes	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 963 nt before and 576 nt after the junction)
+MN102127_frag	frag	linear	linear	yes	8	0	13	as labelled
+MN102127_gap	gap	linear	linear	yes	12	2	21	as labelled
+NC_044745_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_044745_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+NC_044745_frag	frag	linear	linear	yes	7	1	12	as labelled
+NC_044745_gap	gap	linear	linear	yes	13	2	17	as labelled
+OR935920_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+OR935920_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 152 nt before and 775 nt after the junction)
+OR935920_frag	frag	linear	linear	yes	7	0	10	as labelled
+OR935920_gap	gap	linear	linear	yes	12	2	22	as labelled
+NC_070068_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_070068_rot	circ_rot	circular	circular	yes	13	2	22	nad2 runs across the sequence ends (its reference protein aligns 71 nt before and 973 nt after the junction)
+NC_070068_frag	frag	linear	linear	yes	2	2	7	as labelled
+NC_070068_gap	gap	linear	linear	yes	12	2	20	as labelled
+NC_082550_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_082550_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+NC_082550_frag	frag	linear	linear	yes	7	0	8	as labelled
+NC_082550_gap	gap	linear	linear	yes	12	2	18	as labelled
+PP266604_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP266604_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 971 nt before and 163 nt after the junction)
+PP266604_frag	frag	linear	linear	yes	10	2	18	as labelled
+PP266604_gap	gap	linear	linear	yes	13	1	20	as labelled
+NC_046684_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_046684_rot	circ_rot	circular	circular	yes	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 1018 nt before and 362 nt after the junction)
+NC_046684_frag	frag	linear	linear	yes	5	0	11	as labelled
+NC_046684_gap	gap	linear	linear	yes	13	2	19	as labelled
+NC_083998_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_083998_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 48 nt before and 1086 nt after the junction)
+NC_083998_frag	frag	linear	linear	yes	7	0	6	as labelled
+NC_083998_gap	gap	linear	linear	yes	13	2	22	as labelled
+MW794259_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+MW794259_rot	circ_rot	circular	circular	yes	13	2	22	cox2 runs across the sequence ends (its reference protein aligns 58 nt before and 623 nt after the junction)
+MW794259_frag	frag	linear	linear	yes	10	2	18	as labelled
+MW794259_gap	gap	linear	linear	yes	12	2	20	as labelled
+NC_008157_orig	circ_orig	circular	linear	NO	13	2	1	as labelled
+NC_008157_rot	circ_rot	circular	circular	yes	13	2	1	nad5 runs across the sequence ends (its reference protein aligns 677 nt before and 1138 nt after the junction)
+NC_008157_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_008157_gap	gap	linear	linear	yes	13	2	1	as labelled
+NC_011162_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_011162_rot	circ_rot	circular	circular	yes	13	2	2	cob runs across the sequence ends (its reference protein aligns 771 nt before and 366 nt after the junction)
+NC_011162_frag	frag	linear	linear	yes	9	2	0	as labelled
+NC_011162_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_082917_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_082917_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_082917_frag	frag	linear	linear	yes	5	0	0	as labelled
+NC_082917_gap	gap	linear	linear	yes	11	2	2	as labelled
+LC677172_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+LC677172_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+LC677172_frag	frag	linear	linear	yes	3	2	11	as labelled
+LC677172_gap	gap	linear	linear	yes	11	2	18	as labelled
+NC_080259_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_080259_rot	circ_rot	circular	circular	yes	13	2	2	nad4 runs across the sequence ends (its reference protein aligns 1126 nt before and 347 nt after the junction)
+NC_080259_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_080259_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_056771_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_056771_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 116 nt before and 670 nt after the junction)
+NC_056771_frag	frag	linear	linear	yes	7	1	1	as labelled
+NC_056771_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_008162_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_008162_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_008162_frag	frag	linear	circular	NO	11	1	2	nad2 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 9240 nt before and 506 nt after the junction)
+NC_008162_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_042481_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_042481_rot	circ_rot	circular	circular	yes	13	2	2	cox1 runs across the sequence ends (its reference protein aligns 162 nt before and 1374 nt after the junction)
+NC_042481_frag	frag	linear	linear	yes	7	1	0	as labelled
+NC_042481_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_015309_orig	circ_orig	circular	linear	NO	12	2	22	as labelled
+NC_015309_rot	circ_rot	circular	linear	NO	12	2	22	as labelled
+NC_015309_frag	frag	linear	linear	yes	6	0	12	as labelled
+NC_015309_gap	gap	linear	linear	yes	12	2	22	as labelled
+NC_080261_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_080261_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_080261_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_080261_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_042742_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_042742_rot	circ_rot	circular	circular	yes	13	2	2	atp6 runs across the sequence ends (its reference protein aligns 447 nt before and 249 nt after the junction)
+NC_042742_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_042742_gap	gap	linear	linear	yes	11	2	2	as labelled
+NC_080260_orig	circ_orig	circular	circular	yes	13	2	2	nad1 runs across the sequence ends (its reference protein aligns 341 nt before and 658 nt after the junction)
+NC_080260_rot	circ_rot	circular	circular	yes	13	2	2	cox2 runs across the sequence ends (its reference protein aligns 597 nt before and 153 nt after the junction)
+NC_080260_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_080260_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_046403_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_046403_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_046403_frag	frag	linear	linear	yes	5	2	2	as labelled
+NC_046403_gap	gap	linear	linear	yes	13	2	1	as labelled
+NC_070437_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_070437_rot	circ_rot	circular	circular	yes	13	2	2	nad2 runs across the sequence ends (its reference protein aligns 784 nt before and 311 nt after the junction)
+NC_070437_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_070437_gap	gap	linear	linear	yes	12	2	1	as labelled
+OR637230_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+OR637230_rot	circ_rot	linear	circular	NO	13	2	22	nad2 runs across the sequence ends (its reference protein aligns 654 nt before and 222 nt after the junction)
+OR637230_frag	frag	linear	linear	yes	6	1	15	as labelled
+OR637230_gap	gap	linear	linear	yes	12	2	19	as labelled
+NC_027610_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_027610_rot	circ_rot	circular	circular	yes	13	2	2	nad4 runs across the sequence ends (its reference protein aligns 1324 nt before and 140 nt after the junction)
+NC_027610_frag	frag	linear	linear	yes	4	1	0	as labelled
+NC_027610_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_024182_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_024182_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 78 nt before and 708 nt after the junction)
+NC_024182_frag	frag	linear	circular	NO	5	1	0	atp6 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 1074 nt before and 542 nt after the junction)
+NC_024182_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_030352_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_030352_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_030352_frag	frag	linear	linear	yes	7	2	2	as labelled
+NC_030352_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_080206_orig	circ_orig	circular	circular	yes	13	2	2	nad1 runs across the sequence ends (its reference protein aligns 189 nt before and 819 nt after the junction)
+NC_080206_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_080206_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_080206_gap	gap	linear	linear	yes	13	2	1	as labelled
+NC_018364_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_018364_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 263 nt before and 514 nt after the junction)
+NC_018364_frag	frag	linear	linear	yes	10	1	0	as labelled
+NC_018364_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_056290_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_056290_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_056290_frag	frag	linear	linear	yes	7	0	1	as labelled
+NC_056290_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_022470_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_022470_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_022470_frag	frag	linear	linear	yes	5	2	1	as labelled
+NC_022470_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_003522_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_003522_rot	circ_rot	circular	circular	yes	13	2	2	cob runs across the sequence ends (its reference protein aligns 831 nt before and 321 nt after the junction)
+NC_003522_frag	frag	linear	linear	yes	11	1	1	as labelled
+NC_003522_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_072168_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_072168_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_072168_frag	frag	linear	linear	yes	7	1	1	as labelled
+NC_072168_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_024671_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_024671_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_024671_frag	frag	linear	linear	yes	7	0	1	as labelled
+NC_024671_gap	gap	linear	linear	yes	12	2	2	as labelled
+EU293739_orig	circ_orig	linear	linear	yes	13	2	22	as labelled
+EU293739_rot	circ_rot	linear	linear	yes	13	2	22	as labelled
+EU293739_frag	frag	linear	linear	yes	4	2	8	as labelled
+EU293739_gap	gap	linear	linear	yes	13	1	21	as labelled
+NC_027526_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_027526_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_027526_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_027526_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_027102_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_027102_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_027102_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_027102_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_022824_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_022824_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 556 nt before and 230 nt after the junction)
+NC_022824_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_022824_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_079940_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_079940_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_079940_frag	frag	linear	linear	yes	7	0	1	as labelled
+NC_079940_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_069594_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_069594_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_069594_frag	frag	linear	circular	NO	7	2	2	nad4 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 798 nt before and 1606 nt after the junction)
+NC_069594_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_027611_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_027611_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_027611_frag	frag	linear	linear	yes	8	0	1	as labelled
+NC_027611_gap	gap	linear	linear	yes	12	2	2	as labelled
+KY774370_orig	circ_orig	circular	linear	NO	12	2	22	as labelled
+KY774370_rot	circ_rot	circular	circular	yes	12	2	22	cox2 runs across the sequence ends (its reference protein aligns 334 nt before and 347 nt after the junction)
+KY774370_frag	frag	linear	linear	yes	5	0	9	as labelled
+KY774370_gap	gap	linear	linear	yes	11	2	21	as labelled
+NC_026025_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_026025_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 572 nt before and 214 nt after the junction)
+NC_026025_frag	frag	linear	linear	yes	5	1	2	as labelled
+NC_026025_gap	gap	linear	linear	yes	12	2	2	as labelled
+NC_046690_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_046690_rot	circ_rot	circular	circular	yes	13	2	2	cox2 runs across the sequence ends (its reference protein aligns 88 nt before and 617 nt after the junction)
+NC_046690_frag	frag	linear	linear	yes	12	1	1	as labelled
+NC_046690_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_030274_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_030274_rot	circ_rot	circular	circular	yes	13	2	2	cox2 runs across the sequence ends (its reference protein aligns 503 nt before and 235 nt after the junction)
+NC_030274_frag	frag	linear	linear	yes	5	1	1	as labelled
+NC_030274_gap	gap	linear	linear	yes	13	2	1	as labelled
+NC_024092_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_024092_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_024092_frag	frag	linear	linear	yes	4	1	0	as labelled
+NC_024092_gap	gap	linear	circular	NO	13	2	2	nad4 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 846 nt before and 15065 nt after the junction)
+NC_080262_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_080262_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_080262_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_080262_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_080209_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_080209_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 217 nt before and 569 nt after the junction)
+NC_080209_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_080209_gap	gap	linear	linear	yes	13	2	2	as labelled
+NC_027100_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_027100_rot	circ_rot	circular	circular	yes	13	2	2	nad4 runs across the sequence ends (its reference protein aligns 1063 nt before and 410 nt after the junction)
+NC_027100_frag	frag	linear	linear	yes	6	1	1	as labelled
+NC_027100_gap	gap	linear	linear	yes	14	1	2	as labelled
+NC_026026_orig	circ_orig	circular	linear	NO	13	2	2	as labelled
+NC_026026_rot	circ_rot	circular	linear	NO	13	2	2	as labelled
+NC_026026_frag	frag	linear	linear	yes	9	1	1	as labelled
+NC_026026_gap	gap	linear	linear	yes	12	2	1	as labelled
+PP228860_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP228860_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+PP228860_frag	frag	linear	linear	yes	10	2	17	as labelled
+PP228860_gap	gap	linear	linear	yes	13	2	20	as labelled
+PQ821863_orig	circ_orig	circular	linear	NO	13	2	23	as labelled
+PQ821863_rot	circ_rot	circular	circular	yes	13	2	23	nad2 runs across the sequence ends (its reference protein aligns 159 nt before and 705 nt after the junction)
+PQ821863_frag	frag	linear	linear	yes	11	0	17	as labelled
+PQ821863_gap	gap	linear	linear	yes	13	2	23	as labelled
+PP228862_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP228862_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1243 nt before and 425 nt after the junction)
+PP228862_frag	frag	linear	linear	yes	7	0	9	as labelled
+PP228862_gap	gap	linear	circular	NO	13	2	18	nad4 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 11349 nt before and 1125 nt after the junction)
+NC_064058_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_064058_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+NC_064058_frag	frag	linear	linear	yes	8	0	6	as labelled
+NC_064058_gap	gap	linear	linear	yes	12	2	20	as labelled
+PP003976_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP003976_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+PP003976_frag	frag	linear	linear	yes	5	2	18	as labelled
+PP003976_gap	gap	linear	linear	yes	12	2	21	as labelled
+PP228861_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP228861_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 487 nt before and 398 nt after the junction)
+PP228861_frag	frag	linear	linear	yes	4	0	6	as labelled
+PP228861_gap	gap	linear	linear	yes	13	2	22	as labelled
+OP104125_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+OP104125_rot	circ_rot	circular	circular	yes	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 1019 nt before and 310 nt after the junction)
+OP104125_frag	frag	linear	linear	yes	6	2	10	as labelled
+OP104125_gap	gap	linear	linear	yes	12	2	22	as labelled
+PP944313_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP944313_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+PP944313_frag	frag	linear	circular	NO	5	2	15	nad2 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 454 nt before and 2619 nt after the junction)
+PP944313_gap	gap	linear	linear	yes	12	2	21	as labelled
+NC_066969_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+NC_066969_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+NC_066969_frag	frag	linear	linear	yes	1	2	8	as labelled
+NC_066969_gap	gap	linear	linear	yes	13	2	22	as labelled
+OM914591_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+OM914591_rot	circ_rot	circular	circular	yes	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 810 nt before and 732 nt after the junction)
+OM914591_frag	frag	linear	linear	yes	9	0	10	as labelled
+OM914591_gap	gap	linear	linear	yes	11	2	19	as labelled
+PP228859_orig	circ_orig	circular	linear	NO	13	2	22	as labelled
+PP228859_rot	circ_rot	circular	linear	NO	13	2	22	as labelled
+PP228859_frag	frag	linear	linear	yes	6	0	8	as labelled
+PP228859_gap	gap	linear	linear	yes	12	2	22	as labelled

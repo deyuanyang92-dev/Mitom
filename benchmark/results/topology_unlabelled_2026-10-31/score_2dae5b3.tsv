@@ -1,0 +1,365 @@
+seq_id	kind	truth	called	ok	pcg	rrna	trna	reason
+PQ279307_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PQ279307_rot	circ_rot	linear	circular	NO	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 1211 nt before and 142 nt after the junction)
+PQ279307_frag	frag	linear	linear	yes	4	2	12	as labelled
+PQ279307_gap	gap	linear	linear	yes	12	2	18	nad4 stops at the junction of the sequence ends with residues 125-451/451 of its protein, the rest is not on the other side: the ends do not join
+NC_082191_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_082191_rot	circ_rot	circular	circular	yes	13	2	22	cox2 runs across the sequence ends (its reference protein aligns 254 nt before and 430 nt after the junction)
+NC_082191_frag	frag	linear	linear	yes	6	1	11	as labelled
+NC_082191_gap	gap	linear	linear	yes	11	2	19	cob stops at the junction of the sequence ends with residues 50-380/380 of its protein, the rest is not on the other side: the ends do not join
+NC_025335_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_025335_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 114 nt before and 867 nt after the junction)
+NC_025335_frag	frag	linear	linear	yes	5	0	4	as labelled
+NC_025335_gap	gap	linear	linear	yes	11	2	19	no topology label, no gene across the ends, gene set incomplete (11 of 13 protein genes, rRNA rrnL, rrnS, 20 tRNAs): partial
+NC_037947_orig	circ_orig	circular	circular	yes	13	2	23	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 23 tRNAs)
+NC_037947_rot	circ_rot	circular	circular	yes	13	2	23	nad5 runs across the sequence ends (its reference protein aligns 1461 nt before and 258 nt after the junction)
+NC_037947_frag	frag	linear	linear	yes	6	0	8	as labelled
+NC_037947_gap	gap	linear	linear	yes	13	2	22	nad2 stops at the junction of the sequence ends with residues 1-100/336 of its protein, the rest is not on the other side: the ends do not join
+PQ131216_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PQ131216_rot	circ_rot	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PQ131216_frag	frag	linear	linear	yes	3	1	6	as labelled
+PQ131216_gap	gap	linear	linear	yes	13	2	21	atp6 stops at the junction of the sequence ends with residues 158-231/231 of its protein, the rest is not on the other side: the ends do not join
+NC_082997_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_082997_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 686 nt before and 1150 nt after the junction)
+NC_082997_frag	frag	linear	linear	yes	6	0	12	as labelled
+NC_082997_gap	gap	linear	linear	yes	12	2	17	nad1 stops at the junction of the sequence ends with residues 1-281/324 of its protein, the rest is not on the other side: the ends do not join
+KT726961_orig	circ_orig	circular	circular	yes	13	2	21	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 21 tRNAs)
+KT726961_rot	circ_rot	circular	circular	yes	13	2	21	cox1 runs across the sequence ends (its reference protein aligns 212 nt before and 1309 nt after the junction)
+KT726961_frag	frag	linear	linear	yes	4	2	11	as labelled
+KT726961_gap	gap	linear	linear	yes	11	2	20	nad4 stops at the junction of the sequence ends with residues 72-448/452 of its protein, the rest is not on the other side: the ends do not join
+KY753835_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+KY753835_rot	circ_rot	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+KY753835_frag	frag	linear	linear	yes	12	0	16	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA none, 16 tRNAs): partial
+KY753835_gap	gap	linear	linear	yes	11	2	21	cob stops at the junction of the sequence ends with residues 122-349/349 of its protein, the rest is not on the other side: the ends do not join
+NC_027831_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_027831_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1050 nt before and 666 nt after the junction)
+NC_027831_frag	frag	linear	circular	NO	4	2	13	atp6 runs across the sequence ends (its reference protein aligns 98 nt before and 451 nt after the junction)
+NC_027831_gap	gap	linear	linear	yes	13	1	19	nad4 stops at the junction of the sequence ends with residues 1-415/452 of its protein, the rest is not on the other side: the ends do not join
+NC_065161_orig	circ_orig	circular	linear	NO	11	2	0	no topology label, no gene across the ends, gene set incomplete (11 of 13 protein genes, rRNA rrnL, rrnS, 0 tRNAs): partial
+NC_065161_rot	circ_rot	circular	linear	NO	10	2	0	no topology label, no gene across the ends, gene set incomplete (10 of 13 protein genes, rRNA rrnL, rrnS, 0 tRNAs): partial
+NC_065161_frag	frag	linear	linear	yes	6	0	0	as labelled
+NC_065161_gap	gap	linear	circular	NO	10	2	0	as labelled
+NC_056170_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_056170_rot	circ_rot	circular	circular	yes	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 1248 nt before and 300 nt after the junction)
+NC_056170_frag	frag	linear	linear	yes	9	2	15	as labelled
+NC_056170_gap	gap	linear	linear	yes	12	2	19	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 19 tRNAs): partial
+NC_010636_orig	circ_orig	circular	circular	yes	18	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_010636_rot	circ_rot	circular	circular	yes	18	2	22	nad5 runs across the sequence ends (its reference protein aligns 1353 nt before and 342 nt after the junction)
+NC_010636_frag	frag	linear	linear	yes	6	0	2	as labelled
+NC_010636_gap	gap	linear	linear	yes	17	2	21	cob stops at the junction of the sequence ends with residues 137-379/379 of its protein, the rest is not on the other side: the ends do not join
+NC_070077_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_070077_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 580 nt before and 335 nt after the junction)
+NC_070077_frag	frag	linear	linear	yes	6	2	11	as labelled
+NC_070077_gap	gap	linear	circular	NO	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OR935904_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OR935904_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1154 nt before and 562 nt after the junction)
+OR935904_frag	frag	linear	linear	yes	6	2	12	no topology label, no gene across the ends, gene set incomplete (6 of 13 protein genes, rRNA rrnL, rrnS, 12 tRNAs): partial
+OR935904_gap	gap	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OM203184_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OM203184_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OM203184_frag	frag	linear	linear	yes	4	2	11	as labelled
+OM203184_gap	gap	linear	linear	yes	12	2	21	atp6 stops at the junction of the sequence ends with residues 130-234/234 of its protein, the rest is not on the other side: the ends do not join
+MG873458_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+MG873458_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1267 nt before and 446 nt after the junction)
+MG873458_frag	frag	linear	linear	yes	6	2	12	as labelled
+MG873458_gap	gap	linear	linear	yes	11	2	14	cox1 stops at the junction of the sequence ends with residues 1-385/519 of its protein, the rest is not on the other side: the ends do not join
+NC_057074_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_057074_rot	circ_rot	circular	circular	yes	13	2	22	cox3 runs across the sequence ends (its reference protein aligns 49 nt before and 728 nt after the junction)
+NC_057074_frag	frag	linear	linear	yes	1	2	5	as labelled
+NC_057074_gap	gap	linear	linear	yes	13	2	22	nad2 stops at the junction of the sequence ends with residues 1-114/329 of its protein, the rest is not on the other side: the ends do not join
+NC_006894_orig	circ_orig	circular	circular	yes	13	2	23	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 23 tRNAs)
+NC_006894_rot	circ_rot	circular	circular	yes	13	2	23	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 23 tRNAs)
+NC_006894_frag	frag	linear	linear	yes	6	0	9	as labelled
+NC_006894_gap	gap	linear	circular	NO	12	2	23	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 23 tRNAs)
+LC726502_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+LC726502_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 475 nt before and 662 nt after the junction)
+LC726502_frag	frag	linear	linear	yes	7	1	11	as labelled
+LC726502_gap	gap	linear	linear	yes	13	2	18	nad5 stops at the junction of the sequence ends with residues 1-364/572 of its protein, the rest is not on the other side: the ends do not join
+KU672397_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+KU672397_rot	circ_rot	linear	circular	NO	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 270 nt before and 1062 nt after the junction)
+KU672397_frag	frag	linear	linear	yes	5	2	8	as labelled
+KU672397_gap	gap	linear	linear	yes	12	2	20	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 20 tRNAs): partial
+NC_065055_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_065055_rot	circ_rot	circular	circular	yes	13	2	22	cox3 runs across the sequence ends (its reference protein aligns 142 nt before and 641 nt after the junction)
+NC_065055_frag	frag	linear	linear	yes	10	0	7	as labelled
+NC_065055_gap	gap	linear	linear	yes	12	2	17	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 17 tRNAs): partial
+NC_067864_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_067864_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_067864_frag	frag	linear	linear	yes	10	1	15	no topology label, no gene across the ends, gene set incomplete (10 of 13 protein genes, rRNA rrnL, 15 tRNAs): partial
+NC_067864_gap	gap	linear	linear	yes	13	2	17	cox1 stops at the junction of the sequence ends with residues 53-514/516 of its protein, the rest is not on the other side: the ends do not join
+NC_027524_orig	circ_orig	circular	linear	NO	8	2	1	no topology label, no gene across the ends, gene set incomplete (8 of 13 protein genes, rRNA rrnL, rrnS, 1 tRNAs): partial
+NC_027524_rot	circ_rot	circular	linear	NO	8	2	1	no topology label, no gene across the ends, gene set incomplete (8 of 13 protein genes, rRNA rrnL, rrnS, 1 tRNAs): partial
+NC_027524_frag	frag	linear	linear	yes	5	2	0	as labelled
+NC_027524_gap	gap	linear	linear	yes	7	2	1	cox2 stops at the junction of the sequence ends with residues 1-139/199 of its protein, the rest is not on the other side: the ends do not join
+NC_039987_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_039987_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 813 nt before and 141 nt after the junction)
+NC_039987_frag	frag	linear	linear	yes	8	0	8	as labelled
+NC_039987_gap	gap	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+LC726566_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+LC726566_rot	circ_rot	linear	circular	NO	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 1294 nt before and 245 nt after the junction)
+LC726566_frag	frag	linear	linear	yes	7	2	15	nad5 stops at the junction of the sequence ends with residues 36-572/572 of its protein, the rest is not on the other side: the ends do not join
+LC726566_gap	gap	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_008828_orig	circ_orig	circular	linear	NO	14	2	17	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 17 tRNAs): partial
+NC_008828_rot	circ_rot	circular	linear	NO	14	2	17	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 17 tRNAs): partial
+NC_008828_frag	frag	linear	linear	yes	5	0	6	as labelled
+NC_008828_gap	gap	linear	linear	yes	13	2	16	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 16 tRNAs): partial
+NC_038175_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_038175_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 239 nt before and 898 nt after the junction)
+NC_038175_frag	frag	linear	linear	yes	13	0	17	cob stops at the junction of the sequence ends with residues 1-143/379 of its protein, the rest is not on the other side: the ends do not join
+NC_038175_gap	gap	linear	linear	yes	11	2	21	nad5 stops at the junction of the sequence ends with residues 1-567/613 of its protein, the rest is not on the other side: the ends do not join
+OQ807206_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OQ807206_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 169 nt before and 962 nt after the junction)
+OQ807206_frag	frag	linear	linear	yes	10	2	16	cox1 stops at the junction of the sequence ends with residues 204-511/511 of its protein, the rest is not on the other side: the ends do not join
+OQ807206_gap	gap	linear	linear	yes	13	2	20	atp6 stops at the junction of the sequence ends with residues 1-108/232 of its protein, the rest is not on the other side: the ends do not join
+NC_066398_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_066398_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_066398_frag	frag	linear	linear	yes	3	0	5	as labelled
+NC_066398_gap	gap	linear	linear	yes	13	1	20	nad4 stops at the junction of the sequence ends with residues 1-230/453 of its protein, the rest is not on the other side: the ends do not join
+LC726534_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+LC726534_rot	circ_rot	linear	circular	NO	13	2	22	cob runs across the sequence ends (its reference protein aligns 550 nt before and 587 nt after the junction)
+LC726534_frag	frag	linear	linear	yes	9	1	12	as labelled
+LC726534_gap	gap	linear	linear	yes	11	2	19	cox1 stops at the junction of the sequence ends with residues 42-513/513 of its protein, the rest is not on the other side: the ends do not join
+MN102127_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+MN102127_rot	circ_rot	circular	circular	yes	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 963 nt before and 576 nt after the junction)
+MN102127_frag	frag	linear	linear	yes	8	0	13	as labelled
+MN102127_gap	gap	linear	circular	NO	12	2	21	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 21 tRNAs)
+NC_044745_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_044745_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_044745_frag	frag	linear	linear	yes	7	1	12	as labelled
+NC_044745_gap	gap	linear	linear	yes	13	2	17	cox1 stops at the junction of the sequence ends with residues 95-518/518 of its protein, the rest is not on the other side: the ends do not join
+OR935920_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OR935920_rot	circ_rot	circular	circular	yes	13	2	22	nad1 runs across the sequence ends (its reference protein aligns 152 nt before and 769 nt after the junction)
+OR935920_frag	frag	linear	linear	yes	7	0	10	as labelled
+OR935920_gap	gap	linear	circular	NO	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_070068_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_070068_rot	circ_rot	circular	circular	yes	13	2	22	nad2 runs across the sequence ends (its reference protein aligns 71 nt before and 973 nt after the junction)
+NC_070068_frag	frag	linear	linear	yes	2	2	7	as labelled
+NC_070068_gap	gap	linear	linear	yes	12	2	20	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 20 tRNAs): partial
+NC_082550_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_082550_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_082550_frag	frag	linear	linear	yes	7	0	8	as labelled
+NC_082550_gap	gap	linear	linear	yes	12	2	18	nad2 stops at the junction of the sequence ends with residues 69-348/348 of its protein, the rest is not on the other side: the ends do not join
+PP266604_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP266604_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 971 nt before and 166 nt after the junction)
+PP266604_frag	frag	linear	linear	yes	10	2	18	nad5 stops at the junction of the sequence ends with residues 31-572/572 of its protein, the rest is not on the other side: the ends do not join
+PP266604_gap	gap	linear	linear	yes	13	1	20	nad4 stops at the junction of the sequence ends with residues 1-321/452 of its protein, the rest is not on the other side: the ends do not join
+NC_046684_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_046684_rot	circ_rot	circular	circular	yes	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 1018 nt before and 362 nt after the junction)
+NC_046684_frag	frag	linear	linear	yes	5	0	11	as labelled
+NC_046684_gap	gap	linear	linear	yes	13	2	19	nad5 stops at the junction of the sequence ends with residues 260-611/611 of its protein, the rest is not on the other side: the ends do not join
+NC_083998_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_083998_rot	circ_rot	circular	circular	yes	13	2	22	cob runs across the sequence ends (its reference protein aligns 48 nt before and 1086 nt after the junction)
+NC_083998_frag	frag	linear	linear	yes	7	0	6	as labelled
+NC_083998_gap	gap	linear	linear	yes	13	2	22	nad5 stops at the junction of the sequence ends with residues 1-350/606 of its protein, the rest is not on the other side: the ends do not join
+MW794259_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+MW794259_rot	circ_rot	circular	circular	yes	13	2	22	cox2 runs across the sequence ends (its reference protein aligns 58 nt before and 623 nt after the junction)
+MW794259_frag	frag	linear	linear	yes	10	2	18	cox1 stops at the junction of the sequence ends with residues 292-500/502 of its protein, the rest is not on the other side: the ends do not join
+MW794259_gap	gap	linear	linear	yes	12	2	20	cox3 stops at the junction of the sequence ends with residues 32-259/260 of its protein, the rest is not on the other side: the ends do not join
+NC_008157_orig	circ_orig	circular	circular	yes	13	2	1	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 1 tRNAs)
+NC_008157_rot	circ_rot	circular	circular	yes	13	2	1	nad5 runs across the sequence ends (its reference protein aligns 677 nt before and 1138 nt after the junction)
+NC_008157_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_008157_gap	gap	linear	circular	NO	13	2	1	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 1 tRNAs)
+NC_011162_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_011162_rot	circ_rot	circular	circular	yes	13	2	2	cob runs across the sequence ends (its reference protein aligns 771 nt before and 366 nt after the junction)
+NC_011162_frag	frag	linear	linear	yes	9	2	0	cox2 stops at the junction of the sequence ends with residues 1-141/278 of its protein, the rest is not on the other side: the ends do not join
+NC_011162_gap	gap	linear	circular	NO	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_082917_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_082917_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_082917_frag	frag	linear	linear	yes	5	0	0	as labelled
+NC_082917_gap	gap	linear	linear	yes	11	2	2	nad5 stops at the junction of the sequence ends with residues 368-611/611 of its protein, the rest is not on the other side: the ends do not join
+LC677172_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+LC677172_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+LC677172_frag	frag	linear	linear	yes	3	2	11	as labelled
+LC677172_gap	gap	linear	linear	yes	11	2	18	cox1 stops at the junction of the sequence ends with residues 92-393/513 of its protein, the rest is not on the other side: the ends do not join
+NC_080259_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080259_rot	circ_rot	circular	circular	yes	13	2	2	nad4 runs across the sequence ends (its reference protein aligns 1126 nt before and 347 nt after the junction)
+NC_080259_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_080259_gap	gap	linear	circular	NO	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_056771_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_056771_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 116 nt before and 670 nt after the junction)
+NC_056771_frag	frag	linear	linear	yes	7	1	1	no topology label, no gene across the ends, gene set incomplete (7 of 13 protein genes, rRNA rrnL, 1 tRNAs): partial
+NC_056771_gap	gap	linear	circular	NO	12	2	2	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_008162_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_008162_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_008162_frag	frag	linear	linear	yes	11	2	2	nad2 stops at the junction of the sequence ends with residues 199-367/367 of its protein, the rest is not on the other side: the ends do not join
+NC_008162_gap	gap	linear	linear	yes	13	2	2	cox1 stops at the junction of the sequence ends with residues 321-521/521 of its protein, the rest is not on the other side: the ends do not join
+NC_042481_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_042481_rot	circ_rot	circular	circular	yes	13	2	2	cox1 runs across the sequence ends (its reference protein aligns 180 nt before and 1374 nt after the junction)
+NC_042481_frag	frag	linear	linear	yes	7	1	0	as labelled
+NC_042481_gap	gap	linear	linear	yes	13	2	2	nad4 stops at the junction of the sequence ends with residues 1-153/479 of its protein, the rest is not on the other side: the ends do not join
+NC_015309_orig	circ_orig	circular	circular	yes	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_015309_rot	circ_rot	circular	circular	yes	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_015309_frag	frag	linear	linear	yes	6	0	12	as labelled
+NC_015309_gap	gap	linear	circular	NO	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_080261_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080261_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080261_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_080261_gap	gap	linear	linear	yes	13	2	2	nad4 stops at the junction of the sequence ends with residues 45-490/490 of its protein, the rest is not on the other side: the ends do not join
+NC_042742_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_042742_rot	circ_rot	circular	circular	yes	13	2	2	atp6 runs across the sequence ends (its reference protein aligns 447 nt before and 249 nt after the junction)
+NC_042742_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_042742_gap	gap	linear	circular	NO	11	2	2	nad5 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 10709 nt before and 1445 nt after the junction)
+NC_080260_orig	circ_orig	circular	circular	yes	13	2	2	nad1 runs across the sequence ends (its reference protein aligns 341 nt before and 658 nt after the junction)
+NC_080260_rot	circ_rot	circular	circular	yes	13	2	2	cox2 runs across the sequence ends (its reference protein aligns 597 nt before and 153 nt after the junction)
+NC_080260_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_080260_gap	gap	linear	linear	yes	12	2	2	nad5 stops at the junction of the sequence ends with residues 315-620/620 of its protein, the rest is not on the other side: the ends do not join
+NC_046403_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_046403_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_046403_frag	frag	linear	linear	yes	5	2	2	no topology label, no gene across the ends, gene set incomplete (5 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs): partial
+NC_046403_gap	gap	linear	linear	yes	13	2	1	cox2 stops at the junction of the sequence ends with residues 174-250/250 of its protein, the rest is not on the other side: the ends do not join
+NC_070437_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_070437_rot	circ_rot	circular	circular	yes	13	2	2	nad2 runs across the sequence ends (its reference protein aligns 784 nt before and 311 nt after the junction)
+NC_070437_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_070437_gap	gap	linear	circular	NO	12	2	1	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 1 tRNAs)
+OR637230_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OR637230_rot	circ_rot	linear	circular	NO	13	2	22	nad2 runs across the sequence ends (its reference protein aligns 654 nt before and 222 nt after the junction)
+OR637230_frag	frag	linear	linear	yes	6	1	15	as labelled
+OR637230_gap	gap	linear	linear	yes	12	2	19	no topology label, no gene across the ends, gene set incomplete (12 of 13 protein genes, rRNA rrnL, rrnS, 19 tRNAs): partial
+NC_027610_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027610_rot	circ_rot	circular	circular	yes	13	2	2	nad4 runs across the sequence ends (its reference protein aligns 1324 nt before and 140 nt after the junction)
+NC_027610_frag	frag	linear	linear	yes	4	1	0	as labelled
+NC_027610_gap	gap	linear	linear	yes	13	2	2	nad2 stops at the junction of the sequence ends with residues 167-369/369 of its protein, the rest is not on the other side: the ends do not join
+NC_024182_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_024182_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 78 nt before and 708 nt after the junction)
+NC_024182_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_024182_gap	gap	linear	circular	NO	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_030352_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_030352_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_030352_frag	frag	linear	linear	yes	7	2	2	as labelled
+NC_030352_gap	gap	linear	linear	yes	13	2	2	nad6 stops at the junction of the sequence ends with residues 1-56/204 of its protein, the rest is not on the other side: the ends do not join
+NC_080206_orig	circ_orig	circular	circular	yes	13	2	2	nad1 runs across the sequence ends (its reference protein aligns 189 nt before and 819 nt after the junction)
+NC_080206_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080206_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_080206_gap	gap	linear	linear	yes	13	2	1	nad2 stops at the junction of the sequence ends with residues 1-318/385 of its protein, the rest is not on the other side: the ends do not join
+NC_018364_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_018364_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 263 nt before and 514 nt after the junction)
+NC_018364_frag	frag	linear	linear	yes	10	1	0	as labelled
+NC_018364_gap	gap	linear	linear	yes	13	2	2	nad2 stops at the junction of the sequence ends with residues 1-382/428 of its protein, the rest is not on the other side: the ends do not join
+NC_056290_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_056290_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_056290_frag	frag	linear	linear	yes	7	0	1	as labelled
+NC_056290_gap	gap	linear	linear	yes	12	2	2	nad1 stops at the junction of the sequence ends with residues 1-238/327 of its protein, the rest is not on the other side: the ends do not join
+NC_022470_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_022470_rot	circ_rot	circular	circular	yes	13	2	2	cox1 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 1199 nt before and 1223 nt after the junction)
+NC_022470_frag	frag	linear	linear	yes	5	2	1	as labelled
+NC_022470_gap	gap	linear	circular	NO	12	2	2	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_003522_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_003522_rot	circ_rot	circular	circular	yes	13	2	2	cob runs across the sequence ends (its reference protein aligns 831 nt before and 321 nt after the junction)
+NC_003522_frag	frag	linear	linear	yes	11	1	1	cox1 stops at the junction of the sequence ends with residues 1-455/533 of its protein, the rest is not on the other side: the ends do not join
+NC_003522_gap	gap	linear	linear	yes	13	2	2	cox1 stops at the junction of the sequence ends with residues 1-215/533 of its protein, the rest is not on the other side: the ends do not join
+NC_072168_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_072168_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_072168_frag	frag	linear	linear	yes	7	1	1	as labelled
+NC_072168_gap	gap	linear	linear	yes	13	2	2	nad4 stops at the junction of the sequence ends with residues 182-491/491 of its protein, the rest is not on the other side: the ends do not join
+NC_024671_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_024671_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_024671_frag	frag	linear	linear	yes	7	0	1	as labelled
+NC_024671_gap	gap	linear	linear	yes	12	2	2	nad1 stops at the junction of the sequence ends with residues 240-327/327 of its protein, the rest is not on the other side: the ends do not join
+EU293739_orig	circ_orig	linear	circular	NO	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+EU293739_rot	circ_rot	linear	circular	NO	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 601 nt before and 245 nt after the junction)
+EU293739_frag	frag	linear	linear	yes	4	2	8	as labelled
+EU293739_gap	gap	linear	linear	yes	13	1	21	no topology label, no gene across the ends, gene set incomplete (13 of 13 protein genes, rRNA rrnS, 21 tRNAs): partial
+NC_027526_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027526_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027526_frag	frag	linear	linear	yes	6	1	0	as labelled
+NC_027526_gap	gap	linear	circular	NO	12	2	2	nad5 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 10789 nt before and 1419 nt after the junction)
+NC_027102_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027102_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027102_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_027102_gap	gap	linear	circular	NO	12	2	2	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_022824_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_022824_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 556 nt before and 230 nt after the junction)
+NC_022824_frag	frag	linear	linear	yes	5	1	0	as labelled
+NC_022824_gap	gap	linear	circular	NO	12	2	2	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_079940_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_079940_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_079940_frag	frag	linear	linear	yes	7	0	1	as labelled
+NC_079940_gap	gap	linear	circular	NO	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_069594_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_069594_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_069594_frag	frag	linear	linear	yes	7	2	2	nad4 stops at the junction of the sequence ends with residues 1-266/491 of its protein, the rest is not on the other side: the ends do not join
+NC_069594_gap	gap	linear	circular	NO	12	2	2	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027611_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027611_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027611_frag	frag	linear	linear	yes	8	0	1	as labelled
+NC_027611_gap	gap	linear	linear	yes	12	2	2	atp6 stops at the junction of the sequence ends with residues 146-229/229 of its protein, the rest is not on the other side: the ends do not join
+KY774370_orig	circ_orig	circular	circular	yes	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+KY774370_rot	circ_rot	circular	circular	yes	12	2	22	cox2 runs across the sequence ends (its reference protein aligns 334 nt before and 347 nt after the junction)
+KY774370_frag	frag	linear	linear	yes	5	0	9	as labelled
+KY774370_gap	gap	linear	linear	yes	11	2	21	no topology label, no gene across the ends, gene set incomplete (11 of 13 protein genes, rRNA rrnL, rrnS, 21 tRNAs): partial
+NC_026025_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_026025_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 572 nt before and 214 nt after the junction)
+NC_026025_frag	frag	linear	linear	yes	5	1	2	as labelled
+NC_026025_gap	gap	linear	linear	yes	12	2	2	nad4 stops at the junction of the sequence ends with residues 49-491/491 of its protein, the rest is not on the other side: the ends do not join
+NC_046690_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_046690_rot	circ_rot	circular	circular	yes	13	2	2	cox2 runs across the sequence ends (its reference protein aligns 88 nt before and 617 nt after the junction)
+NC_046690_frag	frag	linear	linear	yes	12	1	1	nad1 stops at the junction of the sequence ends with residues 189-315/315 of its protein, the rest is not on the other side: the ends do not join
+NC_046690_gap	gap	linear	linear	yes	13	2	2	nad5 stops at the junction of the sequence ends with residues 355-604/604 of its protein, the rest is not on the other side: the ends do not join
+NC_030274_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_030274_rot	circ_rot	circular	circular	yes	13	2	2	cox2 runs across the sequence ends (its reference protein aligns 503 nt before and 235 nt after the junction)
+NC_030274_frag	frag	linear	linear	yes	5	1	1	as labelled
+NC_030274_gap	gap	linear	linear	yes	13	2	1	nad2 stops at the junction of the sequence ends with residues 209-385/385 of its protein, the rest is not on the other side: the ends do not join
+NC_024092_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_024092_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_024092_frag	frag	linear	linear	yes	4	1	0	as labelled
+NC_024092_gap	gap	linear	linear	yes	13	2	2	nad4 stops at the junction of the sequence ends with residues 1-284/491 of its protein, the rest is not on the other side: the ends do not join
+NC_080262_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080262_rot	circ_rot	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080262_frag	frag	linear	linear	yes	4	0	0	as labelled
+NC_080262_gap	gap	linear	linear	yes	13	2	2	cox3 stops at the junction of the sequence ends with residues 1-80/262 of its protein, the rest is not on the other side: the ends do not join
+NC_080209_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_080209_rot	circ_rot	circular	circular	yes	13	2	2	cox3 runs across the sequence ends (its reference protein aligns 217 nt before and 569 nt after the junction)
+NC_080209_frag	frag	linear	linear	yes	6	1	0	no topology label, no gene across the ends, gene set incomplete (6 of 13 protein genes, rRNA rrnS, 0 tRNAs): partial
+NC_080209_gap	gap	linear	linear	yes	13	2	2	cox1 stops at the junction of the sequence ends with residues 1-233/506 of its protein, the rest is not on the other side: the ends do not join
+NC_027100_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_027100_rot	circ_rot	circular	circular	yes	13	2	2	nad4 runs across the sequence ends (its reference protein aligns 1063 nt before and 410 nt after the junction)
+NC_027100_frag	frag	linear	linear	yes	6	1	1	as labelled
+NC_027100_gap	gap	linear	circular	NO	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_026026_orig	circ_orig	circular	circular	yes	13	2	2	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 2 tRNAs)
+NC_026026_rot	circ_rot	circular	circular	yes	13	2	2	cox1 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 1131 nt before and 1408 nt after the junction)
+NC_026026_frag	frag	linear	linear	yes	9	1	1	as labelled
+NC_026026_gap	gap	linear	circular	NO	12	2	1	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 1 tRNAs)
+PP228860_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228860_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228860_frag	frag	linear	linear	yes	10	2	17	no topology label, no gene across the ends, gene set incomplete (10 of 13 protein genes, rRNA rrnL, rrnS, 17 tRNAs): partial
+PP228860_gap	gap	linear	linear	yes	13	2	20	nad5 stops at the junction of the sequence ends with residues 332-565/569 of its protein, the rest is not on the other side: the ends do not join
+PQ821863_orig	circ_orig	circular	circular	yes	13	2	23	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 23 tRNAs)
+PQ821863_rot	circ_rot	circular	circular	yes	13	2	23	nad2 runs across the sequence ends (its reference protein aligns 159 nt before and 705 nt after the junction)
+PQ821863_frag	frag	linear	linear	yes	11	0	17	as labelled
+PQ821863_gap	gap	linear	circular	NO	13	2	23	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 23 tRNAs)
+PP228862_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228862_rot	circ_rot	circular	circular	yes	13	2	22	nad5 runs across the sequence ends (its reference protein aligns 1243 nt before and 425 nt after the junction)
+PP228862_frag	frag	linear	linear	yes	7	0	9	as labelled
+PP228862_gap	gap	linear	linear	yes	13	2	18	nad4 stops at the junction of the sequence ends with residues 77-451/451 of its protein, the rest is not on the other side: the ends do not join
+NC_064058_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_064058_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_064058_frag	frag	linear	linear	yes	8	0	6	as labelled
+NC_064058_gap	gap	linear	linear	yes	12	2	20	nad4 stops at the junction of the sequence ends with residues 139-451/451 of its protein, the rest is not on the other side: the ends do not join
+PP003976_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP003976_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP003976_frag	frag	linear	linear	yes	5	2	18	as labelled
+PP003976_gap	gap	linear	circular	NO	12	2	21	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 21 tRNAs)
+PP228861_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228861_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228861_frag	frag	linear	linear	yes	4	0	6	as labelled
+PP228861_gap	gap	linear	linear	yes	13	2	22	nad5 stops at the junction of the sequence ends with residues 399-567/569 of its protein, the rest is not on the other side: the ends do not join
+OP104125_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OP104125_rot	circ_rot	circular	circular	yes	13	2	22	nad4 runs across the sequence ends (its reference protein aligns 1019 nt before and 310 nt after the junction)
+OP104125_frag	frag	linear	linear	yes	6	2	10	as labelled
+OP104125_gap	gap	linear	circular	NO	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP944313_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP944313_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP944313_frag	frag	linear	circular	NO	5	2	15	nad2 runs across the sequence ends with an intron (aligned spliced) (its reference protein aligns 454 nt before and 2619 nt after the junction)
+PP944313_gap	gap	linear	circular	NO	12	2	21	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 21 tRNAs)
+NC_066969_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_066969_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+NC_066969_frag	frag	linear	linear	yes	1	2	8	as labelled
+NC_066969_gap	gap	linear	linear	yes	13	2	22	cob stops at the junction of the sequence ends with residues 1-133/379 of its protein, the rest is not on the other side: the ends do not join
+OM914591_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+OM914591_rot	circ_rot	circular	circular	yes	13	2	22	cox1 runs across the sequence ends (its reference protein aligns 810 nt before and 717 nt after the junction)
+OM914591_frag	frag	linear	linear	yes	9	0	10	as labelled
+OM914591_gap	gap	linear	linear	yes	11	2	19	cox1 stops at the junction of the sequence ends with residues 1-355/510 of its protein, the rest is not on the other side: the ends do not join
+PP228859_orig	circ_orig	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228859_rot	circ_rot	circular	circular	yes	13	2	22	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)
+PP228859_frag	frag	linear	linear	yes	6	0	8	as labelled
+PP228859_gap	gap	linear	circular	NO	12	2	22	no topology label, no gene cut at the ends, complete gene set (12 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs)

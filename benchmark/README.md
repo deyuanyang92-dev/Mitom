@@ -44,6 +44,8 @@ python3 bench_report.py --eval bench/eval/all --tools mitom_native,mitos2 --out 
 | `full_v30_2026-10-27/` | all benchmark sets (2,497 records): reports per set, tRNA tables, NCBI ERRORs |
 | `curation_cmp_2026-10-28/` | MitoM, MitoZ, MITOS2 raw and after MitoM's curation |
 | `intron_gold_2026-10-29/` | verified gold standard of the introns of 193 NCBI records; MitoM end to end against it |
+| `intron_rotation_2026-10-30/` | the gold records rotated so that the origin lies inside the intron gene (exon, intron, 15 nt inside either intron end): introns found as without rotation |
+| `topology_unlabelled_2026-10-31/` | 364 unlabelled sequences of 91 NCBI genomes (complete, rotated, fragments, contigs with a gap): circular or linear decided from the sequence |
 
 ## Early intron evaluation (mito_intron.py, 2026-10-09)
 
