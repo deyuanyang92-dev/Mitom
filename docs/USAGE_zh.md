@@ -1018,7 +1018,7 @@ out/
 
 主要文件：
 
-- `final_annotation/<登录号>.gb`：**最终 GenBank**：端点校正（mito_curate.py）并统一为 NCBI 命名——CDS `COX1…CYTB`、`ND1…ND6`、`ND4L`；rRNA `rrnS`/`rrnL`（12S/16S ribosomal RNA）；tRNA `/gene` 只写符号（`trnL1`/`trnL2`、`trnS1`/`trnS2` 按反密码子，沿用 MITOS 约定 L1 = CUN、L2 = UUR、S1 = AGN、S2 = UCN；脊椎动物 HGNC/RefSeq 的 L1/L2 编号相反，请按投稿类群核对），反密码子写在 `/note`；非法起始密码子按 NCBI 惯例标 5′ partial（"start codon not determined"）。`--curate no` 时为校正前的注释。
+- `final_annotation/<登录号>.gb`：**最终 GenBank**：端点校正（mito_curate.py）并统一为 NCBI 命名——CDS `COX1…CYTB`、`ND1…ND6`、`ND4L`；rRNA `rrnS`/`rrnL`（12S/16S ribosomal RNA）；tRNA `/gene` 只写符号（`trnL1`/`trnL2`、`trnS1`/`trnS2` 按反密码子，与 MITOS2（2.1.10）相同：所有类群、包括脊椎动物都是 L1 = CUN、L2 = UUR、S1 = AGN、S2 = UCN；NCBI 的脊椎动物记录（如人 NC_012920.1）L1/L2、S1/S2 编号相反，MitoM 按 MITOS2，不随类群改变），反密码子写在 `/note`；非法起始密码子按 NCBI 惯例标 5′ partial（"start codon not determined"）。`--curate no` 时为校正前的注释。
 - `ncbi_submission/`：每条记录的 NCBI 提交文件和校验报告。`submission_summary.tsv` 中 ERROR 为 0 的记录可直接提交；GenBank 平面文件（.gb）本身不能直接提交给 NCBI（NCBI 只收 table2asn 生成的 `.sqn`，或 BankIt 上传 `.fsa` + `.tbl`），`.sqn/.tbl` 与 `final_annotation/*.gb` 是同一份注释。正式提交时用 `--sbt` 给出 NCBI 提交者模板（https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。2026-10-27 全部基准记录（2,497 条：1,050 条多类群 RefSeq、669 条环节动物、577 条科未参与训练的无脊椎动物、188 条脊椎动物、13 条锚定基因组）用默认流程注释：table2asn ERROR 0 条（此前 199 条，主要是鸟类/龟类 ND3 移码、蚌类 nad1 包住 trnL2、环节动物 nad2 跨原点无终止子）；余下 WARNING 为 NCBI 自己记录里也有的类型（ND3 移码 join 的 ShortIntron、无起始/终止密码子基因的 partial 提示）。
 - `summary.tsv` 的 `annotation_used`：`round 2` = 定向后重注；`round 1, shifted` = 第一轮注释随序列平移（通过检查，不必重注）；`round 1, not re-oriented` = 未找到定向基因。
 - 输出目录里用户自己的文件和目录不会被移动或删除；同一目录再次运行会替换上一次的结果。

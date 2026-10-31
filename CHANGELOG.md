@@ -28,6 +28,8 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- tRNA Leu / Ser numbers follow MITOS2 2.1.10 for every taxon, vertebrates included (L1 = CUN, L2 = UUR, S1 = AGN,
+  S2 = UCN; NCBI's vertebrate records number them the other way): unchanged behaviour, now documented and tested.
 - Robustness round 2 (2026-10-31: every command fuzzed with 24 good / malformed inputs, four module reviews):
   - Reverse complement reversed the parts of every join (exons, trans-spliced and origin-crossing features came out
     scrambled after a record with cox1 on the minus strand was turned; 6 of 208 features in the test records), and

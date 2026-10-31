@@ -109,3 +109,11 @@ def test_trna_symbol_is_the_old_mito_trna_rule():
     for aa in list(mito_names.AA1_TO_3) + [""]:
         for ac in codons:
             assert mito_names.trna_symbol(aa, ac) == mito_trna.trna_name(aa, ac) == old(aa, ac)
+
+
+def test_leu_ser_numbers_follow_mitos2_for_every_taxon():
+    """User's decision 2026-10-31: follow MITOS2 (2.1.10: L1 = CUN, L2 = UUR, S1 = AGN, S2 = UCN codons) for every taxon,
+    vertebrates included, although NCBI's human record numbers them the other way."""
+    t = mito_names.trna_symbol
+    assert (t("L", "tag"), t("L", "taa"), t("S", "gct"), t("S", "tct"), t("S", "tga")) == \
+        ("trnL1", "trnL2", "trnS1", "trnS1", "trnS2")

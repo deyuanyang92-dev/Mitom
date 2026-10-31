@@ -124,8 +124,10 @@ def trna_number(qualifiers: dict) -> str:
 
 # ── tRNA gene symbols ────────────────────────────────────────────────────────────────────────────────────────────────
 def trna_symbol(aa: str, ac: str) -> str:
-    """trnL1/trnL2 and trnS1/trnS2 by anticodon (invertebrate convention: L1 = CUN (tag), L2 = UUR (taa);
-    S1 = AGN (tct/gct), S2 = UCN (tga))."""
+    """trnL1/trnL2 and trnS1/trnS2 by anticodon, the MITOS2 rule for every taxon, vertebrates included (MITOS2 2.1.10
+    mitos/trna/__init__.py: L1 = CTN, L2 = TTR, S1 = AGN, S2 = TCN codons): L1 = CUN (anticodon tag), L2 = UUR (taa),
+    S1 = AGN (tct / gct), S2 = UCN (tga). NCBI's vertebrate records (human NC_012920.1) number Leu / Ser the other way;
+    MitoM follows MITOS2 (user's decision 2026-10-31)."""
     if aa == "L":
         return "trnL1" if ac.endswith("ag") else "trnL2" if ac.endswith("aa") else "trnL"
     if aa == "S":
