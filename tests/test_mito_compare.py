@@ -54,3 +54,13 @@ def test_same_gene_is_same_after_rotation(tmp_path):
     SeqIO.write(rec_m, str(tmp_path / "m" / "X1.1.gb"), "genbank")
     n = mc.compare_dirs(tmp_path / "o", tmp_path / "m", tmp_path / "out.tsv")
     assert n["same"] == 1 and n["records"] == 1, dict(n)
+
+
+def test_ncbi_form_of_a_minus_strand_feature_across_the_origin():
+    """2026-10-31 review: complement(join(1,16306..16371)) (NCBI) read as a whole-genome span."""
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation
+    import mito_compare as mcmp
+    n = 16371
+    a = mcmp.span(CompoundLocation([FeatureLocation(16305, n, -1), FeatureLocation(0, 1, -1)]), n)
+    b = mcmp.span(CompoundLocation([FeatureLocation(0, 1, -1), FeatureLocation(16305, n, -1)]), n)
+    assert a == b == (16305, n + 1)

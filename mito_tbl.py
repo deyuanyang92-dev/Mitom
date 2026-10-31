@@ -14,7 +14,7 @@ Output (-o OUT):
                          genetic code, gene counts, warnings (and the NCBI ERROR / WARNING counts with --validate)
 Records:
   - the same record in two inputs (same ID and sequence) is written once; different records with one ID are renamed
-    ID_2, ID_3 ... (NCBI needs unique SeqIDs in a submission); an ID is cleaned to NCBI's characters
+    ID-2, ID-3 ... (NCBI needs unique SeqIDs in a submission); an ID is cleaned to NCBI's characters
     (A-Z a-z 0-9 _ - . : * #) and cut to 50
   - the FASTA header carries [organism=] (the source /organism), [location=mitochondrion] / [location=chloroplast]
     (from /organelle; none for a nuclear record), [topology=], [completeness=complete] for a circular record,
@@ -67,6 +67,7 @@ import copy
 import csv
 import io
 import re
+import subprocess
 import sys
 import unicodedata
 from collections import Counter, defaultdict
@@ -80,6 +81,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import ncbi_validate as nv  # noqa: E402  (the feature table and the FASTA header of the NCBI submission files)
 from mito_common import GB_SUFFIXES, iter_gb_files, run_tool, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 from mito_names import AA1_TO_3, AA3, PRODUCTS, gene_name, name_key, trna_name  # noqa: E402
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CODE, PHYLUM_SYNONYMS  # noqa: E402
 
@@ -355,8 +357,14 @@ def assign_ids(items) -> List[Tuple[Path, object, str, List[str]]]:
         if seqs.get(sid) == str(rec.seq).upper():
             continue                                   # the same record in another input: once
         if sid in used:
-            used[sid] += 1
-            new = clean_id(f"{sid[:MAX_ID - 4]}_{used[sid]}")
+            # '-N', not '_N': table2asn 1.28 hangs for ever on NC_012920.1 + NC_012920.1_2 in one file (2026-10-31);
+            # a name already taken by another record (X-2 given, then X twice) is skipped
+            k = max(used[sid], 1)
+            new = sid
+            while new in used:
+                k += 1
+                new = clean_id(f"{sid[:MAX_ID - 4]}-{k}")
+            used[sid] = k
             warn.append(f"ID {sid} also used by another record: written as {new}")
             sid = new
         used[sid] += 1
@@ -545,9 +553,15 @@ def write_pair(out: Path, name: str, entries: List[Entry], modifiers: bool) -> N
 def validate(out: Path, name: str, t2a: str, sbt: Optional[str]) -> Dict[str, Counter]:
     """table2asn on <name>.fsa (+ <name>.tbl) -> <name>.sqn, <name>.val; ERROR / WARNING per SeqID (submitter /
     publication messages left out, as in ncbi_validate.py)."""
-    run_tool([t2a, "-i", str(pair(out, name, ".fsa")), "-V", "vb", "-o", str(pair(out, name, ".sqn")),
-              *(["-t", sbt] if sbt else [])])
     per: Dict[str, Counter] = defaultdict(Counter)
+    try:
+        run_tool([t2a, "-i", str(pair(out, name, ".fsa")), "-V", "vb", "-o", str(pair(out, name, ".sqn")),
+                  *(["-t", sbt] if sbt else [])], timeout=nv.TABLE2ASN_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        per[""]["ERROR"] += 1                         # (it hung on some SeqIDs: never wait for ever)
+        print(f"mitom gb2tbl: table2asn did not finish in {nv.TABLE2ASN_TIMEOUT} s on {name}.fsa: not validated",
+              file=sys.stderr)
+        return per
     val = pair(out, name, ".val")
     for line in val.read_text(errors="ignore").splitlines() if val.is_file() else []:
         m = nv.MSG_RE.match(line.strip())
@@ -682,4 +696,4 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

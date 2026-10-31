@@ -112,6 +112,7 @@ DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
 from mito_common import (GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb,  # noqa: E402
                          write_tsv)                                                                       # (CC0)
+from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
 from mito_common import run_tool as run_program  # noqa: E402  (CC0: logged, e.g. by `mitom run --debug`)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
 TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII
@@ -191,11 +192,19 @@ class Model:
 TIMEOUT = 900                          # seconds per external program call (--timeout)
 
 
+_FAILED: set = set()                   # programs already reported as failed (one warning each)
+
+
 def run_tool(cmd: List[str], what: str) -> str:
     """Run an external program; on timeout or failure return '' and warn, so one hard
     sequence cannot stall or kill a batch."""
     try:
-        return run_program(cmd, timeout=TIMEOUT).stdout
+        p = run_program(cmd, timeout=TIMEOUT)
+        if p.returncode != 0 and what not in _FAILED:     # (2026-10-31 review: failures were silent: no introns)
+            _FAILED.add(what)
+            print(f"[mito_intron] WARNING: {what} failed (exit {p.returncode}): "
+                  f"{(p.stderr or '').strip()[-200:]} - its results are missing", file=sys.stderr)
+        return p.stdout
     except subprocess.TimeoutExpired:
         print(f"[mito_intron] {what} timed out after {TIMEOUT}s - skipped", file=sys.stderr)
     except OSError as exc:
@@ -1585,7 +1594,9 @@ def main(argv=None) -> int:
         ref = load_ref_gb(a.ref_gb, a.genetic_code)
         lib.update(ref)
         print(f"[mito_intron] + {len(ref)} reference proteins from --ref_gb", file=sys.stderr)
-    files = iter_files([a.input], GB_EXT)
+    src_in = prepare_input(a.input)
+    files = iter_files([src_in], GB_EXT)
+    require_records(len(files) and count_seq_records(src_in), "GenBank records", a.input)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     rows: List[dict] = []
@@ -1617,4 +1628,4 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

@@ -1285,3 +1285,20 @@ def test_cds_across_the_origin_without_stop_marked_3prime_partial():
     cds = _by(rec, "CDS", "ND4L")
     assert str(cds.extract(rec.seq)) == plus
     assert isinstance(cds.location.parts[-1].start, BeforePosition) and _mc().NO_STOP_NOTE in cds.qualifiers["note"], rows
+
+
+def test_internal_transl_except_kept_and_used_in_the_translation(tmp_path):
+    """2026-10-31 review: curation deleted every /transl_except; NCBI NC_001636.1 ATP8 / ND4 / CYTB (an ambiguous
+    codon read as Trp) got X in their translations. Every translation must equal NCBI's."""
+    import subprocess
+    src = Path(__file__).resolve().parent / "data" / "NC_001636.gb"
+    out = tmp_path / "o"
+    p = subprocess.run([sys.executable, str(Path(__file__).resolve().parent.parent / "mito_curate.py"), "-i", str(src),
+                        "-o", str(out), "--no_validate"], capture_output=True, text=True)
+    assert p.returncode == 0, p.stderr
+    a = SeqIO.read(str(src), "genbank")
+    b = SeqIO.read(str(out / src.name), "genbank")
+    want = sorted(f.qualifiers["translation"][0] for f in a.features if f.type == "CDS")
+    got = sorted(f.qualifiers.get("translation", [""])[0] for f in b.features if f.type == "CDS")
+    assert got == want
+    assert sum("aa:Trp" in q for f in b.features for q in f.qualifiers.get("transl_except", [])) == 3

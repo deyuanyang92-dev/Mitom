@@ -50,11 +50,13 @@ _PCG_SYNONYMS = {
 _CORE_BY_SYMBOL = {symbol: product for k, (symbol, product) in CORE_NAMES.items() if k in PCG}
 PCG_NAMES = {symbol: (_CORE_BY_SYMBOL[symbol], syns) for symbol, syns in _PCG_SYNONYMS.items()}
 PCG_SYN = {syn: name for name, (_, syns) in PCG_NAMES.items() for syn in syns}      # synonym key -> NCBI symbol
-RRNA_PRODUCT = {g: CORE_NAMES[g][1] for g in ("rrnS", "rrnL")}                    # rrnS / rrnL -> NCBI product
+RRNA_PRODUCT = {g: CORE_NAMES[g][1] for g in ("rrnS", "rrnL")}
+_CORE_BY_SYMBOL = {sym: core for core, (sym, _) in CORE_NAMES.items()}             # NCBI symbol -> core name                    # rrnS / rrnL -> NCBI product
 
 # ── normalised names of annotated features (mito_check, mito_compare, mito_intron_ref, benchmark) ────────────────
 RRNA_ALIAS = {"rrns": "rrnS", "srrna": "rrnS", "12s": "rrnS", "12srrna": "rrnS", "rns": "rrnS", "rrn12": "rrnS",
-              "rrnl": "rrnL", "lrrna": "rrnL", "16s": "rrnL", "16srrna": "rrnL", "rnl": "rrnL", "rrn16": "rrnL"}
+              "rrnl": "rrnL", "lrrna": "rrnL", "16s": "rrnL", "16srrna": "rrnL", "rnl": "rrnL", "rrn16": "rrnL",
+              "rnr1": "rrnS", "rnr2": "rrnL"}         # (RNR1 / RNR2: human NC_012920.1)
 ALIAS = {"coi": "cox1", "coii": "cox2", "coiii": "cox3", "co1": "cox1", "co2": "cox2", "co3": "cox3",
          "cytb": "cob", "cyb": "cob", "nd1": "nad1", "nd2": "nad2", "nd3": "nad3", "nd4": "nad4", "nd4l": "nad4l",
          "nd5": "nad5", "nd6": "nad6", "atpase6": "atp6", "atpase8": "atp8", **RRNA_ALIAS}
@@ -72,6 +74,9 @@ def gene_name(qualifiers: dict, ftype: str, atp9: bool = False) -> str:
     pcg = PCG | {"atp9"} if atp9 else PCG
     g = re.sub(r"[^a-z0-9]", "", (qualifiers.get("gene", [""])[0] or "").lower())
     g = ALIAS.get(g, g)
+    if g not in pcg and g in PCG_SYN and g != "atp":   # curate's synonyms (NADH4L, nadh6, COXI: 2026-10-31 review;
+        #                                                   a bare "atp" stays ambiguous)
+        g = _CORE_BY_SYMBOL.get(PCG_SYN[g], g)
     m = re.fullmatch(r"(cox[123]|nad[1-6]|nad4l|atp[689]|cob)[abc]" if atp9 else
                      r"(cox[123]|nad[1-6]|nad4l|atp[68]|cob)[abc]", g)
     if m:

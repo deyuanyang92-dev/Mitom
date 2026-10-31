@@ -98,8 +98,10 @@ import mito_env  # noqa: E402  (finds external programs: config, PATH, conda env
 # N1: NCBI gene symbols, products and synonyms; tRNA names trnL1/L2, trnS1/S2 by anticodon (mito_names.py)
 from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key as key, trna_symbol  # noqa: E402
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
+from mito_names import PRODUCT as RRNA_PRODUCT_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
                          transl_except_term, write_tsv)
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 import mito_start  # noqa: E402  (P11: the start codon NCBI records choose, learned)
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
@@ -187,6 +189,47 @@ def record_phylum(rec) -> str:
     return next((t for t in tax if t in METAZOAN_PHYLA), "") or next((PHYLUM_SYNONYMS[t] for t in tax
                                                                        if t in PHYLUM_SYNONYMS), "")
 
+
+
+_EXCEPT_RE = re.compile(r"pos:(complement\()?(\d+)\.\.(\d+)\)?,aa:(\w+)")
+
+
+def internal_excepts(f: SeqFeature) -> List[str]:
+    """Keep the /transl_except of codons inside the gene (an ambiguous codon read as Trp, NCBI NC_001636.1 ATP8) and
+    drop the TERM one of the old stop (written again by the caller) and any outside the final location; returns the
+    kept ones (2026-10-31 review: every /transl_except was deleted - X in the translations)."""
+    pos = {i for p in f.location.parts for i in range(int(p.start), int(p.end))}
+    keep = []
+    for q in f.qualifiers.get("transl_except", []):
+        m = _EXCEPT_RE.search(q.replace(" ", ""))
+        if m and m.group(4).upper() != "TERM" and int(m.group(2)) - 1 in pos and int(m.group(3)) - 1 in pos:
+            keep.append(q)
+    if keep:
+        f.qualifiers["transl_except"] = keep
+    else:
+        f.qualifiers.pop("transl_except", None)
+    return list(keep)
+
+
+def apply_excepts(f: SeqFeature, prot: str, offset: int = 0) -> str:
+    """prot with the amino acids of the feature's internal /transl_except (Trp for an NCC codon ...)."""
+    from Bio.SeqUtils import seq1
+    order = [i for p in f.location.parts for i in (range(int(p.start), int(p.end)) if p.strand != -1
+                                                    else range(int(p.end) - 1, int(p.start) - 1, -1))]
+    index = {g: k for k, g in enumerate(order)}
+    out = list(prot)
+    for q in f.qualifiers.get("transl_except", []):
+        m = _EXCEPT_RE.search(q.replace(" ", ""))
+        if not m or m.group(4).upper() == "TERM":
+            continue
+        first = int(m.group(3)) - 1 if m.group(1) else int(m.group(2)) - 1      # the codon's first base (transcript)
+        k = index.get(first)
+        if k is None or (k - offset) % 3:
+            continue
+        aa = seq1(m.group(4)) if len(m.group(4)) == 3 else m.group(4)[:1]
+        if 0 <= (k - offset) // 3 < len(out) and aa and aa != "X":
+            out[(k - offset) // 3] = aa
+    return "".join(out)
 
 class Curator:
     def __init__(self, rec, code: int, a):
@@ -529,13 +572,13 @@ class Curator:
         # stop qualifiers
         nt = s[new_a - 1:new_b]
         tail = len(nt) % 3
-        for k in ("transl_except",):
-            f.qualifiers.pop(k, None)
+        internal_excepts(f)                             # the old TERM exception goes; codon exceptions inside stay
         loc = f.location                               # an end left 3'-partial (cut by a linear sequence end) may continue
         cut = isinstance(loc.end, AfterPosition) if loc.strand == 1 else isinstance(loc.start, BeforePosition)
         if abbreviated_stop(nt) and not cut:           # (table2asn PartialProblemHasStop with a T / TA stop)
             gs, ge = span(f)
-            f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1, tail)]
+            f.qualifiers["transl_except"] = internal_excepts(f) + [transl_except_term(gs, ge, 1 if f.location.strand == 1
+                                                                                      else -1, tail)]
             notes = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n]
             f.qualifiers["note"] = notes + [POLYA_NOTE]
         f.qualifiers.pop("translation", None)          # stale after coordinate changes
@@ -611,6 +654,11 @@ class Curator:
             return
         head, tail = f.location.parts                  # transcript order: the part before the origin first
         if len(tail) > MAX_ORIGIN_EXT or len(head) < 60:
+            return
+        nt = str(f.location.extract(self.rec.seq)).upper()
+        if ends_with_stop(nt, self.stops) and "*" not in codon_translate(nt[:len(nt) - len(nt) % 3], self.code)[:-1]:
+            # a complete gene across the origin (NCBI / MITOS2 records, a rotated input): not the core's run-on into
+            # cox1 (2026-10-31 review: ~25 real genes were cut in half, some given an invented T / TA stop)
             return
         f.location = FeatureLocation(head.start, head.end, head.strand)
         g = gene_feature(self.rec, f)
@@ -756,12 +804,13 @@ class Curator:
         if g is not None:                              # the gene spans the whole join (NCBI)
             gs, ge = span(f)
             g.location = FeatureLocation(gs - 1, ge, strand=f.location.strand)
-        f.qualifiers.pop("transl_except", None)
+        internal_excepts(f)
         notes = [x for x in f.qualifiers.get("note", []) if x not in (ND3_NOTE, FRAMESHIFT_NOTE, POLYA_NOTE)]
         notes.append(ND3_NOTE if name == "ND3" and self.code == 2 and abs(p - S + 1 - ND3_EXTRA) <= 10 else FRAMESHIFT_NOTE)
         if tail:
             gs, ge = span(f)
-            f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1, tail)]
+            f.qualifiers["transl_except"] = internal_excepts(f) + [transl_except_term(gs, ge, 1 if f.location.strand == 1
+                                                                                      else -1, tail)]
             notes.append(POLYA_NOTE)
         f.qualifiers["note"] = notes
         self.joined.add(id(f))
@@ -839,7 +888,7 @@ class Curator:
         s = self.tseq(f)
         a, b = self.tx(f)
         nt = s[a - 1:b]
-        prot = codon_translate(nt, self.a.genetic_code)
+        prot = codon_translate(nt, self.code)
         n_stop = prot.rstrip("*").count("*")
         if n_stop:
             self.log(f, "P4", span(f), span(f), f"{n_stop} internal stop codon(s): wrong frame, frameshift "
@@ -858,7 +907,7 @@ class Curator:
                 FeatureLocation(loc.start, AfterPosition(loc.end), loc.strand)
             f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if n != NO_START_NOTE] + [NO_START_NOTE]
             self.log(f, "P5", span(f), span(f), f"first codon {nt[:3]} is not a start codon of table "
-                     f"{self.a.genetic_code}: CDS marked 5'-partial, 'start codon not determined' (NCBI practice)")
+                     f"{self.code}: CDS marked 5'-partial, 'start codon not determined' (NCBI practice)")
         tail = len(nt) % 3
         has_stop = ends_with_stop(nt, self.stops)              # (the last 3 nt are out of frame when there is a tail)
         if tail and not has_stop:
@@ -890,6 +939,7 @@ class Curator:
         if not nt:
             return
         prot = str(Seq(nt).translate(table=self.code))
+        prot = apply_excepts(f, prot, int(f.qualifiers.get("codon_start", ["1"])[0]) - 1)
         prot = prot[:-1] if prot.endswith("*") else prot
         p5 = f.location.parts[0]                       # 5'-most part (transcript order)
         partial5 = isinstance(p5.end, AfterPosition) if f.location.strand == -1 else isinstance(p5.start, BeforePosition)
@@ -1084,8 +1134,10 @@ class Curator:
         call and is removed (NC_061193.1 flatworm 'atp8' around tRNA-Glu, NC_013814.1 chaetognath 'atp6' around
         tRNA-Phe: neither phylum has the gene); a complete gene is kept and the conflict reported (P4)."""
         for c in [x for x in self.rec.features if x.type == "CDS"]:
+            # inside one PART of the CDS: the hull of a join across the origin is 1..L and 'contains' every tRNA
+            # (2026-10-31 review: partial cox1 / nad5 across the origin were removed by C1)
             inside = [t for t in self.rec.features if t.type == "tRNA" and t.location.strand == c.location.strand
-                      and span(c)[0] <= span(t)[0] and span(t)[1] <= span(c)[1] and simple(t)]
+                      and simple(t) and any(a <= span(t)[0] and span(t)[1] <= b for a, b in spans(c))]
             if not inside:
                 continue
             notes = c.qualifiers.get("note", [])
@@ -1124,8 +1176,10 @@ class Curator:
             if name:
                 q = {"gene": [name], "product": [PCG_NAMES[name][0]]}
         elif f.type == "rRNA":
-            name = RRNA_NAMES.get(key(cur)) or \
-                {"12sribosomalrna": "rrnS", "16sribosomalrna": "rrnL"}.get(key(f.qualifiers.get("product", [""])[0]))
+            prod = f.qualifiers.get("product", [""])[0]
+            name = RRNA_NAMES.get(key(cur)) or RRNA_PRODUCT_NAMES.get(prod.strip().lower()) or RRNA_NAMES.get(key(prod)) \
+                or {"12sribosomalrna": "rrnS", "16sribosomalrna": "rrnL"}.get(key(prod))   # (2026-10-31 review: l-rRNA,
+            #                                                                 small subunit ribosomal RNA were not read)
             if name:
                 q = {"gene": [name], "product": [RRNA_PRODUCT[name]]}
         elif f.type == "tRNA":
@@ -1152,6 +1206,9 @@ class Curator:
             if f.type in ("CDS", "rRNA", "tRNA"):
                 self.log(f, "N1", span(f), span(f), f"gene name '{cur}' not recognised - kept")
             return
+        if g is None and not cur and f.type != "CDS":
+            q.pop("gene", None)          # no gene feature and no /gene: none added (table2asn GeneXrefWithoutGene x 22
+            #                              on the tRNAs / rRNAs of NCBI NC_001636.1, 2026-10-31 review)
         for k, v in q.items():
             if v:
                 f.qualifiers[k] = v
@@ -1228,12 +1285,21 @@ def compare_validation(before: List[Dict[str, str]], after: List[Dict[str, str]]
     return rows
 
 
+def record_code(rec) -> Optional[int]:
+    """The genetic code of a record: the most common CDS /transl_table (None without one)."""
+    codes = [int(f.qualifiers["transl_table"][0]) for f in rec.features
+             if f.type == "CDS" and str(f.qualifiers.get("transl_table", [""])[0]).isdigit()]
+    return max(set(codes), key=codes.count) if codes else None
+
+
 def main(argv=None) -> int:
     from Bio import SeqIO
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-i", "--input", required=True)
     p.add_argument("-o", "--out", required=True)
-    p.add_argument("--genetic_code", type=int, default=5)
+    p.add_argument("--genetic_code", type=int, default=None,
+                   help="Genetic code (default: each record's CDS /transl_table, else 5; 2026-10-31 review: code 5 was "
+                        "used for every record - vertebrate AGG stops read through)")
     p.add_argument("--rrna_bounds", choices=["trim", "fill"], default="fill",
                    help="fill (default): remove overlaps with flanking genes and extend rRNA ends to them (gaps <= "
                         "--max_fill), the GenBank convention; trim: only remove overlaps (Fourdrilis criterion vi). "
@@ -1270,8 +1336,9 @@ def main(argv=None) -> int:
     p.add_argument("--table2asn", default=None,
                    help="NCBI table2asn for validation before/after curation (default: found by mito_env.py)")
     p.add_argument("--no_validate", action="store_true", help="Skip the NCBI validation before/after curation")
+    p.add_argument("--allow_empty", action="store_true", help=argparse.SUPPRESS)   # mitom run: a folder of 0 records
     a = p.parse_args(argv)
-    src, out = Path(a.input), Path(a.out)
+    src, out = Path(prepare_input(a.input)), Path(a.out)
     a.start_model_obj = None if a.start_model == "no" else mito_start.load(None if a.start_model == "auto" else a.start_model)
     if a.start_model not in ("auto", "no") and a.start_model_obj is None:
         p.error(f"--start_model {a.start_model}: no such model")
@@ -1285,14 +1352,17 @@ def main(argv=None) -> int:
     files = iter_gb_files(src) if src.is_dir() else [src]
     out.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, str]] = []
+    n_recs = 0
     for f in files:
         recs = list(SeqIO.parse(str(f), "genbank"))
+        n_recs += len(recs)
         for i, rec in enumerate(recs):
             if t2a:
                 val_before += nv.validate_record(copy.deepcopy(rec), out / "validation" / "before", t2a)
             backup = copy.deepcopy(rec)                  # run() edits in place: a failure must not leave a half-curated record
             try:
-                cur = Curator(rec, a.genetic_code, a)
+                code = a.genetic_code or record_code(rec) or 5
+                cur = Curator(rec, code, a)
                 rows += cur.run()
                 start_rows += cur.start_rows
             except Exception as exc:
@@ -1304,6 +1374,8 @@ def main(argv=None) -> int:
         dest = out / (f.relative_to(src) if src.is_dir() else f.name)
         dest.parent.mkdir(parents=True, exist_ok=True)
         SeqIO.write(recs, str(dest), "genbank")      # always: N1 names / gene ranges change without a report row
+    if not n_recs and not (src.is_dir() and a.allow_empty):
+        require_records(0, "GenBank records", a.input)
     cols = ["record", "feature", "gene", "strand", "rule", "old", "new", "reason"]
     write_tsv(out / "curation_report.tsv", cols, rows)
     if a.dump_starts:
@@ -1327,4 +1399,4 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

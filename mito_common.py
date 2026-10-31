@@ -11,6 +11,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from dataclasses import dataclass
@@ -102,11 +103,22 @@ def write_nonempty_table(out_path: Path, header: str, rows: List[str]) -> None:
             fh.write(r + "\n")
 
 
+# INSDC qualifiers without a value (/pseudo): Biopython reads them as '' (2026-10-31 review: /pseudo="" in the output)
+FLAG_QUALIFIERS = ("pseudo", "ribosomal_slippage", "trans_splicing", "environmental_sample", "germline", "focus",
+                   "macronuclear", "proviral", "rearranged", "transgenic", "partial")
+
+
 def write_gb(recs, path) -> None:
     """Write GenBank records atomically: a temporary file in the same folder replaces `path` only when complete, so a
     failure (or a killed run) never leaves a half-written file; permissions as the file had (a new file: umask)."""
     from Bio import SeqIO
     path = Path(path)
+    recs = list(recs) if not isinstance(recs, SeqRecord) else [recs]
+    for rec in recs:                                 # value-less qualifiers read back as '' would be written /pseudo=""
+        for f in rec.features:
+            for q in FLAG_QUALIFIERS:
+                if f.qualifiers.get(q) == [""]:
+                    f.qualifiers[q] = [None]
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w") as h:
@@ -160,7 +172,13 @@ def topology_from_header(description: str) -> str:
 def contig_record_id(prefix: str, seq_id: str, k: int, n_seqs: int) -> str:
     """Record name of sequence k of a sample as the core gives it: the prefix for one sequence, else the sequence's
     own (cleaned, <= 16 characters) name."""
-    return prefix if n_seqs == 1 else (re.sub(r"[^A-Za-z0-9_.-]", "_", seq_id)[:16] or f"{prefix}_{k + 1}")
+    if n_seqs == 1:
+        return prefix
+    name = re.sub(r"[^A-Za-z0-9_.-]", "_", seq_id)
+    if len(name) > 16:              # cut names end with their number: TRINITY_DN1000_c0_g1_i1 / _i2 were one (2026-10-31)
+        tag = f"_{k + 1}"
+        name = name[:16 - len(tag)].rstrip("_.-") + tag
+    return name or f"{prefix}_{k + 1}"
 
 
 # ── the annotation core's genes (mito_core.py; its tRNA step in mito_trna.py) ─────────────────────────────────────
@@ -188,8 +206,9 @@ def rc_location(loc, seq_len: int):
     """loc on the reverse complement of a sequence of length seq_len; partial ends stay partial and change sides
     (a 5'-partial plus-strand start <s becomes a 5'-partial minus-strand end >)."""
     if isinstance(loc, CompoundLocation):
-        return CompoundLocation(
-            [rc_location(p, seq_len) for p in loc.parts][::-1], operator=loc.operator)
+        # parts are in transcript order and stay so: exon 1 is still exon 1 on the other strand (2026-10-31 review:
+        # the parts were reversed - every exon, trans-spliced and origin-crossing feature scrambled after an RC)
+        return CompoundLocation([rc_location(p, seq_len) for p in loc.parts], operator=loc.operator)
     start, end = int(loc.start), int(loc.end)
     new_strand  = None if loc.strand is None else (-loc.strand)
     new_start = BeforePosition(seq_len - end) if isinstance(loc.end, AfterPosition) else seq_len - end
@@ -333,8 +352,9 @@ def shift_location(location, shift: int, seq_len: int):
     if start <= end:
         return FeatureLocation(start, end, strand=strand)
 
-    return CompoundLocation([FeatureLocation(start, seq_len, strand=strand),
-                              FeatureLocation(0, end, strand=strand)])
+    parts = [FeatureLocation(start, seq_len, strand=strand), FeatureLocation(0, end, strand=strand)]
+    return CompoundLocation(parts[::-1] if strand == -1 else parts)   # transcript order: the minus strand from the
+    #                                                                   new start's side (2026-10-31 review)
 
 
 def feature_start_pos(feat: "SeqFeature") -> int:
@@ -441,10 +461,17 @@ def run_tool(cmd, *, cwd=None, env=None, timeout=None, check: bool = False, capt
     return p
 
 
+TOOL_TIMEOUT = 3600   # s: one program of the annotation core on one genome (blastx / exonerate / cmsearch: seconds)
+
+
 def run_or_raise(cmd, **kw) -> subprocess.CompletedProcess:
     """run_tool for the annotation core's programs: RuntimeError('<program> failed (<exit code>): <end of stderr>')
-    when the program fails."""
-    p = run_tool(cmd, **kw)
+    when the program fails, or does not finish within TOOL_TIMEOUT s (a hung program never stalls a run)."""
+    kw.setdefault("timeout", TOOL_TIMEOUT)
+    try:
+        p = run_tool(cmd, **kw)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"{Path(cmd[0]).name} did not finish in {kw['timeout']} s (stopped)") from None
     if p.returncode != 0:
         raise RuntimeError(f"{Path(cmd[0]).name} failed ({p.returncode}): {p.stderr.strip()[-400:]}")
     return p
@@ -456,3 +483,129 @@ def safe_copy(src: Path, dst: Path) -> None:
         shutil.copy2(str(src), str(dst))
     except shutil.SameFileError:
         pass
+
+
+# ── command-line robustness (2026-10-31 fuzz test: tracebacks and silent 'success' on bad input) ───────────────────
+class InputError(Exception):
+    """A problem with what the user gave (file missing, unreadable, no records): one clear line, exit 2."""
+
+
+def require_records(n: int, what: str, path) -> None:
+    """InputError when an input gave no records (empty, not GenBank / FASTA, all records unreadable)."""
+    if not n:
+        raise InputError(f"no {what} in {path} (empty file, wrong format, or a folder without such files)")
+
+
+def require_path(path, what: str = "input") -> Path:
+    p = Path(path)
+    if not p.exists():
+        raise InputError(f"{what} not found: {p}")
+    return p
+
+
+_TEMP_INPUTS: List[Path] = []
+
+
+def prepare_input(path, what: str = "input", in_place: bool = False) -> str:
+    """The input as the tools read it: it must exist; gzip (.gz), UTF-8 with a byte-order mark and Latin-1 text are
+    unpacked / converted into a temporary folder (removed at exit). A tool that changes its input in place cannot
+    work on such a copy: InputError then (unpack / convert the files first)."""
+    import atexit
+    import tempfile
+    p = require_path(path, what)
+    import mitom_inputs                                  # (imports mito_common: loaded here, not at the top)
+    tmp = Path(tempfile.mkdtemp(prefix="mitom_input."))
+    new, notes = mitom_inputs.normalize_input(p, tmp)
+    if not notes:
+        shutil.rmtree(tmp, ignore_errors=True)
+        return str(p)
+    if in_place:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise InputError(f"{p}: {'; '.join(notes)} - this command writes into its input: unpack / convert the "
+                         f"files first (gunzip; save as UTF-8)")
+    if not _TEMP_INPUTS:
+        atexit.register(lambda: [shutil.rmtree(d, ignore_errors=True) for d in _TEMP_INPUTS])
+    _TEMP_INPUTS.append(tmp)
+    for n in notes:
+        print(f"[input] {n}", file=sys.stderr)
+    return str(new)
+
+
+def _from_biopython(exc: BaseException) -> bool:
+    tb = exc.__traceback__
+    while tb is not None:
+        if "/Bio/" in tb.tb_frame.f_code.co_filename.replace("\\", "/"):
+            return True
+        tb = tb.tb_next
+    return False
+
+
+def cli_guard(main, argv=None) -> int:
+    """Run a command's main(): problems of the input (InputError, a missing / unreadable file, text that is not UTF-8,
+    a file Biopython cannot parse) end with one 'ERROR: ...' line and exit 2 instead of a traceback; with --debug /
+    MITOM_DEBUG=1 the traceback is shown as well. Other exceptions (bugs) are not hidden."""
+    try:
+        return main(argv) if argv is not None else main()
+    except (InputError, FileNotFoundError, IsADirectoryError, NotADirectoryError, UnicodeDecodeError) as exc:
+        msg = str(exc) if isinstance(exc, InputError) else f"{type(exc).__name__}: {exc}"
+    except ValueError as exc:                            # a malformed GenBank / FASTA / EMBL file
+        if not _from_biopython(exc):
+            raise
+        msg = f"cannot read the input ({exc}); is it a complete GenBank / FASTA / EMBL file?"
+    if debug_mode():
+        import traceback
+        traceback.print_exc()
+    print(f"ERROR: {msg}", file=sys.stderr)
+    return 2
+
+
+def count_seq_records(path) -> int:
+    """Records in a GenBank / FASTA / EMBL file or in the such files below a folder (a parse error is raised)."""
+    from Bio import SeqIO
+    p = Path(path)
+    fasta = (".fa", ".fasta", ".fna", ".fas")
+    files = [p] if p.is_file() else sorted(x for x in p.rglob("*") if x.is_file()
+                                           and x.suffix.lower() in GB_SUFFIXES + fasta + (".embl",))
+    n = 0
+    for f in files:
+        head = f.read_text(encoding="utf-8", errors="replace")[:2000].lstrip()
+        fmt = "fasta" if head.startswith(">") else "embl" if head.startswith("ID ") else "genbank"
+        n += sum(1 for _ in SeqIO.parse(str(f), fmt))
+    return n
+
+
+_LOCUS_SIZE = re.compile(r"^LOCUS\s+\S+\s+(\d+)\s+(?:bp|aa)", re.M)
+
+
+def truncated_genbank(path, records) -> List[int]:
+    """Indexes of records of a GenBank file that are cut off: the sequence shorter than the LOCUS length, or the last
+    record without its closing '//' (a download killed or out of disk space; Biopython reads such a record as if it
+    were complete - 2026-10-31 review: a cut genome was annotated as a closed circle)."""
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    sizes = [int(x) for x in _LOCUS_SIZE.findall(text)]
+    bad = []
+    for i, rec in enumerate(records):
+        try:
+            n = len(rec.seq)
+            str(rec.seq[:1])
+        except Exception:                                # no sequence (CONTIG): handled by the caller
+            continue
+        if i < len(sizes) and n and n != sizes[i]:
+            bad.append(i)
+    if records and not re.search(r"^//[ \t]*\s*\Z", text[-200:], re.M) and len(records) - 1 not in bad:
+        bad.append(len(records) - 1)
+    return bad
+
+
+def unique_path(path: Path, used: set) -> Path:
+    """path, or path with _2, _3 ... before the suffix when this command already wrote that name (input files with
+    one name in two subfolders overwrote each other's output, 2026-10-31 review)."""
+    p, k = Path(path), 2
+    while str(p) in used:
+        p = Path(path).with_name(f"{Path(path).stem}_{k}{Path(path).suffix}")
+        k += 1
+    used.add(str(p))
+    return p

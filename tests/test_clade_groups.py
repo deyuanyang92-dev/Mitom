@@ -161,3 +161,44 @@ def test_codons_seen_no_more_often_than_tag_are_noise():
            "TGA": Counter(W=50), "TAA": Counter(Y=4, L=3), "TAG": Counter(L=3, F=2)}
     sc = mc.codon_scores(obs, n_codons=8000)
     assert 2 in sc and max(sc, key=sc.get) in (2, 5)       # AGR / TAA not informative: 2 and 5 tie on ATA AAA TGA
+
+
+def test_merge_never_overwrites_a_name_of_another_group(tmp_path):
+    outs = {}
+    for g in ("A_gc5", "B_gc4"):
+        o = tmp_path / g / "out"
+        (o / "final_annotation").mkdir(parents=True)
+        (o / "final_annotation" / "NODE_1.gb").write_text(f"LOCUS {g}\n//\n")
+        outs[g] = o
+    dest = tmp_path / "m"
+    dest.mkdir()
+    mg.merge_outputs(dest, outs)
+    got = sorted(p.name for p in (dest / "final_annotation").iterdir())
+    assert got == ["NODE_1.B_gc4.gb", "NODE_1.gb"]
+
+
+def test_fasta_names_unique_over_groups(tmp_path):
+    """2026-10-31 review: SPAdes 'NODE_1' in two files of two phyla: one result replaced the other."""
+    p = tmp_path / "in"
+    p.mkdir()
+    (p / "a.fasta").write_text(">NODE_1 x\n" + "ACGT" * 300 + "\n")
+    (p / "b.fasta").write_text(">NODE_1 y\n" + "ACGT" * 300 + "\n")
+    plan = mg.Plan(rows=[mg.Row("NODE_1", "a.fasta", group="A_gc5"), mg.Row("NODE_1", "b.fasta", group="B_gc4")])
+    ins = mg._split_input(plan, argparse.Namespace(input=str(p)), tmp_path / "_groups")
+    heads = sorted(line for f in ins.values() for x in (f.iterdir() if f.is_dir() else [f])
+                   for line in x.read_text().splitlines() if line.startswith(">"))
+    assert heads == [">NODE_1 x", ">NODE_1_2 y"]
+
+
+def test_one_bad_record_does_not_stop_the_classification_of_the_others(monkeypatch):
+    def fake(rid, seq, *a, **k):
+        if rid == "bad":
+            raise RuntimeError("blastx failed on cox1.fas")
+        return mc.Classification(rid, phylum="Chordata", genetic_code=2, support=1.0)
+    monkeypatch.setattr(mc, "classify_seq", fake)
+    monkeypatch.setattr(mc.mito_env, "find", lambda *a, **k: "/bin/true")
+    import tempfile
+    d = Path(tempfile.mkdtemp())
+    (d / "featureProt").mkdir()
+    got = mc.classify_records([("good", "ACGT"), ("bad", "ACGT")], str(d), threads=2)
+    assert got[0].phylum == "Chordata" and "blastx failed" in got[1].note

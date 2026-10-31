@@ -123,8 +123,10 @@ def test_reverse_complement_keeps_and_swaps_partial_ends():
     a, b, c = (f.location for f in rc.features)
     assert (int(a.start), int(a.end), a.strand) == (L - 200, L, -1) and isinstance(a.end, AfterPosition)
     assert (int(b.start), int(b.end), b.strand) == (0, L - 1500, 1) and isinstance(b.start, BeforePosition)
-    # minus-strand join in transcript order: the 3'-partial piece first (its 3' end is its start), the 5'-partial last
-    assert isinstance(c.parts[0].start, BeforePosition) and isinstance(c.parts[-1].end, AfterPosition)
+    # minus-strand join, transcript order kept: exon 1 (5'-partial, now its 5' end is the high end >) first, the
+    # 3'-partial exon (its 3' end now the low end <) last (2026-10-31: the parts were reversed)
+    assert isinstance(c.parts[0].end, AfterPosition) and isinstance(c.parts[-1].start, BeforePosition)
+    assert int(c.parts[0].start) > int(c.parts[-1].start)
     back = bm.reverse_complement_record(rc)
     assert [str(f.location) for f in back.features] == [str(f.location) for f in r.features]
 
@@ -174,3 +176,37 @@ def test_rotation_and_reverse_complement_move_transl_except_and_anticodon():
     check(bm.rotate_record(r, 1032))                                   # the anticodon is cut by the new origin
     check(bm.reverse_complement_record(rot))
     check(bm.rotate_record(bm.reverse_complement_record(r), 1500))
+
+
+def test_rotation_and_reverse_complement_keep_every_feature_sequence():
+    """2026-10-31 review: rc_location reversed the parts of every join, shift_location wrote a minus-strand feature
+    across the new origin in the wrong order. Every feature's sequence must survive random rotations, reverse
+    complements and both, on real records with introns, origin-crossing and trans-spliced features."""
+    import random
+    from Bio import SeqIO
+    import mito_common as mcm
+    rnd = random.Random(5)
+    n_checked = 0
+    for name in ("NC_000933.gb", "NC_008164.gb", "NC_010217.gb", "NC_056771.gb", "NC_000931.gb"):
+        rec = SeqIO.read(str(Path(__file__).resolve().parent / "data" / name), "genbank")
+        L = len(rec.seq)
+        want = {(f.type, i): str(f.extract(rec.seq)) for i, f in enumerate(rec.features) if f.type != "source"}
+        for trial in range(12):
+            k = rnd.randrange(1, L)
+            rot = rec[k:] + rec[:k]                          # the expected rotated sequence
+            feats = [f for f in rec.features]
+            new_feats = [mcm.shift_location(f.location, k, L) for f in feats]
+            for (i, f), loc in zip(enumerate(feats), new_feats):
+                if f.type != "source":
+                    assert str(loc.extract(rot.seq)) == want[(f.type, i)], (name, k, f.type, f.qualifiers.get("gene"))
+                    n_checked += 1
+            rc = mcm.reverse_complement_record(rec)
+            for i, f in enumerate(rc.features):
+                if f.type != "source":
+                    assert str(f.extract(rc.seq)) == want[(f.type, i)], (name, "rc", f.type, f.qualifiers.get("gene"))
+            both = [mcm.shift_location(f.location, k, L) for f in rc.features]
+            rc_rot = rc[k:] + rc[:k]
+            for i, (f, loc) in enumerate(zip(rc.features, both)):
+                if f.type != "source":
+                    assert str(loc.extract(rc_rot.seq)) == want[(f.type, i)], (name, "rc+rot", k, f.type)
+    assert n_checked > 1000

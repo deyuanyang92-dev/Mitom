@@ -38,6 +38,7 @@ from Bio import Entrez, SeqIO
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_common import gb_fasta_record, old_spelling, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 
 ESEARCH_PAGE = 10000          # NCBI maximum retmax of one esearch request
 ACC_BATCH = 500               # UIDs per efetch rettype=acc request
@@ -128,6 +129,16 @@ def existing_accessions(gb_path: Path) -> Dict[str, str]:
     out: Dict[str, str] = {}
     if not gb_path.is_file() or gb_path.stat().st_size == 0:
         return out
+    text = gb_path.read_text(encoding="utf-8", errors="replace")
+    end = text.rfind("\n//")
+    tail = text[end + 3:] if end >= 0 else text
+    if tail.strip():                                     # a cut-off last record (killed / out of disk): removed, so
+        keep = text[:end + 3] + "\n" if end >= 0 else ""   # that the resume downloads it again (2026-10-31 review)
+        logging.warning(f"[FETCH] {gb_path.name}: the last record is cut off ({len(tail)} bytes after the last //): "
+                        f"removed, downloaded again")
+        gb_path.write_text(keep, encoding="utf-8")
+        if not keep:
+            return out
     for rec in SeqIO.parse(str(gb_path), "genbank"):
         acc_ver = rec.id
         out[acc_ver] = acc_ver.split(".")[0]
@@ -279,4 +290,4 @@ def main(argv: Optional[List[str]] = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

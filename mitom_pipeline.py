@@ -59,7 +59,7 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (command_line, debug_mode, GB_SUFFIXES, gb_fasta_record, iter_gb_files, old_spelling,  # noqa: E402,F401
+from mito_common import (InputError, cli_guard, count_seq_records, unique_path, prepare_input, require_records, command_line, debug_mode, GB_SUFFIXES, gb_fasta_record, iter_gb_files, old_spelling,  # noqa: E402,F401
                          reports_dir, run_tool,  # noqa: F401
                          safe_copy, safe_name, write_nonempty_list, write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
@@ -98,7 +98,7 @@ from mitom_snakemake import (AnnotTask, int_mem_mb, render_snakemake_snakefile, 
 from mitom_stage import (annotate_one, engine_cmd, ENGINE_LABEL, MITO_CORE, MITO_ENGINES,  # noqa: E402,F401
                          native_core_cmd, run_annotation_stage, run_cmd_capture, run_phase2,  # noqa: F401
                          sample_lineage, STAGE_LABEL, write_input_annotation)  # noqa: F401
-from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_genbank_output, new_reports,  # noqa: E402,F401
+from mitom_output import (clear_previous_work, cleanup_intermediates, counts_from_genbank, finalize_genbank_output, new_reports,  # noqa: E402,F401
                           INTERMEDIATE_DIRS, _LOCUS_NAME_MAXLEN, merge_gb_files, organize_outputs,  # noqa: F401
                           OUTPUT_LAYOUT, refresh_summary, REPORT_FILES, REPORT_NOTES,  # noqa: F401
                           rewrite_genbank_record_ids, RunSummary, WORK_DIRS, write_summary)  # noqa: F401
@@ -361,6 +361,7 @@ KNOWN_LIMITATION = ("[KNOWN_LIMITATION] the annotation core does not annotate in
 def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
+    clear_previous_work(out_root, keep=("00.input", "00.imported"))
     new_reports(out_root)
     setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
     log_environment(args)
@@ -466,8 +467,13 @@ def workflow_reorient(args: argparse.Namespace) -> int:
     summary      = RunSummary()
     summary_rows: List[str] = []
 
+    used_samples: set = set()
     for gb_in in gb_files:
-        sample     = safe_name(gb_in.stem)
+        sample = base = safe_name(gb_in.stem)
+        k = 2
+        while sample in used_samples:                  # a/rec.gb and b/rec.gb: rec and rec_2, not one overwritten
+            sample, k = f"{base}_{k}", k + 1
+        used_samples.add(sample)
         gb_out     = out_dir     / f"{sample}.gbf"
         gb_no_gene = no_gene_dir / f"{sample}.gbf"
         try:
@@ -496,6 +502,10 @@ def workflow_reorient(args: argparse.Namespace) -> int:
     write_table(out_root / "annotation-summary.tsv", "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok",
                 summary_rows)
     summary.log()
+    if summary.reorient_failed:                        # (2026-10-31 review: exit 0 when every input failed)
+        print(f"mitom reorient: {len(summary.reorient_failed)} of {len(gb_files)} file(s) failed: "
+              f"{', '.join(summary.reorient_failed[:5])} (see {out_root / 'pipeline.log'})", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -509,6 +519,7 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
+    clear_previous_work(out_root, keep=("00.input", "00.imported"))   # made by this run (input copies, `import`)
     new_reports(out_root)
     setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w",   # one run, one log
                       debug=getattr(args, "debug", False))
@@ -923,9 +934,10 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
                 + ", ".join(str(p) for p in paths))
         return 2
     n_ok = n_skip = n_fail = 0
+    used_names: set = set()
     for bf in body_files:
         matched  = meta_by_stem.get(bf.stem)
-        out_file = bf if args.overwrite_new_body == "yes" else (out_dir / bf.name)
+        out_file = bf if args.overwrite_new_body == "yes" else unique_path(out_dir / bf.name, used_names)
         try:
             status = _process(bf, matched, out_file)
             if status == "ok":
@@ -975,8 +987,10 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
     log_rows: List[str] = []
     n_ok = n_miss = n_fail = 0
 
+    used_names: set = set()
+
     for bf in body_files:
-        out_file = bf if args.overwrite_new_body == "yes" else (out_dir / bf.name)
+        out_file = bf if args.overwrite_new_body == "yes" else unique_path(out_dir / bf.name, used_names)
         try:
             n_rep, n_nf, n_tot = replace_organism_in_gb_file(bf, out_file, org_index)
             log_rows.append(f"{bf.name}\t{out_file}\t{n_rep}\t{n_nf}\t{n_tot}\t")         # note column empty
@@ -1039,16 +1053,22 @@ def workflow_gb2fasta(args: argparse.Namespace) -> int:
     out = Path(args.out_root)
     out.mkdir(parents=True, exist_ok=True)
     n = 0
+    used: set = set()
     for f in files:
-        recs = [gb_fasta_record(r) for r in SeqIO.parse(str(f), "genbank")]
+        recs = []
+        for r in SeqIO.parse(str(f), "genbank"):
+            try:
+                recs.append(gb_fasta_record(r))
+            except Exception:                            # noqa: BLE001  (no sequence: CONTIG / WGS record)
+                print(f"[gb2fasta] {r.id} ({f.name}): no sequence (CONTIG / WGS record): skipped", file=sys.stderr)
         n += len(recs)
         if args.split:
             for r in recs:
-                SeqIO.write([r], str(out / f"{safe_name(r.id)}.fasta"), "fasta")
-        elif recs:
-            SeqIO.write(recs, str(out / f"{f.stem}.fasta"), "fasta")
+                SeqIO.write([r], str(unique_path(out / f"{safe_name(r.id)}.fasta", used)), "fasta")
+        elif recs:                                   # (a.gb in two subfolders: two files, not one overwritten)
+            SeqIO.write(recs, str(unique_path(out / f"{f.stem}.fasta", used)), "fasta")
     print(f"[gb2fasta] {n} record(s) from {len(files)} GenBank file(s) -> {out}", file=sys.stderr)
-    return 0
+    return 0 if n else 2                              # (0 GenBank records: FASTA or empty input)
 
 
 def workflow_intron(args: argparse.Namespace) -> int:
@@ -1488,6 +1508,16 @@ def main() -> int:
         if err:
             print(err, file=sys.stderr)
             return error_exit_code(err)
+    if args.cmd in ("dedup", "reorient", "gb2fasta", "transfer_metadata", "replace_organism"):
+        def check_inputs() -> int:                       # missing / empty / unreadable input: one line, exit 2
+            for attr, what in (("input", "-i"), ("metadata", "-m"), ("new_body", "-n")):
+                if getattr(args, attr, None):
+                    setattr(args, attr, prepare_input(getattr(args, attr), what))
+                    require_records(count_seq_records(getattr(args, attr)), "sequence records", getattr(args, attr))
+            return 0
+        rc = cli_guard(check_inputs)
+        if rc:
+            return rc
     if args.cmd in ("annotate", "run", "import"):
         out_new = not Path(args.out_root).exists()      # an error before the run leaves no folder it created
         err = lock_output(Path(args.out_root))
@@ -1540,6 +1570,11 @@ def main() -> int:
     t0 = time.time()
     try:
         rc = fn(args)
+    except InputError as exc:                # a problem of the input found during the run: one line, exit 2
+        logging.error(f"[ERROR] {exc}")
+        logging.info(f"[DONE] exit=2 {duration(time.time() - t0)}")
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
     except Exception as exc:                 # into the run's log with the traceback (mitom debug reads it), then exit 1
         if Steps.current is not None:
             Steps.current.failed(exc)

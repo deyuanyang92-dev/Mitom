@@ -126,7 +126,7 @@ def _blastx(blastx: str, query: Path, db: Path, threads: int) -> List[List[str]]
     p = subprocess.run([blastx, "-query", str(query), "-db", str(db), "-query_gencode", "5", "-evalue", "1e-5",
                         "-seg", "no", "-max_target_seqs", "100", "-num_threads", str(max(1, threads)),
                         "-outfmt", "6 sseqid bitscore qstart qend qseq sseq stitle"],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, timeout=1800)
     if p.returncode != 0:
         raise RuntimeError(f"blastx failed on {db.name}: {p.stderr.strip()[-300:]}")
     return [c.split("\t") for c in p.stdout.splitlines() if c]
@@ -284,8 +284,13 @@ def classify_records(records: List[Tuple[str, str]], refdir: Optional[str] = Non
     if not bx:
         raise FileNotFoundError("blastx not found (mitom doctor)")
     per = max(1, min(len(GENES), threads))
+    def one(r):                      # one record's failure does not cost the others their classification
+        try:
+            return classify_seq(r[0], r[1], rd, bx, per)
+        except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired) as exc:
+            return Classification(r[0], note=f"blastx failed: {str(exc)[:200]}")
     with cf.ThreadPoolExecutor(max_workers=max(1, threads // per)) as ex:
-        return list(ex.map(lambda r: classify_seq(r[0], r[1], rd, bx, per), records))
+        return list(ex.map(one, records))
 
 
 def main() -> int:

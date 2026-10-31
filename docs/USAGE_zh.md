@@ -513,7 +513,9 @@ mitom debug out
 | `--clade auto: the input has several phyla / genetic codes ... mitom annotate needs one` | `annotate` / `import` 一次只能一个门；用 `mitom run`（自动分组），或给 `--clade` 和 `--genetic_code` |
 | `[CLADE] WARNING: ... phylum uncertain` 或 `genetic code ... from the codons` | 参考库里没有近亲或密码子与近亲的遗传密码不符：核对 `reports/clade_decision.tsv`，知道类群时给 `--clade` 和 `--genetic_code` |
 | `another MitoM run (pid N) is writing into OUT` | 同一个输出目录一次只能有一个运行（`OUT/.mitom.lock`）。等它结束、停止它，或换一个 `-o`；运行被 `kill -9` 杀掉后留下的锁会自动接管 |
-| `no sequence to annotate in ...` | 输入为空、读不出或全是 N（`[SEQ]` / `[SPLIT]` 警告指出是哪个文件、哪条序列）；`.gz` 压缩文件和非 UTF-8（Latin-1）文本会自动解压 / 转换，序列中的比对空位 `-` `.` 和 `*` 会自动去掉 |
+| `no sequence to annotate in ...` / `ERROR: no ... records in ...` | 输入为空、读不出、全是 N、是蛋白序列，或 GenBank 记录被截断（下载中断；`mitom fetch` 再运行一次会重新下载）。`[SEQ]` / `[SPLIT]` / `[DEDUP]` 警告指出是哪个文件、哪条序列。`.gz` 压缩文件、带 BOM 的 UTF-8、Latin-1 文本和 EMBL 文件会自动解压 / 转换；序列中的比对空位 `-` `.` 和 `*` 会自动去掉；没有序列的 CONTIG 记录跳过。所有命令遇到输入问题都只给一行 `ERROR:`，退出码 2（`--debug` 时显示完整报错） |
+| `mitom rescue` / `mitom rrna-hmm search` 要求文件夹 | 这两个命令直接修改输入文件夹里的 GenBank 文件，请给文件夹（压缩或非 UTF-8 文件请先解压 / 转换） |
+| 外部程序卡住 | 核心注释的每个外部程序最长 1 小时、table2asn 最长 10 分钟，超时按失败处理并写入日志，不会无限等待 |
 | 中途停止运行 | 用 Ctrl-C（或 `kill -INT`），所有子进程几秒内退出；`kill -9` 只杀主进程，子进程会继续跑完当前记录。之后在同一目录重跑即可，结果与一次跑完相同 |
 | `exonerate / blastp not found`，内含子步骤跳过 | 不在 mitotools 环境中运行，或环境不完整。运行 `mitom doctor`；用 `--intron_bin <环境>/bin` 指定 |
 | tRNA 很少或没有 | 先看 `mitom doctor` 中 cmsearch / cmalign / java 是否 OK（MitoM-ML 和 MiTFi 需要）；部分类群（刺胞动物、同骨海绵）本来只有 1–6 个 tRNA |

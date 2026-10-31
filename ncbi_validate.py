@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -27,6 +28,7 @@ from Bio.SeqFeature import AfterPosition, BeforePosition
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_common import iter_gb_files, run_tool, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 
 SKIP_QUALS = {"translation", "db_xref", "protein_id", "locus_tag_old"}
 INTERNAL_NOTE = re.compile(r"check .* manually|mito_\w+\.py")   # e.g. mito_rescue.py / mito_intron.py notes
@@ -98,6 +100,9 @@ def record_dir(out: Path, rec_id: str) -> Path:
     return out / re.sub(r"[^\w.]+", "_", rec_id)
 
 
+TABLE2ASN_TIMEOUT = 600      # s; one mitogenome takes < 1 s
+
+
 def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
                     nuclear: bool = False) -> List[Dict[str, str]]:
     """Write rec as NCBI submission inputs (rec.fsa + rec.tbl) and run table2asn on them (rec.sqn, rec.val);
@@ -107,8 +112,15 @@ def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
     base = d / "rec"
     (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
     (d / "rec.tbl").write_text("\n".join(feature_lines(rec)) + "\n")
-    run_tool([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn", *(["-t", sbt] if sbt else [])])
     rows = []
+    for old in (d / "rec.val", d / "rec.sqn"):       # a failing table2asn must not leave the last run's messages
+        old.unlink(missing_ok=True)
+    try:
+        run_tool([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn",
+                  *(["-t", sbt] if sbt else [])], timeout=TABLE2ASN_TIMEOUT)
+    except subprocess.TimeoutExpired:                  # never wait for ever (table2asn 1.28 can hang)
+        return [{"record": rec.id, "severity": "ERROR", "code": "MITOM.Table2asnTimeout", "ours": "no",
+                 "message": f"table2asn did not finish in {TABLE2ASN_TIMEOUT} s: not validated"}]
     val = d / "rec.val"
     mine = our_intervals(rec)
     for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
@@ -136,7 +148,7 @@ def main(argv=None) -> int:
     if not exe:
         print("[ncbi_validate] table2asn not found (conda install -c bioconda table2asn)", file=sys.stderr)
         return 1
-    src = Path(a.input)
+    src = Path(prepare_input(a.input))
     files = iter_gb_files(src) if src.is_dir() else [src]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -146,6 +158,7 @@ def main(argv=None) -> int:
         for rec in SeqIO.parse(str(f), "genbank"):
             n += 1
             rows += validate_record(rec, out, exe, nuclear=a.nuclear)
+    require_records(n, "GenBank records", a.input)
     write_tsv(out / "validation.tsv", ["record", "severity", "code", "ours", "message"], rows)
     focus = re.compile(a.focus, re.I) if a.focus else None
     sel = [r for r in rows if (not focus or focus.search(r["message"])) and (not a.only_ours or r["ours"] == "yes")]
@@ -158,4 +171,4 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

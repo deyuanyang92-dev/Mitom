@@ -20,6 +20,7 @@ from typing import Any, Callable, List, Optional, Tuple, TypeVar
 from Bio import SeqIO
 
 from mito_common import reports_dir, run_tool, write_table
+from mito_common import write_gb  # noqa: E402
 from mitom_log import record_event
 from mito_taxa import abbreviated_overlap, abbreviated_pcg_overlap, aggressive_start_genes, CLADE_PHYLUM, no_upstream_atg
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
@@ -78,7 +79,7 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
     here = Path(__file__).resolve().parent
     cur = out_root / "05.curated"
     p = run_tool([sys.executable, "-W", "ignore", str(here / "mito_curate.py"), "-i", str(gb_dir), "-o", str(cur),
-                  "--genetic_code", str(int(args.genetic_code)), "--no_validate",
+                  "--genetic_code", str(int(args.genetic_code)), "--no_validate", "--allow_empty",
                   "--aggressive_start_genes", aggressive_start_genes(getattr(args, "clade", None)),
                   *abbreviated_overlap(getattr(args, "clade", None)),
                   *abbreviated_pcg_overlap(getattr(args, "clade", None)),
@@ -115,7 +116,7 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
         for rec in recs:
             n_rec, n_ncr = n_rec + 1, n_ncr + add_ncr(rec, min_len)
             nt += sum(len(f) for f in rec.features if is_ncr(f))
-        SeqIO.write(recs, str(gbf), "genbank")
+        write_gb(recs, gbf)                          # atomic, value-less /pseudo kept (2026-10-31 review)
     return StepResult(f"{n_ncr} non-coding regions of >= {min_len} nt ({nt:,} nt) in {n_rec} records "
                       "(misc_feature 'non-coding region NCR<k>'; --ncr no: none)")
 

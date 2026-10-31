@@ -410,6 +410,16 @@ def write_summary(out_root: Path) -> None:
     src.unlink()
 
 
+def clear_previous_work(out_root: Path, keep: tuple = ("00.input",)) -> None:
+    """Remove the intermediate folders a previous run left in out_root (interrupted, or --keep_intermediate yes):
+    they were picked up as this run's results (2026-10-31 review: a stale 04.final_gb/*.gbf was published, a stale
+    reoriented body of another genome became a final record). Only MitoM's own folder names; `keep` = made by this run."""
+    for name in WORK_DIRS + ("06.ncbi_submission", "work"):
+        d = Path(out_root) / name
+        if name not in keep and d.is_dir() and not d.is_symlink():
+            shutil.rmtree(d)
+
+
 def new_reports(out_root: Path) -> Path:
     """An empty reports/ folder for a new run into out_root (a previous run's reports are removed)."""
     d = Path(out_root) / REPORTS

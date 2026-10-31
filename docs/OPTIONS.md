@@ -730,6 +730,8 @@ options:
   -i INPUT, --input INPUT
   -o OUT, --out OUT
   --genetic_code GENETIC_CODE
+                        Genetic code (default: each record's CDS /transl_table, else 5; 2026-10-31 review:
+                        code 5 was used for every record - vertebrate AGG stops read through)
   --rrna_bounds {trim,fill}
                         fill (default): remove overlaps with flanking genes and extend rRNA ends to them
                         (gaps <= --max_fill), the GenBank convention; trim: only remove overlaps (Fourdrilis
@@ -1068,7 +1070,7 @@ Output (-o OUT):
                          genetic code, gene counts, warnings (and the NCBI ERROR / WARNING counts with --validate)
 Records:
   - the same record in two inputs (same ID and sequence) is written once; different records with one ID are renamed
-    ID_2, ID_3 ... (NCBI needs unique SeqIDs in a submission); an ID is cleaned to NCBI's characters
+    ID-2, ID-3 ... (NCBI needs unique SeqIDs in a submission); an ID is cleaned to NCBI's characters
     (A-Z a-z 0-9 _ - . : * #) and cut to 50
   - the FASTA header carries [organism=] (the source /organism), [location=mitochondrion] / [location=chloroplast]
     (from /organelle; none for a nuclear record), [topology=], [completeness=complete] for a circular record,

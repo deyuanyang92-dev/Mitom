@@ -27,7 +27,7 @@ from Bio import SeqIO
 
 from mito_common import safe_name
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS
-from mitom_inputs import _is_fasta_file, _is_gb_file, _sniff_input_type
+from mitom_inputs import _is_fasta_file, _is_gb_file, _sniff_input_type, clean_sequence
 
 HERE = Path(__file__).resolve().parent
 FALLBACK = ("Annelida-segmented-worms", 5, "")     # nothing could be decided (the default before --clade auto)
@@ -132,7 +132,11 @@ def decide(args: argparse.Namespace) -> Plan:
                 else:
                     row.note = f"taxonomy without a known phylum ('{'; '.join(tax[-2:])}')"
             if not row.phylum:
-                todo.append((row, str(rec.seq)))
+                clean, _ = clean_sequence(rec)               # (an empty contig made blastx fail for every record)
+                if len(clean.seq):
+                    todo.append((row, str(clean.seq)))
+                else:
+                    row.note = "empty or all-N sequence"
             plan.rows.append(row)
     if todo:
         msg = (f"[CLADE] {len(todo)} record(s) without a taxonomy: phylum and genetic code by blastx to the reference "
@@ -197,6 +201,7 @@ def _split_input(plan: Plan, args: argparse.Namespace, groups_dir: Path) -> Dict
             shutil.rmtree(d.parent)
         d.mkdir(parents=True)
     k = 0
+    seen_names: set = set()
     for f in files:
         if kind == "genbank":
             text = f.read_text(encoding="utf-8", errors="replace")
@@ -208,7 +213,18 @@ def _split_input(plan: Plan, args: argparse.Namespace, groups_dir: Path) -> Dict
         else:
             recs = list(SeqIO.parse(str(f), "fasta"))
             ids = [r.id for r in recs]
-            pieces = [f">{r.description}\n{str(r.seq)}\n" for r in recs]
+            pieces = []
+            for r in recs:                     # a name in two groups: the merged folder would keep one of them
+                name = r.id
+                if name in seen_names:
+                    n = 2
+                    while f"{name}_{n}" in seen_names:
+                        n += 1
+                    logging.warning(f"[GROUP] {f.name}: a second sequence named '{name}': annotated as '{name}_{n}'")
+                    name = f"{name}_{n}"
+                seen_names.add(name)
+                rest = r.description[len(r.id):] if r.description.startswith(r.id) else " " + r.description
+                pieces.append(f">{name}{rest}\n{str(r.seq)}\n")
         for rid, piece in zip(ids, pieces):
             g = group_of[k]
             k += 1
@@ -240,6 +256,7 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path]) -> None:
             shutil.rmtree(old)
         elif name != "run.log" and old.is_file():
             old.unlink()
+    written: Dict[Path, str] = {}
     for sub in ("final_annotation", "original_annotation", "ncbi_submission", "plots", "work"):
         for o in outs:
             src = o / sub
@@ -249,11 +266,16 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path]) -> None:
                 shutil.copytree(src, out_root / "work" / next(g for g, x in group_outs.items() if x == o),
                                 dirs_exist_ok=True)
                 continue
+            g = next(k for k, x in group_outs.items() if x == o)
             for p in sorted(src.rglob("*")):
                 if p.is_file() and not (sub == "ncbi_submission" and p.suffix == ".tsv" and p.parent == src):
                     t = out_root / sub / p.relative_to(src)
+                    if t.exists() and written.get(t) not in (None, g):   # one name in two groups: never overwrite
+                        t = t.with_name(f"{p.name.split('.')[0]}.{g}{''.join(Path(p.name).suffixes)}")
+                        logging.warning(f"[GROUP] {sub}/{p.name} exists in two groups: {g}'s copy is {t.name}")
                     t.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(p, t)
+                    written[t] = g
     for name in ("submission_summary.tsv", "validation_messages.tsv"):
         srcs = [o / "ncbi_submission" / name for o in outs if (o / "ncbi_submission" / name).is_file()]
         if srcs:
@@ -340,7 +362,7 @@ def run_groups(args: argparse.Namespace, plan: Plan, argv: List[str], say=print)
     if getattr(args, "keep_intermediate", "no") != "yes" and all(rc == 0 for rc in rcs.values()):
         shutil.rmtree(groups_dir, ignore_errors=True)
         shutil.rmtree(out_root / "00.input", ignore_errors=True)        # unpacked / converted input (mitom_inputs)
-    rc = max(rcs.values()) if rcs else 1
+    rc = max((1 if r < 0 else r) for r in rcs.values()) if rcs else 1   # killed by a signal (OOM, kill): exit < 0
     say(f"\nMitoM finished ({len(groups)} groups merged, exit {rc}): {out_root}")
     if rc:
         failed = [g for g, r in rcs.items() if r]

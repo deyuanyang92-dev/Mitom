@@ -139,3 +139,27 @@ def test_gb2fasta_headers_split_and_mitom_run_topology(tmp_path):
     assert _mitom("gb2fasta", "-i", src / "two.gb", "-o", tmp_path / "split", "--split") == 0
     assert sorted(p.name for p in (tmp_path / "split").iterdir()) == ["NC_000933.1.fasta", "XX000001.1.fasta"]
     assert _mitom("gb2fasta", "-i", tmp_path / "nothing", "-o", tmp_path / "x") == 2
+
+
+def test_same_locus_name_with_other_sequences_is_not_a_duplicate(tmp_path):
+    """2026-10-31 review: records without ACCESSION fall back to the LOCUS name; contig1 in two files, or
+    YZZ20231_1 / YZZ20231_2 (the _N read as a version), were dropped as duplicates of each other."""
+    import random
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+    import mitom_inputs as mi
+    rnd = random.Random(1)
+    def rec(name):
+        r = SeqRecord(Seq("".join(rnd.choice("ACGT") for _ in range(2000))), id=name, name=name, description="x")
+        r.annotations.update(molecule_type="DNA", topology="circular")
+        return r
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    SeqIO.write([rec("contig1")], str(tmp_path / "a" / "x.gb"), "genbank")
+    SeqIO.write([rec("contig1")], str(tmp_path / "b" / "y.gb"), "genbank")
+    SeqIO.write([rec("YZZ20231_1"), rec("YZZ20231_2")], str(tmp_path / "z.gb"), "genbank")
+    files = sorted(tmp_path.rglob("*.gb"))
+    kept, _, stats = mi.dedup_gb_records(files)
+    names = sorted(m.acc_versioned for m in kept)
+    assert names == ["YZZ20231_1", "YZZ20231_2", "contig1", "contig1_2"], names

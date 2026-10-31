@@ -25,7 +25,7 @@ def test_gaps_stops_and_odd_letters_are_cleaned():
 
 
 def test_clean_sequence_leaves_a_good_sequence_alone():
-    rec = SeqRecord(Seq("acgtRYKM" * 300), id="a")
+    rec = SeqRecord(Seq("acgt" * 290 + "RYKMSWBDHV" * 4), id="a")
     r, why = mi.clean_sequence(rec)
     assert r is rec and why == ""                     # soft-masked case and IUPAC codes kept
 
@@ -93,3 +93,82 @@ def test_output_folder_not_writable_is_a_clean_error(tmp_path):
         assert "cannot write into the output folder" in bm.lock_output(ro / "out")
     finally:
         ro.chmod(0o755)
+
+
+def test_utf8_byte_order_mark_is_removed(tmp_path):
+    """2026-10-31 review: a Notepad 'UTF-8 with BOM' FASTA gave 0 records."""
+    fa = tmp_path / "bom.fasta"
+    fa.write_bytes(b"\xef\xbb\xbf>s1\n" + b"ACGT" * 300 + b"\n")
+    out, notes = mi.normalize_input(fa, tmp_path / "out")
+    assert notes and [r.id for r in SeqIO.parse(str(out), "fasta")] == ["s1"]
+
+
+def test_protein_fasta_is_not_annotated_as_dna():
+    """2026-10-31 fuzz: a protein FASTA (A G K M V ... are IUPAC nucleotide codes too) ran as a genome."""
+    r, why = mi.clean_sequence(SeqRecord(Seq("MKVLAAGIVGLLLAAQPAMA" * 100), id="p"))
+    assert len(r.seq) == 0 and "not a nucleotide sequence" in why
+
+
+def test_embl_input_is_written_as_genbank(tmp_path):
+    rec = SeqRecord(Seq("ACGT" * 300), id="X1.1", name="X1", description="test")
+    rec.annotations["molecule_type"] = "DNA"
+    SeqIO.write(rec, str(tmp_path / "a.embl"), "embl")
+    out, notes = mi.normalize_input(tmp_path / "a.embl", tmp_path / "out")
+    assert out.suffix == ".gb" and "EMBL" in notes[0]
+    assert len(SeqIO.read(str(out), "genbank").seq) == 1200
+
+
+def test_a_previous_runs_work_folders_are_cleared(tmp_path):
+    """2026-10-31 review: a stale 04.final_gb/*.gbf of an earlier run into the same -o was published as a result,
+    and a stale reoriented body of another genome became a final record."""
+    import mitom_output as mo
+    for d in ("04.final_gb", "01.anno_round1/S00001/reoriented", "06.ncbi_submission", "00.input", "my_notes"):
+        (tmp_path / d).mkdir(parents=True)
+        (tmp_path / d / "x.gbf").write_text("LOCUS STALE\n//\n")
+    mo.clear_previous_work(tmp_path, keep=("00.input",))
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["00.input", "my_notes"]
+
+
+def _gb_text(name, n, seed):
+    import io
+    import random
+    r = SeqRecord(Seq("".join(random.Random(seed).choice("ACGT") for _ in range(n))), id=f"{name}.1", name=name,
+                  description="test")
+    r.annotations.update(molecule_type="DNA", topology="circular", accessions=[name], sequence_version=1)
+    h = io.StringIO()
+    SeqIO.write(r, h, "genbank")
+    return h.getvalue()
+
+
+def test_a_cut_off_last_record_is_not_annotated(tmp_path):
+    """2026-10-31 review: a download killed while writing left a record without its end; it was read as a complete
+    circular genome (11,840 of 15,000 bp)."""
+    full = _gb_text("MN000001", 3000, 1) + _gb_text("MN000002", 3000, 2)
+    cut = full[: len(full) - 900]
+    (tmp_path / "x.gb").write_text(cut)
+    kept, _, stats = mi.dedup_gb_records([tmp_path / "x.gb"])
+    assert [m.acc_versioned for m in kept] == ["MN000001.1"]
+
+
+def test_fetch_resume_downloads_a_cut_off_record_again(tmp_path):
+    import mito_fetch
+    full = _gb_text("MN000001", 3000, 1) + _gb_text("MN000002", 3000, 2)
+    (tmp_path / "x.gb").write_text(full[: len(full) - 900])
+    assert list(mito_fetch.existing_accessions(tmp_path / "x.gb")) == ["MN000001.1"]
+
+
+def test_contig_record_without_sequence_is_skipped():
+    from Bio.Seq import UndefinedSequenceError  # noqa: F401
+    r = SeqRecord(Seq(None, length=1000), id="CONTIG1")
+    out, why = mi.clean_sequence(r)
+    assert len(out.seq) == 0 and "CONTIG" in why
+
+
+def test_gb2fasta_same_file_name_in_two_subfolders(tmp_path):
+    for d, seed in (("a", 1), ("b", 2)):
+        (tmp_path / "in" / d).mkdir(parents=True)
+        (tmp_path / "in" / d / "mt.gb").write_text(_gb_text(f"MN00000{seed}", 1200, seed))
+    p = subprocess.run([sys.executable, str(HERE.parent / "mitom_pipeline.py"), "gb2fasta", "-i", str(tmp_path / "in"),
+                        "-o", str(tmp_path / "out")], capture_output=True, text=True)
+    assert p.returncode == 0, p.stderr
+    assert sorted(x.name for x in (tmp_path / "out").iterdir()) == ["mt.fasta", "mt_2.fasta"]

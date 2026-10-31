@@ -3,7 +3,9 @@ the GenBank taxonomy, GenBank deduplication (dedup_report.tsv; RefSeq NC_ kept) 
 FASTA record with an internal ID (id_map.tsv), the FASTQ pair of a sample (--infq), and the CDS transl_table check."""
 from __future__ import annotations
 
+import dataclasses
 import gzip
+import io
 import logging
 import re
 import shutil
@@ -15,7 +17,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import GB_SUFFIXES, safe_name, topology_from_header
+from mito_common import GB_SUFFIXES, InputError, safe_name, topology_from_header, truncated_genbank
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS
 from mitom_metadata import _normalize_acc, gb_record_accession
 
@@ -89,6 +91,7 @@ def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optio
 
 
 _FASTA_EXTS = {".fa", ".fasta", ".fna", ".fas"}
+EMBL_EXTS = {".embl", ".ebl", ".ena"}
 _GB_EXTS    = GB_SUFFIXES
 
 
@@ -109,15 +112,20 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
         files, base = [in_path], in_path.parent
     elif in_path.is_dir():
         files, base = sorted(p for p in in_path.rglob("*") if p.is_file()
-                             and _plain_suffix(p) in (set(_FASTA_EXTS) | set(_GB_EXTS))), in_path
+                             and _plain_suffix(p) in (set(_FASTA_EXTS) | set(_GB_EXTS) | EMBL_EXTS)), in_path
     else:
         return in_path, []
 
     def needs(p: Path) -> str:
         with p.open("rb") as fh:
-            head = fh.read(2)
-        if head == b"\x1f\x8b":
+            head = fh.read(3)
+        if head[:2] == b"\x1f\x8b":
             return "gzip"
+        if head == b"\xef\xbb\xbf":                 # UTF-8 with a byte-order mark (Windows Notepad): 0 records
+            return "bom"
+        with p.open("rb") as fh:
+            if fh.read(5) == b"ID   ":                   # EMBL / ENA flat file: written as GenBank
+                return "embl"
         try:
             p.read_bytes().decode("utf-8")
         except UnicodeDecodeError:
@@ -134,18 +142,32 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
     for p, what in todo.items():
         rel = p.relative_to(base)
         t = dest / (rel.parent / rel.name[:-3] if what == "gzip" and rel.name.lower().endswith(".gz") else rel)
+        if what == "embl":
+            t = t.with_suffix(".gb")
         t.parent.mkdir(parents=True, exist_ok=True)
         data = gzip.open(p, "rb").read() if what == "gzip" else p.read_bytes()
         try:
-            text, latin = data.decode("utf-8"), False
+            text, latin = data.decode("utf-8-sig"), False
         except UnicodeDecodeError:
             text, latin = data.decode("latin-1"), True
-        t.write_text(text, encoding="utf-8")
+        if what == "embl" or (what == "gzip" and text.startswith("ID   ")):
+            t = t.with_suffix(".gb") if what == "embl" else t
+            recs = list(SeqIO.parse(io.StringIO(text), "embl"))
+            for r in recs:                               # (GenBank needs molecule_type)
+                r.annotations.setdefault("molecule_type", "DNA")
+            with t.open("w", encoding="utf-8") as fh:
+                SeqIO.write(recs, fh, "genbank")
+        else:
+            t.write_text(text, encoding="utf-8")
         if what:
             notes.append(f"{p.name}: " + "; ".join(x for x in ("unpacked" if what == "gzip" else "",
+                                                               "EMBL written as GenBank" if what == "embl" else "",
+                                                               "byte-order mark removed" if what == "bom" else "",
                                                                "not UTF-8 text: read as Latin-1" if latin else "") if x))
-    return (dest / in_path.name[:-3] if in_path.is_file() and todo[in_path].startswith("gzip")
-            and in_path.name.lower().endswith(".gz") else dest / in_path.name if in_path.is_file() else dest), notes
+    if in_path.is_file():
+        name = in_path.name[:-3] if todo[in_path] == "gzip" and in_path.name.lower().endswith(".gz") else in_path.name
+        return (dest / Path(name).with_suffix(".gb").name if todo[in_path] == "embl" else dest / name), notes
+    return dest, notes
 
 
 def _is_fasta_file(p: Path) -> bool:
@@ -278,9 +300,15 @@ def dedup_gb_records(
             logging.warning(f"[DEDUP] Cannot parse {gb_path}: {exc}")
             stats["parse_errors"] += 1
             continue
+        cut = set(truncated_genbank(gb_path, records)) if fmt == "genbank" else set()
 
         for i, rec in enumerate(records):
             stats["total_in"] += 1
+            if i in cut:
+                logging.warning(f"[DEDUP] {rec.id} ({gb_path.name}): the record is cut off (sequence shorter than its "
+                                f"LOCUS length, or no closing //): not annotated - download it again")
+                stats["parse_errors"] += 1
+                continue
             if fmt == "fasta":
                 acc_ver  = rec.id
                 acc_base = (_normalize_acc(acc_ver) or acc_ver) if _FASTA_ACC_RE.match(acc_ver) else f"{gb_path}#{i}"
@@ -315,12 +343,30 @@ def dedup_gb_records(
             ))
 
     by_acc: Dict[str, GbRecordMeta] = {}
+    names_used = {m.acc_versioned for m in all_metas}
     for meta in all_metas:
         key = meta.acc_base
+        prev = by_acc.get(key)
+        if prev is not None and prev.version_int == meta.version_int and prev.seq_hash != meta.seq_hash:
+            # same name and version, another sequence: not a duplicate (records without ACCESSION fall back to the
+            # LOCUS name - contig1 in two files, YZZ20231_1 / _2 read as versions; 2026-10-31: the second was dropped)
+            if meta.acc_versioned == prev.acc_versioned:
+                n = 2
+                while f"{meta.acc_versioned}_{n}" in names_used:
+                    n += 1
+                logging.warning(f"[DEDUP] {meta.acc_versioned} ({meta.source_file.name}): another sequence under the "
+                                f"name of {prev.acc_versioned} ({prev.source_file.name}): kept as "
+                                f"{meta.acc_versioned}_{n}")
+                meta = dataclasses.replace(meta, acc_versioned=f"{meta.acc_versioned}_{n}")
+                names_used.add(meta.acc_versioned)
+            k = 2
+            while f"{key}#{k}" in by_acc:
+                k += 1
+            by_acc[f"{key}#{k}"] = meta
+            continue
         if key not in by_acc:
             by_acc[key] = meta
         else:
-            prev = by_acc[key]
             if meta.version_int > prev.version_int:
                 kind = "dup_exact" if prev.acc_versioned == meta.acc_versioned else "dup_version"
                 stats[kind] += 1
@@ -510,7 +556,7 @@ def iter_inputs(
         fasta_paths, acc_to_orig_gb = convert_gb_to_fasta_for_annotation(
             gb_files, gb_to_fasta_dir, dedup_report_path=dedup_report, orig_dir=orig_dir)
         if not fasta_paths:
-            raise RuntimeError(f"No records extracted from GenBank input: {in_path}")
+            raise InputError(f"no usable GenBank record in {in_path} (empty, cut off, without sequence, or unreadable: see the warnings)")
         logging.info(
             f"[INPUT] Converted {len(gb_files)} GB file(s) -> "
             f"{len(fasta_paths)} unique FASTA record(s)")
@@ -615,13 +661,22 @@ def clean_sequence(rec: "SeqRecord") -> Tuple["SeqRecord", str]:
     removed, U -> T, letters that are not IUPAC nucleotides -> N (2026-10-31: a '-' made exonerate fail on every
     protein gene). Returns (record, warning, '' when nothing changed); a sequence with fewer than MIN_ACGT A/C/G/T
     comes back empty (skipped, with the warning)."""
-    raw = str(rec.seq)
+    try:
+        raw = str(rec.seq)
+    except Exception:                                    # (Biopython UndefinedSequenceError: CONTIG / WGS record)
+        return SeqRecord(Seq(""), id=rec.id, name=rec.name, description=rec.description), \
+            "no sequence (a CONTIG / WGS record): not annotated"
     s = re.sub(r"[-.*\s0-9]", "", raw.upper()).replace("U", "T")
     bad = sum(1 for c in s if c not in _IUPAC)
     if bad:
         s = "".join(c if c in _IUPAC else "N" for c in s)
     acgt = sum(s.count(c) for c in "ACGT")
     notes = []
+    letters = re.sub(r"[^A-Z]", "", raw.upper())
+    nt = sum(letters.count(c) for c in "ACGTUN")
+    if letters and nt < 0.8 * len(letters):          # protein letters are IUPAC codes too (A G K M V ...): 2026-10-31
+        return rec[:0], (f"only {100 * nt / len(letters):.0f} % A/C/G/T/N: not a nucleotide sequence (protein?), "
+                         f"not annotated")
     if len(s) != len(raw):
         notes.append(f"{len(raw) - len(s)} gap / stop / space characters removed")
     if bad:

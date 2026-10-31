@@ -64,9 +64,9 @@ def test_repeated_record_once_and_id_clash_renamed(tmp_path):
     assert mito_tbl.main(["-i", str(DATA / "NC_000933.gb"), str(DATA / "NC_000933.gb"), str(tmp_path / "clash.gbf"),
                           "-o", str(tmp_path / "o")]) == 0
     rows = report(tmp_path / "o")
-    assert [r["seq_id"] for r in rows] == ["NC_000933.1", "NC_000933.1_2"]       # the repeated record written once
+    assert [r["seq_id"] for r in rows] == ["NC_000933.1", "NC_000933.1-2"]       # the repeated record written once
     assert "also used by another record" in rows[1]["warnings"]
-    assert ">Feature NC_000933.1_2" in (tmp_path / "o" / "submission.tbl").read_text()
+    assert ">Feature NC_000933.1-2" in (tmp_path / "o" / "submission.tbl").read_text()
 
 
 def test_fasta_header_modifiers(tmp_path):
@@ -275,3 +275,22 @@ def test_mitom_command(tmp_path):
     p = subprocess.run([sys.executable, str(HERE.parent / "mitom"), "gb2tbl", "-i", str(DATA / "NC_000931.gb"), "-o",
                         str(tmp_path / "c")], capture_output=True, text=True)
     assert p.returncode == 0 and (tmp_path / "c" / "NC_000931.tbl").is_file() and "[gb2tbl] 1 record(s)" in p.stderr
+
+
+def test_renamed_ids_never_collide(tmp_path):
+    """2026-10-31 review: records X-2, X, X gave the SeqIDs X-2, X, X-2."""
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+    import random
+    rnd = random.Random(3)
+    recs = []
+    for name in ("X-2", "X", "X"):
+        r = SeqRecord(Seq("".join(rnd.choice("ACGT") for _ in range(300))), id=name, name=name, description="d")
+        r.annotations["molecule_type"] = "DNA"
+        recs.append(r)
+    SeqIO.write(recs, str(tmp_path / "a.gb"), "genbank")
+    import mito_tbl
+    assert mito_tbl.main(["-i", str(tmp_path / "a.gb"), "-o", str(tmp_path / "o")]) == 0
+    heads = [l.split()[0] for l in (tmp_path / "o" / "a.fsa").read_text().splitlines() if l.startswith(">")]
+    assert len(heads) == len(set(heads)) == 3, heads

@@ -45,6 +45,7 @@ from Bio.SeqRecord import SeqRecord
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from mito_common import iter_gb_files, old_spelling, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 from mito_names import PCG, gene_name, trna_name  # noqa: E402
 
 # usual protein gene lengths (nt, incl. stop) in bilaterian mitogenomes; 60 % / 160 % are the error limits
@@ -274,11 +275,12 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="Translation table for CDS without /transl_table (default: the record's own tables).")
     ap.add_argument("--min_trna", type=int, default=22, help="Fewer tRNAs than this is an ERROR (default 22; 0 = off).")
     args = ap.parse_args(argv)
-    files = gb_files(Path(args.input))
+    files = gb_files(Path(prepare_input(args.input)))
     if not files:
         print(f"no GenBank files in {args.input}", file=sys.stderr)
         return 2
     rows = check_files(files, args.genetic_code, args.min_trna)
+    require_records(len(rows), "GenBank records", args.input)
     write_reports(rows, Path(args.out_dir))
     print(summary_line(rows), file=sys.stderr)
     print(f"reports: {Path(args.out_dir) / 'check_report.tsv'}, check_details.tsv, check_flagged.txt", file=sys.stderr)
@@ -286,4 +288,4 @@ def main(argv: Optional[List[str]] = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

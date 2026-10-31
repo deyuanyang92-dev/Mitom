@@ -93,6 +93,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_names  # noqa: E402
 from mito_common import codon_translate, iter_gb_files, run_tool, stop_qualifiers, write_gb, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
 MIN_INTRON = 142        # a CDS gap at least this long is an intron without an intron feature (eval_introns, MFannot)
@@ -550,9 +551,14 @@ def _blast(exe: str, query: Path, subject: Path, extra: List[str]) -> List[List[
     cmd = [exe, "-query", str(query), "-subject", str(subject), "-outfmt",
            "6 qseqid qstart qend sstart send sframe bitscore evalue qseq sseq", *extra]
     try:
-        out = run_tool(cmd, timeout=TIMEOUT).stdout
+        p = run_tool(cmd, timeout=TIMEOUT)
+        out = p.stdout
     except (subprocess.TimeoutExpired, OSError) as exc:
         print(f"[mito_intron_ref] {Path(exe).name} failed: {exc}", file=sys.stderr)
+        return []
+    if p.returncode != 0:                              # (2026-10-31 review: a failing tblastn / blastn was silent)
+        print(f"[mito_intron_ref] WARNING: {Path(exe).name} failed (exit {p.returncode}): "
+              f"{(p.stderr or '').strip()[-200:]}", file=sys.stderr)
         return []
     return [line.split("\t") for line in out.splitlines() if line.count("\t") == 9]
 
@@ -1998,8 +2004,9 @@ def main(argv=None) -> int:
             ids |= {_base(r.id) for r in SeqIO.parse(str(f), "genbank")}
         for g in build_library(a.ref_gb):
             (own if _base(g.acc) in ids else lib).append(g)
-    src = Path(a.input)
+    src = Path(prepare_input(a.input))
     files = iter_gb_files(src)
+    require_records(len(files), "GenBank files", a.input)
     _JOB.update(a=a, lib=lib, own=own, tools=tools, root=src.parent if src.is_file() else src)
     Path(a.out).mkdir(parents=True, exist_ok=True)
     rows: List[dict] = []
@@ -2030,4 +2037,4 @@ def find_tool(name: str, bin_dir: Optional[str]) -> Optional[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

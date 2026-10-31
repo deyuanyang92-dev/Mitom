@@ -34,6 +34,7 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mito_common import iter_gb_files, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input  # noqa: E402
 from mito_names import PCG, gene_name, trna_name, trna_number  # noqa: E402
 
 RESULT = {"exact": "same", "le3": "ends_differ", "gt3": "ends_differ", "name_error": "name_differs",
@@ -171,16 +172,23 @@ class Feat(NamedTuple):
 
 
 def span(loc, n: int) -> tuple:
-    """(start, end) of a location; parts are in biological order, a wrap past the origin gives end > n."""
+    """(start, end) of a location; a feature across the origin gives end > n. Decided from the positions it covers
+    (both sequence ends covered: across the origin, the span is the circle minus its largest gap), not from the part
+    order: NCBI writes complement(join(1,16306..16371)), read as [16305:16371], [0:1] (2026-10-31 review: such genes
+    became whole-genome spans and were not matched)."""
     parts = list(loc.parts)
-    strand = loc.strand or 1
-    wrapped = any((int(b.start) < int(a.start)) if strand != -1 else (int(b.start) > int(a.start))
-                  for a, b in zip(parts, parts[1:]))
-    if not wrapped:
+    if len(parts) == 1 or not n:
         return int(loc.start), int(loc.end)
-    if strand != -1:
-        return int(parts[0].start), int(parts[-1].end) + n
-    return int(parts[-1].start), int(parts[0].end) + n
+    cov = sorted({i for p in parts for i in range(int(p.start), int(p.end))})
+    if not cov or cov[0] != 0 or cov[-1] != n - 1:
+        return int(loc.start), int(loc.end)
+    gap_len, gap_at = 0, None                     # the largest stretch not covered, between consecutive positions
+    for a, b in zip(cov, cov[1:]):
+        if b - a - 1 > gap_len:
+            gap_len, gap_at = b - a - 1, (a, b)
+    if gap_at is None:                            # every position: the whole sequence
+        return 0, n
+    return gap_at[1], gap_at[0] + 1 + n
 
 
 def norm_features(rec: SeqRecord, code: int = 5) -> List[Feat]:
@@ -296,6 +304,8 @@ def compare_dirs(original_dir: Path, mitom_dir: Path, out_tsv: Path, code: int =
     """Write out_tsv for every record present in both directories; returns counts per result
     (+ 'records', 'records_without_original_annotation', 'errors')."""
     orig, mit = gb_by_stem(original_dir), gb_by_stem(mitom_dir)
+    if Path(original_dir).is_file() and Path(mitom_dir).is_file():   # two files: compare them (any names)
+        orig, mit = {"pair": Path(original_dir)}, {"pair": Path(mitom_dir)}
     rows: List[dict] = []
     n = Counter()
     for stem in sorted(set(orig) & set(mit)):
@@ -336,11 +346,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("-o", "--out", default="original_vs_mitom.tsv")
     ap.add_argument("--genetic_code", type=int, default=5)
     a = ap.parse_args(argv)
-    n = compare_dirs(Path(a.original), Path(a.mitom), Path(a.out), a.genetic_code)
+    n = compare_dirs(Path(prepare_input(a.original, "--original")), Path(prepare_input(a.mitom, "--mitom")),
+                     Path(a.out), a.genetic_code)
+    if not n["records"]:
+        raise InputError(f"no record compared between --original {a.original} and --mitom {a.mitom}"
+                         + (f" ({n['errors']} not readable: see {a.out})" if n["errors"] else "")
+                         + " (folders: the same file names; files: one GenBank record each)")
     print(f"[mito_compare] {summary_text(n)}", file=sys.stderr)
     print(f"table: {a.out}", file=sys.stderr)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

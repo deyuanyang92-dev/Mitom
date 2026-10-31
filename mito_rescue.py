@@ -50,6 +50,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 from mito_engines import engine_env, mitos2_command, mitos_to_record  # noqa: E402,F401  (MITOS2: one runner, one parser)
 
 MIN_RRNA = 300
@@ -225,6 +226,9 @@ def main(argv=None) -> int:
     p.add_argument("--refdir", dest="mitos_refdir", metavar="DIR", help="folder that holds the MITOS2 reference data refseq89m")
     old_spelling(p, "--mitos_refdir", "mitos_refdir")
     a = p.parse_args(argv)
+    if not Path(a.input).is_dir():                    # (the files are changed in place, the report goes next to them)
+        raise InputError(f"{a.input}: give the folder that holds the GenBank files (changed in place)"
+                         if Path(a.input).is_file() else f"input not found: {a.input}")
     rows = rescue_dir(Path(a.input), a.genetic_code, mitos_bin=a.mitos_bin, refdir=a.mitos_refdir)
     rep = Path(a.input) / "rescue_report.tsv"
     write_tsv(rep, ["file", "record", "gene", "location", "status", "hint"], rows)
@@ -235,4 +239,4 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

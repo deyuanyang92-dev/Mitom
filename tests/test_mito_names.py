@@ -6,7 +6,8 @@ of 4855378 (before mito_names became the single source), for
     replaced by 1),
   - every key of every old name table (aliases, synonyms, products, orientation aliases) in six spellings, as /gene and
     as /product of a CDS, rRNA, tRNA and gene feature.
-A deliberate change of a name rule regenerates the file and shows the changed names in its diff."""
+A deliberate change of a name rule regenerates the file and shows the changed names in its diff (2026-10-31: RNR1 / RNR2,
+l-rRNA / small subunit ribosomal RNA products, curate's PCG synonyms NADH4L / COXI in gene_name)."""
 import argparse
 import csv
 import gzip

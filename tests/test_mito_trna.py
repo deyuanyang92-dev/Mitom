@@ -269,3 +269,15 @@ def test_refseq_dir_from_either_folder(tmp_path):
     (tmp_path / "refs" / "refseq89m" / "ncRNA").mkdir(parents=True)
     assert mito_env.refseq_dir(str(tmp_path / "refs")) == tmp_path / "refs" / "refseq89m"
     assert mito_env.refseq_dir(str(tmp_path / "refs" / "refseq89m")) == tmp_path / "refs" / "refseq89m"
+
+
+def test_mitfi_ends_take_the_whole_trna_not_its_piece_past_the_origin():
+    """2026-10-31 review: MiTFi finds a tRNA across the origin whole (start < n < end) and its piece after the origin
+    at the sequence start; the first match in start order (the 32-nt piece) gave the final ends."""
+    from mito_common import CoreFeature
+    n = 16569
+    ml = CoreFeature("tRNA", "trnE", 16532, 16601, -1, "MitoM-ML", score=0.99)
+    piece = CoreFeature("tRNA", "trnE", 0, 32, -1, "MiTFi copy", score=20.0)
+    whole = CoreFeature("tRNA", "trnE", 16532, 16601, -1, "MiTFi", score=60.0)
+    got = mt.mitfi_ends([ml], [piece, whole], n)[0]
+    assert (got.start, got.end) == (16532, 16601)

@@ -28,6 +28,34 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- Robustness round 2 (2026-10-31: every command fuzzed with 24 good / malformed inputs, four module reviews):
+  - Reverse complement reversed the parts of every join (exons, trans-spliced and origin-crossing features came out
+    scrambled after a record with cox1 on the minus strand was turned; 6 of 208 features in the test records), and
+    rotation wrote a minus-strand feature across the new origin in the wrong order (50 of 272 random rotations).
+    Now every feature's sequence survives rotations, reverse complements and both (tested on 5 records x 12 shifts).
+  - A previous run's 04.final_gb/ or reoriented body in the same -o was published as this run's result (another
+    genome under the record's header): the run clears its own intermediate folders first.
+  - Curation: O2 cut complete genes across the origin in half (NCBI / MITOS2 / rotated input; ~25 genes in a rotation
+    test), C1 / P4 judged a join across the origin by its hull 1..L and removed partial cox1 / nad5, `mitom curate`
+    used code 5 for every record (vertebrate AGG stops read through; now each record's /transl_table), every
+    /transl_except was deleted (an internal Trp codon gave X in the translation; now kept and applied), rRNA names
+    l-rRNA / small subunit ribosomal RNA / RNR1 / RNR2 were not read, /gene was added to tRNAs / rRNAs without a
+    gene feature (22 table2asn GeneXrefWithoutGene on NC_001636.1).
+  - A tRNA across the origin got a truncated duplicate from MiTFi (vertebrate trnE cut to 32 of 69 nt; written
+    twice with --trna mitfi); MitoM-ML ignored cmsearch / cmalign failures (0 tRNAs, empty anticodons: now an error,
+    the core falls back to MiTFi with a warning); intron steps ignored failing exonerate / tblastn / blastn.
+  - table2asn hung for ever on NC_012920.1 + NC_012920.1_2 in one file: gb2tbl renames duplicates ID-2 (never an ID
+    already used) and every table2asn / core program call has a timeout.
+  - Every command: a missing, empty, unreadable (truncated, not GenBank / FASTA), gzip, BOM, Latin-1 or EMBL input
+    now gives one ERROR line and exit 2 (or is unpacked / converted) instead of a traceback or 'finished, 0 records'
+    with exit 0 (dedup, reorient, gb2fasta, curate, check, compare, plot, validate, rrna-hmm, trna, intron, nuc,
+    transfer_metadata, replace_organism); protein FASTA is not annotated as DNA; cut-off GenBank records (a killed
+    download) are skipped and `mitom fetch` downloads them again; CONTIG records without sequence are skipped.
+  - Same-name inputs no longer overwrite each other (dedup of LOCUS-only names, gb2fasta, reorient, plot,
+    transfer_metadata / replace_organism, grouped runs); `reorient` exits 1 when files failed; group runs killed by a
+    signal fail the run; one bad record no longer turns off --clade auto for all; /pseudo stays value-less and the
+    NCR step writes atomically; `mitom compare` matches NCBI's complement(join(1,16306..16371)) and two files of any
+    name.
 - Every record of a multi-record GenBank file (the output of `mitom fetch`) took the lineage of the FIRST record
   (mitom_stage.sample_lineage): Metridium senile (Anthozoa, circular) after Aurelia aurita was made linear as a
   jellyfish; the MitoM-ML tRNA clade models used the wrong lineage too. Now the record's own lineage (read once per file).

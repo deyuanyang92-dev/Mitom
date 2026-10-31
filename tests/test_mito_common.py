@@ -69,7 +69,8 @@ def test_read_fasta_matches_seqio_and_the_old_engines_reader(tmp_path):
 
 def test_contig_record_id():
     assert mc.contig_record_id("S00001", "contig 1", 0, 1) == "S00001"
-    assert mc.contig_record_id("S00001", "NODE_1_length_15000+x", 0, 2) == "NODE_1_length_15"
+    assert mc.contig_record_id("S00001", "NODE_1_length_15000+x", 0, 2) == "NODE_1_length_1"   # cut: + its number
+    assert mc.contig_record_id("S00001", "NODE_1_length_15000+y", 1, 2) == "NODE_1_length_2"
     assert mc.contig_record_id("S00001", "", 2, 3) == "S00001_3"
 
 

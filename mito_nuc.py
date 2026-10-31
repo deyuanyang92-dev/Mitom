@@ -67,6 +67,7 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
+from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 LIB = HERE / "models" / "nuc"
@@ -1859,9 +1860,13 @@ def write_submission(out: Path, inp: Path, recs, org: Dict[str, str], feats: Dic
     t2a = mito_env.find("table2asn")
     if not t2a or not fsa:
         return d
-    subprocess.run([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
-                    "-gaps-min", "10", "-gaps-unknown", "100",
-                    "-o", str(d / "nuc.sqn")], capture_output=True, text=True, check=False)
+    try:
+        subprocess.run([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
+                        "-gaps-min", "10", "-gaps-unknown", "100",
+                        "-o", str(d / "nuc.sqn")], capture_output=True, text=True, check=False, timeout=3600)
+    except subprocess.TimeoutExpired:                  # (table2asn 1.28 can hang on some SeqIDs)
+        logging.warning("[NUC] submission: table2asn did not finish in 1 h: not validated")
+        return d
     msgs = Counter()
     val = d / "nuc.val"
     for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
@@ -2274,10 +2279,12 @@ def main(argv=None) -> int:
         bad = set(genes) - {"rdna", "histone"}
         if bad:
             ap.error(f"--genes: unknown {', '.join(sorted(bad))}")
-        annotate(args.input, args.out, args.lib, genes, args.threads, args.leave_out, args.consensus_identity,
+        src = Path(prepare_input(args.input))
+        require_records(count_seq_records(src), "sequence records", args.input)
+        annotate(src, args.out, args.lib, genes, args.threads, args.leave_out, args.consensus_identity,
                  args.organism, args.src, not args.no_cm)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

@@ -54,6 +54,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import command_line, iter_gb_files, old_spelling, STDERR_MARK, STDERR_TAIL, TOOL_LOG  # noqa: E402
+from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 from mito_ncr import MIN_LEN as MIN_NONCODING, extent, is_ncr, noncoding, span  # noqa: E402,F401
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000
@@ -367,7 +368,7 @@ STYLES = ("circos", "mitom")
 
 def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = None,
                 formats: Sequence[str] = ("png", "pdf"), style: str = "circos",
-                min_noncoding: int = MIN_NONCODING) -> List[Path]:
+                min_noncoding: int = MIN_NONCODING, used: Optional[set] = None) -> List[Path]:
     """Draw the map of `rec` (depth: per-position read depth, e.g. from depth_from_reads) in `style` - circos (strand
     lanes, after mitoPlotR) or mitom (genes on both sides of one circle, GC content and GC skew rings) - and write
     <out_dir>/<record id>.<format> for each format (png at 300 dpi); returns the written paths. Introns are hatched
@@ -381,7 +382,12 @@ def plot_record(rec: SeqRecord, out_dir: Path, depth: Optional[np.ndarray] = Non
     fig = (_circos_figure if style == "circos" else _mitom_figure)(rec, depth, min_noncoding)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    stem = re.sub(r"[^\w.-]", "_", rec.id)
+    stem = base = re.sub(r"[^\w.-]", "_", rec.id)
+    if used is not None:                          # records with one ID (two input files): two maps, not one overwritten
+        k = 2
+        while stem in used:
+            stem, k = f"{base}_{k}", k + 1
+        used.add(stem)
     written = []
     with matplotlib.rc_context({"pdf.fonttype": 42}):           # editable text in the PDF
         for fmt in formats:
@@ -723,9 +729,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help=f"shortest unannotated stretch shaded and labelled 'NCR <length>' (default {MIN_NONCODING} "
                         "nt; 0: none)")
     a = p.parse_args(argv)
-    src = Path(a.input)
-    if not src.exists():
-        p.error(f"{src} not found")
+    src = Path(prepare_input(a.input))
     recs = [r for f in iter_gb_files(src) for r in SeqIO.parse(str(f), "genbank")]
     if not recs:
         p.error(f"no GenBank records in {src}")
@@ -735,16 +739,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     if reads and len(recs) != 1:
         p.error(f"--fq1 / --fq2 need an input with one record ({len(recs)} found)")
     formats = [x.strip() for x in a.formats.split(",") if x.strip()]
+    used_stems: set = set()
     for rec in recs:
         try:
             depth = depth_from_reads(rec, reads, a.threads) if reads else None
         except RuntimeError as exc:
             print(f"[mito_plot] {rec.id}: {exc}", file=sys.stderr)
             return 1
-        for path in plot_record(rec, Path(a.out_dir), depth, formats, a.style, a.min_noncoding):
+        for path in plot_record(rec, Path(a.out_dir), depth, formats, a.style, a.min_noncoding, used=used_stems):
             print(path)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

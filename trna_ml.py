@@ -71,8 +71,10 @@ def rc(s: str) -> str:
 
 
 def sh(cmd: List[str]) -> None:
-    from mito_common import run_tool
-    run_tool(cmd)
+    """A program of MitoM-ML; a failure raises RuntimeError (2026-10-31 review: a failing cmsearch gave 0 tRNAs and a
+    failing cmalign empty anticodons, without a message)."""
+    from mito_common import run_or_raise
+    run_or_raise(cmd)
 
 
 # ── models ───────────────────────────────────────────────────────────────────

@@ -76,6 +76,7 @@ import mito_env  # noqa: E402  (finds external programs: config, PATH, conda env
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
 from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_tsv  # noqa: E402
+from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
 from mito_common import CoreFeature, positions, run_or_raise  # noqa: E402  (the annotation core's tRNA step)
 
 GB_EXT = set(GB_SUFFIXES)
@@ -558,7 +559,9 @@ def mitfi_ends(ml: List[CoreFeature], mitfi: List[CoreFeature], n: int) -> List[
     chordates: both ends exact 90.2 -> 91.4 %, MITOS2 91.1 %; 188 held-out vertebrates 91.3 -> 92.7 %)."""
     out = []
     for f in ml:
-        m = next((g for g in mitfi if same_trna(f, g, n)), None)
+        pf = positions(f, n)                     # the MiTFi call that overlaps most (not the first in start order)
+        m = max((g for g in mitfi if same_trna(f, g, n)), key=lambda g: (len(pf & positions(g, n)), g.score),
+                default=None)
         out.append(f if m is None else CoreFeature(f.kind, f.name, m.start, m.end, f.strand, f.note + ", ends by MiTFi",
                                                anticodon=f.anticodon, score=f.score, model=f.model))
     return out
@@ -627,7 +630,12 @@ def parse_mitfi(text: str, log, n: Optional[int] = None) -> List[CoreFeature]:
     kept: List[CoreFeature] = []
     L = n or max((f.end for f in feats), default=1)
     for f in feats:
-        if all(len(positions(f, L) & positions(k, L)) <= MITFI_TRNA_OVL for k in kept):
+        pf = positions(f, L)
+        if all(len(pf & positions(k, L)) <= MITFI_TRNA_OVL
+               # a piece of a better hit of the same tRNA (its part past the origin of a circular record, <= 50 nt,
+               # found again at the sequence start: 2026-10-31 review, trnE across the origin cut to 32 nt)
+               and not (k.name == f.name and k.strand == f.strand and len(pf & positions(k, L)) >= 0.9 * len(pf))
+               for k in kept):
             kept.append(f)
     return sorted(kept, key=lambda f: f.start)
 
@@ -642,7 +650,11 @@ def core_trnas(genome: str, searched: str, genome_fa: Path, refdir: Path, code: 
     circular), n = its length, genes = the protein genes / rRNAs found (the sensitive MiTFi pass searches outside them)."""
     if not use_ml:
         return annotate_trnas(searched, genome_fa, refdir, code, threads, tools, tmp, log, n, phylum, genes=genes)
-    trnas = annotate_trnas_ml(genome, n, code, threads, tools, lineage, circular, log)
+    try:
+        trnas = annotate_trnas_ml(genome, n, code, threads, tools, lineage, circular, log)
+    except RuntimeError as exc:                       # cmsearch / cmalign failed: MiTFi's tRNAs, said on the console
+        log.warning(f"[core] MitoM-ML failed ({str(exc)[:300]}): tRNAs by MiTFi only")
+        return annotate_trnas(searched, genome_fa, refdir, code, threads, tools, tmp, log, n, phylum, genes=genes)
     mitfi = annotate_trnas(searched, genome_fa, refdir, code, threads, tools, tmp, log, n, phylum,
                            genes=genes) if tools.get("mitfi") else None
     kept = trna_second_opinion(trnas, mitfi, n)
@@ -734,7 +746,8 @@ def main(argv=None) -> int:
         print("[mito_trna] --select mitom needs MitoM-ML (models/trna_ml, cmsearch, cmalign, refseq89m)", file=sys.stderr)
         return 1
     b: Dict[str, str] = {k: v for k, v in found.items() if v}
-    src, out = Path(a.input), Path(a.out)
+    src, out = Path(prepare_input(a.input)), Path(a.out)
+    require_records(count_seq_records(src), "sequence records", a.input)
     files = sorted(x for x in src.rglob("*") if x.is_file() and x.suffix.lower() in GB_EXT | {".fa", ".fasta", ".fna"}) \
         if src.is_dir() else [src]
     if a.select == "mitos2":
@@ -862,4 +875,4 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

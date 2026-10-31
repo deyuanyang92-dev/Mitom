@@ -74,6 +74,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
 from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
+from mito_common import cli_guard, InputError, iter_gb_files, prepare_input, require_records  # noqa: E402,F811
 from mito_common import CoreFeature  # noqa: E402  (the annotation core's rRNA step)
 from mito_trna import cmsearch  # noqa: E402  (MITOS2's covariance model search, as for the tRNAs)
 
@@ -640,6 +641,10 @@ def main() -> int:
         for r in build(a.gb, a.out, ex, a.cpu, a.manifest_only):
             print("\t".join(str(r[k]) for k in MANIFEST))
         return 0
+    if not a.input.is_dir():                          # (the files are changed in place, the report goes next to them)
+        raise InputError(f"{a.input}: give the folder that holds the GenBank files (changed in place)"
+                         if a.input.is_file() else f"input not found: {a.input}")
+    require_records(sum(1 for _ in iter_gb_files(a.input)), "GenBank files", a.input)
     rows = search_dir(a.input, a.lib, a.phylum)
     write_report(rows, a.input / "rrna_hmm_report.tsv")
     print(f"[mito_rrna_hmm] {sum(r['status'].startswith('added') for r in rows)} rRNA(s) added; report "
@@ -648,4 +653,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))
