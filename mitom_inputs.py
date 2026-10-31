@@ -3,6 +3,7 @@ the GenBank taxonomy, GenBank deduplication (dedup_report.tsv; RefSeq NC_ kept) 
 FASTA record with an internal ID (id_map.tsv), the FASTQ pair of a sample (--infq), and the CDS transl_table check."""
 from __future__ import annotations
 
+import gzip
 import logging
 import re
 import shutil
@@ -11,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from Bio import SeqIO
+from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from mito_common import GB_SUFFIXES, safe_name, topology_from_header
@@ -88,6 +90,62 @@ def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optio
 
 _FASTA_EXTS = {".fa", ".fasta", ".fna", ".fas"}
 _GB_EXTS    = GB_SUFFIXES
+
+
+def _plain_suffix(p: Path) -> str:
+    """The suffix of a file name without a trailing .gz (genome.fasta.gz -> .fasta)."""
+    return Path(p.name[:-3]).suffix.lower() if p.name.lower().endswith(".gz") else p.suffix.lower()
+
+
+NORMALIZED_DIR = "00.input"
+
+
+def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
+    """The input as the steps read it: gzip-compressed files (.gz) unpacked and text that is not UTF-8 (Latin-1
+    headers of Windows programs) converted, into out_root/00.input/ (2026-10-31: both made the run end with 0
+    records). Returns (the path to read, notes); the input itself when nothing needs to change."""
+    in_path = Path(in_path)
+    if in_path.is_file():
+        files, base = [in_path], in_path.parent
+    elif in_path.is_dir():
+        files, base = sorted(p for p in in_path.rglob("*") if p.is_file()
+                             and _plain_suffix(p) in (set(_FASTA_EXTS) | set(_GB_EXTS))), in_path
+    else:
+        return in_path, []
+
+    def needs(p: Path) -> str:
+        with p.open("rb") as fh:
+            head = fh.read(2)
+        if head == b"\x1f\x8b":
+            return "gzip"
+        try:
+            p.read_bytes().decode("utf-8")
+        except UnicodeDecodeError:
+            return "latin1"
+        return ""
+
+    todo = {p: needs(p) for p in files}
+    if not any(todo.values()):
+        return in_path, []
+    dest = Path(out_root) / NORMALIZED_DIR
+    if dest.is_dir():
+        shutil.rmtree(dest)
+    notes = []
+    for p, what in todo.items():
+        rel = p.relative_to(base)
+        t = dest / (rel.parent / rel.name[:-3] if what == "gzip" and rel.name.lower().endswith(".gz") else rel)
+        t.parent.mkdir(parents=True, exist_ok=True)
+        data = gzip.open(p, "rb").read() if what == "gzip" else p.read_bytes()
+        try:
+            text, latin = data.decode("utf-8"), False
+        except UnicodeDecodeError:
+            text, latin = data.decode("latin-1"), True
+        t.write_text(text, encoding="utf-8")
+        if what:
+            notes.append(f"{p.name}: " + "; ".join(x for x in ("unpacked" if what == "gzip" else "",
+                                                               "not UTF-8 text: read as Latin-1" if latin else "") if x))
+    return (dest / in_path.name[:-3] if in_path.is_file() and todo[in_path].startswith("gzip")
+            and in_path.name.lower().endswith(".gz") else dest / in_path.name if in_path.is_file() else dest), notes
 
 
 def _is_fasta_file(p: Path) -> bool:
@@ -548,6 +606,37 @@ def write_one_record_fasta(record: "SeqRecord", out_fa: Path, seq_id: str, topol
         SeqIO.write([rec], fh, "fasta")
 
 
+_IUPAC = set("ACGTRYKMSWBDHVN")
+MIN_ACGT = 500        # a sequence with fewer A/C/G/T than this (empty, all N) is not annotated
+
+
+def clean_sequence(rec: "SeqRecord") -> Tuple["SeqRecord", str]:
+    """The sequence as the programs of the core read it: alignment gaps ('-', '.'), stops ('*'), spaces and digits
+    removed, U -> T, letters that are not IUPAC nucleotides -> N (2026-10-31: a '-' made exonerate fail on every
+    protein gene). Returns (record, warning, '' when nothing changed); a sequence with fewer than MIN_ACGT A/C/G/T
+    comes back empty (skipped, with the warning)."""
+    raw = str(rec.seq)
+    s = re.sub(r"[-.*\s0-9]", "", raw.upper()).replace("U", "T")
+    bad = sum(1 for c in s if c not in _IUPAC)
+    if bad:
+        s = "".join(c if c in _IUPAC else "N" for c in s)
+    acgt = sum(s.count(c) for c in "ACGT")
+    notes = []
+    if len(s) != len(raw):
+        notes.append(f"{len(raw) - len(s)} gap / stop / space characters removed")
+    if bad:
+        notes.append(f"{bad} letters that are not nucleotides read as N")
+    if acgt < MIN_ACGT:
+        notes.append(f"only {acgt} A/C/G/T nucleotides (empty or all N): not annotated")
+        s = ""
+    if not notes:                        # (case kept: only gaps, odd letters and empty sequences are changed)
+        return rec, ""
+    out = rec[:0]
+    out.seq = Seq(s)
+    out.id, out.name, out.description = rec.id, rec.name, rec.description
+    return out, "; ".join(notes)
+
+
 def split_or_sanitize_fastas(
     in_files: List[Path],
     out_dir: Path,
@@ -582,6 +671,11 @@ def split_or_sanitize_fastas(
         if (not if_split) and len(records) > 1:
             raise ValueError(f"FASTA has >1 record: {fa}. Use --if_split_fasta yes.")
         for rec in records:
+            rec, why = clean_sequence(rec)
+            if why:
+                logging.warning(f"[SEQ] {rec.id}: {why}")
+            if not len(rec.seq):
+                continue
             idx += 1
             desc = (rec.description or "").strip()
             orig_token = header_first_token(rec.id) if _is_topology_tag(desc) \
@@ -595,6 +689,8 @@ def split_or_sanitize_fastas(
                 cand_name = f"{base_name}_{sample_counts[base_name]}"
             _seen_sample_names.add(cand_name)
             sample_name = cand_name
+            if sample_name != base_name:
+                logging.warning(f"[SPLIT] {fa.name}: a second sequence named '{base_name}': annotated as '{sample_name}'")
             orig_gb_path = acc_to_orig_gb.get(safe_name(rec.id)) \
                         or acc_to_orig_gb.get(orig_token)
             topo     = infer_topology_from_description(desc)

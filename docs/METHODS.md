@@ -37,6 +37,32 @@ It can:
 - Draw a circular genome map per record (by default in the lane layout of mitoPlotR: genes, GC content, read depth when reads are given; introns hatched with their length, non-coding regions shaded).
 
 
+## 类群与遗传密码自动判断 / --clade auto (mito_classify.py, mitom_groups.py)
+
+`--clade auto`（默认）逐条记录决定门、类群和遗传密码，结果与依据写入 `reports/clade_decision.tsv`：
+
+1. **GenBank 记录**：分类信息里的门（或纲级同义名）；遗传密码取 CDS 的 `/transl_table`（多数票），没有 CDS 时取参考基因组中该谱系最深一级类群的遗传密码（`code_of_lineage`，例如 Tunicata → 13）。分类信息不属于 Metazoa 时报错。
+2. **FASTA / 无分类信息的记录**：blastx（`-query_gencode 5`，任何动物线粒体密码下都不会提前终止）比对 refseq89m 的 8 个保守蛋白（cox1 cox2 cox3 cob atp6 nad1 nad4 nad5，约 8,000 个基因组）。参考基因组的谱系和遗传密码来自 `models/ref_taxa.tsv.gz`（`scripts/build_ref_taxa.py` 用本机 RefSeq 生成，8,022 个中 7,672 个有谱系）。
+   - 门：每个基因取前 5 个命中，按（比分 / 该基因最高比分）加权投票；支持度 = 获胜门所占权重。
+   - 遗传密码：获胜门的命中的 `transl_table` 加权投票。
+   - 密码子核验：在这些比对中，基因组自己的 AGA AGG ATA AAA TGA TAA 处对应的参考氨基酸；每个动物线粒体密码（2 4 5 9 13 14 21 24 33）按吻合比例打分。AGR 在比对区内出现（≥ 1/1000 个密码子且多于 3 倍 TAG）时排除把 AGR 当终止的密码 2（文昌鱼 3.0/1000，脊椎动物 0–0.1/1000）；出现次数不多于 3 倍 TAG（所有密码中的终止密码子，比对区内的 TAG 即测序错误 / 移码的噪声）的密码子不计分。打分明显更好（差 ≥ 0.15）的密码取代近亲的密码，并给出警告。
+   - 支持度 < 0.7（参考库里没有近亲，小门常见）：门判为不确定，类群用 `Animal`，遗传密码用密码子核验的结果。
+   - 命中少于 2 个基因（< 约 4 kb 的片段）：不判断，并入输入中最常见的组。
+3. **多个门 / 遗传密码**：`mitom run` 按（类群，遗传密码，门）分组，每组以显式 `--clade --genetic_code --phylum` 运行一次完整流程（并行；`--jobs` 按记录数分给各组），结果合并到同一输出目录（`final_annotation/`、`summary.tsv`、`ncbi_submission/`、`plots/`、`reports/` 表格合并；各组参数与日志在 `reports/groups/`）。
+4. 门未知的记录（FASTA、门不确定）缺 rRNA 时，rRNA HMM 后备步骤使用所有门的模型中得分最高的那一个门。
+
+**评测**（2026-10-31，均为本机数据，未新下载）：
+
+| 测试 | 记录 | 遗传密码正确 | 门 正确 / 不确定 / 错误 |
+|---|---|---|---|
+| RefSeq 分层抽样（每门 ≤ 15 条 + 各门少数密码 ≤ 3 条，29 门），去掉同科参考 | 238 | 93.3 % | 63.0 / 32.4 / 4.6 % |
+| 同上，8 kb / 5 kb / 3 kb 随机片段 | 238 × 3 | 91.6 / 85.3 / 74.4 % | 58.4 / 50.0 / 37.8 % 正确 |
+| 同上，10 % / 20 % 随机替换 | 238 × 2 | 89.1 / 84.0 % | 63.0 / 60.9 % 正确 |
+| 同上，20 % 的 N（200 nt 块）、反向互补 + 随机起点 | 238 × 2 | 93.3 / 93.3 % | 与完整基因组相同 |
+| 全流程：55 条 29 门无标签 FASTA，自身参考在分类和注释中都排除（`MITOM_EXCLUDE_REF`） | 55 | 52 / 55 | 29 / 23 / 3；NCBI ERROR 0 |
+
+门判错的都是参考库里只有 1–2 个科的小门（有爪动物、鳃曳动物、线形动物判成节肢动物）；它们的遗传密码仍正确。遗传密码的残余错误：吸虫 14 → 9（两者只差 TAA）、柱头虫 9 / 24、六放海绵 5 / 4。两个门的嵌合序列判为其中之一或不确定（不报警）。知道类群时请显式给 `--clade` 和 `--genetic_code`。
+
 ## 注释后校正 / Post-annotation curation (mito_curate.py)
 
 对注释好的 GenBank（MitoM 核心、MitoZ、MITOS 等的输出）单独运行，按 Fourdrilis et al. 2018 的软体动物（腹足类）注释准则修正 PCG 与 12S/16S，准则引自 Ghiselli et al. 2021, *Phil. Trans. R. Soc. B* 376:20200159（doi:10.1098/rstb.2020.0159，第 3 节）：

@@ -308,6 +308,28 @@ def _verdict(span: Hit, m: dict, leng: int, taken: List[Set[int]], n: int, linea
     return f"added (partial {' and '.join(part)})" if part else "added"
 
 
+def best_library(fa: Path, lib: Path, phyla: Iterable[str], run: Callable[[Path, Path], List[Hit]],
+                 n: Optional[int]) -> str:
+    """The phylum of the library whose rRNA models score best on the genome (sum of the best 16S and 12S cluster
+    scores); '' when none hits. For records without any phylum (2026-10-31 stress test: two ctenophores of an
+    unlabelled FASTA lost both rRNAs, their phylum being uncertain)."""
+    best, best_score = "", 0.0
+    for p in sorted(phyla):
+        score = 0.0
+        for g in GENES:
+            hmm = lib / f"{p}.{g}.hmm"
+            if not hmm.is_file():
+                continue
+            try:
+                span, _ = best_spans(run(hmm, fa), n)
+            except ERRORS:
+                continue
+            score += span.score if span is not None else 0.0
+        if score > best_score:
+            best, best_score = p, score
+    return best
+
+
 def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
                   run: Optional[Callable[[Path, Path], List[Hit]]] = None) -> List[dict]:
     """Search the rRNAs missing from rec; add the accepted ones in place. One report row per searched gene."""
@@ -315,10 +337,9 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
     if not want:
         return []
     man = read_manifest(lib)
-    phy = phylum_of(rec, {p for p, _ in man}, phylum)
-    row = {"record": rec.id, "phylum": phy or ""}
-    if not phy:
-        return [dict(row, gene=GENES[g][0], location="", status="skipped: no library for this phylum") for g in want]
+    lib_phyla = {p for p, _ in man}
+    phy = phylum_of(rec, lib_phyla, phylum)
+    taxonomy = [t for t in rec.annotations.get("taxonomy", []) if t]
     run = run or nhmmer
     n = len(rec)
     taken = [_positions(f, n) for f in rec.features if f.type in ("CDS", "rRNA")]
@@ -328,6 +349,13 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
         circ = rec.annotations.get("topology") == "circular"
         seq = str(rec.seq)
         fa.write_text(f">{rec.id}\n{seq + seq[:min(ORIGIN_EXT, n)] if circ else seq}\n")
+        chosen = ""
+        if not phy and not taxonomy and phylum is None:   # no phylum at all (FASTA, --clade auto uncertain): the
+            phy = best_library(fa, lib, lib_phyla, run, n if circ else None)   # phylum whose models fit best
+            chosen = " (phylum unknown: the library whose 16S / 12S models fit best)" if phy else ""
+        row = {"record": rec.id, "phylum": phy or ""}
+        if not phy:
+            return [dict(row, gene=GENES[g][0], location="", status="skipped: no library for this phylum") for g in want]
         for g in want:
             name, product = GENES[g]
             m = man.get((phy, g))
@@ -350,7 +378,7 @@ def search_record(rec: SeqRecord, lib: Path = LIB, phylum: Optional[str] = None,
             if not status.startswith("added"):
                 continue
             fl = _location(span, _partial(span, leng), n)
-            q = {"gene": [name], "product": [product], "note": [NOTE.format(phy, m["n_used"])]}
+            q = {"gene": [name], "product": [product], "note": [NOTE.format(phy, m["n_used"]) + chosen]}
             rec.features += [SeqFeature(fl, type="gene", qualifiers={"gene": [name]}), SeqFeature(fl, type="rRNA", qualifiers=q)]
             taken.append({i % n for i in range(span.start, span.end)})
             if copy and _verdict(copy, m, leng, taken, n, linear=not circ).startswith("added"):

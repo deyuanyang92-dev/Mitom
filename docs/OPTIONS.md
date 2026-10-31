@@ -159,19 +159,20 @@ Annotation:
                         problem samples are always kept (reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
   --jobs N              Records annotated at the same time (default: CPUs // threads = 9).
-  --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): from the
-                        taxonomy of the GenBank input (one phylum per run; class names such as Vertebrata,
-                        Gastropoda, Insecta count for their phylum; a group below or Animal). A taxonomy
-                        that names no known phylum, several phyla, or CDS transl_tables that differ between
-                        records are errors; input with NO taxonomy at all (FASTA, GenBank without a lineage)
-                        falls back to Annelida-segmented-worms with a WARNING - give the clade explicitly
-                        for any other taxon: Chordata, Arthropoda, Echinodermata, Annelida-segmented-worms,
-                        Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-sponges, Cnidaria,
-                        Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
+  --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
+                        - the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a
+                        taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
+                        genomes, their genetic code checked on the codons; no close relative: Animal and the
+                        code of the codons). Several phyla / codes: `run` annotates each group with its own
+                        clade and code and merges the results (reports/clade_decision.tsv); `import` and
+                        `annotate` need one. Or give one of: Chordata, Arthropoda, Echinodermata, Annelida-
+                        segmented-worms, Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-
+                        sponges, Cnidaria, Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
   --genetic_code GENETIC_CODE
-                        Genetic code (default with --clade auto: the CDS transl_table of the input, else the
-                        phylum's usual code; otherwise the code of the clade - 2 Chordata, 9 Echinodermata,
-                        4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal).
+                        Genetic code (default with --clade auto: the CDS transl_table of each record, else
+                        the code of its lineage or of the closest reference genomes; otherwise the code of
+                        the clade - 2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria,
+                        Platyhelminthes, Chaetognatha, Animal).
 
 FASTQ (optional - read depth ring of the genome maps, --plot):
   --infq INFQ           Directory with the paired FASTQ files of the samples (matched by sample name).
@@ -313,19 +314,20 @@ Annotation:
                         problem samples are always kept (reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
   --jobs N              Records annotated at the same time (default: CPUs // threads = 9).
-  --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): from the
-                        taxonomy of the GenBank input (one phylum per run; class names such as Vertebrata,
-                        Gastropoda, Insecta count for their phylum; a group below or Animal). A taxonomy
-                        that names no known phylum, several phyla, or CDS transl_tables that differ between
-                        records are errors; input with NO taxonomy at all (FASTA, GenBank without a lineage)
-                        falls back to Annelida-segmented-worms with a WARNING - give the clade explicitly
-                        for any other taxon: Chordata, Arthropoda, Echinodermata, Annelida-segmented-worms,
-                        Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-sponges, Cnidaria,
-                        Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
+  --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
+                        - the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a
+                        taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
+                        genomes, their genetic code checked on the codons; no close relative: Animal and the
+                        code of the codons). Several phyla / codes: `run` annotates each group with its own
+                        clade and code and merges the results (reports/clade_decision.tsv); `import` and
+                        `annotate` need one. Or give one of: Chordata, Arthropoda, Echinodermata, Annelida-
+                        segmented-worms, Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-
+                        sponges, Cnidaria, Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
   --genetic_code GENETIC_CODE
-                        Genetic code (default with --clade auto: the CDS transl_table of the input, else the
-                        phylum's usual code; otherwise the code of the clade - 2 Chordata, 9 Echinodermata,
-                        4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal).
+                        Genetic code (default with --clade auto: the CDS transl_table of each record, else
+                        the code of its lineage or of the closest reference genomes; otherwise the code of
+                        the clade - 2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria,
+                        Platyhelminthes, Chaetognatha, Animal).
 
 FASTQ (optional - read depth ring of the genome maps, --plot):
   --infq INFQ           Directory with the paired FASTQ files of the samples (matched by sample name).
@@ -460,19 +462,20 @@ Annotation:
                         problem samples are always kept (reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
   --jobs N              Records annotated at the same time (default: CPUs // threads = 9).
-  --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): from the
-                        taxonomy of the GenBank input (one phylum per run; class names such as Vertebrata,
-                        Gastropoda, Insecta count for their phylum; a group below or Animal). A taxonomy
-                        that names no known phylum, several phyla, or CDS transl_tables that differ between
-                        records are errors; input with NO taxonomy at all (FASTA, GenBank without a lineage)
-                        falls back to Annelida-segmented-worms with a WARNING - give the clade explicitly
-                        for any other taxon: Chordata, Arthropoda, Echinodermata, Annelida-segmented-worms,
-                        Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-sponges, Cnidaria,
-                        Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
+  --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
+                        - the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a
+                        taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
+                        genomes, their genetic code checked on the codons; no close relative: Animal and the
+                        code of the codons). Several phyla / codes: `run` annotates each group with its own
+                        clade and code and merges the results (reports/clade_decision.tsv); `import` and
+                        `annotate` need one. Or give one of: Chordata, Arthropoda, Echinodermata, Annelida-
+                        segmented-worms, Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-
+                        sponges, Cnidaria, Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
   --genetic_code GENETIC_CODE
-                        Genetic code (default with --clade auto: the CDS transl_table of the input, else the
-                        phylum's usual code; otherwise the code of the clade - 2 Chordata, 9 Echinodermata,
-                        4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal).
+                        Genetic code (default with --clade auto: the CDS transl_table of each record, else
+                        the code of its lineage or of the closest reference genomes; otherwise the code of
+                        the clade - 2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria,
+                        Platyhelminthes, Chaetognatha, Animal).
 
 FASTQ (optional - read depth ring of the genome maps, --plot):
   --infq INFQ           Directory with the paired FASTQ files of the samples (matched by sample name).

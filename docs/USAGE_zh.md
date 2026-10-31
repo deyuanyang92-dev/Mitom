@@ -84,7 +84,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 ### 3.1 文件格式
 
 - **GenBank**（`.gb .gbk .gbf .gbff .genbank`）：单个文件（可含多条记录）或一个目录。记录自带的分类信息用来自动判断类群和遗传密码；原记录的表头（物种、文献、标本信息等）会复制到结果里。
-- **FASTA**：单个文件或目录，需要 `--clade` 和 `--genetic_code`。
+- **FASTA**：单个文件或目录。不写 `--clade` 时自动判断每条序列的门和遗传密码（见 3.3）；知道类群时可写明 `--clade` 和 `--genetic_code`。
 
 ### 3.2 环状还是线状
 
@@ -108,9 +108,16 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 
 环状记录会旋转到以 cox1 起始（见第 4 节）；线状记录从不旋转，以免在假的“原点”处把真基因切断。
 
-### 3.3 一次运行只能是一个门
+### 3.3 类群和遗传密码：自动判断（可多门混合）
 
-遗传密码和若干规则按门（类群）设定，所以 `mitom run` 的一次输入必须属于同一个门。`--clade auto`（默认）从 GenBank 的分类信息判断；输入含多个门时会报错并列出各门的记录数，这时按门分开运行，或显式给 `--clade` 和 `--genetic_code`。
+遗传密码和若干规则按门（类群）设定。`--clade auto`（默认）逐条记录判断：
+
+- **GenBank 记录**：用记录自己的分类信息（门名；只有纲级名如 `Vertebrata`、`Gastropoda` 时按所属门）和 CDS 的 `transl_table`；没有 CDS 时取参考基因组里同一类群的遗传密码（例如海鞘 13）。分类信息不属于动物（植物、真菌等）时报错。
+- **FASTA 和没有分类信息的记录**：blastx 比对 refseq89m 的 8 个保守蛋白（cox1 cox2 cox3 cob atp6 nad1 nad4 nad5），按最近参考基因组的门投票，遗传密码取它们的 `transl_table`，再用基因组自己的 AGA AGG ATA AAA TGA TAA 密码子在比对中对应的氨基酸核验（AGR 在基因内部出现时排除把它当终止密码子的密码 2）；两者冲突时用密码子的结果并警告。参考库里没有近亲（门的支持度 < 0.7，小门常见）时按 `Animal` 和密码子判断的遗传密码。每条序列约几秒；序列太短（< 约 4 kb，命中少于 2 个基因）时并入输入中最常见的组。
+- **一次输入含多个门 / 多个遗传密码**：`mitom run` 按（门，遗传密码）分组，每组用自己的类群和密码注释（同时运行，`--jobs` 按记录数分给各组），结果合并到同一个输出目录，和单组运行的结构一样。`import`、`annotate` 仍需一个门。
+- 每条记录的判断、依据（分类信息 / blastx）、支持度、密码子核验、最近参考：`reports/clade_decision.tsv`。
+
+评测（2026-10-31，本机 RefSeq 按门分层抽样 238 条、29 个门，去掉同科参考后判断）：遗传密码 93.3% 正确（8 kb 片段 91.6%，3 kb 片段 74.4%，10% 随机替换 89.1%）；门判对 63%，32% 因没有近亲判为不确定（`Animal`），4.6% 判错（都是参考库里只有 1–2 个科的小门，如有爪动物判成节肢动物）。详见 docs/METHODS.md。显式给 `--clade` / `--genetic_code` 时不做自动判断。
 
 | `--clade` | 默认遗传密码 | 说明 |
 |---|---|---|
@@ -176,7 +183,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 
 **`run` 和 `import` 的区别：** `run` 只用输入的序列，所有基因都由 MitoM 重新注释，原来的注释留在 `original_annotation/` 里供对比；`import` 保留输入里已有的基因注释，只做后面的整理步骤。想要统一、可比的注释，用 `run`；只想把别的软件的结果整理成 NCBI 可提交的格式，用 `import`。
 
-**为什么推荐 GenBank 而不是 FASTA？** GenBank 记录自带物种分类，MitoM 能据此自动选类群和遗传密码；原记录的物种、文献、标本信息也会复制到结果里。FASTA 只有序列，必须手动给 `--clade` 和 `--genetic_code`。
+**为什么推荐 GenBank 而不是 FASTA？** GenBank 记录自带物种分类，MitoM 直接据此选类群和遗传密码；原记录的物种、文献、标本信息也会复制到结果里。FASTA 只有序列，类群和遗传密码靠 blastx 推断（见 3.3），没有近亲的类群请手动给 `--clade` 和 `--genetic_code`。
 
 ---
 
@@ -187,12 +194,13 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 ### `mitom run`：完整流程（最常用）
 
 - **做什么**：从序列到最终注释、NCBI 提交文件和基因组图，11 个步骤见第 4 节。
-- **输入**：GenBank（推荐）或 FASTA；单个文件或目录。一次只能是同一个门（见 3.3）。
+- **输入**：GenBank（推荐）或 FASTA；单个文件或目录。可以多门混合（见 3.3）。
 - **输出**：见第 7 节（`final_annotation/`、`ncbi_submission/`、`plots/`、`reports/`、`run.log` 等）。
 - **示例**：
   ```bash
   mitom run -i fetch_out/Annelida.gb -o out                              # GenBank：类群和遗传密码自动判断
-  mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5    # FASTA：要写明类群和遗传密码
+  mitom run -i contigs.fasta -o out                                      # FASTA：类群和遗传密码自动判断（blastx）
+  mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5    # 或写明
   mitom run -i genomes/ -o out --threads 4 --jobs 8                      # 目录：8 条同时注释，每条 4 线程
   mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5 --engine mitoz   # 用 MitoZ 找基因（需另装）
   ```
@@ -502,7 +510,11 @@ mitom debug out
 
 | 现象 | 原因与处理 |
 |---|---|
-| `--clade auto: the input must be one metazoan phylum` | 输入含多个门。按门分开运行，或给 `--clade` 和 `--genetic_code` |
+| `--clade auto: the input has several phyla / genetic codes ... mitom annotate needs one` | `annotate` / `import` 一次只能一个门；用 `mitom run`（自动分组），或给 `--clade` 和 `--genetic_code` |
+| `[CLADE] WARNING: ... phylum uncertain` 或 `genetic code ... from the codons` | 参考库里没有近亲或密码子与近亲的遗传密码不符：核对 `reports/clade_decision.tsv`，知道类群时给 `--clade` 和 `--genetic_code` |
+| `another MitoM run (pid N) is writing into OUT` | 同一个输出目录一次只能有一个运行（`OUT/.mitom.lock`）。等它结束、停止它，或换一个 `-o`；运行被 `kill -9` 杀掉后留下的锁会自动接管 |
+| `no sequence to annotate in ...` | 输入为空、读不出或全是 N（`[SEQ]` / `[SPLIT]` 警告指出是哪个文件、哪条序列）；`.gz` 压缩文件和非 UTF-8（Latin-1）文本会自动解压 / 转换，序列中的比对空位 `-` `.` 和 `*` 会自动去掉 |
+| 中途停止运行 | 用 Ctrl-C（或 `kill -INT`），所有子进程几秒内退出；`kill -9` 只杀主进程，子进程会继续跑完当前记录。之后在同一目录重跑即可，结果与一次跑完相同 |
 | `exonerate / blastp not found`，内含子步骤跳过 | 不在 mitotools 环境中运行，或环境不完整。运行 `mitom doctor`；用 `--intron_bin <环境>/bin` 指定 |
 | tRNA 很少或没有 | 先看 `mitom doctor` 中 cmsearch / cmalign / java 是否 OK（MitoM-ML 和 MiTFi 需要）；部分类群（刺胞动物、同骨海绵）本来只有 1–6 个 tRNA |
 | 线状记录没有旋转 | 设计如此：线状序列旋转会切断真基因。有基因跨两端时会自动改判为环状（`reports/topology_decision.tsv`）；确为环状但两端没有基因时，在 FASTA 表头加 `topology=circular` |
@@ -916,7 +928,7 @@ Outputs and matching:
 | `--id_maxlen` | `run`, `annotate` | 内部 ID 最大长度，必须至少 6；对 `reorient` 无实际作用 | Maximum internal ID length, minimum 6; no practical effect for `reorient` |
 | `--threads` | `run`, `annotate` | 每个注释任务线程数，必须为正整数；默认 `min(8, CPU 数)` | Threads per annotation job, positive integer; default `min(8, CPUs)` |
 | `--jobs` | `run`, `annotate` | 同时运行的任务数，必须为正整数；默认 `max(1, CPU 数 // threads)` | Maximum concurrent jobs, positive integer; default `max(1, CPUs // threads)` |
-| `--clade` | `run`, `annotate` | 类群蛋白库，默认 `auto`：从 GenBank 分类信息判断（一次一个门；纲级名按所属门处理；分类信息里没有已知门名、含多个门、或各条记录 CDS `transl_table` 不一致时报错；**完全没有分类信息**（FASTA、无 lineage 的 GenBank）时沿用 Annelida 并警告）；可选值见"快速上手" | Taxon protein database, default `auto` (from the GenBank taxonomy, one phylum per run; class names count for their phylum; a taxonomy without a known phylum, several phyla, or differing CDS transl_tables are errors; input with NO taxonomy at all - FASTA, GenBank without lineage - falls back to Annelida with a warning) |
+| `--clade` | `run`, `annotate` | 类群，默认 `auto`：逐条记录判断——GenBank 用记录的分类信息和 CDS `transl_table`，FASTA / 无分类信息的记录用 blastx 比对参考蛋白并核验密码子（mito_classify.py）；多门或多遗传密码时 `run` 分组注释再合并（`reports/clade_decision.tsv`），`annotate` 要求一个门；分类信息不属于动物时报错；可选值见"快速上手" | Clade, default `auto`: per record - the GenBank taxonomy and CDS transl_table; FASTA / no taxonomy: blastx to the reference proteins, codons checked (mito_classify.py); several phyla / codes: `run` annotates each group and merges (reports/clade_decision.tsv), `annotate` needs one; a non-animal taxonomy is an error |
 | `--genetic_code` | `run`, `annotate` | 遗传密码表，无默认固定值：`--clade auto` 时取输入各记录 CDS 的 transl_table（记录间不一致则报错），无则该门常用码；显式 `--clade` 时取该类群的密码（Chordata 2、Echinodermata 9、Porifera 4，其余 5；Cnidaria、Platyhelminthes、Chaetognatha、Animal 必须显式给出）；显式给出时优先 | Genetic code (no fixed default): with `--clade auto` from the per-record CDS transl_table (differing records are an error), else the phylum's usual code; with an explicit `--clade` the code of that clade (2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal); an explicit value wins |
 | `--engine`, `--mitoz_bin` | `run`, `annotate` | 注释程序：`native`（默认，MitoM 核心）/ `mitoz` / `mitos2`（需自己安装；MitoZ 只支持它自己的 9 个 `--clade`）；`--mitoz_bin` 给 mitoz 所在目录 | Annotation program: native (default) / mitoz / mitos2 (installed by you) |
 | `--topology` | `run`, `annotate` | 环状 / 线状：`auto`（默认）= 按标签（GenBank LOCUS 行；FASTA 表头 `topology=`；没有时：两端重叠 → 环状并去掉重复，表头写 circular / complete genome → 环状、partial genome → 线状，其余 ≥ 10 kb 的看两端和基因组成——蛋白基因 ≥ 12 个且两个 rRNA 齐全为环状，否则线状；< 10 kb 线状），再核对序列两端：有基因从末尾接到开头（中间隔着内含子的也算）→ 环状；标为环状但两端有基因被截断 → 线状；标为环状的水母类、水螅类和钙质海绵（线状线粒体基因组）且没有基因跨两端 → 线状；改判的记录重注，结果见 `reports/topology_decision.tsv`。`label` = 只按标签；`circular` / `linear` = 全部设为环状 / 线状 | Circular or linear: `auto` (default) = the label, checked at the sequence ends (gene across the ends, also with an intron between -> circular; gene cut at an end of a circular-labelled record -> linear; Medusozoa / Calcarea labelled circular without a gene across the ends -> linear; changed records annotated again, `reports/topology_decision.tsv`); `label`; `circular` / `linear` for every record |
@@ -1038,7 +1050,7 @@ Some report files are written only when non-empty.
 
 ### 注意事项 / Practical Notes
 
-1. `--clade` 默认 `auto`：从 GenBank 分类信息判断（一次运行只能一个门；分类信息里没有已知门名、含多个门或各条记录 `transl_table` 不一致时报错）。完全没有分类信息的输入（FASTA、无 lineage 的 GenBank）沿用 `Annelida-segmented-worms` 并给出警告；其他类群请显式给 `--clade` 和 `--genetic_code`。
+1. `--clade` 默认 `auto`：逐条记录判断（GenBank 分类信息；FASTA 用 blastx 推断，见 3.3），多门输入由 `run` 分组注释后合并。参考库里没有近亲的类群（小门）门可能判不准，遗传密码按密码子判断；知道类群时请显式给 `--clade` 和 `--genetic_code`。
 2. `--genetic_code` 没有固定默认值：`--clade auto` 时取输入 CDS 的 `transl_table`，否则按 `--clade`（Chordata 2、Echinodermata 9、Porifera 4，其余 5）；请按物种确认。
 3. `--id_maxlen` 不能小于 6，否则内部 ID 会冲突；脚本现在会拒绝这种参数。
 4. 线性序列重定向后会保留 `linear` topology，不会被强制改成 `circular`。
@@ -1047,7 +1059,7 @@ Some report files are written only when non-empty.
 
 Notes:
 
-1. The default `--clade` is `auto` (from the GenBank taxonomy, one phylum per run; a taxonomy without a known phylum, several phyla, or differing CDS `transl_table` values are errors). Input with no taxonomy at all (FASTA, GenBank without a lineage) falls back to `Annelida-segmented-worms` with a warning; for any other taxon give `--clade` and `--genetic_code`.
+1. The default `--clade` is `auto`, per record (the GenBank taxonomy; FASTA by blastx to the reference proteins, section 3.3); `run` annotates an input of several phyla group by group and merges the results. Lineages without a close relative in the reference (small phyla) may get a wrong or uncertain phylum, their genetic code then comes from the codons; give `--clade` and `--genetic_code` when you know the group.
 2. `--genetic_code` has no fixed default: with `--clade auto` it is the CDS `transl_table` of the input, else the code of the `--clade` (2 Chordata, 9 Echinodermata, 4 Porifera, else 5); verify it for your dataset.
 3. `--id_maxlen` must be at least 6.
 4. Linear records keep linear topology after reorientation.

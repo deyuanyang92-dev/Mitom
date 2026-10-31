@@ -71,7 +71,7 @@ def test_clade_decision_is_printed(tmp_path, capsys):
     f = tmp_path / "m.gb"
     SeqIO.write(r, str(f), "genbank")
     bm.resolve_tools(parse(tmp_path, inp=f))
-    assert "[CLADE] auto: Mollusca -> --clade Mollusca --genetic_code 5" in capsys.readouterr().err
+    assert "[CLADE] auto: Mollusca (1 by GenBank taxonomy) -> --clade Mollusca --genetic_code 5" in capsys.readouterr().err
 
 
 # ---- B7: optional steps never abort the run ---------------------------------------------------------------

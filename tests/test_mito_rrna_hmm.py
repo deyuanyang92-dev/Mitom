@@ -621,3 +621,20 @@ def test_reference_order_does_not_depend_on_the_file(tmp_path):
     recs = list(SeqIO.parse(str(a), "genbank"))
     SeqIO.write(recs[::-1], str(b), "genbank")
     assert rh._ref_rrnas(a, set()) == rh._ref_rrnas(b, set())
+
+
+def test_best_library_when_the_phylum_is_unknown(tmp_path):
+    """2026-10-31 stress test: an unlabelled FASTA record of uncertain phylum (--clade auto) got no rRNA search at all;
+    now the library whose models score best is used."""
+    import mito_rrna_hmm as m
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    for p in ("Annelida", "Ctenophora"):
+        for g in m.GENES:
+            (lib / f"{p}.{g}.hmm").write_text("x")
+    score = {"Annelida": 20.0, "Ctenophora": 300.0}
+
+    def fake(hmm, fa):
+        return [m.Hit(100, 900, 1, 1, 800, score[hmm.name.split(".")[0]])]
+    assert m.best_library(tmp_path / "q.fa", lib, ["Annelida", "Ctenophora"], fake, None) == "Ctenophora"
+    assert m.best_library(tmp_path / "q.fa", lib, ["Annelida"], lambda h, f: [], None) == ""

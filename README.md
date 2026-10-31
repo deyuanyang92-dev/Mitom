@@ -56,7 +56,9 @@ mitom fetch --taxon Annelida -o fetch_out            # -> fetch_out/Annelida.gb 
 # GenBank 输入（推荐）：每条记录都重新注释（不管原来有没有注释），结果在 out/；run 做了哪些事见下面第 3 点
 mitom run -i fetch_out/Annelida.gb -o out
 
-# FASTA 输入（没有分类信息）：不写 --clade 时沿用 Annelida 蛋白库并警告；其他类群请写明类群库和遗传密码
+# FASTA 输入（没有分类信息）：不写 --clade 时用 blastx 比对参考蛋白，自动判断每条序列的门和遗传密码
+mitom run -i contigs.fasta -o out
+# 知道类群时也可以写明（跳过自动判断）
 mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5
 
 # 用 MitoZ 或 MITOS2 注释（需自己另装；之后照常方向调整、第二轮、校正、NCBI 文件、圈图）
@@ -70,7 +72,7 @@ mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --ge
 `--clade` 可选：`Chordata Arthropoda Echinodermata Annelida-segmented-worms Bryozoa Mollusca Nematoda
 Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaetognatha-arrow-worms Animal`
 （`Animal` = 全动物蛋白库，用于其他门）。常用：`--threads 8 --jobs 4`（每个任务线程数 / 同时任务数）、
-`--sbt template.sbt`（NCBI 提交者模板）。`--threads` 默认 `min(8, CPU 数)`，`--jobs` 默认 `CPU 数 // threads`；`--clade auto` 遇到分类信息里没有已知门名（只有纲级名如 `Vertebrata`、`Gastropoda` 会按所属门处理）、含多个门、或各条记录 CDS 的 `transl_table` 不一致时报错（给 `--clade` / `--genetic_code` 即可）。
+`--sbt template.sbt`（NCBI 提交者模板）。`--threads` 默认 `min(8, CPU 数)`，`--jobs` 默认 `CPU 数 // threads`。`--clade auto`（默认）逐条判断：GenBank 记录用自己的分类信息和 CDS 的 `transl_table`；FASTA 和没有分类信息的记录用 blastx 比对 refseq89m 的 8 个保守蛋白，取最近参考基因组的门和遗传密码，再用 AGR / ATA / AAA / TGA 等密码子核验（没有近亲时按 `Animal` 和密码子判断的遗传密码）。一次输入含多个门或多个遗传密码时，`run` 按组分别注释再合并到同一个输出目录；每条记录的判断和依据见 `reports/clade_decision.tsv`。
 
 **3. 运行过程与结果 / What you see and what you get**
 

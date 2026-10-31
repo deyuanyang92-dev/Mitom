@@ -6,6 +6,15 @@ installed one.
 ## Unreleased
 
 ### Changed
+- `--clade auto` (default) per record, no clade needed: a GenBank record by its taxonomy and CDS /transl_table (no CDS:
+  the code of its lineage in the reference genomes, e.g. tunicates 13); FASTA and records without a taxonomy by
+  blastx to 8 conserved proteins of refseq89m (mito_classify.py, models/ref_taxa.tsv.gz built from local RefSeq by
+  scripts/build_ref_taxa.py): phylum of the closest genomes, their genetic code checked on the genome's own AGA AGG
+  ATA AAA TGA TAA codons (codes reading AGR as stop left out when AGR occurs inside the genes; codons seen no more
+  often than TAG are noise); no close relative (phylum support < 0.7): clade Animal, code from the codons. An input
+  of several phyla / codes is no longer an error: `mitom run` annotates each group with its own clade and code (in
+  parallel, --jobs shared) and merges the results into one output folder (mitom_groups.py; reports/clade_decision.tsv,
+  reports/groups/). FASTA input no longer falls back to Annelida. `annotate` / `import` still need one phylum.
 - Topology without a label (FASTA without topology=): decided from the sequence for every record of >= 10 kb, also
   when the file holds several (they were all linear: 81 of 83 complete genomes started at a gene boundary stayed
   linear). In order: a gene across the ends -> circular; a gene cut at an end -> linear; a lineage with linear mtDNA
@@ -19,6 +28,17 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- Every record of a multi-record GenBank file (the output of `mitom fetch`) took the lineage of the FIRST record
+  (mitom_stage.sample_lineage): Metridium senile (Anthozoa, circular) after Aurelia aurita was made linear as a
+  jellyfish; the MitoM-ML tRNA clade models used the wrong lineage too. Now the record's own lineage (read once per file).
+- Stress test (2026-10-31): alignment gaps ('-', '.') and '*' in a sequence made exonerate fail on every protein gene
+  (they are removed, odd letters read as N, with a warning); empty and all-N sequences were annotated (an all-N
+  sequence got NCBI submission files) - now skipped; a run with nothing to annotate (empty, unreadable or all-N input)
+  ended 'finished' with exit 0 - now an error (exit 2); a missing input file under --clade auto gave a traceback;
+  .gz input and Latin-1 headers (Windows programs) ended with 0 records - now unpacked / converted (out/00.input);
+  a second FASTA sequence with the same name was renamed silently - now a warning.
+- rRNA fallback (mito_rrna_hmm.py) for a record without any phylum (unlabelled FASTA of uncertain phylum): the
+  library whose 16S / 12S models fit best is used instead of no search (two ctenophores had lost both rRNAs).
 - End check: a spliced join across the junction (66e0e09) is accepted only when the part it adds aligns by itself on
   the far side (>= half its residues, >= half the score per residue): contigs were joined to chance matches (atp6
   with an 800-nt 'intron', annelid nad4 with an 11-kb one). A gene that stops short of the junction with the residues

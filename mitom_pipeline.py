@@ -44,6 +44,7 @@ import shutil
 import subprocess
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -75,7 +76,7 @@ from mitom_metadata import (_acc_variants, build_metadata_index, build_organism_
                             replace_organism_in_gb_file, replace_organism_in_record, _similarity,  # noqa: F401
                             _split_gb_records, _split_meta_body, _sync_organism_qualifier,  # noqa: F401
                             transfer_gb_metadata_file)  # noqa: F401
-from mitom_inputs import (auto_clade, check_transl_tables, collect_genbank_files, collect_sequence_files, record_format,  # noqa: E402,F401
+from mitom_inputs import (NORMALIZED_DIR, normalize_input, auto_clade, check_transl_tables, collect_genbank_files, collect_sequence_files, record_format,  # noqa: E402,F401
                           convert_gb_to_fasta_for_annotation, dedup_gb_records, _FASTA_EXTS,  # noqa: F401
                           find_fq_pair_for_sample, _GB_EXTS, _gb_version_int, GbRecordMeta,  # noqa: F401
                           header_first_token, infer_topology_from_description, _is_fasta_file,  # noqa: F401
@@ -102,6 +103,7 @@ from mitom_output import (cleanup_intermediates, counts_from_genbank, finalize_g
                           OUTPUT_LAYOUT, refresh_summary, REPORT_FILES, REPORT_NOTES,  # noqa: F401
                           rewrite_genbank_record_ids, RunSummary, WORK_DIRS, write_summary)  # noqa: F401
 from mitom_topology import apply_topology, linear_lineages_first  # noqa: E402
+import mitom_groups  # noqa: E402
 from mitom_steps import (count_rows, intron_denovo_cmd, INTRON_LABEL, intron_ref_cmd, optional_step,  # noqa: E402,F401
                          _plot_file, run_compare, run_curate, run_curate_and_submit, run_intron_fix,  # noqa: F401
                          run_intron_ref, run_ncr, run_plots, run_rescue, run_rrna_hmm, run_submission,  # noqa: F401
@@ -258,7 +260,7 @@ def resolve_tools(args: argparse.Namespace) -> str:
     if str(Path(__file__).resolve().parent) not in sys.path:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
     import mito_env
-    if args.clade == "auto":
+    if args.clade == "auto" and args.cmd == "import":      # results of other programs: one clade for the run
         clade, code, phylum, err = auto_clade(Path(args.input), getattr(args, "genetic_code", None))
         if err and not err.startswith("WARNING"):
             return f"ERROR: {err}"
@@ -270,6 +272,33 @@ def resolve_tools(args: argparse.Namespace) -> str:
         if hasattr(args, "rrna_hmm") and not getattr(args, "phylum", None):
             args.phylum = phylum
         announce(f"[CLADE] auto: {phylum or 'no taxonomy'} -> --clade {args.clade} --genetic_code {args.genetic_code}")
+    elif args.clade == "auto":                             # per record: taxonomy, else blastx (mitom_groups.py)
+        plan = mitom_groups.decide(args)
+        if plan.error:
+            return f"ERROR: {plan.error}"
+        mitom_groups.LAST_PLAN = plan
+        if plan.warnings:                                # one box: the first ones, all in clade_decision.tsv
+            shown = plan.warnings[:5] + ([f"... {len(plan.warnings) - 5} more: reports/clade_decision.tsv (column note)"]
+                                         if len(plan.warnings) > 5 else [])
+            print(f"\n{'=' * 68}\n  [CLADE] WARNING ({len(plan.warnings)}):\n" + "\n".join(f"  - {w}" for w in shown)
+                  + f"\n{'=' * 68}\n", file=sys.stderr)
+        groups = plan.groups()
+        if len(groups) > 1:
+            if args.cmd != "run":
+                got = ", ".join(f"{mitom_groups.group_label(k)} ({len(v)})" for k, v in groups.items())
+                return (f"ERROR: --clade auto: the input has several phyla / genetic codes ({got}); `mitom run` "
+                        f"annotates them group by group, `mitom {args.cmd}` needs one: give --clade and --genetic_code")
+            args.clade_groups = len(groups)              # main(): workflow_groups, one run per group
+            return ""
+        if not groups:
+            return f"ERROR: no sequence records in {args.input} (empty file, or not GenBank / FASTA)"
+        (clade, code, phylum), rows = next(iter(groups.items()))
+        args.clade, args.genetic_code = clade, code
+        if hasattr(args, "rrna_hmm") and not getattr(args, "phylum", None):
+            args.phylum = phylum
+        how = Counter(r.source for r in rows)
+        announce(f"[CLADE] auto: {phylum} ({', '.join(f'{n} by {s}' for s, n in how.items())}) -> --clade {clade} "
+                 f"--genetic_code {code}")
     if args.clade not in ALL_CLADES:
         return (f"ERROR: --clade '{args.clade}' is not a supported clade. Choose one of:\n  " + ", ".join(ALL_CLADES)
                 + "\n  (Animal = all-animal protein database, for any phylum not listed.)")
@@ -529,7 +558,14 @@ def workflow_run(args: argparse.Namespace) -> int:
         steps.done(f"{total} records to annotate; reasons per record: reports/dedup_report.tsv")
     else:
         steps.done(f"{total} FASTA sequences to annotate")
+    if total == 0:                                       # unreadable, empty or all-N input: nothing to annotate
+        msg = (f"ERROR: no sequence to annotate in {in_path} (empty, unreadable or no A/C/G/T; the warnings above "
+               f"and {out_root / 'run.log'} name the file)")
+        logging.error(msg)                               # (on the console too)
+        return 2
 
+    if mitom_groups.LAST_PLAN is not None:              # --clade auto: the phylum and code of every record and why
+        mitom_groups.write_decision(mitom_groups.LAST_PLAN, reports_dir(out_root) / "clade_decision.tsv")
     summary = RunSummary()
     check_transl_tables(out_root / "original_annotation", int(args.genetic_code))
 
@@ -808,6 +844,17 @@ def workflow_run(args: argparse.Namespace) -> int:
         logging.warning(f"[FAIL] every record failed in the annotation core ({total}): see reports/failed_logs/")
         return 1
     return 0
+
+
+def workflow_groups(args: argparse.Namespace) -> int:
+    """--clade auto with several phyla / genetic codes: `mitom run` per group, merged (mitom_groups.run_groups)."""
+    out_root = Path(args.out_root).resolve()
+    out_root.mkdir(parents=True, exist_ok=True)
+    setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w",
+                      debug=getattr(args, "debug", False))
+    log_environment(args)
+    logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
+    return mitom_groups.run_groups(args, mitom_groups.LAST_PLAN, sys.argv[1:], say=say)
 
 
 def workflow_transfer_metadata(args: argparse.Namespace) -> int:
@@ -1173,16 +1220,17 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Records annotated at the same time (default: CPUs // threads = %(default)s).")
         old_spelling(g, "--max_tasks", "max_tasks", type=positive_int_arg)
         g.add_argument("--clade",        default=_CLADE_DEFAULT,
-                       help="Taxonomic group (sets the genetic code and group rules). auto (default): from the taxonomy of the GenBank "
-                            "input (one phylum per run; class names such as Vertebrata, Gastropoda, Insecta count "
-                            "for their phylum; a group below or Animal). A taxonomy that names no "
-                            "known phylum, several phyla, or CDS transl_tables that differ between records are "
-                            "errors; input with NO taxonomy at all (FASTA, GenBank without a lineage) falls back to "
-                            "Annelida-segmented-worms with a WARNING - give the clade explicitly for any other "
-                            f"taxon: {', '.join(ALL_CLADES)}.")
+                       help="Taxonomic group (sets the genetic code and group rules). auto (default): per record - "
+                            "the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a "
+                            "taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest "
+                            "genomes, their genetic code checked on the codons; no close relative: Animal and the "
+                            "code of the codons). Several phyla / codes: `run` annotates each group with its own "
+                            "clade and code and merges the results (reports/clade_decision.tsv); `import` and "
+                            "`annotate` need one. Or give one of: "
+                            f"{', '.join(ALL_CLADES)}.")
         g.add_argument("--genetic_code", type=int, default=None,
-                       help="Genetic code (default with --clade auto: the CDS transl_table of the input, else the "
-                            "phylum's usual code; otherwise the code of the clade - 2 Chordata, 9 Echinodermata, "
+                       help="Genetic code (default with --clade auto: the CDS transl_table of each record, else the "
+                            "code of its lineage or of the closest reference genomes; otherwise the code of the clade - 2 Chordata, 9 Echinodermata, "
                             "4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal).")
         g.add_argument("--species_name", default=None, help=argparse.SUPPRESS)   # hidden; passed to MitoZ (--engine mitoz)
 
@@ -1385,6 +1433,42 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+LOCK_NAME = ".mitom.lock"
+
+
+def lock_output(out_root: Path) -> str:
+    """One run per output folder: out_root/.mitom.lock holds the pid of the run writing there (2026-10-31 stress test:
+    two runs started into one folder both failed with half the records). A lock of a process that no longer runs
+    (killed) is taken over. Removed at exit. Returns an error message, '' when the folder is ours."""
+    import atexit
+    try:
+        out_root.mkdir(parents=True, exist_ok=True)
+        (out_root / ".mitom.write_test").write_text("")
+        (out_root / ".mitom.write_test").unlink()
+    except OSError as exc:
+        return f"ERROR: cannot write into the output folder {out_root}: {exc.strerror or exc} (give -o a folder you can write to)"
+    lock = out_root / LOCK_NAME
+    me = str(os.getpid())
+    for _ in range(2):
+        try:
+            fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            try:
+                other = int(lock.read_text().split()[0])
+                os.kill(other, 0)                      # still running?
+            except (ValueError, IndexError, OSError):
+                lock.unlink(missing_ok=True)           # stale (the run was killed): take it over
+                continue
+            return (f"ERROR: another MitoM run (pid {other}) is writing into {out_root}; wait for it, stop it, or "
+                    f"use another -o folder (a stale lock: delete {lock})")
+        with os.fdopen(fd, "w") as fh:
+            fh.write(me + "\n")
+        atexit.register(lambda: lock.unlink(missing_ok=True) if lock.is_file() and lock.read_text().split()[:1] == [me]
+                        else None)
+        return ""
+    return f"ERROR: cannot lock {lock}"
+
+
 def error_exit_code(message: str) -> int:
     """Exit code of a refused run: 1 when a program or the reference data is missing (the run cannot be done here),
     2 when the command line or the input is wrong (MitoM's exit codes: 0 done, 1 failure, 2 usage)."""
@@ -1405,9 +1489,23 @@ def main() -> int:
             print(err, file=sys.stderr)
             return error_exit_code(err)
     if args.cmd in ("annotate", "run", "import"):
+        out_new = not Path(args.out_root).exists()      # an error before the run leaves no folder it created
+        err = lock_output(Path(args.out_root))
+        if err:
+            print(err, file=sys.stderr)
+            return 2
+        if args.cmd in ("annotate", "run") and Path(args.input).exists():   # .gz unpacked, Latin-1 text converted
+            new_input, notes = normalize_input(Path(args.input), Path(args.out_root))
+            args.input = str(new_input)
+            for n in notes:
+                print(f"    [INPUT] {n} ({Path(args.out_root) / NORMALIZED_DIR})", file=sys.stderr)
         err = resolve_tools(args)
         if err:
             print(err, file=sys.stderr)
+            if out_new:
+                shutil.rmtree(args.out_root, ignore_errors=True)
+            else:
+                shutil.rmtree(Path(args.out_root) / NORMALIZED_DIR, ignore_errors=True)
             return error_exit_code(err)
 
     if getattr(args, "suffix_fq", None):
@@ -1430,7 +1528,7 @@ def main() -> int:
         "gb2fasta":          workflow_gb2fasta,
         "intron":            workflow_intron,
     }
-    fn = dispatch.get(args.cmd)
+    fn = workflow_groups if getattr(args, "clade_groups", 0) else dispatch.get(args.cmd)
     if fn is None:
         print(f"Unknown command: {args.cmd}", file=sys.stderr)
         return 2

@@ -387,6 +387,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     run = parse(log, log.parent)
     add_output(run)
     text, problem = report(run)
+    groups = sorted((log.parent / "reports" / "groups").glob("*.run.log"))
+    if groups:                       # --clade auto over several phyla: one run per group (mitom_groups.py)
+        text = text.split("\nSteps", 1)[0].rstrip() + f"\n\n{len(groups)} groups (phylum / genetic code), " \
+               "one run each (reports/groups/<group>.run.log):\n"
+        for g in groups:
+            gr = parse(g, log.parent)
+            gtext, gproblem = report(gr)
+            problem = problem or gproblem
+            name = g.name[:-len(".run.log")]
+            text += f"  {name:<28} {status(gr)}\n" if not gproblem else \
+                f"\n---- group {name} ----\n" + gtext + "\n"
     sys.stdout.write(text)
     return 1 if problem else 0
 
