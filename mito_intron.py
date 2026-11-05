@@ -204,7 +204,7 @@ def run_tool(cmd: List[str], what: str) -> str:
             _FAILED.add(what)
             print(f"[mito_intron] WARNING: {what} failed (exit {p.returncode}): "
                   f"{(p.stderr or '').strip()[-200:]} - its results are missing", file=sys.stderr)
-        return p.stdout
+        return "" if p.returncode else p.stdout          # a failed program's partial output is not parsed (Kimi 1.13)
     except subprocess.TimeoutExpired:
         print(f"[mito_intron] {what} timed out after {TIMEOUT}s - skipped", file=sys.stderr)
     except OSError as exc:
@@ -549,7 +549,7 @@ def subtype_cms() -> List[Path]:
     """Group I subtype covariance models (IA1..IE3) of Selles Vidal et al. 2025, trained on 42,459
     group I introns. Not redistributed (no licence stated): downloaded once into a local cache;
     if the download fails the bundled Rfam models are used alone."""
-    if not SUBTYPE_CM_DIR.exists() or not list(SUBTYPE_CM_DIR.glob("*.cm")):
+    if not (SUBTYPE_CM_DIR / ".complete").is_file():      # an interrupted download is fetched again (Kimi 1.14)
         try:
             import json
             import urllib.request
@@ -559,7 +559,11 @@ def subtype_cms() -> List[Path]:
             for it in items:
                 name = Path(str(it["name"])).name      # a name from the web never leaves the folder (N7)
                 if name == it["name"] and name.endswith(".cm"):
-                    urllib.request.urlretrieve(it["download_url"], SUBTYPE_CM_DIR / name)
+                    part = SUBTYPE_CM_DIR / f".{name}.part"
+                    with urllib.request.urlopen(it["download_url"], timeout=60) as r, open(part, "wb") as h:
+                        shutil.copyfileobj(r, h)
+                    part.replace(SUBTYPE_CM_DIR / name)
+            (SUBTYPE_CM_DIR / ".complete").touch()
         except Exception as exc:                       # offline: carry on with Rfam only
             print(f"[mito_intron] group I subtype models not available ({exc}); using Rfam only",
                   file=sys.stderr)
@@ -1189,6 +1193,8 @@ def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[d
     note = "exon-intron structure predicted by protein alignment (Exonerate, MFannot method)"
     nt = cds_loc.extract(rec.seq)
     prot = str(nt[: len(nt) - len(nt) % 3].translate(table=gencode, to_stop=True))
+    if not partial5 and str(nt[:3]).upper() in CodonTable.unambiguous_dna_by_id[gencode].start_codons:
+        prot = "M" + prot[1:]                     # NCBI: M for any start codon, as mito_curate (Kimi 3.3, 2026-11-05)
     quals: Dict[str, List[str]] = {"gene": [name], "codon_start": ["1"], "transl_table": [str(gencode)],
                                    "product": [product], "note": [note]}
     for k, v in ({} if partial3 else stop_qualifiers(rec, cds_loc, gencode)).items():
@@ -1536,7 +1542,7 @@ def process_file(f: Path) -> List[dict]:
                 rows += annotate_record(rec, lib, lib_db, a, tools, tmp)
             except Exception as exc:              # keep going: record is written back unchanged
                 rows.append({"record": rec.id, "written": "no", "note": f"error, record left unchanged: {exc!r}"})
-        src_root = Path(a.input) if Path(a.input).is_dir() else f.parent
+        src_root = Path(_JOB["src"]) if Path(_JOB["src"]).is_dir() else f.parent   # the prepared input (Kimi 1.4, 2026-11-05)
         dest = out / f.relative_to(src_root)
         dest.parent.mkdir(parents=True, exist_ok=True)
         if any(r.get("written") == "yes" for r in rows):
@@ -1609,7 +1615,7 @@ def main(argv=None) -> int:
         lib_faa.write_text("".join(f">{k}\n{v.seq}\n" for k, v in lib.items()))
         run_program([str(tools["makeblastdb"]), "-in", str(lib_faa), "-dbtype", "prot", "-out", str(Path(td) / "lib")],
                     check=True)
-        _JOB.update(lib=lib, lib_db=Path(td) / "lib", a=a, tools=tools, out=out)
+        _JOB.update(lib=lib, lib_db=Path(td) / "lib", a=a, tools=tools, out=out, src=src_in)
         if a.jobs > 1 and len(files) > 1:
             import multiprocessing as mp
             with mp.get_context("fork").Pool(a.jobs) as pool:      # workers inherit _JOB (no pickling)

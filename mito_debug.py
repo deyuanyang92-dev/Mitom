@@ -213,7 +213,7 @@ def record_logs(out: Path, name: str, text: str) -> List[Path]:
     """The logs of a record: its copies in reports/failed_logs/, the sample log named in the [RECORD] line, the logs of
     its work folder (kept with --keep_intermediate yes / --debug)."""
     logs = sorted((out / "reports" / "failed_logs").glob(f"{name}.*")) if (out / "reports" / "failed_logs").is_dir() else []
-    m = re.search(r"sample log: (\S+?/(0[13]\.[\w.]+)/([^/\s]+))/sample\.log", text)
+    m = re.search(r"sample log: (\S+?/(0[123]\.[\w.]+)/([^/\s]+))/sample\.log", text)   # 02.anno_topology (Kimi 4.2)
     if m:
         for d in (Path(m.group(1)), out / "work" / m.group(2) / m.group(3)):
             if d.is_dir():
@@ -227,7 +227,7 @@ def record_input(out: Path, name: str, events: List[str]) -> Optional[Path]:
     the run (kept with --keep_intermediate yes / --debug)."""
     if (out / "original_annotation" / f"{name}.gb").is_file():
         return out / "original_annotation" / f"{name}.gb"
-    m = re.search(r"/0[13]\.[\w.]+/([^/\s]+)/sample\.log", "\n".join(events))
+    m = re.search(r"/0[123]\.[\w.]+/([^/\s]+)/sample\.log", "\n".join(events))
     for d in ((out / "00.internal_fasta", out / "work" / "00.internal_fasta") if m else ()):
         if (d / f"{m.group(1)}.fasta").is_file():
             return d / f"{m.group(1)}.fasta"

@@ -17,7 +17,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import GB_SUFFIXES, InputError, safe_name, topology_from_header, truncated_genbank
+from mito_common import GB_SUFFIXES, InputError, safe_name, topology_from_header, truncated_genbank, write_gb
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS
 from mitom_metadata import _normalize_acc, gb_record_accession
 
@@ -180,8 +180,7 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
             recs = list(SeqIO.parse(io.StringIO(text), "embl"))
             for r in recs:                               # (GenBank needs molecule_type)
                 r.annotations.setdefault("molecule_type", "DNA")
-            with t.open("w", encoding="utf-8") as fh:
-                SeqIO.write(recs, fh, "genbank")
+            write_gb(recs, t)                        # (Kimi 1.5: EMBL flags /pseudo)
         else:
             t.write_text(text, encoding="utf-8")
         if what:
@@ -536,7 +535,7 @@ def convert_gb_to_fasta_for_annotation(
         orig_dir.mkdir(parents=True, exist_ok=True)
         for meta in kept_records:
             try:
-                SeqIO.write([meta.record], str(orig_dir / f"{safe_name(meta.acc_versioned)}.gb"), "genbank")
+                write_gb([meta.record], orig_dir / f"{safe_name(meta.acc_versioned)}.gb")   # (Kimi 1.5)
             except Exception as exc:               # noqa: BLE001  (a record Biopython cannot write back: compared later as missing)
                 logging.warning(f"[ORIGINAL_GB] {meta.acc_versioned}: not written to {orig_dir.name}/: {exc!r}")
     LAST_DEDUP_STATS.clear()

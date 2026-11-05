@@ -67,7 +67,7 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
-from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records, write_gb  # noqa: E402
+from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records, run_tool, write_gb  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 LIB = HERE / "models" / "nuc"
@@ -140,7 +140,10 @@ def tool_ok(name: str) -> bool:
 
 
 def run(cmd: List[str]) -> str:
-    return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+    p = run_tool(cmd)                             # [CMD] line; the program's own error text kept (Kimi 1.8, 2026-11-05)
+    if p.returncode:
+        raise RuntimeError(f"{Path(cmd[0]).name} failed ({p.returncode}): {p.stderr.strip()[-400:]}")
+    return p.stdout
 
 
 # ── reference library ───────────────────────────────────────────────────────

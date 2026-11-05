@@ -322,7 +322,8 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
     Kept: 04.final_gb/, all.final.gbf, reports/, pipeline.log. The core logs of problem samples are copied to
     reports/failed_logs/ before deletion. `run` then arranges what is kept into its final layout (organize_outputs).
     """
-    problems = set(problem_samples)
+    import mitom_log
+    problems = set(problem_samples) | mitom_log.RECORD_NAMES     # 02 / round-2 failures too (Kimi 4.1)
     for si in samples:
         if si.sample_name not in problems:
             continue

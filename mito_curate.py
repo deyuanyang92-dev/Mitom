@@ -1365,6 +1365,10 @@ def main(argv=None) -> int:
                 cur = Curator(rec, code, a)
                 rows += cur.run()
                 start_rows += cur.start_rows
+                if a.genetic_code or record_code(rec):    # the code curation used, on CDSs without one (Kimi 2.2)
+                    for ft in rec.features:
+                        if ft.type == "CDS":
+                            ft.qualifiers.setdefault("transl_table", [str(code)])
             except Exception as exc:
                 recs[i] = backup
                 rows.append({"record": rec.id, "rule": "error", "reason": f"left unchanged: {exc!r}"})

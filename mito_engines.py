@@ -236,8 +236,8 @@ def mitos2_record(result_dir: Path, seq: str, rid: str, code: Optional[int], top
             ac = (f.qualifiers.get("anticodon") or [""])[0].upper().replace("T", "U")
             q = {"gene": [name], "product": [f"tRNA-{mito_names.AA1_TO_3.get(name[3:4].upper(), 'Xaa')}"],
                  "note": ([f"anticodon: {ac}"] if ac else []) + ["MITOS2"]}
-        elif f.type in ("CDS", "rRNA") and name in mito_names.CORE_NAMES:
-            gene, product = mito_names.CORE_NAMES[name]
+        elif f.type in ("CDS", "rRNA") and (name in mito_names.CORE_NAMES or name == "atp9"):   # sponges (Kimi 3.2)
+            gene, product = mito_names.CORE_NAMES.get(name, ("ATP9", mito_names.PRODUCTS["atp9"]))
             q = {"gene": [gene], "product": [product]}
             if f.type == "CDS":
                 q.update(codon_start=["1"], **({"transl_table": [str(code)]} if code else {}))

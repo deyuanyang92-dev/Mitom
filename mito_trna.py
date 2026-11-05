@@ -75,7 +75,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
-from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
+from mito_common import GB_SUFFIXES, old_spelling, run_tool, topology_from_header, write_gb, write_tsv  # noqa: E402
 from mito_common import cli_guard, count_seq_records, prepare_input, require_records  # noqa: E402
 from mito_common import CoreFeature, positions, run_or_raise  # noqa: E402  (the annotation core's tRNA step)
 
@@ -812,8 +812,9 @@ def main(argv=None) -> int:
                 continue
             L = len(rec.seq)
             global CIRC_L
-            CIRC_L = L if rec.annotations.get("topology", "circular") == "circular" else 0
-            preds = unwrap(preds, L)
+            topo = rec.annotations.get("topology") or (topology_from_header(rec.description) if fmt == "fasta" else "circular")
+            CIRC_L = L if topo == "circular" else 0     # FASTA topology=linear honoured (Kimi 2.3, 2026-11-05)
+            preds = unwrap(preds, L) if CIRC_L else [p for p in preds if p.start <= p.end]
             groups = group(preds)
             conf = conflicts(groups)
             sources_run = sorted({x for x in ("MITOS2" if "mitos2" in want else "", "ARWEN" if "arwen" in want else "",

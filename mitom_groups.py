@@ -318,6 +318,8 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path], failed: Iterable[
             for g, o in group_outs.items():
                 if (o / "reports" / rel).is_file():
                     dst = rep / "groups" / f"{g}.{rel.name}" if rel.suffix == ".json" else t
+                    if dst == t and t.exists():                # one sample name in two groups (Kimi 4.4, 2026-11-05)
+                        dst = t.with_name(f"{t.name.split('.')[0]}.{g}.{t.name.split('.', 1)[1]}")
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(o / "reports" / rel, dst)
         else:

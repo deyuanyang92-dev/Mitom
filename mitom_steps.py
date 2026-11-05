@@ -95,6 +95,10 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
     report = reports_dir(out_root) / "curation_report.tsv"
     if (cur / "curation_report.tsv").exists():
         shutil.move(str(cur / "curation_report.tsv"), str(report))
+        for ln in report.read_text(encoding="utf-8").splitlines()[1:]:   # (Kimi 4.3: seen by mitom debug)
+            c = ln.split("\t")
+            if len(c) > 7 and c[4] == "error":
+                record_event(c[0], f"curation failed, record left uncurated: {c[7]}")
     return StepResult(f"{count_rows(report)} changes, each with rule and reason in reports/curation_report.tsv",
                       gb_dir=cur)
 
@@ -205,6 +209,9 @@ def run_rescue(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
                           for r in rows])
     added = [f"{r['record']}:{r['gene']}" for r in rows if r["status"] == "added"]
     failed = [r["record"] for r in rows if r["status"] != "added"]
+    for r in rows:
+        if str(r["status"]).startswith("failed"):
+            record_event(r["record"], f"MITOS2 rescue {r['status']}")          # (Kimi 4.3)
     logging.info(f"[RESCUE] {len(added)} gene(s) added from MITOS2 {added}" + (f"; MITOS2 failed: {failed}" if failed else ""))
     return StepResult(_rescue_line(args, gb_dir, out_root), ok=not failed)
 
@@ -233,6 +240,9 @@ def run_rrna_hmm(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> Step
                          ["\t".join([r[k] for k in ("file", "record", "phylum", "gene", "location", "status")]
                                     + [str(r.get(k, "")) for k in ("coverage", "note")]) for r in rows])
     added = [f"{r['record']}:{r['gene']}" for r in rows if str(r["status"]).startswith("added")]
+    for r in rows:
+        if str(r["status"]).startswith("failed"):
+            record_event(r["record"], f"rRNA HMM search {r['status']}")        # (Kimi 4.3)
     logging.info(f"[RRNA_HMM] {len(added)} rRNA(s) added from per-phylum HMMs {added}")
     n_skip = sum(str(r["status"]).startswith(("skipped: no library", "skipped: no model")) for r in rows)
     if n_skip:

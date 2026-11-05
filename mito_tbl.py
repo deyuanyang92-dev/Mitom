@@ -175,9 +175,9 @@ def clean_record(rec) -> Tuple[object, List[str]]:
     n = len(rec.seq)
     for f in rec.features:
         loc = f.location
-        if loc is not None and len(loc.parts) == 1 and int(loc.start) == int(loc.end) and 0 < int(loc.start) < n:
+        if loc is not None and len(loc.parts) == 1 and int(loc.start) == int(loc.end) and 0 <= int(loc.start) <= n:
             # a site between two bases (GenBank 100^101): the 2-nt interval around it, as NCBI's gbf2tbl writes it
-            f.location = FeatureLocation(int(loc.start) - 1, int(loc.start) + 1, loc.strand)
+            f.location = FeatureLocation(max(0, int(loc.start) - 1), min(n, int(loc.start) + 1), loc.strand)   # n^1: Kimi 3.4
             sites += 1
         if f.type not in FEATURE_KEYS:
             keys[f.type] += 1

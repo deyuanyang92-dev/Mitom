@@ -312,8 +312,11 @@ def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
             new_features.append(SeqFeature(location=new_loc, type=feat.type,
                                             id=getattr(feat, "id", "<unknown>"),
                                             qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, rc=True)))
-        except Exception:
-            new_features.append(feat)
+        except Exception as exc:                 # old coordinates would be wrong on the reverse strand (Kimi 1.11)
+            if feat.type != "source":
+                logging.warning(f"[REVCOMP] {record.id}: {feat.type} {feat.location} not moved ({exc}): left out")
+            else:
+                new_features.append(feat)
     new_rec.features = new_features
     return new_rec
 
