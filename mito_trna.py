@@ -75,7 +75,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
-from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_tsv  # noqa: E402
+from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
 from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
 from mito_common import CoreFeature, positions, run_or_raise  # noqa: E402  (the annotation core's tRNA step)
 
@@ -102,7 +102,11 @@ class Pred:
 
 def run(cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
     try:
-        return run_tool(cmd, timeout=TIMEOUT, cwd=cwd, env=env).stdout
+        p = run_tool(cmd, timeout=TIMEOUT, cwd=cwd, env=env)
+        if p.returncode != 0:                          # a failed predictor is not 'no tRNA found' (D7, 2026-11-05)
+            print(f"[mito_trna] {Path(cmd[0]).name} failed (exit {p.returncode}): "
+                  f"{' '.join((p.stderr or '').split())[-300:]}", file=sys.stderr)
+        return p.stdout
     except (subprocess.TimeoutExpired, OSError) as exc:
         print(f"[mito_trna] {cmd[0]} failed: {exc}", file=sys.stderr)
         return ""
@@ -859,7 +863,7 @@ def main(argv=None) -> int:
             selected.append(r2)
         for sub, recs_out in (("review", review), ("selected", selected)):
             (out / sub).mkdir(exist_ok=True)
-            SeqIO.write(recs_out, str(out / sub / f"{f.stem}.gbf"), "genbank")
+            write_gb(recs_out, out / sub / f"{f.stem}.gbf")
     cols = ["file", "record", "group", "tRNA", "anticodon", "strand", "start", "end", "boundary_source",
             "n_families", "sources", "coords_by_source", "conflict", "selected"]
     write_tsv(out / "trna_report.tsv", cols, report)

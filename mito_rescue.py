@@ -36,6 +36,7 @@ Writes the GenBank files in place and rescue_report.tsv next to them.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -98,11 +99,24 @@ def _translation(f: SeqFeature, seq: Any, code: int) -> Optional[str]:
     return "M" + aa[1:] if str(nt[:3]).upper() in starts else aa
 
 
+def present_genes(rec: SeqRecord) -> set:
+    """Names of the record's protein genes and rRNAs, as written and as the core's names (COX1, CYTB, s-rRNA ...):
+    a record named in another style (cox1, COI, rrnS) never gets the gene again (E15, 2026-11-05)."""
+    have = set()
+    for f in rec.features:
+        if f.type in ("CDS", "rRNA"):
+            have.add(f.qualifiers.get("gene", [""])[0])
+            g = mito_names.gene_name(f.qualifiers, f.type)
+            if g in CORE_NAMES:
+                have.add(CORE_NAMES[g][0])
+    return have
+
+
 def rescue(rec: SeqRecord, mitos: SeqRecord, code: int) -> List[str]:
     """Add to rec (the core's annotation) the protein genes and rRNAs of mitos (mitos_to_record) that rec lacks.
     Returns the core-style names added."""
     n = len(rec)
-    have = {f.qualifiers.get("gene", [""])[0] for f in rec.features if f.type in ("CDS", "rRNA")}
+    have = present_genes(rec)
     others = [(CORE_NAMES[f.qualifiers["gene"][0]][0], _positions(f, n)) for f in mitos.features
               if f.type in ("CDS", "rRNA") and f.qualifiers["gene"][0] in CORE_NAMES]
     taken = []
@@ -158,7 +172,7 @@ def rescue(rec: SeqRecord, mitos: SeqRecord, code: int) -> List[str]:
 
 
 def run_mitos(fa: Path, code: int, out: Path, linear: bool, mitos_bin: Optional[str] = None,
-              refdir: Optional[str] = None, ref: str = "refseq89m") -> Path:
+              refdir: Optional[str] = None, ref: str = "refseq89m", jobs: Optional[int] = None) -> Path:
     """MITOS2 protein-gene and rRNA annotation (no tRNA, intron, OH/OL) via scripts/runmitos_fast.py."""
     b = mito_env.mitos_bin(mitos_bin)
     d = mito_env.mitos_refdir(refdir)
@@ -166,7 +180,7 @@ def run_mitos(fa: Path, code: int, out: Path, linear: bool, mitos_bin: Optional[
         raise RuntimeError("MITOS2 not found (install.sh, or --mitos_bin / --mitos_refdir)")
     out.mkdir(parents=True, exist_ok=True)
     p = run_tool(mitos2_command(fa, out, code, b, d, ref=ref, mode="sensitive", skip=("trna", "intron", "oril", "orih"),
-                                linear=linear), env=engine_env(b, isolated=True))
+                                linear=linear, jobs=jobs), env=engine_env(b, isolated=True))
     if not (out / "result.bed").exists():
         raise RuntimeError(f"MITOS2 produced no result.bed: {(p.stderr or p.stdout)[-300:]}")
     return out
@@ -176,6 +190,9 @@ def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, jobs:
     """Rescue every record of every *.gbf in final_dir (in place); returns report rows. Files are processed
     `jobs` at a time (one MITOS2 run per record that misses a gene, minutes each)."""
     if run is None:
+        # the CPUs shared by the `jobs` MITOS2 runs (E26: each ran min(CPUs, 16) cmsearch processes)
+        kw.setdefault("jobs", max(1, min(os.cpu_count() or 1, 16) // max(1, jobs)))
+
         def run(fa, c, out, linear):
             return run_mitos(fa, c, out, linear, **kw)
 
@@ -190,7 +207,7 @@ def rescue_dir(final_dir: Path, code: int, run: Optional[Callable] = None, jobs:
         recs = list(SeqIO.parse(str(gbf), "genbank"))
         changed = False
         for rec in recs:
-            have = {f.qualifiers.get("gene", [""])[0] for f in rec.features if f.type in ("CDS", "rRNA")}
+            have = present_genes(rec)
             if all(v[0] in have for v in CORE_NAMES.values()):      # nothing to rescue: MITOS2 not run
                 continue
             with tempfile.TemporaryDirectory() as td:

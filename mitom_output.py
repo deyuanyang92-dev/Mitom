@@ -291,8 +291,8 @@ def finalize_genbank_output(
             # cox1_first from the file itself: a linear record is never rotated (rotate_record), whatever
             # reorient_one_gb counted
             orientation_ok = starts_with_gene(draft_gb, which_gene_first, force_forward)
-        except Exception:
-            pass
+        except Exception as exc:             # the counts of the summary table stay those before this step (N4)
+            logging.warning(f"[FINAL] {sample_name}: genes not recounted from {dest_gb.name}: {exc}")
         os.replace(str(draft_gb), str(dest_gb))
         committed = True
 
@@ -410,14 +410,33 @@ def write_summary(out_root: Path) -> None:
     src.unlink()
 
 
-def clear_previous_work(out_root: Path, keep: tuple = ("00.input",)) -> None:
+def clear_previous_work(out_root: Path, keep: tuple = ("00.input",), protect=()) -> None:
     """Remove the intermediate folders a previous run left in out_root (interrupted, or --keep_intermediate yes):
     they were picked up as this run's results (2026-10-31 review: a stale 04.final_gb/*.gbf was published, a stale
     reoriented body of another genome became a final record). Only MitoM's own folder names; `keep` = made by this run."""
     for name in WORK_DIRS + ("06.ncbi_submission", "work"):
         d = Path(out_root) / name
-        if name not in keep and d.is_dir() and not d.is_symlink():
+        if name not in keep and d.is_dir() and not d.is_symlink() and not any(_overlaps(d, x) for x in protect):
             shutil.rmtree(d)
+    # and the previous run's results: a table / map this run does not write (FASTA input: no original_vs_mitom.tsv)
+    # stayed beside the new ones (Codex R9 / N14, 2026-11-05). run.log is this run's; reports/: new_reports()
+    for name in [n.rstrip("/") for n, _ in OUTPUT_LAYOUT if n not in ("run.log", "reports/", "work/")] + \
+            ["annotation-summary.tsv", "all.final.gbf", "README.txt"]:
+        d = Path(out_root) / name
+        if name in keep or d.is_symlink() or any(_overlaps(d, x) for x in protect):
+            continue                                 # (-i out/final_annotation -o out: never the input)
+        if d.is_dir():
+            shutil.rmtree(d)
+        elif d.is_file():
+            d.unlink()
+
+
+def _overlaps(a: Path, b) -> bool:
+    try:
+        a, b = Path(a).resolve(), Path(b).resolve()
+    except OSError:
+        return True
+    return a == b or a in b.parents or b in a.parents
 
 
 def new_reports(out_root: Path) -> Path:

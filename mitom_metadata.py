@@ -22,10 +22,10 @@ def gb_record_accession(rec: "SeqRecord") -> str:
     ver  = rec.annotations.get("sequence_version", "")
     accs = rec.annotations.get("accessions", [])
     acc  = accs[0] if accs else ""
+    if not acc:                       # the full id before the LOCUS name (cut to 16 characters by writers: E13)
+        acc = rec.id  if rec.id  and rec.id  not in (".", "<unknown>") else ""
     if not acc:
         acc = rec.name if rec.name and rec.name not in (".", "<unknown>") else ""
-    if not acc:
-        acc = rec.id  if rec.id  and rec.id  not in (".", "<unknown>") else ""
     if ver and acc and not acc.endswith(f".{ver}"):
         versioned = f"{acc}.{ver}"
     else:
@@ -290,12 +290,7 @@ def replace_metadata_in_text(
         meta, match_type = find_metadata_from_index(acc, exact_dict, clean_dict, norm_dict)
         if meta is not None:
             _, body = _split_meta_body(rec)
-            # the bp count of the source metadata's LOCUS line: the length of the re-annotated sequence
-            new_locus_m = re.search(r"LOCUS\s+\S+\s+(\d+)\s+[a-zA-Z]+", rec)
-            if new_locus_m:
-                real_len = new_locus_m.group(1)
-                meta = _LOCUS_BPCOUNT_RE.sub(rf"\g<1>{real_len}\g<2>", meta, count=1)
-            meta = keep_topology(meta, rec)
+            meta = keep_topology(_with_length(meta, rec), rec)
             out_records.append(meta + body if body else rec)
             if match_type == "exact":
                 stats["exact"] += 1
@@ -310,7 +305,7 @@ def replace_metadata_in_text(
                 acc, candidates, exact_dict, auto_accept=auto_accept)
             if resolved_meta is not None:
                 _, body = _split_meta_body(rec)
-                out_records.append(keep_topology(resolved_meta, rec) + body if body else rec)
+                out_records.append(keep_topology(_with_length(resolved_meta, rec), rec) + body if body else rec)
                 stats["smart_resolved"] += 1
                 stats["smart_list"].append((acc, chosen_acc))
                 continue
@@ -318,6 +313,13 @@ def replace_metadata_in_text(
         stats["not_found_list"].append((acc, hints))
         out_records.append(rec)
     return "".join(out_records), stats
+
+
+def _with_length(meta: str, rec: str) -> str:
+    """The source metadata's LOCUS line with the bp count of the re-annotated record `rec` (exact and smart matches
+    alike: E14, 2026-11-05 - a smart match kept the old length)."""
+    m = re.search(r"LOCUS\s+\S+\s+(\d+)\s+[a-zA-Z]+", rec)
+    return _LOCUS_BPCOUNT_RE.sub(rf"\g<1>{m.group(1)}\g<2>", meta, count=1) if m else meta
 
 
 def transfer_gb_metadata_file(

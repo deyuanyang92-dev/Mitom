@@ -18,7 +18,7 @@ from Bio.SeqRecord import SeqRecord
 from mito_common import (abbreviated_stop, feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
                          move_position_qualifiers, reports_dir, reverse_complement_record, shift_location, write_gb,
                          write_nonempty_table, write_table)
-from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
+from mito_names import CORE_NAMES, ORIENTATION_ALIAS_GROUPS, gene_aliases, gene_name, name_key
 
 if TYPE_CHECKING:
     from mitom_inputs import SampleInfo
@@ -114,8 +114,12 @@ def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
             new_features.append(SeqFeature(location=new_loc, type=feat.type,
                                             id=getattr(feat, "id", "<unknown>"),
                                             qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, start_pos)))
-        except Exception:
-            new_features.append(feat)
+        except Exception as exc:             # its old coordinates would be wrong on the rotated sequence (E22)
+            if feat.type != "source":
+                logging.warning(f"[ROTATE] {record.id}: {feat.type} {feat.qualifiers.get('gene', [''])[0]} "
+                                f"{feat.location} not moved to the new origin ({exc}): left out")
+            else:
+                new_features.append(feat)
     new_features.sort(key=lambda f: feature_start_pos(f))
     new_rec.features = new_features
     return new_rec
@@ -231,6 +235,8 @@ def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
             if edge:
                 probs.append(f"{ro.id}: gene(s) at the end of the round-1 sequence, look cut: {', '.join(edge)}")
         have = {f.qualifiers.get("gene", [""])[0] for f in genes}
+        # and as the core's names: a round 1 of MITOS2 / an imported record (cox1, rrnS) is not 'missing' (E16)
+        have |= {CORE_NAMES[g][0] for g in (gene_name(f.qualifiers, f.type) for f in genes) if g in CORE_NAMES}
         miss = [g for g in STANDARD_GENES if g not in have]
         if miss and not linear:
             probs.append(f"{ro.id}: standard gene(s) missing in round 1: {', '.join(miss)}")

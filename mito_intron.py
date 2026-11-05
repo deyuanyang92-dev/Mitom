@@ -386,9 +386,10 @@ class Report:
 
 
 def run_exonerate(exe: str, prot_faa: Path, genome_fna: Path, gencode: int, maxintron: int) -> List[Report]:
+    from mito_core import exonerate_code       # codes exonerate 2.4 lacks (24, 33): the 64-letter table (D2, 2026-11-05)
     cmd = [exe, "--model", "protein2genome", "--showalignment", "no", "--showvulgar", "no",
            "--showtargetgff", "yes", "--minintron", str(MIN_INTRON), "--maxintron", str(maxintron),
-           "--intronpenalty", "-35", "--geneticcode", str(gencode),
+           "--intronpenalty", "-35", "--geneticcode", exonerate_code(int(gencode)),
            *(["--splice3", str(SPLICE_PSSM), "--splice5", str(SPLICE_PSSM)] if SPLICE_PSSM.exists() else []),
            # %tS = target strand (%g, the splice-derived gene orientation, is "." without introns)
            "--ryo", ">>RYO\t%qab\t%qae\t%tab\t%tae\t%s\t%tS\n", str(prot_faa), str(genome_fna)]
@@ -556,8 +557,9 @@ def subtype_cms() -> List[Path]:
             with urllib.request.urlopen(SUBTYPE_CM_URL, timeout=30) as r:
                 items = json.load(r)
             for it in items:
-                if it["name"].endswith(".cm"):
-                    urllib.request.urlretrieve(it["download_url"], SUBTYPE_CM_DIR / it["name"])
+                name = Path(str(it["name"])).name      # a name from the web never leaves the folder (N7)
+                if name == it["name"] and name.endswith(".cm"):
+                    urllib.request.urlretrieve(it["download_url"], SUBTYPE_CM_DIR / name)
         except Exception as exc:                       # offline: carry on with Rfam only
             print(f"[mito_intron] group I subtype models not available ({exc}); using Rfam only",
                   file=sys.stderr)

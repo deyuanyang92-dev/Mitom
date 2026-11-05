@@ -239,7 +239,7 @@ def nhmmer(hmm: Path, fa: Path) -> List[Hit]:
         raise RuntimeError("nhmmer not found (HMMER 3; conda env mitotools)")
     with tempfile.TemporaryDirectory() as td:
         tbl = Path(td) / "hits.tbl"
-        p = run_tool([exe, "--dna", "--cpu", "2", "-E", str(EVALUE), "--tblout", str(tbl), "-o", "/dev/null",
+        p = run_tool([exe, "--dna", "--cpu", "2", "-E", str(EVALUE), "--tblout", str(tbl), "-o", os.devnull,
                       str(hmm), str(fa)])
         if p.returncode:
             raise RuntimeError(f"nhmmer failed (exit {p.returncode}): {' '.join(p.stderr.split()[-60:])}")

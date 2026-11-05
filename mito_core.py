@@ -61,7 +61,7 @@ import mito_rrna_hmm  # noqa: E402,F401  (the rRNA step: per-phylum profile HMMs
 # the rRNA step, moved to mito_rrna_hmm.py, stays importable from here (tests)
 from mito_rrna_hmm import annotate_rrnas, cm_len, rrna_hmm, tbl_hits  # noqa: E402,F401
 from mito_common import contig_record_id, CoreFeature as Feature, debug_mode, positions, read_fasta, run_or_raise  # noqa: E402,F401
-from mito_common import topology_from_header  # noqa: E402
+from mito_common import topology_from_header, write_gb  # noqa: E402
 import mito_trna  # noqa: E402  (the tRNA step: MitoM-ML checked by MiTFi, mito_trna.core_trnas)
 # the tRNA step's names, moved to mito_trna.py, stay importable from here (benchmark scripts, tests)
 from mito_trna import (annotate_trnas, annotate_trnas_ml, CM_ALN, CM_EVALUE, CM_EVALUE_SENSITIVE,  # noqa: E402,F401
@@ -673,8 +673,7 @@ def location(f: Feature, n: int):
 
 
 def write_genbank(genome: str, feats: List[Feature], code: int, prefix: str, topology: str, out: Path) -> Path:
-    from Bio import SeqIO
-    SeqIO.write(genbank_record(genome, feats, code, prefix, topology), str(out), "genbank")
+    write_gb(genbank_record(genome, feats, code, prefix, topology), out)
     return out
 
 
@@ -778,8 +777,7 @@ def annotate(args) -> int:
         for kind in n_all:
             n_all[kind] += sum(1 for f in feats if f.kind == kind)
     gb = out / f"{prefix}.gbf"
-    from Bio import SeqIO
-    SeqIO.write(recs, str(gb), "genbank")
+    write_gb(recs, gb)
     with (out / f"{prefix}.core.tsv").open("w") as fh:
         fh.write("record\tkind\tname\tstart\tend\tstrand\tscore\tanticodon\tnote\n")
         fh.writelines(rows)

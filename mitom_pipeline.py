@@ -59,7 +59,7 @@ from Bio import SeqIO  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
-from mito_common import (InputError, cli_guard, count_seq_records, unique_path, prepare_input, require_records, command_line, debug_mode, GB_SUFFIXES, gb_fasta_record, iter_gb_files, old_spelling,  # noqa: E402,F401
+from mito_common import (InputError, cli_guard, count_seq_records, unique_path, prepare_input, require_records, command_line, debug_mode, GB_SUFFIXES, gb_fasta_record, iter_gb_files, old_spelling, write_gb,  # noqa: E402,F401
                          reports_dir, run_tool,  # noqa: F401
                          safe_copy, safe_name, write_nonempty_list, write_nonempty_table, write_table)  # noqa: F401
 from mito_taxa import (abbreviated_overlap, aggressive_start_genes, ALL_CLADES, BASE_CLADES,  # noqa: E402,F401
@@ -343,7 +343,7 @@ def prepare_import(args: argparse.Namespace) -> str:
         return f"ERROR: no annotated GenBank record and no MITOS2 result (result.bed) found in {args.input}"
     out = Path(args.out_root).resolve() / "00.imported"
     out.mkdir(parents=True, exist_ok=True)
-    SeqIO.write(recs, str(out / "imported.gb"), "genbank")
+    write_gb(recs, out / "imported.gb")
     for note in notes:
         announce(f"[IMPORT] {note}")
     announce(f"[IMPORT] {len(recs)} annotated record(s) from {args.input}")
@@ -361,7 +361,7 @@ KNOWN_LIMITATION = ("[KNOWN_LIMITATION] the annotation core does not annotate in
 def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    clear_previous_work(out_root, keep=("00.input", "00.imported"))
+    clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=[args.input])
     new_reports(out_root)
     setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
     log_environment(args)
@@ -380,6 +380,10 @@ def workflow_annotate(args: argparse.Namespace) -> int:
         acc_to_orig_gb=acc_to_orig_gb, topology=args.topology)
     samples = linear_lineages_first(samples, args)
     logging.info(f"[ID_MAP] {id_map}  (total: {len(samples)})")
+    if not samples:                                      # as `mitom run` (Codex R7, 2026-11-05: annotate exited 0)
+        logging.error(f"ERROR: no sequence to annotate in {in_path} (empty, unreadable or no A/C/G/T; the warnings "
+                      f"above and {out_root / 'pipeline.log'} name the file)")
+        return 2
 
     results = run_annotation_stage(
         samples=samples, phase_dirname="01.anno_round1",
@@ -442,6 +446,9 @@ def workflow_annotate(args: argparse.Namespace) -> int:
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
     if samples and len(summary.annotation_failed) == len(samples):
         logging.warning(f"[FAIL] every record failed in the annotation core ({len(samples)}): see reports/failed_logs/")
+        return 1
+    if samples and not (summary_rows and all_final_gbs):  # (Codex R7, 2026-11-05: exit 0 with no final GenBank)
+        logging.warning(f"[FAIL] no final GenBank written for any of the {len(samples)} record(s): see reports/")
         return 1
     return 0
 
@@ -519,7 +526,7 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    clear_previous_work(out_root, keep=("00.input", "00.imported"))   # made by this run (input copies, `import`)
+    clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=[args.input])   # made by this run (input copies, `import`)
     new_reports(out_root)
     setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w",   # one run, one log
                       debug=getattr(args, "debug", False))
@@ -854,6 +861,9 @@ def workflow_run(args: argparse.Namespace) -> int:
     if total and len(summary.annotation_failed) == total:
         logging.warning(f"[FAIL] every record failed in the annotation core ({total}): see reports/failed_logs/")
         return 1
+    if total and not (n_ok and all_final_gbs):            # (Codex R7, 2026-11-05: exit 0 with no final GenBank)
+        logging.warning(f"[FAIL] no final GenBank written for any of the {total} record(s): see reports/")
+        return 1
     return 0
 
 
@@ -953,7 +963,7 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
                          "body_file\tmetadata_file\toutput_file\tstatus\treplaced\tunmatched",
                          log_rows)
     logging.info(f"[SUMMARY] transferred={n_ok}  skipped={n_skip}  failed={n_fail}")
-    return 0
+    return 1 if n_fail else 0                         # (N10, 2026-11-05: failures were exit 0)
 
 
 def workflow_replace_organism(args: argparse.Namespace) -> int:
@@ -1015,7 +1025,7 @@ def workflow_replace_organism(args: argparse.Namespace) -> int:
         log_rows)
     logging.info(
         f"[SUMMARY] files_updated={n_ok}  no_match={n_miss}  failed={n_fail}")
-    return 0
+    return 1 if n_fail else 0
 
 
 def workflow_dedup(args: argparse.Namespace) -> int:
@@ -1033,7 +1043,7 @@ def workflow_dedup(args: argparse.Namespace) -> int:
     kept, _, stats = dedup_gb_records(files, dedup_report_path=out_root / "dedup_report.tsv")
     gb = [m.record for m in kept if record_format(m.source_file) == "genbank"]
     if gb:
-        SeqIO.write(gb, str(out_root / "dedup.gb"), "genbank")
+        write_gb(gb, out_root / "dedup.gb")
     SeqIO.write([gb_fasta_record(m.record) if record_format(m.source_file) == "genbank" else m.record for m in kept],
                 str(out_root / "dedup.fasta"), "fasta")
     logging.info(f"[DEDUP] in={stats['total_in']} kept={stats['kept']} no_seq={stats['no_sequence']} "
@@ -1475,7 +1485,8 @@ def lock_output(out_root: Path) -> str:
         except FileExistsError:
             try:
                 other = int(lock.read_text().split()[0])
-                os.kill(other, 0)                      # still running?
+                if not _lock_holder_alive(other):
+                    raise ProcessLookupError(other)
             except (ValueError, IndexError, OSError):
                 lock.unlink(missing_ok=True)           # stale (the run was killed): take it over
                 continue
@@ -1483,10 +1494,31 @@ def lock_output(out_root: Path) -> str:
                     f"use another -o folder (a stale lock: delete {lock})")
         with os.fdopen(fd, "w") as fh:
             fh.write(me + "\n")
-        atexit.register(lambda: lock.unlink(missing_ok=True) if lock.is_file() and lock.read_text().split()[:1] == [me]
-                        else None)
+        atexit.register(_release_lock, lock, me)
         return ""
     return f"ERROR: cannot lock {lock}"
+
+
+def _lock_holder_alive(pid: int) -> bool:
+    """Whether the pid of a lock still runs: a process of another user counts (os.kill raises PermissionError; it was
+    taken for a stale lock, N8 2026-11-05). A pid reused by another program also counts - the message names the
+    lock file to delete (taking over a live run's folder would be worse)."""
+    try:
+        os.kill(pid, 0)
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _release_lock(lock: Path, me: str) -> None:
+    """atexit: remove the lock when it is still ours (D19: it may be gone or taken over meanwhile)."""
+    try:
+        if lock.read_text().split()[:1] == [me]:
+            lock.unlink(missing_ok=True)
+    except OSError:
+        pass
 
 
 def error_exit_code(message: str) -> int:
@@ -1503,11 +1535,6 @@ def main() -> int:
     elif extra:
         parser.error("unrecognized arguments: " + " ".join(extra))
 
-    if args.cmd == "import":
-        err = prepare_import(args)
-        if err:
-            print(err, file=sys.stderr)
-            return error_exit_code(err)
     if args.cmd in ("dedup", "reorient", "gb2fasta", "transfer_metadata", "replace_organism"):
         def check_inputs() -> int:                       # missing / empty / unreadable input: one line, exit 2
             for attr, what in (("input", "-i"), ("metadata", "-m"), ("new_body", "-n")):
@@ -1524,6 +1551,13 @@ def main() -> int:
         if err:
             print(err, file=sys.stderr)
             return 2
+        if args.cmd == "import":                         # writes 00.imported/: only into a folder locked for us (R6)
+            err = prepare_import(args)
+            if err:
+                print(err, file=sys.stderr)
+                if out_new:
+                    shutil.rmtree(args.out_root, ignore_errors=True)
+                return error_exit_code(err)
         if args.cmd in ("annotate", "run") and Path(args.input).exists():   # .gz unpacked, Latin-1 text converted
             new_input, notes = normalize_input(Path(args.input), Path(args.out_root))
             args.input = str(new_input)

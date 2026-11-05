@@ -72,7 +72,7 @@ import sys
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation, SeqFeature
@@ -550,25 +550,36 @@ def write_pair(out: Path, name: str, entries: List[Entry], modifiers: bool) -> N
     pair(out, name, ".fsa").write_text("\n".join(fsa) + "\n")
 
 
-def validate(out: Path, name: str, t2a: str, sbt: Optional[str]) -> Dict[str, Counter]:
+def validate(out: Path, name: str, t2a: str, sbt: Optional[str], sids: Sequence[str] = ()) -> Dict[str, Counter]:
     """table2asn on <name>.fsa (+ <name>.tbl) -> <name>.sqn, <name>.val; ERROR / WARNING per SeqID (submitter /
-    publication messages left out, as in ncbi_validate.py)."""
+    publication messages left out, as in ncbi_validate.py; REJECT / Critical / FATAL counted as ERROR). When
+    table2asn hangs, cannot run or writes no .val, every SeqID of the pair (`sids`) gets 1 ERROR: not validated is never
+    0 ERROR (Codex R2 / R4, 2026-11-05: the timeout went to SeqID '' that no report row reads)."""
     per: Dict[str, Counter] = defaultdict(Counter)
-    try:
-        run_tool([t2a, "-i", str(pair(out, name, ".fsa")), "-V", "vb", "-o", str(pair(out, name, ".sqn")),
-                  *(["-t", sbt] if sbt else [])], timeout=nv.TABLE2ASN_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        per[""]["ERROR"] += 1                         # (it hung on some SeqIDs: never wait for ever)
-        print(f"mitom gb2tbl: table2asn did not finish in {nv.TABLE2ASN_TIMEOUT} s on {name}.fsa: not validated",
-              file=sys.stderr)
-        return per
     val = pair(out, name, ".val")
-    for line in val.read_text(errors="ignore").splitlines() if val.is_file() else []:
+    val.unlink(missing_ok=True)                       # never read the last run's messages
+    why = ""
+    try:
+        p = run_tool([t2a, "-i", str(pair(out, name, ".fsa")), "-V", "vb", "-o", str(pair(out, name, ".sqn")),
+                      *(["-t", sbt] if sbt else [])], timeout=nv.TABLE2ASN_TIMEOUT)
+        if not val.is_file():                         # (exit 2 with a .val: validation errors, not a crash)
+            why = f"table2asn exit {p.returncode}, no {val.name}"
+    except subprocess.TimeoutExpired:                 # (it hung on some SeqIDs: never wait for ever)
+        why = f"table2asn did not finish in {nv.TABLE2ASN_TIMEOUT} s"
+    except OSError as exc:
+        why = f"table2asn could not be run ({exc})"
+    if why:
+        print(f"mitom gb2tbl: {why} on {name}.fsa: not validated", file=sys.stderr)
+        for sid in sids or [""]:
+            per[sid]["ERROR"] += 1
+        return per
+    for line in val.read_text(errors="ignore").splitlines():
         m = nv.MSG_RE.match(line.strip())
         if not m or nv.IGNORE_CODES.search(m.group(2)):
             continue
         sid = re.search(r"lcl\|([^\s:\]]+)", m.group(3))
-        per[sid.group(1) if sid else ""][m.group(1).upper()] += 1
+        sev = m.group(1).upper()
+        per[sid.group(1) if sid else ""]["ERROR" if sev in ("REJECT", "CRITICAL", "FATAL") else sev] += 1
     return per
 
 
@@ -649,7 +660,7 @@ def main(argv=None) -> int:
     rows = []
     for name, its in groups.items():
         write_pair(out, name, its, a.source_modifiers == "yes")
-        val = validate(out, name, t2a, a.sbt) if t2a else {}
+        val = validate(out, name, t2a, a.sbt, [e.sid for e in its]) if t2a else {}
         for e in its:
             c = counts(e.rec)
             loc, _ = location(e.rec)

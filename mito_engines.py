@@ -90,13 +90,15 @@ RUNMITOS_FAST = Path(__file__).resolve().parent / "scripts" / "runmitos_fast.py"
 
 
 def mitos2_command(fa: Path, out: Path, code: int, bin_dir: str, refdir: str, ref: str = mito_env.MITOS_REF,
-                   mode: str = "full", skip: Sequence[str] = (), linear: bool = False, noplots: bool = True) -> List[str]:
+                   mode: str = "full", skip: Sequence[str] = (), linear: bool = False, noplots: bool = True,
+                   jobs: Optional[int] = None) -> List[str]:
     """The MITOS2 command of every MitoM module (run it with engine_env(bin_dir, isolated=True)): mode full = runmitos
     as installed; sensitive / fast = scripts/runmitos_fast.py (the Infernal searches in parallel, same results; fast
     also skips the sensitive re-search of missing tRNAs); skip = MITOS2 parts not annotated (prot, rrna, trna,
-    intron, oril, orih)."""
+    intron, oril, orih); jobs = parallel cmsearch processes of runmitos_fast.py (default: all CPUs, max 16)."""
     exe = [str(Path(bin_dir) / "runmitos")] if mode == "full" else \
-        [str(Path(bin_dir) / "python"), str(RUNMITOS_FAST), *(["--no_sensitive"] if mode == "fast" else [])]
+        [str(Path(bin_dir) / "python"), str(RUNMITOS_FAST), *(["--no_sensitive"] if mode == "fast" else []),
+         *(["--jobs", str(max(1, int(jobs)))] if jobs else [])]
     return [*exe, "-i", str(fa), "-c", str(code), "-o", str(out), "-r", ref, "--refdir", str(refdir),
             *[x for part in skip for x in (f"--{part}", "0")], *(["--noplots"] if noplots else []),
             *(["--linear"] if linear else [])]
@@ -263,19 +265,19 @@ def mitos2_seq_ids(result_dir: Path) -> List[str]:
 
 # ── existing results (mitom import) ───────────────────────────────────────────
 def find_results(src: Path) -> Tuple[List[Path], List[Path]]:
-    """(GenBank files, MITOS2 result folders) under src. A folder with MitoZ result folders (*.result/*.gbf) gives
-    only those (MitoZ also leaves a draft .gbf in its tmp_* folder); MITOS2 result folders are the folders with a
-    result.bed."""
+    """(GenBank files, MITOS2 result folders) under src. Of a MitoZ output folder (the one holding *.result/) only
+    *.result/*.gbf (MitoZ also leaves a draft .gbf in its tmp_* folder); MITOS2 result folders are the folders with
+    a result.bed."""
     src = Path(src)
     if src.is_file():
         return ([src], []) if src.suffix.lower() in GB_SUFFIXES else ([], [src.parent] if src.name == "result.bed" else [])
     mitos = sorted({p.parent for p in src.rglob("result.bed")})
     mitoz = sorted(src.rglob("*.result/*.gbf"))
-    if mitoz:
-        return mitoz, mitos
+    runs = {p.parent.parent for p in mitoz}                # a MitoZ output folder: only its *.result/*.gbf
     gbs = sorted(p for p in src.rglob("*") if p.is_file() and p.suffix.lower() in GB_SUFFIXES
-                 and not any(m in p.parents for m in mitos))
-    return gbs, mitos
+                 and not any(m in p.parents for m in mitos) and not any(r in p.parents for r in runs))
+    # GenBank files outside the MitoZ folders are imported too (E5, 2026-11-05: they were left out)
+    return sorted(set(mitoz) | set(gbs)), mitos
 
 
 def written_by_mitoz(rec: SeqRecord) -> bool:
@@ -322,10 +324,15 @@ def import_results(src: Path, fastas: Sequence[Path] = (), code: Optional[int] =
                 recs.append(mitos2_record(m, seqs[sid], sid, code, topo))
         notes.append(f"{len(mitos)} MITOS2 result folder(s) converted (genetic code {code})")
     seen: Dict[str, int] = {}
+    used = {r.id for r in recs}
     for r in recs:                                          # one record per name
         seen[r.id] = seen.get(r.id, 0) + 1
         if seen[r.id] > 1:
-            r.id = r.name = f"{r.id}_{seen[r.id]}"
+            k, base = seen[r.id], r.id
+            while f"{base}_{k}" in used:                    # never the name of another record (E12)
+                k += 1
+            r.id = r.name = f"{base}_{k}"
+            used.add(r.id)
     return recs, notes
 
 

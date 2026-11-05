@@ -21,7 +21,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from Bio import SeqIO
 
@@ -234,22 +234,39 @@ def _split_input(plan: Plan, args: argparse.Namespace, groups_dir: Path) -> Dict
 
 
 def _concat_tsv(srcs: List[Path], dst: Path) -> None:
-    """Tables with one header line: the header once, then every table's rows."""
-    head, rows = None, []
+    """Tables with one header line: the header once, then every table's rows. Headers that differ between the groups
+    (a column only one group wrote): the columns of all, in first-seen order, each row under its own column names
+    (D17, 2026-11-05: the second header was kept as a data row)."""
+    tables = []
     for s in srcs:
         lines = s.read_text(encoding="utf-8", errors="replace").splitlines()
-        if not lines:
-            continue
-        head = head or lines[0]
-        rows += lines[1:] if lines[0] == head else lines
-    if head is not None:
-        dst.write_text("\n".join([head] + rows) + "\n", encoding="utf-8")
+        if lines:
+            tables.append((lines[0], lines[1:]))
+    if not tables:
+        return
+    heads = list(dict.fromkeys(h for h, _ in tables))
+    if len(heads) == 1:
+        out = [heads[0]] + [r for _, rows in tables for r in rows]
+    else:
+        cols = list(dict.fromkeys(c for h in heads for c in h.split("\t")))
+        out = ["\t".join(cols)]
+        for h, rows in tables:
+            names = h.split("\t")
+            for r in rows:
+                d = dict(zip(names, r.split("\t")))
+                out.append("\t".join(d.get(c, "") for c in cols))
+    dst.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
-def merge_outputs(out_root: Path, group_outs: Dict[str, Path]) -> None:
-    """The outputs of the group runs, merged into out_root in the layout of one run."""
+def merge_outputs(out_root: Path, group_outs: Dict[str, Path], failed: Iterable[str] = ()) -> None:
+    """The outputs of the group runs, merged into out_root in the layout of one run. A `failed` group (exit != 0)
+    gives only its reports and logs, never half-written results to final_annotation/ etc. (N3, 2026-11-05)."""
     from mitom_output import OUTPUT_LAYOUT
-    outs = [p for p in group_outs.values() if p.is_dir()]
+    failed = set(failed)
+    for g in sorted(failed & set(group_outs)):
+        logging.warning(f"[GROUP] {g} failed: its annotation is not merged (reports/groups/{g}.run.log)")
+    outs_all = [p for p in group_outs.values() if p.is_dir()]
+    outs = [o for g, o in group_outs.items() if o.is_dir() and g not in failed]
     for name, _ in OUTPUT_LAYOUT:                          # a previous run's results in this folder
         old = out_root / name.rstrip("/")
         if name != "run.log" and old.is_dir() and not old.is_symlink():
@@ -289,10 +306,10 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path]) -> None:
             if (o / "final_annotation_all.gb").is_file():
                 fh.write((o / "final_annotation_all.gb").read_text(encoding="utf-8", errors="replace"))
     rep = out_root / "reports"
-    names = sorted({p.relative_to(o / "reports") for o in outs if (o / "reports").is_dir()
+    names = sorted({p.relative_to(o / "reports") for o in outs_all if (o / "reports").is_dir()
                     for p in (o / "reports").rglob("*") if p.is_file()})
     for rel in names:
-        srcs = [o / "reports" / rel for o in outs if (o / "reports" / rel).is_file()]
+        srcs = [o / "reports" / rel for o in outs_all if (o / "reports" / rel).is_file()]
         t = rep / rel
         t.parent.mkdir(parents=True, exist_ok=True)
         if rel.suffix == ".tsv":
@@ -351,7 +368,7 @@ def run_groups(args: argparse.Namespace, plan: Plan, argv: List[str], say=print)
     with cf.ThreadPoolExecutor(max_workers=len(tasks)) as ex:
         rcs = dict(ex.map(one, tasks))
     outs = {g: groups_dir / g / "out" for g, _, _ in tasks}
-    merge_outputs(out_root, outs)
+    merge_outputs(out_root, outs, failed=[g for g, r in rcs.items() if r])
     write_decision(plan, out_root / "reports" / "clade_decision.tsv")
     for g, _, _ in tasks:                    # each group's log: reports/groups/<group>.run.log (`mitom debug` reads them)
         lg = outs[g] / "run.log"

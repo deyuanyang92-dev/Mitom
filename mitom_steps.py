@@ -121,6 +121,9 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
                       "(misc_feature 'non-coding region NCR<k>'; --ncr no: none)")
 
 
+BLOCKING = ("ERROR", "REJECT", "FATAL")             # table2asn severities that stop an NCBI submission
+
+
 def _submission_line(out_root: Path) -> str:
     sub_sum = out_root / "06.ncbi_submission" / "submission_summary.tsv"
     n_rec = count_rows(sub_sum)
@@ -147,6 +150,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     sub = out_root / "06.ncbi_submission"
     sub.mkdir(parents=True, exist_ok=True)
     summary, msgs = [], []
+    unchecked = 0                                    # records table2asn could not validate (crash, no .val)
     for gbf in sorted(gb_dir.rglob("*.gbf")):
         for rec in SeqIO.parse(str(gbf), "genbank"):
             rows = nv.validate_record(rec, sub / "_work", t2a, getattr(args, "sbt", None))
@@ -154,12 +158,14 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
             for ext in (".fsa", ".tbl", ".sqn", ".val"):
                 if (d / f"rec{ext}").exists():
                     shutil.copy2(d / f"rec{ext}", sub / f"{d.name}{ext}")
-            n = {sev: sum(r["severity"] == sev for r in rows) for sev in ("ERROR", "WARNING")}
+            # REJECT / FATAL block a submission as ERROR does: counted in the ERROR column (Codex R3, 2026-11-05)
+            errs = [r for r in rows if r["severity"] in BLOCKING]
+            n = {"ERROR": len(errs), "WARNING": sum(r["severity"] == "WARNING" for r in rows)}
+            unchecked += any(r["code"] == "MITOM.Table2asnFailed" for r in rows)
             if n["ERROR"]:
-                record_event(rec.id, f"NCBI ERROR: {n['ERROR']} ({'; '.join(sorted({r['code'] for r in rows if r['severity'] == 'ERROR'}))})"
+                record_event(rec.id, f"NCBI ERROR: {n['ERROR']} ({'; '.join(sorted({r['code'] for r in errs}))})"
                                      " - ncbi_submission/validation_messages.tsv")
-            summary.append(f"{rec.id}\t{n['ERROR']}\t{n['WARNING']}\t"
-                           + "; ".join(sorted({r["code"] for r in rows if r["severity"] == "ERROR"})))
+            summary.append(f"{rec.id}\t{n['ERROR']}\t{n['WARNING']}\t" + "; ".join(sorted({r["code"] for r in errs})))
             msgs += [f"{r['record']}\t{r['severity']}\t{r['code']}\t{r['message']}" for r in rows]
     shutil.rmtree(sub / "_work", ignore_errors=True)
     write_table(sub / "submission_summary.tsv", "record\tERROR\tWARNING\terror_codes", summary)
@@ -167,7 +173,9 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     bad = [x.split("\t")[0] for x in summary if x.split("\t")[1] != "0"]
     logging.info(f"[SUBMISSION] {len(summary)} record(s) -> {sub}; NCBI ERROR in {len(bad)}: {bad[:10]}"
                  + (" - see validation_messages.tsv" if bad else ""))
-    return StepResult(_submission_line(out_root))
+    if unchecked:
+        logging.error(f"[SUBMISSION] table2asn failed on {unchecked} record(s): not validated (MITOM.Table2asnFailed)")
+    return StepResult(_submission_line(out_root), ok=not unchecked and bool(summary))
 
 
 def _rescue_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:

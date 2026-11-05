@@ -100,7 +100,7 @@ from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 from mito_names import PRODUCT as RRNA_PRODUCT_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
-                         transl_except_term, write_tsv)
+                         transl_except_term, write_gb, write_tsv)
 from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
 import mito_start  # noqa: E402  (P11: the start codon NCBI records choose, learned)
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
@@ -1373,7 +1373,7 @@ def main(argv=None) -> int:
                 val_after += nv.validate_record(rec, out / "validation" / "after", t2a)
         dest = out / (f.relative_to(src) if src.is_dir() else f.name)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        SeqIO.write(recs, str(dest), "genbank")      # always: N1 names / gene ranges change without a report row
+        write_gb(recs, dest)      # always: N1 names / gene ranges change without a report row
     if not n_recs and not (src.is_dir() and a.allow_empty):
         require_records(0, "GenBank records", a.input)
     cols = ["record", "feature", "gene", "strand", "rule", "old", "new", "reason"]
