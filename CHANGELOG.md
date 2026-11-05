@@ -28,6 +28,19 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- Model reviews round 2 (Grok 4.7, GLM 5.3, Kimi K3, 11-03 static review; each item checked and reproduced,
+  Mitom_review/FIX_STATUS_2026-11-05.md). Annotation: input tRNAs across the origin are no longer the whole record;
+  tRNA calls between two others join their group; intron-step neighbours read by part (a join across the origin or
+  a gene inside its intron was skipped); atp8 / nad4L fallback ORFs across the origin; ARWEN anticodons kept;
+  `mitom curate` without --genetic_code uses the taxonomy's code and writes /transl_table (was 5); CDS with
+  /codon_start 2 / 3 left out of the boundary rules; a CDS named `atp` is no longer renamed ATP6 and then deleted as a
+  second ATP6; "cytochrome c oxidase subunit 1" products recognised; explicit `--clade Chordata` and Urochordata
+  give tunicates 13, pterobranchs 24 / 33; atp9 kept from MITOS2. Output: every GenBank writer keeps a value-less
+  /pseudo (the final records of `mitom run` had /pseudo=""), atomic writes, n^1 sites, plastids. Logs / debug: the
+  logs of topology-phase and round-2 failures kept, failed programs' messages, step failures as [RECORD] lines.
+  Fetch: "complete mitochondrial genome" titles. Python 3.8.0-3.11.3 tar extraction. Tests: an environment leak
+  made two tRNA tests fail only in the full suite. Not changed (checked, not bugs): GLM 2.1 (its proposed change
+  would drop the gene), Grok 1.1 / 2.4, Kimi 2.6 / 3.5. 49 NCBI records old vs new: identical coordinates.
 - Model reviews 2026-11-04 (Mitom_review/VERIFICATION_REPORT.md, NEW_BUGS_2026-11-04.md; checked and fixed
   2026-11-05, tests/test_review_2026_11_05.py):
   - NCBI check: a table2asn that crashed or could not run (no .val) was counted as 0 ERROR (run, curate, gb2tbl,

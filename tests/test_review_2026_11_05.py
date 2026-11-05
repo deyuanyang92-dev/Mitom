@@ -379,3 +379,38 @@ def test_explicit_chordata_uses_the_tunicate_code(tmp_path):
                                          "--clade", "Chordata"])
     bm.resolve_tools(args)
     assert args.genetic_code == 13
+
+
+# ---- Grok 4.7 review (verified 2026-11-05) -----------------------------------------------------------------------
+def test_arabic_numeral_cox_product_and_bare_atp():
+    import mito_names
+    assert mito_names.gene_name({"product": ["cytochrome c oxidase subunit 1"]}, "CDS") == "cox1"
+    assert mito_names.gene_name({"gene": ["atp"]}, "CDS") == ""             # ambiguous: atp6 or atp8
+
+
+def test_pterobranch_and_urochordata_codes():
+    for tax, code in ((["Metazoa", "Hemichordata", "Pterobranchia", "Rhabdopleuridae"], 24),
+                      (["Metazoa", "Hemichordata", "Pterobranchia", "Cephalodiscidae"], 33),
+                      (["Metazoa", "Chordata", "Urochordata", "Ascidiacea"], 13),
+                      (["Metazoa", "Hemichordata", "Enteropneusta"], 9)):
+        r = _rec()
+        r.annotations["taxonomy"] = tax
+        r.features.append(SeqFeature(FeatureLocation(0, 90, 1), type="CDS", qualifiers={"gene": ["COX1"]}))
+        assert mito_tbl.record_code(r, None)[0] == code
+
+
+def test_fetch_query_takes_complete_mitochondrial_genome_titles():
+    import mito_fetch
+    assert '"complete mitochondrial genome"[Title]' in mito_fetch.MT_CORE
+
+
+def test_curate_without_code_uses_the_taxonomy_and_writes_it(tmp_path):
+    import mito_curate
+    r = next(SeqIO.parse(str(HERE / "data" / "NC_000933.gb"), "genbank"))
+    for f in r.features:
+        f.qualifiers.pop("transl_table", None)
+    SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
+    mito_curate.main(["-i", str(tmp_path / "a.gb"), "-o", str(tmp_path / "o"), "--no_validate"])
+    out = next((tmp_path / "o").rglob("*.gb*"))
+    codes = {f.qualifiers.get("transl_table", [""])[0] for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS"}
+    assert codes == {"4"}                                                   # Cnidaria (NC_000933: Metridium)

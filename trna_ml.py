@@ -353,7 +353,9 @@ def ext_hits(preds) -> List[Dict[str, Any]]:
         if fam and p.source in ("ARWEN", "ARAGORN"):
             out.append({"model": p.source, "clade": "ext", "depth": -1, "family": fam, "start": p.start, "end": p.end,
                         "strand": p.strand, "evalue": 1.0, "bits": 0.0, "gc": 0.0, "mfrom": 1, "mto": 1, "clen": 1,
-                        "trunc": "no", "anticodon": "", "ac_known": 1, "ac_match": 1})
+                        # the predictor's anticodon, else a locus only ARWEN / ARAGORN call is written without one (Grok
+                        # 2.8, 2026-11-05); ac_known / ac_match stay 1 as in the caller's training data (learn.py)
+                        "trunc": "no", "anticodon": p.anticodon or "", "ac_known": 1, "ac_match": 1})
     return out
 
 
@@ -429,7 +431,8 @@ def call(cands, clf, thr: float = THRESHOLD):
             best[c["locus"]] = c
     final: List[Dict[str, Any]] = []
     for c in sorted(best.values(), key=lambda c: -c["p"]):
-        if any(x["strand"] == c["strand"] and _ov(x, c) > 0.5 * min(x["end"] - x["start"], c["end"] - c["start"])
+        # lengths end - start + 1 as in _loci (Grok 2.5, 2026-11-05: half a base short)
+        if any(x["strand"] == c["strand"] and _ov(x, c) > 0.5 * min(x["end"] - x["start"] + 1, c["end"] - c["start"] + 1)
                for x in final):
             continue
         final.append(c)

@@ -46,7 +46,10 @@ RETRIES = 5
 TRANSIENT = (urllib.error.URLError, urllib.error.HTTPError, http.client.HTTPException,
              ConnectionError, TimeoutError, OSError)
 REFSEQ_RE = re.compile(r"^[A-Z]{2}_\d")
-MT_CORE = 'mitochondrion[Filter] AND "complete genome"[Title] NOT partial[Title]'
+# a quoted phrase is adjacent words: "complete mitochondrial genome" titles were missed (406 Metazoa records,
+# Entrez 2026-11-05; Grok 1.13)
+MT_CORE = ('mitochondrion[Filter] AND ("complete genome"[Title] OR "complete mitochondrial genome"[Title]) '
+           'NOT partial[Title]')
 
 
 # ── query ────────────────────────────────────────────────────────────────────

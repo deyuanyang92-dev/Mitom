@@ -1003,12 +1003,15 @@ def prev_feature_end(rec, m: Model, exons_tx: List[Tuple[int, int]], L: int) -> 
     for ft in rec.features:
         if ft.type not in ("gene", "CDS", "tRNA", "rRNA"):
             continue
-        fs, fe = int(ft.location.start) + 1, int(ft.location.end)
-        if overlap((fs, fe), g_span) >= 30:
+        # each part: a join's start / end are its min / max, so a neighbour across the origin or with this gene in
+        # its intron covered the whole span and was skipped (Grok 2.2, 2026-11-05)
+        parts = [(int(p.start) + 1, int(p.end)) for p in ft.location.parts]
+        if sum(overlap(x, g_span) for x in parts) >= 30:
             continue
-        end_tx = fe if m.strand == 1 else L + 1 - fs
-        if end_tx < start_tx:
-            lo = max(lo, end_tx + 1)
+        for fs, fe in parts:
+            end_tx = fe if m.strand == 1 else L + 1 - fs
+            if end_tx < start_tx:
+                lo = max(lo, end_tx + 1)
     return lo
 
 
@@ -1020,12 +1023,13 @@ def next_feature_start(rec, m: Model, exons_tx: List[Tuple[int, int]], L: int) -
     for ft in rec.features:
         if ft.type not in ("gene", "CDS", "tRNA", "rRNA"):
             continue
-        fs, fe = int(ft.location.start) + 1, int(ft.location.end)
-        if overlap((fs, fe), g_span) >= 30:          # the gene being re-modelled (or a nested ORF)
+        parts = [(int(p.start) + 1, int(p.end)) for p in ft.location.parts]     # (as prev_feature_end)
+        if sum(overlap(x, g_span) for x in parts) >= 30:  # the gene being re-modelled (or a nested ORF)
             continue
-        start_tx = fs if m.strand == 1 else L + 1 - fe
-        if start_tx > end_tx:
-            limit = min(limit, start_tx - 1)
+        for fs, fe in parts:
+            start_tx = fs if m.strand == 1 else L + 1 - fe
+            if start_tx > end_tx:
+                limit = min(limit, start_tx - 1)
     return limit
 
 

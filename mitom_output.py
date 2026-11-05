@@ -73,8 +73,10 @@ def merge_gb_files(gb_files: List[Path], merged_out: Path) -> int:
             text = gb.read_text()
             chunks.append(text if text.endswith("\n") else text + "\n")
             n += k
-    if chunks:
-        merged_out.write_text("".join(chunks))
+    if chunks:                                         # a temporary file, then replace: never a half-written merge
+        tmp = merged_out.with_name(f".{merged_out.name}.tmp")     # (Grok 3.12, 2026-11-05)
+        tmp.write_text("".join(chunks))
+        os.replace(str(tmp), str(merged_out))
     return n
 
 

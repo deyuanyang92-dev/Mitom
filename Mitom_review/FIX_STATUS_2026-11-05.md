@@ -122,3 +122,105 @@ S1–S3 已由上面的项覆盖。S4–S12（内含子前移、起止证据分�
 | 同一个 `-o` 先跑 GenBank、再跑 FASTA | `original_vs_mitom.tsv`、`original_annotation/` 被删除，用户自己的 `my_notes.txt` 保留 |
 | 实测 table2asn | 有校验错误时，单记录 exit 0，多记录 exit 2，`.val` 都会写出：退出码不能用来判断崩溃 |
 | 实测 makeblastdb | 路径带空格时直接失败（D18 改为给出明确报错） |
+
+---
+
+# 第二轮：三份模型报告（Grok 4.7 / GLM 5.3 / Kimi K3）和 11-03 静态审查的逐条核实
+
+方法：每份报告交给一个子代理，逐条读代码、做最小复现（不改仓库），给出判定和补丁；补丁由 Claude Code 合并、写回归测试、跑全量测试。判定：**已修** / **不成立** / **设计**（有注释、文档或测试锁定该行为）/ **不改**（原因见表）。
+
+## Grok 4.7（算法质疑最多的一份）
+
+| ID | 判定 | 要点 |
+|---|---|---|
+| 1.1 吸虫→21 | 不成立 | 参考库 32/34 条吸虫记录用 9 |
+| 1.2 Chordata→2 | 已修 | `import --clade auto`（第一轮）；显式 `--clade Chordata` 也改用记录自身的密码（GLM 3.2）；`Urochordata` 同义名→13 |
+| 1.3 / 1.4 单独运行 curate 时固定用 code 5 | 已修 | 无 `--genetic_code` 且 CDS 无 `transl_table` 时，按分类取密码（`mito_tbl.record_code`），并写入 `/transl_table`；验证用的 `.fsa` 带 `[mgcode=]`。实测 NC_000933：14/14 条翻译与 NCBI 一致（原来 13 条不一致） |
+| 1.6 code 14 | 不成立 | 已有的 14 会保留 |
+| 1.7 半索动物 | 已修（范围窄） | 羽鳃类 Rhabdopleuridae→24、Cephalodiscidae→33；肠鳃纲仍为 9 |
+| 1.8 trnL/trnS 编号 | 设计 | 按 MITOS2 规则（655a75c 有文档和测试） |
+| 1.9 裸 `atp` | 已修，比报告说的更严重 | N1 把 `atp` 改名为 ATP6 后，D1 当作重复的 ATP6 **删掉了**（实测 atp8 被删）。现从同义词表中去掉裸 `atp` |
+| 1.10 单碱基 transl_except | 不成立 | 单碱基合法的只有 TERM，会被重写 |
+| 1.11 `/codon_start` | 已修，范围比报告更大 | `codon_start≠1` 的 CDS 原来会被移起点、当作移码拼接、丢失 translation；现在跳过边界规则并记录 |
+| 1.12 plastid | 已修 | `plastid:apicoplast` 不再写成 chloroplast |
+| 1.13 下载检索式 | 已修 | 加上 `"complete mitochondrial genome"[Title]`（实测漏掉 406 条后生动物记录） |
+| 1.14 Radopholus | 不改 | 参考库无此属记录；gb2tbl 已提示密码为推定 |
+| 1.15 "subunit 1" | 已修 | 阿拉伯数字的 COX 产物名可识别（名称快照 190 行变化，全部是这两条规则） |
+| 2.1 两个终止→换读码框 | 不改（不确定） | 机制能复现，但这是 NC_086642 的启发式，读码框里有 2 个终止的基因本身已损坏；没有基准测试证据前不改 |
+| 2.2 内含子端延伸用外接矩形 | 已修 | 邻居是跨原点 join 或本基因位于邻居的内含子里时，原来会跳过该邻居；现在按每一段判断。报告给的原因（`fs>fe`）不对，负链子项不成立 |
+| 2.3 参考内含子 3′ 端 | 设计 | 与代码注释和测试一致 |
+| 2.4 负链核 rDNA | 不成立 | blastn 负链命中是 qstart<qend、sstart>send，已有测试锁定 |
+| 2.5 tRNA 重叠长度少 1 | 已修 | 只在重叠恰好等于一半时有影响 |
+| 2.6 atp8/nad4L 回退 ORF 不能跨原点 | 已修，另有一处 bug | 另外发现负链跨原点时会返回附加拷贝里的坐标 |
+| 2.7 `--stop_rule homolog` | 设计 | 非默认选项，docstring 写明 |
+| 2.8 ARWEN 反密码子为空 | 已修 | 只补反密码子；模型特征保持不变 |
+| 3.1 跨原点切成两段的基因 | 已修（非标准输入） | 两个独立 feature（不是 join）时取 5′ 段 |
+| 3.2 内含子 note 被删 | 已修 | 只删当前 CDS 自己的跨原点 note |
+| 3.3 RefSeq COMMENT | 设计 | dedup 规则 (2)，有测试 |
+| 3.5 第 2 轮覆盖第 1 轮 | 不确定 | 没有证据表明会丢基因 |
+| 3.7 FASTA 与线性 mtDNA 类群规则 | 设计 | 文档写明 |
+| 3.10 Windows | 不支持原生 Windows | |
+| 3.11 去重计数 | 已修 | 截断的记录不再计入重复 |
+| 3.12 合并文件非原子 | 已修 | |
+| 3.13 跨原点的 `/transl_except` 没有平移 | 不改 | 比较时只检查有无，不影响结果 |
+
+## GLM 5.3
+
+| ID | 判定 | 要点 |
+|---|---|---|
+| 2.1 O2 负链反了 | **不成立** | 负链按转录方向 `parts[0]` 就是原点前那段；现有测试锁定。**报告建议的改法会保留 3′ 越界并丢掉基因，没有采用** |
+| 2.2 tRNA `group()` 只和第一个成员比 | 已修 | 夹在两个预测之间的预测会并入同一组（改变 tRNA 结果，见 A/B） |
+| 2.3 输入 tRNA 跨原点取外接矩形 | 已修，比报告说的更严重 | 原来变成 1..16000，会在冲突中挤掉一个真实 tRNA |
+| 3.2 显式 `--clade Chordata` | 已修 | GenBank 输入用记录自身的密码（被囊 13、头索 5） |
+| 3.3 defline | 部分 | 非 ASCII 字符 table2asn 会报 FATAL，现已计入；`[organism=.]` 占位未处理（需你决定验证是否与 gb2tbl 保持一致） |
+| 1.4 locale | 不成立 | LC_ALL=C / POSIX 下 Python 3.11 会自动启用 UTF-8 模式，实测不受影响 |
+| 1.5 tarfile | 已修（11-03 A） | |
+| 1.6 注释阶段无超时 | 不改（需你决定） | 给 MitoZ/MITOS2 外壳加超时会留下孤儿子进程，需要按进程组 kill |
+| 1.7 / 1.8 / 1.9 / 4.1 / 4.2 / 4.4 | 已修 | 异常信息写入日志；样本 logger 关闭；所有 GenBank 写出都改用 `write_gb`；第 2 轮失败的日志保留；exonerate 失败给出警告；snakemake 写 sample.log |
+| 4.5 / 4.6 | 设计 | |
+
+## Kimi K3
+
+| ID | 判定 | 要点 |
+|---|---|---|
+| 1.5 `/pseudo=""` | **已修，影响每次 `mitom run`** | 最终 ID 改写和重定向用的是原始 `SeqIO.write`，会把 `/pseudo` 写成 `/pseudo=""`；全部改为 `write_gb` |
+| 1.4 | 已修 | 目录里有 `.gb.gz` 时，`mito_intron.py` 单独运行会崩溃 |
+| 1.8 / 1.13 / 1.14 | 已修 | 程序报错信息保留；失败程序的部分输出不再解析；CM 下载先写 `.part`，有超时和完成标记 |
+| 1.11 | 已修 | `reverse_complement_record` 也改为丢弃无法变换的 feature 并警告 |
+| 2.1 | 设计 | `tests/test_mito_intron.py:495` 锁定 |
+| 2.2 | 已修 | 与 Grok 1.3 合并 |
+| 2.3 | 部分 | 未标注时按环状是设计；FASTA 头里写了 `topology=linear` 现在会被遵守 |
+| 2.4 / 2.5 | 已修 / 只改注释 | |
+| 2.6 MITOS2 片段顺序 | 不成立 | MITOS2 2.1.9 先按 qstart 排序再标字母 |
+| 2.7 mito_ncr 单独运行 | 已修 | 输入检查、`cli_guard` |
+| 3.2 atp9 | 已修 | `--engine mitos2` 不再丢 atp9（import 本来就不丢） |
+| 3.3 / 3.4 | 已修 | 内含子步骤翻译以 M 开头；`n^1` 位点不再写成倒置区间 |
+| 3.5 | 不成立 | |
+| 4.1–4.5 | 已修 | 02 阶段 / 第 2 轮失败的日志保留；`mitom debug` 能识别 02；curate / rescue / rrna_hmm 的失败写成 `[RECORD]` 行；同名 failed_logs 不再互相覆盖；blastx 改走 `run_tool` |
+| 1.1/1.2/1.10/1.12/4.2(a)(c) | 原生 Windows 不支持 | |
+| 1.9 / 1.15 / 1.17 / 4.6 | 不改 / 不成立 | |
+
+## 11-03 静态审查
+
+| ID | 判定 | 要点 |
+|---|---|---|
+| 问题 3 | 已修 | `--overwrite_new_body yes` 会原地重写 body 文件，改为原子写入 |
+| 问题 4 | 已修 | 文件在运行中变短时，分片循环会卡死（已复现），现在报错 |
+| 问题 7 | 已修 | 生产代码里实际的未用 import 是 17 个（不是 198 个），已删除 |
+| 新发现 A | 已修，前提有误 | 3.8.17 / 3.9.17 / 3.10.12 / 3.11.4 起已有 filter；更早的小版本上 `trna_ml` 会崩溃，现在统一走安全解压 |
+| 新发现 C | 已修 | 3 处死代码删除 |
+| 问题 5 / 6 / 8 / 9 | 不成立 | |
+| R1 CRLF | 已修 | 新增 `.gitattributes`（代码和脚本固定 LF，tsv 原样保留） |
+
+## 测试中顺序相关的 2 个失败
+
+根因：`test_mito_engines.py::test_setup_downloads_checks_and_writes_the_config` 里，`mito_env.setup()` 会把 `os.environ["MITOS_REFDIR"]` 设成测试用的假参考目录；而对一个原本不存在的变量调用 `monkeypatch.delenv`，pytest 什么也不记录，测试结束后无法恢复。之后的 tRNA 测试在子进程里读到了这个假目录。已修，全量测试 0 失败。
+
+## 第二轮验证
+
+| 检查 | 结果 |
+|---|---|
+| 全量 `pytest tests` | **743 passed，0 failed**，3 skipped；新增回归测试共 36 个（`tests/test_review_2026_11_05.py`） |
+| 名称快照 `tests/data/name_expected.tsv.gz` | 已重新生成；190 行变化，逐行核对，全部来自 Grok 1.9（裸 `atp`）和 1.15（"subunit 1/2/3"）两条规则 |
+| 真实数据新旧对比：从 NCBI 下载 49 条记录（内含子金标准中的 25 条：刺胞 16 + 环节/扁盘/海绵；mini 基准 24 条，覆盖 8 个门），裸序列 `mitom run --clade auto`，旧代码 `7cb43d0` 对比新代码 | 49 条全部写出，exit 0；所有 CDS/tRNA/rRNA/intron 的坐标**完全相同（0 处差异）**；文本只多了 2 行 tRNA `/note="anticodon: …"`（Grok 2.8）；NCBI ERROR 新旧都是 0 |
+| 说明 | 改变注释结果的几项（Grok 2.2 内含子端、2.6 跨原点 ORF、GLM 2.2 tRNA 分组、GLM 2.3 输入 tRNA）在这 49 条记录上没有触发。完整的内含子金标准（309 个内含子，需要另一台机器上的 `mitom_work/intron_gold_2026-10-29/gold/gb`）尚未重跑 |

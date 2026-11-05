@@ -481,7 +481,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
         nbf = next((f for f in kept if f.name == nb), None)
         if (phylum or "").lower() not in phyla or nbf is None or any(f.name == gene for f in kept):
             continue
-        f = orf_before(genome, rc, nbf, gene, table, typical, shortest, longest)
+        f = orf_before(genome, rc, nbf, gene, table, typical, shortest, longest, n)
         if f is not None and f in drop_paralogs(kept + [f], n, log):
             log.info(f"[core] {gene}: {f.start + 1}..{f.end} ({'+' if f.strand == 1 else '-'}) {f.note}")
             kept.append(f)
@@ -489,11 +489,15 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
 
 
 def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.CodonTable, typical: int,
-               shortest: int, longest: int) -> Optional[Feature]:
+               shortest: int, longest: int, n: int = 0) -> Optional[Feature]:
     """ADJACENT: the open reading frame ending with a stop codon 25 nt before to 10 nt after the start of `nb`, same
-    strand, start codon giving the length nearest `typical` (shortest..longest nt)."""
+    strand, start codon giving the length nearest `typical` (shortest..longest nt); n = the record's length when
+    `genome` is a circular record with its first nt appended."""
     N = len(genome)
+    n = n or N
     seq, bs = (genome, nb.start) if nb.strand == 1 else (rc, N - nb.end)
+    if nb.strand == 1 and n < N and bs < longest + 25:
+        bs += n        # (the copy of nb in the appended part: the ORF may lie before the origin; Grok 2.6, 2026-11-05)
     starts, stops = set(table.start_codons), set(table.stop_codons)
     best = None
     for e in range(max(3, bs - 25), min(N, bs + 11)):
@@ -507,6 +511,8 @@ def orf_before(genome: str, rc: str, nb: Feature, gene: str, table: CodonTable.C
     if best is None:
         return None
     s, e = (best[1], best[2]) if nb.strand == 1 else (N - best[2], N - best[1])
+    if s >= n:                                     # found in the appended copy: the record's own coordinates
+        s, e = s - n, e - n
     return Feature("CDS", gene, s, e, nb.strand, f"open reading frame before {nb.name} (gene order)", score=1.0)
 
 

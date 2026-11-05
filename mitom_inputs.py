@@ -401,8 +401,8 @@ def dedup_gb_records(
                 by_acc[key] = meta
             else:
                 kind = "dup_version" if meta.version_int < prev.version_int else "dup_exact"
-                stats["dup_exact"] += 1
-                stats["dup_exact_list"].append(
+                stats[kind] += 1                         # (Grok 3.11, 2026-11-05: always counted dup_exact)
+                stats[f"{kind}_list"].append(
                     f"{meta.acc_versioned} (dup of {prev.acc_versioned})")
                 dropped.append((meta, "older version" if kind == "dup_version" else "same accession listed twice",
                                 prev.acc_versioned))
@@ -495,7 +495,8 @@ def convert_gb_to_fasta_for_annotation(
     n_total  = stats["total_in"]
     n_kept   = stats["kept"]
     n_no_seq = stats["no_sequence"]
-    n_dup    = n_total - n_kept - n_no_seq
+    # the duplicates themselves: a record cut off is a parse error, not a duplicate (Grok 3.11, 2026-11-05)
+    n_dup    = sum(stats[k] for k in ("dup_exact", "dup_version", "dup_seq", "dup_refseq"))
 
     logging.info(
         f"[GB_DEDUP] total={n_total}  with_seq={n_kept}  "

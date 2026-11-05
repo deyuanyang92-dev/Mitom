@@ -138,7 +138,9 @@ QUALIFIERS = {
     "standard_name", "strain", "sub_clone", "submitter_seqid", "sub_species", "sub_strain", "tag_peptide", "tissue_lib",
     "tissue_type", "transgenic", "translation", "transl_except", "transl_table", "trans_splicing", "type_material",
     "variety"}
-SUBPHYLUM_CODE = {"Tunicata": 13, "Cephalochordata": 5}          # the chordates without the vertebrate code 2
+SUBPHYLUM_CODE = {"Tunicata": 13, "Urochordata": 13, "Cephalochordata": 5,   # the chordates without the vertebrate code 2
+                  # pterobranchs: NCBI codes 24 / 33 were made for them, enteropneusts stay 9 (Grok 1.2 / 1.7, 2026-11-05)
+                  "Rhabdopleuridae": 24, "Cephalodiscidae": 33}
 ASCII = {"\u00b5": "u", "\u03bc": "u", "\u00df": "ss", "\u00e6": "ae", "\u00c6": "AE", "\u0153": "oe", "\u00f8": "o",
          "\u00d8": "O", "\u0131": "i", "\u0142": "l", "\u0141": "L", "\u00b0": " degrees", "\u2018": "'", "\u2019": "'",
          "\u201c": '"', "\u201d": '"', "\u2013": "-", "\u2014": "-", "\u2212": "-", "\u00d7": "x", "\u00a0": " "}
@@ -247,6 +249,8 @@ def location(rec) -> Tuple[str, str]:
     org = " ".join(source_of(rec).get("organelle", [])).lower()
     if "mitochondr" in org:
         return "mitochondrion", "mgcode"
+    if org.startswith("plastid:") and org[8:].strip():    # plastid:apicoplast is no chloroplast (Grok 1.12, 2026-11-05)
+        return org[8:].strip(), "gcode"
     if "chloroplast" in org or "plastid" in org:
         return "chloroplast", "gcode"
     return "", "gcode"

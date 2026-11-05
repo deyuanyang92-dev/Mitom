@@ -33,10 +33,13 @@ PRODUCTS = {**{k: product for k, (_, product) in CORE_NAMES.items()}, "atp9": "A
 
 # ── NCBI gene symbols and products (mito_curate N1, as in RefSeq, e.g. NC_012920.1) and their synonyms (name_key) ──
 _PCG_SYNONYMS = {
-    "COX1": ("cox1", "coi", "co1", "coxi", "cytochromecoxidasesubuniti"),
-    "COX2": ("cox2", "coii", "co2", "coxii", "cytochromecoxidasesubunitii"),
-    "COX3": ("cox3", "coiii", "co3", "coxiii", "cytochromecoxidasesubunitiii"),
-    "ATP6": ("atp6", "atpase6", "atp", "atpsynthasef0subunit6"),
+    "COX1": ("cox1", "coi", "co1", "coxi", "cytochromecoxidasesubuniti", "cytochromecoxidasesubunit1"),
+    "COX2": ("cox2", "coii", "co2", "coxii", "cytochromecoxidasesubunitii", "cytochromecoxidasesubunit2"),
+    "COX3": ("cox3", "coiii", "co3", "coxiii", "cytochromecoxidasesubunitiii", "cytochromecoxidasesubunit3"),
+    # (the Arabic-numeral products of MitoZ / MITOS2 / many submitters: Grok 1.15, 2026-11-05)
+    # (no bare "atp": curate N1 renamed it ATP6 and D1 then deleted an atp8 named so as a second ATP6 - Grok 1.9,
+    # 2026-11-05; gene_name already left it ambiguous)
+    "ATP6": ("atp6", "atpase6", "atpsynthasef0subunit6"),
     "ATP8": ("atp8", "atpase8", "atpsynthasef0subunit8"),
     "CYTB": ("cytb", "cob", "ctb", "cyb", "cytochromeb"),
     "ND1": ("nd1", "nad1", "nadh1", "nadhdehydrogenasesubunit1"),

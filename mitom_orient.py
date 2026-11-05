@@ -67,6 +67,13 @@ def find_orientation_feature(record: "SeqRecord", genes: str) -> Tuple[Optional[
             continue
         strand = hits[0].location.strand
         same = [f for f in hits if f.location.strand == strand]
+        n = len(record.seq)
+        head = [f for f in same if len(f.location.parts) == 1 and int(f.location.start) == 0]
+        tail = [f for f in same if len(f.location.parts) == 1 and int(f.location.end) == n]
+        if head and tail and record.annotations.get("topology") != "linear":
+            # the gene in two features across the origin (no join): its 5' piece is the one at the end of a plus-strand
+            # record, at the start on the minus strand - not min(start) (Grok 3.1, 2026-11-05)
+            return (tail[0] if strand == 1 else head[0]), gene
         if strand == -1:
             return max(same, key=lambda f: int(f.location.end)), gene
         return min(same, key=lambda f: int(f.location.start)), gene
@@ -341,7 +348,7 @@ def add_exon_gap_introns(rec: "SeqRecord") -> int:
     for cds in [f for f in rec.features if f.type == "CDS" and len(f.location.parts) > 1]:
         parts = list(cds.location.parts)                      # transcript order
         gene = cds.qualifiers.get("gene", [""])[0]
-        notes, ref_notes = {}, {}
+        notes, ref_notes, mine = {}, {}, 0
         for x in cds.qualifiers.get("note", []):
             if x.startswith(INTRON_NOTE):              # mito_intron (de novo): type, E-value, splice score
                 k, _, txt = x[len(INTRON_NOTE):].partition(":")
@@ -361,7 +368,10 @@ def add_exon_gap_introns(rec: "SeqRecord") -> int:
             q["note"] = ["; ".join(x for x in (notes.get(str(k)), ref_notes.get(str(k))) if x)
                          or "intron between the exons of the CDS"]
             added.append(SeqFeature(FeatureLocation(s, e, strand=a.strand), type="intron", qualifiers=q))
-        if added:                                      # the introns are features now: the crossing notes are stale
+            mine += 1
+        # this CDS's introns are features now: its crossing notes are stale (Grok 3.2, 2026-11-05: `added` is the
+        # record's, so a later CDS lost the note of the intron it kept across the origin)
+        if mine:
             cds.qualifiers["note"] = [x for x in cds.qualifiers.get("note", []) if not x.startswith(INTRON_NOTE)
                                       and "crosses the origin: given by the join only" not in x]
     if added:

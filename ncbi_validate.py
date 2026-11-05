@@ -112,13 +112,13 @@ TABLE2ASN_TIMEOUT = 600      # s; one mitogenome takes < 1 s
 
 
 def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
-                    nuclear: bool = False) -> List[Dict[str, str]]:
+                    nuclear: bool = False, code: Optional[int] = None) -> List[Dict[str, str]]:
     """Write rec as NCBI submission inputs (rec.fsa + rec.tbl) and run table2asn on them (rec.sqn, rec.val);
     sbt = submitter template from https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ (optional)."""
     d = record_dir(out, rec.id)
     d.mkdir(parents=True, exist_ok=True)
     base = d / "rec"
-    (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
+    (d / "rec.fsa").write_text(fasta_defline(rec, code or record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
     (d / "rec.tbl").write_text("\n".join(feature_lines(rec)) + "\n")
     rows = []
     for old in (d / "rec.val", d / "rec.sqn"):       # a failing table2asn must not leave the last run's messages
