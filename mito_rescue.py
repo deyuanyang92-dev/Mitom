@@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, InputError  # noqa: E402
 from mito_engines import engine_env, mitos2_command, mitos_to_record  # noqa: E402,F401  (MITOS2: one runner, one parser)
 
 MIN_RRNA = 300

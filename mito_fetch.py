@@ -38,10 +38,9 @@ from Bio import Entrez, SeqIO
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_common import gb_fasta_record, old_spelling, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard  # noqa: E402
 
 ESEARCH_PAGE = 10000          # NCBI maximum retmax of one esearch request
-ACC_BATCH = 500               # UIDs per efetch rettype=acc request
 GB_BATCH = 200                # records per efetch rettype=gb request (~15 kb each)
 RETRIES = 5
 TRANSIENT = (urllib.error.URLError, urllib.error.HTTPError, http.client.HTTPException,

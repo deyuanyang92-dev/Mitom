@@ -1,0 +1,17 @@
+# LF for everything executed or parsed on Linux (Codex R1, 2026-11-03: a CRLF working copy broke ./mitom and install.sh)
+*.py        text eol=lf
+*.sh        text eol=lf
+*.smk       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.cff       text eol=lf
+mitom       text eol=lf
+Dockerfile  text eol=lf
+# benchmark / knowledge tables kept byte for byte (some are committed with CRLF)
+*.tsv       -text
+# never converted
+*.gz        binary
+*.png       binary
+*.jar       binary
+*.cm        binary
+*.pkl       binary

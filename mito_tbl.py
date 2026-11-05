@@ -81,7 +81,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import ncbi_validate as nv  # noqa: E402  (the feature table and the FASTA header of the NCBI submission files)
 from mito_common import GB_SUFFIXES, iter_gb_files, run_tool, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard  # noqa: E402
 from mito_names import AA1_TO_3, AA3, PRODUCTS, gene_name, name_key, trna_name  # noqa: E402
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CODE, PHYLUM_SYNONYMS  # noqa: E402
 

@@ -76,7 +76,7 @@ import mito_env  # noqa: E402  (finds external programs: config, PATH, conda env
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
 from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
-from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, count_seq_records, prepare_input, require_records  # noqa: E402
 from mito_common import CoreFeature, positions, run_or_raise  # noqa: E402  (the annotation core's tRNA step)
 
 GB_EXT = set(GB_SUFFIXES)

@@ -331,3 +331,12 @@ def test_install_sh_macos_asset_and_mitotools():
     txt = (ROOT / "install.sh").read_text()
     assert 'MF_OS="MacOSX"' in txt
     assert 'ENVS="mitotools $ENVS"' in txt
+
+
+def test_lock_of_a_reused_pid_is_stale(tmp_path):
+    out = tmp_path / "o"
+    out.mkdir()
+    (out / bm.LOCK_NAME).write_text(f"{os.getppid()} 1\n")        # a running pid, but started at another time
+    assert bm.lock_output(out) == ""
+    pid, started = (out / bm.LOCK_NAME).read_text().split()
+    assert pid == str(os.getpid()) and started == bm._process_start(os.getpid())

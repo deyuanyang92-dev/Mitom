@@ -1484,8 +1484,9 @@ def lock_output(out_root: Path) -> str:
             fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
             try:
-                other = int(lock.read_text().split()[0])
-                if not _lock_holder_alive(other):
+                held = lock.read_text().split()
+                other = int(held[0])
+                if not _lock_holder_alive(other, held[1] if len(held) > 1 else ""):
                     raise ProcessLookupError(other)
             except (ValueError, IndexError, OSError):
                 lock.unlink(missing_ok=True)           # stale (the run was killed): take it over
@@ -1493,23 +1494,32 @@ def lock_output(out_root: Path) -> str:
             return (f"ERROR: another MitoM run (pid {other}) is writing into {out_root}; wait for it, stop it, or "
                     f"use another -o folder (a stale lock: delete {lock})")
         with os.fdopen(fd, "w") as fh:
-            fh.write(me + "\n")
+            fh.write(f"{me} {_process_start(os.getpid())}".rstrip() + "\n")
         atexit.register(_release_lock, lock, me)
         return ""
     return f"ERROR: cannot lock {lock}"
 
 
-def _lock_holder_alive(pid: int) -> bool:
-    """Whether the pid of a lock still runs: a process of another user counts (os.kill raises PermissionError; it was
-    taken for a stale lock, N8 2026-11-05). A pid reused by another program also counts - the message names the
-    lock file to delete (taking over a live run's folder would be worse)."""
+def _process_start(pid: int) -> str:
+    """Start time of a process (clock ticks since boot, /proc/<pid>/stat field 22); '' where there is no /proc."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[19]
+    except (OSError, IndexError):
+        return ""
+
+
+def _lock_holder_alive(pid: int, started: str = "") -> bool:
+    """Whether the run of a lock still runs: a process of another user counts (os.kill raises PermissionError; it was
+    taken for a stale lock); a pid now used by another process (its start time differs from the one in the lock)
+    does not (N8, 2026-11-05)."""
     try:
         os.kill(pid, 0)
     except PermissionError:
         return True
     except OSError:
         return False
-    return True
+    now = _process_start(pid)
+    return not (started and now and now != started)
 
 
 def _release_lock(lock: Path, me: str) -> None:

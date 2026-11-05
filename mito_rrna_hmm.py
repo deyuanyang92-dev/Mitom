@@ -74,7 +74,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_names import CORE_NAMES, RRNA_ALIAS as RRNA_NAMES, name_key  # noqa: E402  (rRNA aliases: srrna, rrn12 ...)
 from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, iter_gb_files, prepare_input, require_records  # noqa: E402,F811
+from mito_common import cli_guard, InputError, iter_gb_files, require_records  # noqa: E402,F811
 from mito_common import CoreFeature  # noqa: E402  (the annotation core's rRNA step)
 from mito_trna import cmsearch  # noqa: E402  (MITOS2's covariance model search, as for the tRNAs)
 

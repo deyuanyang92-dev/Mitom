@@ -15,7 +15,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import safe_name
+from mito_common import safe_name, write_text_atomic
 
 
 def gb_record_accession(rec: "SeqRecord") -> str:
@@ -338,7 +338,7 @@ def transfer_gb_metadata_file(
     replaced_text, stats = replace_metadata_in_text(
         new_text, exact_dict, clean_dict, norm_dict, smart=smart, auto_accept=auto_accept)
     output_gb.parent.mkdir(parents=True, exist_ok=True)
-    output_gb.write_text(replaced_text, encoding="utf-8")
+    write_text_atomic(output_gb, replaced_text)       # never a half-written file (review 11-03 #3, 2026-11-05)
     n_replaced  = stats["exact"] + stats["compat"] + stats["smart_resolved"]
     unmatched   = [x[0] for x in stats["not_found_list"]]
     compat_keys = [x[0] for x in stats["compat_list"]]

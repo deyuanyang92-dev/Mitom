@@ -388,6 +388,8 @@ def blast_db(fa: Path, db: Path, threads: int) -> str:
             with open(f"{p}.fa", "wb") as o:
                 while a < b:
                     chunk = f.read(min(b - a, 1 << 24))
+                    if not chunk:                # the file shrank after stat() (review 11-03 #4, 2026-11-05)
+                        raise InputError(f"{fa} changed while it was split for BLAST: run again")
                     o.write(chunk)
                     a += len(chunk)
     parts = parts[:len(cuts) - 1]

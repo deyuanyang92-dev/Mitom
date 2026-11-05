@@ -101,7 +101,7 @@ from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 from mito_names import PRODUCT as RRNA_PRODUCT_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
                          transl_except_term, write_gb, write_tsv)
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
 import mito_start  # noqa: E402  (P11: the start codon NCBI records choose, learned)
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance

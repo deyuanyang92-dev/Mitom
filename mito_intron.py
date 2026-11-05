@@ -112,7 +112,7 @@ DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
 from mito_common import (GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb,  # noqa: E402
                          write_tsv)                                                                       # (CC0)
-from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, count_seq_records, prepare_input, require_records  # noqa: E402
 from mito_common import run_tool as run_program  # noqa: E402  (CC0: logged, e.g. by `mitom run --debug`)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
 TYPE_I_MIN, TYPE_II_MIN = 19, 40     # mfannot:5735 / Adjust_TypeII

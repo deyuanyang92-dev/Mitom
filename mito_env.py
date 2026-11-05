@@ -83,16 +83,6 @@ STEP_NAMES = {"core": "the annotation core", "trna_ml": "MitoM-ML tRNAs", "intro
 REQUIRED = tuple(dict.fromkeys(p for progs in REQUIRES.values() for p in progs))   # the default `mitom run`
 
 
-def missing_programs(steps) -> List[str]:
-    """'<program> (for <step>)' for every program the given REQUIRES steps need and find() does not find."""
-    out = []
-    for step in steps:
-        for prog in REQUIRES[step]:
-            if not find(prog):
-                out.append(f"{prog} (for {STEP_NAMES[step]})")
-    return list(dict.fromkeys(out))
-
-
 def config_path() -> Path:
     env = os.environ.get("YZZ_MITO_CONFIG")
     yzz = HERE.parents[1] / "config" / "mitoz.json" if (HERE.parents[1] / "yzz.py").exists() else None
@@ -337,6 +327,21 @@ def doctor(write: bool = False) -> int:
     return 1 if req or not ref or not bio else 0
 
 
+def extract_tar(tgz: Path, dest: Path) -> None:
+    """Unpack tgz into dest, never outside it: filter="data" (Python 3.12; 3.8.17 / 3.9.17 / 3.10.12 / 3.11.4), on
+    older interpreters regular files and folders inside dest only (review 11-03 A, 2026-11-05)."""
+    with tarfile.open(tgz) as tf:
+        if hasattr(tarfile, "data_filter"):
+            tf.extractall(dest, filter="data")
+            return
+        root = os.path.realpath(dest)
+        for m in tf.getmembers():
+            p = os.path.realpath(os.path.join(root, m.name))
+            if not (m.isfile() or m.isdir()) or os.path.commonpath([root, p]) != root:
+                raise ValueError(f"{tgz}: refused member {m.name!r} (not a file or folder inside {dest})")
+        tf.extractall(dest)
+
+
 def setup(refdir: Optional[str] = None) -> int:
     """Download the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked) into refdir (default
     $MITOS_REFDIR or ~/mitos_refs) unless it is found, then save the found locations (doctor --write-config)."""
@@ -358,8 +363,7 @@ def setup(refdir: Optional[str] = None) -> int:
             tgz.unlink()
             print(f"checksum mismatch for {tgz.name}: run mitom setup again", file=sys.stderr)
             return 1
-        with tarfile.open(tgz) as tf:
-            tf.extractall(target, **({"filter": "data"} if hasattr(tarfile, "data_filter") else {}))
+        extract_tar(tgz, target)
         tgz.unlink()
         have = str(target)
     os.environ["MITOS_REFDIR"] = str(Path(have).expanduser())  # doctor --write-config records it

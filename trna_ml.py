@@ -38,7 +38,6 @@ import pickle   # models trained locally from the shipped tables and read back b
 import shutil
 import statistics
 import sys
-import tarfile
 import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -105,8 +104,8 @@ def clade_dir(models: Optional[Path] = None) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(dir=dest.parent, prefix=".clades."))
     try:
-        with tarfile.open(tgz) as t:
-            t.extractall(tmp, filter="data")
+        import mito_env
+        mito_env.extract_tar(tgz, tmp)                 # filter= is missing before Python 3.8.17 (review 11-03 A)
         try:
             os.replace(tmp / "clades", dest)
         except OSError:                                # another run unpacked them first
