@@ -95,6 +95,10 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
     report = reports_dir(out_root) / "curation_report.tsv"
     if (cur / "curation_report.tsv").exists():
         shutil.move(str(cur / "curation_report.tsv"), str(report))
+        for ln in report.read_text(encoding="utf-8").splitlines()[1:]:   # (Kimi 4.3: seen by mitom debug)
+            c = ln.split("\t")
+            if len(c) > 7 and c[4] == "error":
+                record_event(c[0], f"curation failed, record left uncurated: {c[7]}")
     return StepResult(f"{count_rows(report)} changes, each with rule and reason in reports/curation_report.tsv",
                       gb_dir=cur)
 
@@ -119,6 +123,9 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
         write_gb(recs, gbf)                          # atomic, value-less /pseudo kept (2026-10-31 review)
     return StepResult(f"{n_ncr} non-coding regions of >= {min_len} nt ({nt:,} nt) in {n_rec} records "
                       "(misc_feature 'non-coding region NCR<k>'; --ncr no: none)")
+
+
+BLOCKING = ("ERROR", "REJECT", "FATAL")             # table2asn severities that stop an NCBI submission
 
 
 def _submission_line(out_root: Path) -> str:
@@ -147,6 +154,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     sub = out_root / "06.ncbi_submission"
     sub.mkdir(parents=True, exist_ok=True)
     summary, msgs = [], []
+    unchecked = 0                                    # records table2asn could not validate (crash, no .val)
     for gbf in sorted(gb_dir.rglob("*.gbf")):
         for rec in SeqIO.parse(str(gbf), "genbank"):
             rows = nv.validate_record(rec, sub / "_work", t2a, getattr(args, "sbt", None))
@@ -154,12 +162,14 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
             for ext in (".fsa", ".tbl", ".sqn", ".val"):
                 if (d / f"rec{ext}").exists():
                     shutil.copy2(d / f"rec{ext}", sub / f"{d.name}{ext}")
-            n = {sev: sum(r["severity"] == sev for r in rows) for sev in ("ERROR", "WARNING")}
+            # REJECT / FATAL block a submission as ERROR does: counted in the ERROR column (Codex R3, 2026-11-05)
+            errs = [r for r in rows if r["severity"] in BLOCKING]
+            n = {"ERROR": len(errs), "WARNING": sum(r["severity"] == "WARNING" for r in rows)}
+            unchecked += any(r["code"] == "MITOM.Table2asnFailed" for r in rows)
             if n["ERROR"]:
-                record_event(rec.id, f"NCBI ERROR: {n['ERROR']} ({'; '.join(sorted({r['code'] for r in rows if r['severity'] == 'ERROR'}))})"
+                record_event(rec.id, f"NCBI ERROR: {n['ERROR']} ({'; '.join(sorted({r['code'] for r in errs}))})"
                                      " - ncbi_submission/validation_messages.tsv")
-            summary.append(f"{rec.id}\t{n['ERROR']}\t{n['WARNING']}\t"
-                           + "; ".join(sorted({r["code"] for r in rows if r["severity"] == "ERROR"})))
+            summary.append(f"{rec.id}\t{n['ERROR']}\t{n['WARNING']}\t" + "; ".join(sorted({r["code"] for r in errs})))
             msgs += [f"{r['record']}\t{r['severity']}\t{r['code']}\t{r['message']}" for r in rows]
     shutil.rmtree(sub / "_work", ignore_errors=True)
     write_table(sub / "submission_summary.tsv", "record\tERROR\tWARNING\terror_codes", summary)
@@ -167,7 +177,9 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     bad = [x.split("\t")[0] for x in summary if x.split("\t")[1] != "0"]
     logging.info(f"[SUBMISSION] {len(summary)} record(s) -> {sub}; NCBI ERROR in {len(bad)}: {bad[:10]}"
                  + (" - see validation_messages.tsv" if bad else ""))
-    return StepResult(_submission_line(out_root))
+    if unchecked:
+        logging.error(f"[SUBMISSION] table2asn failed on {unchecked} record(s): not validated (MITOM.Table2asnFailed)")
+    return StepResult(_submission_line(out_root), ok=not unchecked and bool(summary))
 
 
 def _rescue_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
@@ -197,6 +209,9 @@ def run_rescue(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
                           for r in rows])
     added = [f"{r['record']}:{r['gene']}" for r in rows if r["status"] == "added"]
     failed = [r["record"] for r in rows if r["status"] != "added"]
+    for r in rows:
+        if str(r["status"]).startswith("failed"):
+            record_event(r["record"], f"MITOS2 rescue {r['status']}")          # (Kimi 4.3)
     logging.info(f"[RESCUE] {len(added)} gene(s) added from MITOS2 {added}" + (f"; MITOS2 failed: {failed}" if failed else ""))
     return StepResult(_rescue_line(args, gb_dir, out_root), ok=not failed)
 
@@ -225,6 +240,9 @@ def run_rrna_hmm(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> Step
                          ["\t".join([r[k] for k in ("file", "record", "phylum", "gene", "location", "status")]
                                     + [str(r.get(k, "")) for k in ("coverage", "note")]) for r in rows])
     added = [f"{r['record']}:{r['gene']}" for r in rows if str(r["status"]).startswith("added")]
+    for r in rows:
+        if str(r["status"]).startswith("failed"):
+            record_event(r["record"], f"rRNA HMM search {r['status']}")        # (Kimi 4.3)
     logging.info(f"[RRNA_HMM] {len(added)} rRNA(s) added from per-phylum HMMs {added}")
     n_skip = sum(str(r["status"]).startswith(("skipped: no library", "skipped: no model")) for r in rows)
     if n_skip:

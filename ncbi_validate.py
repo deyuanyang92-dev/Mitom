@@ -28,13 +28,16 @@ from Bio.SeqFeature import AfterPosition, BeforePosition
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_common import iter_gb_files, run_tool, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
 
 SKIP_QUALS = {"translation", "db_xref", "protein_id", "locus_tag_old"}
+TOOL_TAG = re.compile(r"\s*\(MitoM\)$")                    # end of MitoM's NCR /note (mito_ncr.py)
 INTERNAL_NOTE = re.compile(r"check .* manually|mito_\w+\.py")   # e.g. mito_rescue.py / mito_intron.py notes
 IGNORE_CODES =re.compile(r"SEQ_DESCR\.(NoPubFound|NoSourceDescriptor|MissingLineage|NoTaxonID|BadOrgMod)|"
                           r"GENERIC\.MissingPubRequirement|SEQ_PKG\.|SEQ_DESCR\.TitleNotAppropriateForSet")
-MSG_RE = re.compile(r"^(INFO|WARNING|ERROR|REJECT|FATAL):\s+valid\s+\[([A-Z_]+\.[A-Za-z0-9_]+)\]\s+(.*)$", re.I)
+# table2asn 1.28 writes Info / Warning / Error / Critical / Fatal; Critical (= REJECT of older versions) was not
+# matched and so never counted (2026-11-05: 'Critical: valid [SEQ_FEAT.Range] ... out of range')
+MSG_RE = re.compile(r"^(INFO|WARNING|ERROR|REJECT|CRITICAL|FATAL):\s+valid\s+\[([A-Z_]+\.[A-Za-z0-9_]+)\]\s+(.*)$", re.I)
 
 
 def feature_lines(rec) -> List[str]:
@@ -58,7 +61,12 @@ def feature_lines(rec) -> List[str]:
             for v in vals:
                 if k == "note" and INTERNAL_NOTE.search(str(v)):     # tool hints for the curator, not for the database
                     continue
-                out.append(f"\t\t\t{k}\t{' '.join(str(v).split())}")
+                v = "" if v is None else " ".join(str(v).split())
+                if k == "note":                                       # the tool's name is not for the database (E3)
+                    v = TOOL_TAG.sub("", v)
+                # value-less qualifier (/pseudo, /trans_splicing, /ribosomal_slippage): key column only; Biopython
+                # holds it as [None] in memory and [''] when read back - never write 'pseudo<TAB>None' (2026-11-05)
+                out.append(f"\t\t\t{k}\t{v}" if v else f"\t\t\t{k}")
     return out
 
 
@@ -104,31 +112,41 @@ TABLE2ASN_TIMEOUT = 600      # s; one mitogenome takes < 1 s
 
 
 def validate_record(rec, out: Path, table2asn: str, sbt: Optional[str] = None,
-                    nuclear: bool = False) -> List[Dict[str, str]]:
+                    nuclear: bool = False, code: Optional[int] = None) -> List[Dict[str, str]]:
     """Write rec as NCBI submission inputs (rec.fsa + rec.tbl) and run table2asn on them (rec.sqn, rec.val);
     sbt = submitter template from https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ (optional)."""
     d = record_dir(out, rec.id)
     d.mkdir(parents=True, exist_ok=True)
     base = d / "rec"
-    (d / "rec.fsa").write_text(fasta_defline(rec, record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
+    (d / "rec.fsa").write_text(fasta_defline(rec, code or record_gencode(rec), nuclear) + "\n" + str(rec.seq) + "\n")
     (d / "rec.tbl").write_text("\n".join(feature_lines(rec)) + "\n")
     rows = []
     for old in (d / "rec.val", d / "rec.sqn"):       # a failing table2asn must not leave the last run's messages
         old.unlink(missing_ok=True)
     try:
-        run_tool([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn",
-                  *(["-t", sbt] if sbt else [])], timeout=TABLE2ASN_TIMEOUT)
+        p = run_tool([table2asn, "-i", str(d / "rec.fsa"), "-V", "vb", "-o", str(base) + ".sqn",
+                      *(["-t", sbt] if sbt else [])], timeout=TABLE2ASN_TIMEOUT)
     except subprocess.TimeoutExpired:                  # never wait for ever (table2asn 1.28 can hang)
         return [{"record": rec.id, "severity": "ERROR", "code": "MITOM.Table2asnTimeout", "ours": "no",
                  "message": f"table2asn did not finish in {TABLE2ASN_TIMEOUT} s: not validated"}]
+    except OSError as exc:
+        return [{"record": rec.id, "severity": "ERROR", "code": "MITOM.Table2asnFailed", "ours": "no",
+                 "message": f"table2asn could not be run ({exc}): not validated"}]
     val = d / "rec.val"
+    if not val.exists():
+        # a crashed table2asn writes no .val: that is 'not validated', never '0 ERROR' (Codex R2, 2026-11-05). Its
+        # exit code is no sign: table2asn 1.28 exits 0 or 2 on records with validation errors (rec.val written)
+        tail = " ".join((p.stderr or "").split())[-200:]
+        rows.append({"record": rec.id, "severity": "ERROR", "code": "MITOM.Table2asnFailed", "ours": "no",
+                     "message": f"table2asn exit {p.returncode}, no rec.val: not validated{'; ' + tail if tail else ''}"})
     mine = our_intervals(rec)
     for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
         m = MSG_RE.match(line.strip())
         if not m or IGNORE_CODES.search(m.group(2)):
             continue
         msg = m.group(3)
-        rows.append({"record": rec.id, "severity": m.group(1).upper(), "code": m.group(2),
+        sev = m.group(1).upper()
+        rows.append({"record": rec.id, "severity": "REJECT" if sev == "CRITICAL" else sev, "code": m.group(2),
                      "ours": "yes" if any(re.search(rf"\b{re.escape(iv)}\b", msg) for iv in mine) else "no",
                      "message": msg[:300]})
     return rows

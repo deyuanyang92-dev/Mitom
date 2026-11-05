@@ -133,6 +133,24 @@ def write_gb(recs, path) -> None:
         raise
 
 
+def write_text_atomic(path, text: str) -> None:
+    """write_gb for text: a temporary file in the same folder replaces `path` only when complete (review 11-03 #3,
+    2026-11-05: transfer_gb_metadata_file rewrote the body file in place with --overwrite_new_body yes)."""
+    path = Path(path)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as h:
+            h.write(text)
+        if path.exists():
+            shutil.copymode(path, tmp)
+        else:
+            os.chmod(tmp, 0o666 & ~_UMASK)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
 def read_fasta(path) -> Iterator[SeqRecord]:
     """FASTA records (id = first word, description = whole header), streamed, without Bio.SeqIO (it imports numpy,
     ~27 MB, resident while the annotation programs run)."""
@@ -147,9 +165,6 @@ def read_fasta(path) -> Iterator[SeqRecord]:
                 parts.append("".join(line.split()))
     if head is not None:
         yield SeqRecord(Seq("".join(parts)), id=(head.split() or [""])[0], description=head)
-
-
-FASTA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
 
 
 def gb_fasta_record(rec: SeqRecord) -> SeqRecord:
@@ -297,8 +312,11 @@ def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
             new_features.append(SeqFeature(location=new_loc, type=feat.type,
                                             id=getattr(feat, "id", "<unknown>"),
                                             qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, rc=True)))
-        except Exception:
-            new_features.append(feat)
+        except Exception as exc:                 # old coordinates would be wrong on the reverse strand (Kimi 1.11)
+            if feat.type != "source":
+                logging.warning(f"[REVCOMP] {record.id}: {feat.type} {feat.location} not moved ({exc}): left out")
+            else:
+                new_features.append(feat)
     new_rec.features = new_features
     return new_rec
 

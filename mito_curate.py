@@ -100,9 +100,10 @@ from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key
 from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 from mito_names import PRODUCT as RRNA_PRODUCT_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
-                         transl_except_term, write_tsv)
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+                         transl_except_term, write_gb, write_tsv)
+from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
 import mito_start  # noqa: E402  (P11: the start codon NCBI records choose, learned)
+import mito_tbl  # noqa: E402  (record_code: the genetic code of a record's taxonomy)
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
 SPACERS = (0, 1, 2, 3, -1)  # nt from an abbreviated stop to the downstream tRNA; -1 last: a T on the tRNA's first base is often chance
 NO_START_NOTE = "start codon not determined"
@@ -1227,6 +1228,11 @@ class Curator:
         self.duplicates()                              # D1 before the boundary rules: a copy must not act as neighbour
         self.weak_trnas()
         for f in list(self.rec.features):
+            if f.type == "CDS" and str(f.qualifiers.get("codon_start", ["1"])[0]) != "1":
+                # the boundary rules read codons from the first base: a 5'-partial CDS with /codon_start 2 / 3 was
+                # shifted, joined over 'frameshifts' or written /pseudo (Grok 1.11, 2026-11-05); only translated
+                self.log(f, "P4", span(f), span(f), f"/codon_start={f.qualifiers['codon_start'][0]}: not curated")
+                continue
             if f.type == "CDS":
                 self.origin_cut(f)
                 self.frameshift(f)
@@ -1298,7 +1304,7 @@ def main(argv=None) -> int:
     p.add_argument("-i", "--input", required=True)
     p.add_argument("-o", "--out", required=True)
     p.add_argument("--genetic_code", type=int, default=None,
-                   help="Genetic code (default: each record's CDS /transl_table, else 5; 2026-10-31 review: code 5 was "
+                   help="Genetic code (default: each record's CDS /transl_table, else the usual code of its phylum, else 5; 2026-10-31 review: code 5 was "
                         "used for every record - vertebrate AGG stops read through)")
     p.add_argument("--rrna_bounds", choices=["trim", "fill"], default="fill",
                    help="fill (default): remove overlaps with flanking genes and extend rRNA ends to them (gaps <= "
@@ -1357,11 +1363,16 @@ def main(argv=None) -> int:
         recs = list(SeqIO.parse(str(f), "genbank"))
         n_recs += len(recs)
         for i, rec in enumerate(recs):
+            # no --genetic_code and no CDS /transl_table: the code of the record's taxonomy as gb2tbl takes it (Grok
+            # 1.3, 2026-11-05: always 5 - a vertebrate's AGR stops read through); written on the CDS that lack one
+            code = a.genetic_code or record_code(rec) or mito_tbl.record_code(rec, None)[0] or 5
             if t2a:
-                val_before += nv.validate_record(copy.deepcopy(rec), out / "validation" / "before", t2a)
+                val_before += nv.validate_record(copy.deepcopy(rec), out / "validation" / "before", t2a, code=code)
             backup = copy.deepcopy(rec)                  # run() edits in place: a failure must not leave a half-curated record
             try:
-                code = a.genetic_code or record_code(rec) or 5
+                for ft in rec.features:
+                    if ft.type == "CDS" and not str(ft.qualifiers.get("transl_table", [""])[0]).isdigit():
+                        ft.qualifiers["transl_table"] = [str(code)]
                 cur = Curator(rec, code, a)
                 rows += cur.run()
                 start_rows += cur.start_rows
@@ -1373,7 +1384,7 @@ def main(argv=None) -> int:
                 val_after += nv.validate_record(rec, out / "validation" / "after", t2a)
         dest = out / (f.relative_to(src) if src.is_dir() else f.name)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        SeqIO.write(recs, str(dest), "genbank")      # always: N1 names / gene ranges change without a report row
+        write_gb(recs, dest)      # always: N1 names / gene ranges change without a report row
     if not n_recs and not (src.is_dir() and a.allow_empty):
         require_records(0, "GenBank records", a.input)
     cols = ["record", "feature", "gene", "strand", "rule", "old", "new", "reason"]

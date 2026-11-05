@@ -17,7 +17,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import GB_SUFFIXES, InputError, safe_name, topology_from_header, truncated_genbank
+from mito_common import GB_SUFFIXES, InputError, safe_name, topology_from_header, truncated_genbank, write_gb
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS
 from mitom_metadata import _normalize_acc, gb_record_accession
 
@@ -27,6 +27,16 @@ def header_first_token(desc_or_id: str) -> str:
     if s.startswith(">"):
         s = s[1:]
     return s.split()[0] if s else "NA"
+
+
+def _lineage_code(lineage: str) -> int:
+    """mito_classify.code_of_lineage (0 when its reference table cannot be read)."""
+    try:
+        from mito_classify import code_of_lineage
+        return code_of_lineage(lineage)
+    except Exception as exc:                           # (reference data missing: the phylum default is used)
+        logging.debug(f"[CLADE] code_of_lineage({lineage!r}): {exc}")
+        return 0
 
 
 def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optional[str], Optional[int], Optional[str], str]:
@@ -64,6 +74,12 @@ def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optio
                     except ValueError:
                         continue
                     codes[c] = codes.get(c, 0) + 1
+                elif p:
+                    # no CDS /transl_table: the code of the reference genomes of the deepest taxon, as `mitom run
+                    # --clade auto` decides it (D1, 2026-11-05: a tunicate got the vertebrate code 2 here, 13 there)
+                    c = _lineage_code(";".join(tax))
+                    if c:
+                        codes[c] = codes.get(c, 0) + 1
         except Exception as exc:                          # truncated / not a GenBank file: name it
             return None, None, None, f"--clade auto: cannot read {f}: {exc}; fix the file or {need}"
     if unmatched:
@@ -139,13 +155,22 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
     if dest.is_dir():
         shutil.rmtree(dest)
     notes = []
+    made: Dict[Path, Path] = {}                       # written file -> its source
     for p, what in todo.items():
         rel = p.relative_to(base)
         t = dest / (rel.parent / rel.name[:-3] if what == "gzip" and rel.name.lower().endswith(".gz") else rel)
         if what == "embl":
             t = t.with_suffix(".gb")
+        if t in made:                                 # same.fa + same.fa.gz: one would silently replace the other (R8)
+            raise InputError(f"{made[t]} and {p} both become {t.relative_to(dest)} once unpacked / converted: "
+                             f"rename one of them")
+        made[t] = p
         t.parent.mkdir(parents=True, exist_ok=True)
-        data = gzip.open(p, "rb").read() if what == "gzip" else p.read_bytes()
+        data = p.read_bytes()
+        for _ in range(3):                            # gzip of a gzip file too (E19: it was read as Latin-1 junk)
+            if data[:2] != b"\x1f\x8b":
+                break
+            data = gzip.decompress(data)
         try:
             text, latin = data.decode("utf-8-sig"), False
         except UnicodeDecodeError:
@@ -155,8 +180,7 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
             recs = list(SeqIO.parse(io.StringIO(text), "embl"))
             for r in recs:                               # (GenBank needs molecule_type)
                 r.annotations.setdefault("molecule_type", "DNA")
-            with t.open("w", encoding="utf-8") as fh:
-                SeqIO.write(recs, fh, "genbank")
+            write_gb(recs, t)                        # (Kimi 1.5: EMBL flags /pseudo)
         else:
             t.write_text(text, encoding="utf-8")
         if what:
@@ -331,9 +355,10 @@ def dedup_gb_records(
 
             seq_hash = hashlib.md5(seq_str.encode()).hexdigest()
             topo     = (topology_from_header(rec.description) if fmt == "fasta"
-                        else rec.annotations.get("topology", "circular").lower())
+                        else str(rec.annotations.get("topology") or "").lower())
             if topo not in ("circular", "linear"):
-                topo = "circular"
+                # no topology on the LOCUS line: as an unlabelled FASTA - a contig < 10 kb is linear (N9, 2026-11-05)
+                topo = "circular" if len(seq_str) >= MIN_CIRCULAR_LEN else "linear"
 
             all_metas.append(GbRecordMeta(
                 acc_versioned=acc_ver, acc_base=acc_base,
@@ -376,8 +401,8 @@ def dedup_gb_records(
                 by_acc[key] = meta
             else:
                 kind = "dup_version" if meta.version_int < prev.version_int else "dup_exact"
-                stats["dup_exact"] += 1
-                stats["dup_exact_list"].append(
+                stats[kind] += 1                         # (Grok 3.11, 2026-11-05: always counted dup_exact)
+                stats[f"{kind}_list"].append(
                     f"{meta.acc_versioned} (dup of {prev.acc_versioned})")
                 dropped.append((meta, "older version" if kind == "dup_version" else "same accession listed twice",
                                 prev.acc_versioned))
@@ -470,7 +495,8 @@ def convert_gb_to_fasta_for_annotation(
     n_total  = stats["total_in"]
     n_kept   = stats["kept"]
     n_no_seq = stats["no_sequence"]
-    n_dup    = n_total - n_kept - n_no_seq
+    # the duplicates themselves: a record cut off is a parse error, not a duplicate (Grok 3.11, 2026-11-05)
+    n_dup    = sum(stats[k] for k in ("dup_exact", "dup_version", "dup_seq", "dup_refseq"))
 
     logging.info(
         f"[GB_DEDUP] total={n_total}  with_seq={n_kept}  "
@@ -510,7 +536,7 @@ def convert_gb_to_fasta_for_annotation(
         orig_dir.mkdir(parents=True, exist_ok=True)
         for meta in kept_records:
             try:
-                SeqIO.write([meta.record], str(orig_dir / f"{safe_name(meta.acc_versioned)}.gb"), "genbank")
+                write_gb([meta.record], orig_dir / f"{safe_name(meta.acc_versioned)}.gb")   # (Kimi 1.5)
             except Exception as exc:               # noqa: BLE001  (a record Biopython cannot write back: compared later as missing)
                 logging.warning(f"[ORIGINAL_GB] {meta.acc_versioned}: not written to {orig_dir.name}/: {exc!r}")
     LAST_DEDUP_STATS.clear()
@@ -756,7 +782,8 @@ def split_or_sanitize_fastas(
             if hint:                                  # assembler / NCBI words: a label the ends can still overturn
                 topo, tagged = hint, True
                 source = f"FASTA header text '{words}'"
-            k = terminal_overlap(str(rec.seq)) if not orig_gb_path and topo == "circular" else 0
+            # --topology linear: the ends are real, never cut as a circular overlap (Codex R5, 2026-11-05)
+            k = terminal_overlap(str(rec.seq)) if not orig_gb_path and topo == "circular" and topology != "linear" else 0
             if k:                                     # an assembler's overlap: circular, the repeated end removed
                 logging.warning(f"[TOPOLOGY] {orig_token}: its last {k} nt repeat its first {k} nt (assembly overlap "
                                 f"of a circular molecule): removed, {len(rec.seq) - k} nt annotated as circular")

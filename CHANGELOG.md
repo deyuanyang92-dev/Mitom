@@ -28,6 +28,43 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- Model reviews round 2 (Grok 4.7, GLM 5.3, Kimi K3, 11-03 static review; each item checked and reproduced,
+  Mitom_review/FIX_STATUS_2026-11-05.md). Annotation: input tRNAs across the origin are no longer the whole record;
+  tRNA calls between two others join their group; intron-step neighbours read by part (a join across the origin or
+  a gene inside its intron was skipped); atp8 / nad4L fallback ORFs across the origin; ARWEN anticodons kept;
+  `mitom curate` without --genetic_code uses the taxonomy's code and writes /transl_table (was 5); CDS with
+  /codon_start 2 / 3 left out of the boundary rules; a CDS named `atp` is no longer renamed ATP6 and then deleted as a
+  second ATP6; "cytochrome c oxidase subunit 1" products recognised; explicit `--clade Chordata` and Urochordata
+  give tunicates 13, pterobranchs 24 / 33; atp9 kept from MITOS2. Output: every GenBank writer keeps a value-less
+  /pseudo (the final records of `mitom run` had /pseudo=""), atomic writes, n^1 sites, plastids. Logs / debug: the
+  logs of topology-phase and round-2 failures kept, failed programs' messages, step failures as [RECORD] lines.
+  Fetch: "complete mitochondrial genome" titles. Python 3.8.0-3.11.3 tar extraction. Tests: an environment leak
+  made two tRNA tests fail only in the full suite. Not changed (checked, not bugs): GLM 2.1 (its proposed change
+  would drop the gene), Grok 1.1 / 2.4, Kimi 2.6 / 3.5. 49 NCBI records old vs new: identical coordinates.
+- Model reviews 2026-11-04 (Mitom_review/VERIFICATION_REPORT.md, NEW_BUGS_2026-11-04.md; checked and fixed
+  2026-11-05, tests/test_review_2026_11_05.py):
+  - NCBI check: a table2asn that crashed or could not run (no .val) was counted as 0 ERROR (run, curate, gb2tbl,
+    nuc); now MITOM.Table2asnFailed, the submission step fails. Messages of severity `Critical` (table2asn 1.28) were
+    not read at all; REJECT / Critical / FATAL now count in the ERROR column. table2asn's exit code is no sign of a
+    crash (it exits 2 on records with validation errors). A gb2tbl timeout was counted to SeqID '' (no row).
+  - .tbl: value-less qualifiers (/pseudo, /trans_splicing, /ribosomal_slippage) as the key alone (they were written
+    `pseudo<TAB>None` from records in memory, e.g. `mitom curate`'s check after the rules); '(MitoM)' left out of
+    the NCR /note.
+  - `--topology linear` no longer cuts an end that repeats the start; a GenBank record without topology on its LOCUS
+    line is linear below 10 kb (as FASTA). `annotate` with nothing to annotate exits 2, and `run` / `annotate` exit 1
+    when no final GenBank was written; transfer_metadata / replace_organism exit 1 when a file failed.
+  - `import --clade auto` of a GenBank without CDS /transl_table: the lineage's code as `run` (tunicates 13, was 2).
+  - Intron step (mito_intron.py): exonerate gets the 64-letter table for codes it lacks (24, 33), as the core does.
+  - install.sh: the macOS Miniforge download (MacOSX, not Darwin); mitotools always built (`--envs mitos`).
+  - Output folder: `import` writes only after the folder is locked; a lock of another user's run is not taken over;
+    reusing -o removes the previous run's results (a table / map this run does not write stayed), never the input;
+    `same.fa` + `same.fa.gz` is an error (one replaced the other), gzip of gzip unpacked.
+  - Groups: a failed group's annotation is not merged (its reports are); tables with different headers merged by
+    column name. Rescue / round-2 check know genes named cox1 / rrnS (COX1 was added twice); the MITOS2 runs of the
+    rescue share the CPUs. A feature that cannot be moved to a new origin is left out (it kept its old coordinates).
+    Import: GenBank files beside MitoZ folders are imported, renamed duplicates never take an existing name.
+    Metadata: the accession from the full id, the LOCUS length of smart matches. GenBank results written atomically.
+
 - tRNA Leu / Ser numbers follow MITOS2 2.1.10 for every taxon, vertebrates included (L1 = CUN, L2 = UUR, S1 = AGN,
   S2 = UCN; NCBI's vertebrate records number them the other way): unchanged behaviour, now documented and tested.
 - Robustness round 2 (2026-10-31: every command fuzzed with 24 good / malformed inputs, four module reviews):

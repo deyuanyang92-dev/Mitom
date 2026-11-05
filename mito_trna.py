@@ -75,8 +75,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_names import AA3, trna_symbol as trna_name  # noqa: E402  (trnL1/L2, trnS1/S2 by anticodon)
 from mito_names import AA1_TO_3 as ONE2THREE  # noqa: E402
-from mito_common import GB_SUFFIXES, old_spelling, run_tool, write_tsv  # noqa: E402
-from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import GB_SUFFIXES, old_spelling, run_tool, topology_from_header, write_gb, write_tsv  # noqa: E402
+from mito_common import cli_guard, count_seq_records, prepare_input, require_records  # noqa: E402
 from mito_common import CoreFeature, positions, run_or_raise  # noqa: E402  (the annotation core's tRNA step)
 
 GB_EXT = set(GB_SUFFIXES)
@@ -102,7 +102,11 @@ class Pred:
 
 def run(cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
     try:
-        return run_tool(cmd, timeout=TIMEOUT, cwd=cwd, env=env).stdout
+        p = run_tool(cmd, timeout=TIMEOUT, cwd=cwd, env=env)
+        if p.returncode != 0:                          # a failed predictor is not 'no tRNA found' (D7, 2026-11-05)
+            print(f"[mito_trna] {Path(cmd[0]).name} failed (exit {p.returncode}): "
+                  f"{' '.join((p.stderr or '').split())[-300:]}", file=sys.stderr)
+        return p.stdout
     except (subprocess.TimeoutExpired, OSError) as exc:
         print(f"[mito_trna] {cmd[0]} failed: {exc}", file=sys.stderr)
         return ""
@@ -238,8 +242,13 @@ def from_input(rec) -> List[Pred]:
             g = re.match(r"trn([A-Z])", f.qualifiers.get("gene", [""])[0])
             aa = g.group(1) if g else ""
         ac = re.search(r"\(([acgtuACGTU]{3})\)", txt)
+        s, e, L = int(f.location.start) + 1, int(f.location.end), len(rec.seq)
+        tail = next((p for p in f.location.parts if int(p.end) == L), None)
+        head = next((p for p in f.location.parts if int(p.start) == 0), None)
+        if len(f.location.parts) == 2 and tail is not None and head is not None and tail is not head:
+            s, e = int(tail.start) + 1, L + int(head.end)   # across the origin: end > L, not the hull 1..L (GLM 2.3)
         if aa:
-            out.append(Pred("input", int(f.location.start) + 1, int(f.location.end), f.location.strand or 1, aa,
+            out.append(Pred("input", s, e, f.location.strand or 1, aa,
                             ac.group(1).lower().replace("u", "t") if ac else ""))
     return out
 
@@ -262,10 +271,10 @@ def group(preds: List[Pred]) -> List[List[Pred]]:
     groups: List[List[Pred]] = []
     for p in sorted(preds, key=lambda x: (x.start, x.end)):
         for g in groups:
-            q = g[0]
-            ov = overlap(p, q)
-            same = p.aa == q.aa and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
-            if p.strand == q.strand and same and ov >= 0.5 * min(p.length, q.length):
+            # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05)
+            if any(p.strand == q.strand and p.aa == q.aa
+                   and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
+                   and overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
                 g.append(p)
                 break
         else:
@@ -803,8 +812,9 @@ def main(argv=None) -> int:
                 continue
             L = len(rec.seq)
             global CIRC_L
-            CIRC_L = L if rec.annotations.get("topology", "circular") == "circular" else 0
-            preds = unwrap(preds, L)
+            topo = rec.annotations.get("topology") or (topology_from_header(rec.description) if fmt == "fasta" else "circular")
+            CIRC_L = L if topo == "circular" else 0     # FASTA topology=linear honoured (Kimi 2.3, 2026-11-05)
+            preds = unwrap(preds, L) if CIRC_L else [p for p in preds if p.start <= p.end]
             groups = group(preds)
             conf = conflicts(groups)
             sources_run = sorted({x for x in ("MITOS2" if "mitos2" in want else "", "ARWEN" if "arwen" in want else "",
@@ -859,7 +869,7 @@ def main(argv=None) -> int:
             selected.append(r2)
         for sub, recs_out in (("review", review), ("selected", selected)):
             (out / sub).mkdir(exist_ok=True)
-            SeqIO.write(recs_out, str(out / sub / f"{f.stem}.gbf"), "genbank")
+            write_gb(recs_out, out / sub / f"{f.stem}.gbf")
     cols = ["file", "record", "group", "tRNA", "anticodon", "strand", "start", "end", "boundary_source",
             "n_families", "sources", "coords_by_source", "conflict", "selected"]
     write_tsv(out / "trna_report.tsv", cols, report)

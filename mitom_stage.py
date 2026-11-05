@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import run_tool, safe_name
+from mito_common import run_tool, safe_name, write_gb
 from mitom_inputs import SampleInfo
 from mitom_log import Progress, close_sample_logger, get_sample_logger, record_event, tail_text
 from mitom_snakemake import AnnotTask, run_snakemake_for_annotation_tasks, snakemake_available
@@ -138,7 +138,7 @@ def write_input_annotation(si: SampleInfo, dest: Path) -> str:
     out = SeqRecord(rec.seq, id=si.internal_id, name=si.internal_id[:16], description="", features=list(rec.features))
     out.annotations.update(molecule_type="DNA", topology=si.topology,
                            data_file_division=rec.annotations.get("data_file_division", "INV"))
-    SeqIO.write(out, str(dest), "genbank")
+    write_gb(out, dest)                                  # atomic, /pseudo not /pseudo="" (GLM 1.9, 2026-11-05)
     return ""
 
 
@@ -253,6 +253,7 @@ def run_annotation_stage(
             try:
                 internal_id, ok, workdir, best_gb = fut.result()
             except Exception as exc:
+                close_sample_logger(f"sample.{phase_dirname}.{si.internal_id}")   # its log file (GLM 1.8, 2026-11-05)
                 record_event(si.sample_name, f"annotation failed ({STAGE_LABEL.get(phase_dirname, phase_dirname)}): "
                                              f"{type(exc).__name__}: {exc}", logging.ERROR)
                 internal_id, ok, workdir, best_gb = si.internal_id, False, out_root / phase_dirname / si.internal_id, None

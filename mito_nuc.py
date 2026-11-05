@@ -67,7 +67,7 @@ from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
-from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records, run_tool, write_gb  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 LIB = HERE / "models" / "nuc"
@@ -140,7 +140,10 @@ def tool_ok(name: str) -> bool:
 
 
 def run(cmd: List[str]) -> str:
-    return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+    p = run_tool(cmd)                             # [CMD] line; the program's own error text kept (Kimi 1.8, 2026-11-05)
+    if p.returncode:
+        raise RuntimeError(f"{Path(cmd[0]).name} failed ({p.returncode}): {p.stderr.strip()[-400:]}")
+    return p.stdout
 
 
 # ── reference library ───────────────────────────────────────────────────────
@@ -362,6 +365,8 @@ def blast_db(fa: Path, db: Path, threads: int) -> str:
     """nucleotide BLAST database of a large FASTA: makeblastdb on `threads` pieces at once, joined by an alias
     database (same total length and sequence count, so the same e-values as one database); one makeblastdb of a
     460 Mb SPAdes assembly took 25-35 s. BLAST threads share the work by volume: one volume per thread"""
+    if any(c.isspace() for c in str(db)):            # makeblastdb / blastdb_aliastool cut paths at spaces (D18)
+        raise InputError(f"BLAST cannot write a database into a path with spaces: {db.parent} (use another -o)")
     size = fa.stat().st_size
     n = max(1, min(threads, size // DB_PIECE))
     if n == 1:
@@ -386,6 +391,8 @@ def blast_db(fa: Path, db: Path, threads: int) -> str:
             with open(f"{p}.fa", "wb") as o:
                 while a < b:
                     chunk = f.read(min(b - a, 1 << 24))
+                    if not chunk:                # the file shrank after stat() (review 11-03 #4, 2026-11-05)
+                        raise InputError(f"{fa} changed while it was split for BLAST: run again")
                     o.write(chunk)
                     a += len(chunk)
     parts = parts[:len(cuts) - 1]
@@ -1270,10 +1277,12 @@ def _exonerate_all(target: str, prots: List[str], model: str, td: Path) -> List[
     start, end, length, % identity) or None. One run per protein and model was 22,700 runs of ~20 ms for the 3,700 H3 loci of
     SRR2006110; 2 per locus now"""
     (td / "p.fa").write_text("".join(f">p{i}\n{p}\n" for i, p in enumerate(prots)))
-    out = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
-                          "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
-                          "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"], capture_output=True,
-                         text=True).stdout
+    p = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
+                        "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
+                        "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"], capture_output=True, text=True)
+    if p.returncode:                             # a crash is not 'no alignment' (GLM 4.2, 2026-11-05)
+        logging.warning(f"exonerate failed (exit {p.returncode}) on {target}: {' '.join(p.stderr.split())[-200:]}")
+    out = p.stdout
     res: List[list] = [[None, [], 0, 0, 0, 0.0] for _ in prots]
     ex: List[tuple] = []
     for line in out.splitlines():
@@ -1715,7 +1724,7 @@ def write_outputs(out: Path, recs, org: Dict[str, str], rows: List[dict], feats:
                                    "topology": "linear"})
         g.features = sorted(fs, key=lambda f: int(f.location.start))
         gbrecs.append(g)
-    SeqIO.write(gbrecs, str(out / "nuc_annotation.gb"), "genbank")
+    write_gb(gbrecs, out / "nuc_annotation.gb")
     gd = out / "genes"
     gd.mkdir(exist_ok=True)
     by_gene = defaultdict(list)
@@ -1860,15 +1869,21 @@ def write_submission(out: Path, inp: Path, recs, org: Dict[str, str], feats: Dic
     t2a = mito_env.find("table2asn")
     if not t2a or not fsa:
         return d
+    val = d / "nuc.val"
+    val.unlink(missing_ok=True)                        # never report the last run's messages
     try:
-        subprocess.run([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
-                        "-gaps-min", "10", "-gaps-unknown", "100",
-                        "-o", str(d / "nuc.sqn")], capture_output=True, text=True, check=False, timeout=3600)
+        p = subprocess.run([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
+                            "-gaps-min", "10", "-gaps-unknown", "100",
+                            "-o", str(d / "nuc.sqn")], capture_output=True, text=True, check=False, timeout=3600)
     except subprocess.TimeoutExpired:                  # (table2asn 1.28 can hang on some SeqIDs)
         logging.warning("[NUC] submission: table2asn did not finish in 1 h: not validated")
         return d
+    if not val.exists():                               # a crash is 'not validated', never '0 error(s)' (2026-11-05)
+        logging.warning(f"[NUC] submission: table2asn exit {p.returncode}, no nuc.val: not validated - "
+                        f"{' '.join(p.stderr.split())[-200:]}")
+        (d / "validation.txt").write_text(f"NOT VALIDATED: table2asn exit {p.returncode}\n")
+        return d
     msgs = Counter()
-    val = d / "nuc.val"
     for line in val.read_text(errors="ignore").splitlines() if val.exists() else []:
         m = nv.MSG_RE.match(line.strip())
         if m and not nv.IGNORE_CODES.search(m.group(2)):
@@ -1877,7 +1892,7 @@ def write_submission(out: Path, inp: Path, recs, org: Dict[str, str], feats: Dic
              "(add your template with table2asn -t template.sbt)"]
     lines += [f"{sev}\t{code}\t{n}" for (sev, code), n in msgs.most_common()] or ["no sequence or feature messages"]
     (d / "validation.txt").write_text("\n".join(lines) + "\n")
-    err = sum(n for (sev, _), n in msgs.items() if sev in ("ERROR", "REJECT", "FATAL"))
+    err = sum(n for (sev, _), n in msgs.items() if sev in ("ERROR", "REJECT", "CRITICAL", "FATAL"))
     logging.info(f"[NUC] submission: {d / 'nuc.fsa'} + nuc.tbl; table2asn {err} error(s), "
                  f"{sum(msgs.values()) - err} warning(s)/info  ({d / 'validation.txt'}, discrepancy report nuc.dr)")
     return d

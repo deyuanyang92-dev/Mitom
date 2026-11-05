@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import REPORTS, reports_dir, safe_copy
+from mito_common import REPORTS, reports_dir, safe_copy, write_gb
 from mitom_log import record_event
 from mitom_inputs import SampleInfo
 from mitom_metadata import (_sync_organism_qualifier, build_organism_index, gb_file_has_meaningful_metadata,
@@ -34,13 +34,14 @@ class RunSummary:
     metadata_skipped:         List[str] = field(default_factory=list)
     metadata_transfer_failed: List[str] = field(default_factory=list)
     reorient_failed:          List[str] = field(default_factory=list)       # reorient workflow (nothing annotated)
+    reannotation_failed:      List[str] = field(default_factory=list)       # round 2: logs kept (GLM 4.1, 2026-11-05)
 
     def all_problem_samples(self) -> List[str]:
         return sorted(set(
             self.annotation_failed + self.final_write_failed
             + self.no_target_gene  + self.metadata_transfer_failed
             + self.metadata_key_mismatch                           # header matched only by a compatible accession
-            + self.reorient_failed
+            + self.reorient_failed + self.reannotation_failed
         ))
 
     def log(self) -> None:
@@ -72,8 +73,10 @@ def merge_gb_files(gb_files: List[Path], merged_out: Path) -> int:
             text = gb.read_text()
             chunks.append(text if text.endswith("\n") else text + "\n")
             n += k
-    if chunks:
-        merged_out.write_text("".join(chunks))
+    if chunks:                                         # a temporary file, then replace: never a half-written merge
+        tmp = merged_out.with_name(f".{merged_out.name}.tmp")     # (Grok 3.12, 2026-11-05)
+        tmp.write_text("".join(chunks))
+        os.replace(str(tmp), str(merged_out))
     return n
 
 
@@ -145,7 +148,7 @@ def rewrite_genbank_record_ids(gb_in: Path, gb_out: Path, new_base_id: str) -> T
             elif feat.type == "rRNA":
                 rrna += 1
     gb_out.parent.mkdir(parents=True, exist_ok=True)
-    SeqIO.write(out_recs, str(gb_out), "genbank")
+    write_gb(out_recs, gb_out)                       # /pseudo stays value-less (GLM 1.9, 2026-11-05)
     return pcg, trna, rrna
 
 
@@ -291,8 +294,8 @@ def finalize_genbank_output(
             # cox1_first from the file itself: a linear record is never rotated (rotate_record), whatever
             # reorient_one_gb counted
             orientation_ok = starts_with_gene(draft_gb, which_gene_first, force_forward)
-        except Exception:
-            pass
+        except Exception as exc:             # the counts of the summary table stay those before this step (N4)
+            logging.warning(f"[FINAL] {sample_name}: genes not recounted from {dest_gb.name}: {exc}")
         os.replace(str(draft_gb), str(dest_gb))
         committed = True
 
@@ -321,7 +324,8 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
     Kept: 04.final_gb/, all.final.gbf, reports/, pipeline.log. The core logs of problem samples are copied to
     reports/failed_logs/ before deletion. `run` then arranges what is kept into its final layout (organize_outputs).
     """
-    problems = set(problem_samples)
+    import mitom_log
+    problems = set(problem_samples) | mitom_log.RECORD_NAMES     # 02 / round-2 failures too (Kimi 4.1)
     for si in samples:
         if si.sample_name not in problems:
             continue
@@ -410,14 +414,33 @@ def write_summary(out_root: Path) -> None:
     src.unlink()
 
 
-def clear_previous_work(out_root: Path, keep: tuple = ("00.input",)) -> None:
+def clear_previous_work(out_root: Path, keep: tuple = ("00.input",), protect=()) -> None:
     """Remove the intermediate folders a previous run left in out_root (interrupted, or --keep_intermediate yes):
     they were picked up as this run's results (2026-10-31 review: a stale 04.final_gb/*.gbf was published, a stale
     reoriented body of another genome became a final record). Only MitoM's own folder names; `keep` = made by this run."""
     for name in WORK_DIRS + ("06.ncbi_submission", "work"):
         d = Path(out_root) / name
-        if name not in keep and d.is_dir() and not d.is_symlink():
+        if name not in keep and d.is_dir() and not d.is_symlink() and not any(_overlaps(d, x) for x in protect):
             shutil.rmtree(d)
+    # and the previous run's results: a table / map this run does not write (FASTA input: no original_vs_mitom.tsv)
+    # stayed beside the new ones (Codex R9 / N14, 2026-11-05). run.log is this run's; reports/: new_reports()
+    for name in [n.rstrip("/") for n, _ in OUTPUT_LAYOUT if n not in ("run.log", "reports/", "work/")] + \
+            ["annotation-summary.tsv", "all.final.gbf", "README.txt"]:
+        d = Path(out_root) / name
+        if name in keep or d.is_symlink() or any(_overlaps(d, x) for x in protect):
+            continue                                 # (-i out/final_annotation -o out: never the input)
+        if d.is_dir():
+            shutil.rmtree(d)
+        elif d.is_file():
+            d.unlink()
+
+
+def _overlaps(a: Path, b) -> bool:
+    try:
+        a, b = Path(a).resolve(), Path(b).resolve()
+    except OSError:
+        return True
+    return a == b or a in b.parents or b in a.parents
 
 
 def new_reports(out_root: Path) -> Path:

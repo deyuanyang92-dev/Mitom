@@ -72,7 +72,6 @@ def test_internal_stops_reported_not_changed(tmp_path):
 
 def test_ncbi_validation_before_after(tmp_path):
     """Built-in NCBI table2asn check before vs after curation: errors fixed, none introduced."""
-    import shutil
     import mito_env
     t2a = mito_env.find("table2asn")
     if not t2a:

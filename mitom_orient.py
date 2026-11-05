@@ -18,7 +18,7 @@ from Bio.SeqRecord import SeqRecord
 from mito_common import (abbreviated_stop, feature_start_pos, merge_abutting_parts, rc_location as _rc_location,  # noqa: F401
                          move_position_qualifiers, reports_dir, reverse_complement_record, shift_location, write_gb,
                          write_nonempty_table, write_table)
-from mito_names import ORIENTATION_ALIAS_GROUPS, gene_aliases, name_key
+from mito_names import CORE_NAMES, ORIENTATION_ALIAS_GROUPS, gene_aliases, gene_name, name_key
 
 if TYPE_CHECKING:
     from mitom_inputs import SampleInfo
@@ -67,6 +67,13 @@ def find_orientation_feature(record: "SeqRecord", genes: str) -> Tuple[Optional[
             continue
         strand = hits[0].location.strand
         same = [f for f in hits if f.location.strand == strand]
+        n = len(record.seq)
+        head = [f for f in same if len(f.location.parts) == 1 and int(f.location.start) == 0]
+        tail = [f for f in same if len(f.location.parts) == 1 and int(f.location.end) == n]
+        if head and tail and record.annotations.get("topology") != "linear":
+            # the gene in two features across the origin (no join): its 5' piece is the one at the end of a plus-strand
+            # record, at the start on the minus strand - not min(start) (Grok 3.1, 2026-11-05)
+            return (tail[0] if strand == 1 else head[0]), gene
         if strand == -1:
             return max(same, key=lambda f: int(f.location.end)), gene
         return min(same, key=lambda f: int(f.location.start)), gene
@@ -114,8 +121,12 @@ def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
             new_features.append(SeqFeature(location=new_loc, type=feat.type,
                                             id=getattr(feat, "id", "<unknown>"),
                                             qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, start_pos)))
-        except Exception:
-            new_features.append(feat)
+        except Exception as exc:             # its old coordinates would be wrong on the rotated sequence (E22)
+            if feat.type != "source":
+                logging.warning(f"[ROTATE] {record.id}: {feat.type} {feat.qualifiers.get('gene', [''])[0]} "
+                                f"{feat.location} not moved to the new origin ({exc}): left out")
+            else:
+                new_features.append(feat)
     new_features.sort(key=lambda f: feature_start_pos(f))
     new_rec.features = new_features
     return new_rec
@@ -231,6 +242,8 @@ def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
             if edge:
                 probs.append(f"{ro.id}: gene(s) at the end of the round-1 sequence, look cut: {', '.join(edge)}")
         have = {f.qualifiers.get("gene", [""])[0] for f in genes}
+        # and as the core's names: a round 1 of MITOS2 / an imported record (cox1, rrnS) is not 'missing' (E16)
+        have |= {CORE_NAMES[g][0] for g in (gene_name(f.qualifiers, f.type) for f in genes) if g in CORE_NAMES}
         miss = [g for g in STANDARD_GENES if g not in have]
         if miss and not linear:
             probs.append(f"{ro.id}: standard gene(s) missing in round 1: {', '.join(miss)}")
@@ -292,9 +305,9 @@ def reorient_one_gb(
     gb_out.parent.mkdir(parents=True, exist_ok=True)
     gb_no_gene.parent.mkdir(parents=True, exist_ok=True)
     if ok:
-        SeqIO.write(ok, str(gb_out), "genbank")
+        write_gb(ok, gb_out)                           # (GLM 1.9, 2026-11-05)
     if no_gene:
-        SeqIO.write(no_gene, str(gb_no_gene), "genbank")
+        write_gb(no_gene, gb_no_gene)
     return len(ok), len(no_gene), no_gene_ids
 
 
@@ -335,7 +348,7 @@ def add_exon_gap_introns(rec: "SeqRecord") -> int:
     for cds in [f for f in rec.features if f.type == "CDS" and len(f.location.parts) > 1]:
         parts = list(cds.location.parts)                      # transcript order
         gene = cds.qualifiers.get("gene", [""])[0]
-        notes, ref_notes = {}, {}
+        notes, ref_notes, mine = {}, {}, 0
         for x in cds.qualifiers.get("note", []):
             if x.startswith(INTRON_NOTE):              # mito_intron (de novo): type, E-value, splice score
                 k, _, txt = x[len(INTRON_NOTE):].partition(":")
@@ -355,7 +368,10 @@ def add_exon_gap_introns(rec: "SeqRecord") -> int:
             q["note"] = ["; ".join(x for x in (notes.get(str(k)), ref_notes.get(str(k))) if x)
                          or "intron between the exons of the CDS"]
             added.append(SeqFeature(FeatureLocation(s, e, strand=a.strand), type="intron", qualifiers=q))
-        if added:                                      # the introns are features now: the crossing notes are stale
+            mine += 1
+        # this CDS's introns are features now: its crossing notes are stale (Grok 3.2, 2026-11-05: `added` is the
+        # record's, so a later CDS lost the note of the intron it kept across the origin)
+        if mine:
             cds.qualifiers["note"] = [x for x in cds.qualifiers.get("note", []) if not x.startswith(INTRON_NOTE)
                                       and "crosses the origin: given by the join only" not in x]
     if added:

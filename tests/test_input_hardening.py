@@ -81,7 +81,7 @@ def test_one_run_per_output_folder(tmp_path):
     assert "another MitoM run" in bm.lock_output(out)
     (out / bm.LOCK_NAME).write_text("999999999\n")                 # no such process: stale
     assert bm.lock_output(out) == ""
-    assert (out / bm.LOCK_NAME).read_text().strip() == str(os.getpid())
+    assert (out / bm.LOCK_NAME).read_text().split()[0] == str(os.getpid())   # (+ its start time, N8)
 
 
 def test_output_folder_not_writable_is_a_clean_error(tmp_path):

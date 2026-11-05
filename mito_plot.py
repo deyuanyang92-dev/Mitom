@@ -54,7 +54,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import command_line, iter_gb_files, old_spelling, STDERR_MARK, STDERR_TAIL, TOOL_LOG  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, prepare_input  # noqa: E402
 from mito_ncr import MIN_LEN as MIN_NONCODING, extent, is_ncr, noncoding, span  # noqa: E402,F401
 
 WINDOW, STEP, ORIGIN_EXT = 100, 20, 1000

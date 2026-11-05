@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from Bio import SeqIO
-from Bio.SeqFeature import FeatureLocation, SeqFeature
+from Bio.SeqFeature import FeatureLocation
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))

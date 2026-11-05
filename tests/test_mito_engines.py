@@ -163,7 +163,10 @@ def test_setup_downloads_checks_and_writes_the_config(tmp_path, monkeypatch):
     monkeypatch.setattr(mito_env.urllib.request, "urlretrieve", lambda url, dest: shutil.copy(tgz, dest))
     monkeypatch.setattr(mito_env, "REF_MD5", hashlib.md5(tgz.read_bytes()).hexdigest())
     monkeypatch.setenv("YZZ_MITO_CONFIG", str(tmp_path / "cfg.json"))
-    monkeypatch.delenv("MITOS_REFDIR", raising=False)
+    # setup() sets os.environ["MITOS_REFDIR"] to the fake refs: setenv first, so that monkeypatch restores it
+    # (delenv of an unset variable records nothing; the fake refdir reached mito_trna.py of later tests, 2026-11-05)
+    monkeypatch.setenv("MITOS_REFDIR", "")
+    monkeypatch.delenv("MITOS_REFDIR")
     monkeypatch.setattr(mito_env, "prepare_trna_ml", lambda: None)       # tested in test_mito_trna.py
     mito_env.config.cache_clear()
     try:

@@ -128,10 +128,14 @@ class Steps:
             self.key = ""
 
 
+RECORD_NAMES: set = set()
+
+
 def record_event(name: str, text: str, level: int = logging.WARNING) -> None:
     """One line about one record, as `mitom debug` reads it: '[RECORD <name>] <text>' (a record that failed or was
     left out of a step)."""
     logging.log(level, f"[RECORD {name}] {text}")
+    RECORD_NAMES.add(name)                        # their core logs go to reports/failed_logs/ (Kimi 4.1, 2026-11-05)
 
 
 class Progress:

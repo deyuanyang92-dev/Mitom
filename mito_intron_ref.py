@@ -93,7 +93,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import mito_names  # noqa: E402
 from mito_common import codon_translate, iter_gb_files, run_tool, stop_qualifiers, write_gb, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
 
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
 MIN_INTRON = 142        # a CDS gap at least this long is an intron without an intron feature (eval_introns, MFannot)
@@ -206,6 +206,8 @@ def ref_genes(rec) -> List[RefGene]:
     organism = rec.annotations.get("organism", "")
     lineage = list(rec.annotations.get("taxonomy", []))
     introns = [f for f in rec.features if f.type == "intron"]
+    codes = [f.qualifiers["transl_table"][0] for f in rec.features if f.type == "CDS" and "transl_table" in f.qualifiers]
+    rec_code = max(sorted(set(codes)), key=codes.count) if codes else "1"   # a CDS without one: the record's (Kimi 2.4)
     out: List[RefGene] = []
     seen: Dict[str, int] = {}
     for f in rec.features:
@@ -219,7 +221,7 @@ def ref_genes(rec) -> List[RefGene]:
             nt = str(f.location.extract(rec.seq)).upper()
         except Exception:
             continue
-        code = int(f.qualifiers.get("transl_table", ["1" if f.type == "CDS" else "0"])[0] or 0)
+        code = int(f.qualifiers.get("transl_table", [rec_code if f.type == "CDS" else "0"])[0] or 0)
         cs = int(f.qualifiers.get("codon_start", ["1"])[0]) - 1 if f.type == "CDS" else 0
         prot = ""
         if f.type == "CDS":
@@ -564,7 +566,7 @@ def _blast(exe: str, query: Path, subject: Path, extra: List[str]) -> List[List[
 
 
 TIMEOUT = 900
-SPLIT_GAP = 30                  # a subject insertion of >= 30 nt inside one HSP is an intron: split the HSP there
+SPLIT_GAP = 30                  # a subject insertion of > 30 nt (blastn; tblastn > 10 codons) inside one HSP is an intron: split there
 
 
 def parse_hsps(rows: List[List[str]], L: int, unit: int, ids: Dict[str, List[str]]) -> Dict[str, List[Hsp]]:
@@ -1881,7 +1883,7 @@ def _apply_model(rec, G: Genome, m: GeneModel, code: int, origin_introns: bool) 
                       if x.startswith("intron across the origin of the record")]
         for k, v in ({} if m.partial3 else stop_qualifiers(rec, loc, code)).items():
             q[k] = q.get(k, []) + v
-        q["translation"] = [m.protein]
+        q["translation"] = [("M" + m.protein[1:]) if not m.partial5 and nt[:3] in _codons(code)[0] else m.protein]   # (Kimi 3.3)
     else:
         q.update({"product": [product], "note": [note]})
     if m.trans():

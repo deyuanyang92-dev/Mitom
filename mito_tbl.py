@@ -72,7 +72,7 @@ import sys
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation, SeqFeature
@@ -81,7 +81,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import ncbi_validate as nv  # noqa: E402  (the feature table and the FASTA header of the NCBI submission files)
 from mito_common import GB_SUFFIXES, iter_gb_files, run_tool, write_tsv  # noqa: E402
-from mito_common import cli_guard, InputError, prepare_input, require_records  # noqa: E402
+from mito_common import cli_guard  # noqa: E402
 from mito_names import AA1_TO_3, AA3, PRODUCTS, gene_name, name_key, trna_name  # noqa: E402
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CODE, PHYLUM_SYNONYMS  # noqa: E402
 
@@ -138,7 +138,9 @@ QUALIFIERS = {
     "standard_name", "strain", "sub_clone", "submitter_seqid", "sub_species", "sub_strain", "tag_peptide", "tissue_lib",
     "tissue_type", "transgenic", "translation", "transl_except", "transl_table", "trans_splicing", "type_material",
     "variety"}
-SUBPHYLUM_CODE = {"Tunicata": 13, "Cephalochordata": 5}          # the chordates without the vertebrate code 2
+SUBPHYLUM_CODE = {"Tunicata": 13, "Urochordata": 13, "Cephalochordata": 5,   # the chordates without the vertebrate code 2
+                  # pterobranchs: NCBI codes 24 / 33 were made for them, enteropneusts stay 9 (Grok 1.2 / 1.7, 2026-11-05)
+                  "Rhabdopleuridae": 24, "Cephalodiscidae": 33}
 ASCII = {"\u00b5": "u", "\u03bc": "u", "\u00df": "ss", "\u00e6": "ae", "\u00c6": "AE", "\u0153": "oe", "\u00f8": "o",
          "\u00d8": "O", "\u0131": "i", "\u0142": "l", "\u0141": "L", "\u00b0": " degrees", "\u2018": "'", "\u2019": "'",
          "\u201c": '"', "\u201d": '"', "\u2013": "-", "\u2014": "-", "\u2212": "-", "\u00d7": "x", "\u00a0": " "}
@@ -175,9 +177,9 @@ def clean_record(rec) -> Tuple[object, List[str]]:
     n = len(rec.seq)
     for f in rec.features:
         loc = f.location
-        if loc is not None and len(loc.parts) == 1 and int(loc.start) == int(loc.end) and 0 < int(loc.start) < n:
+        if loc is not None and len(loc.parts) == 1 and int(loc.start) == int(loc.end) and 0 <= int(loc.start) <= n:
             # a site between two bases (GenBank 100^101): the 2-nt interval around it, as NCBI's gbf2tbl writes it
-            f.location = FeatureLocation(int(loc.start) - 1, int(loc.start) + 1, loc.strand)
+            f.location = FeatureLocation(max(0, int(loc.start) - 1), min(n, int(loc.start) + 1), loc.strand)   # n^1: Kimi 3.4
             sites += 1
         if f.type not in FEATURE_KEYS:
             keys[f.type] += 1
@@ -247,6 +249,8 @@ def location(rec) -> Tuple[str, str]:
     org = " ".join(source_of(rec).get("organelle", [])).lower()
     if "mitochondr" in org:
         return "mitochondrion", "mgcode"
+    if org.startswith("plastid:") and org[8:].strip():    # plastid:apicoplast is no chloroplast (Grok 1.12, 2026-11-05)
+        return org[8:].strip(), "gcode"
     if "chloroplast" in org or "plastid" in org:
         return "chloroplast", "gcode"
     return "", "gcode"
@@ -550,25 +554,36 @@ def write_pair(out: Path, name: str, entries: List[Entry], modifiers: bool) -> N
     pair(out, name, ".fsa").write_text("\n".join(fsa) + "\n")
 
 
-def validate(out: Path, name: str, t2a: str, sbt: Optional[str]) -> Dict[str, Counter]:
+def validate(out: Path, name: str, t2a: str, sbt: Optional[str], sids: Sequence[str] = ()) -> Dict[str, Counter]:
     """table2asn on <name>.fsa (+ <name>.tbl) -> <name>.sqn, <name>.val; ERROR / WARNING per SeqID (submitter /
-    publication messages left out, as in ncbi_validate.py)."""
+    publication messages left out, as in ncbi_validate.py; REJECT / Critical / FATAL counted as ERROR). When
+    table2asn hangs, cannot run or writes no .val, every SeqID of the pair (`sids`) gets 1 ERROR: not validated is never
+    0 ERROR (Codex R2 / R4, 2026-11-05: the timeout went to SeqID '' that no report row reads)."""
     per: Dict[str, Counter] = defaultdict(Counter)
-    try:
-        run_tool([t2a, "-i", str(pair(out, name, ".fsa")), "-V", "vb", "-o", str(pair(out, name, ".sqn")),
-                  *(["-t", sbt] if sbt else [])], timeout=nv.TABLE2ASN_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        per[""]["ERROR"] += 1                         # (it hung on some SeqIDs: never wait for ever)
-        print(f"mitom gb2tbl: table2asn did not finish in {nv.TABLE2ASN_TIMEOUT} s on {name}.fsa: not validated",
-              file=sys.stderr)
-        return per
     val = pair(out, name, ".val")
-    for line in val.read_text(errors="ignore").splitlines() if val.is_file() else []:
+    val.unlink(missing_ok=True)                       # never read the last run's messages
+    why = ""
+    try:
+        p = run_tool([t2a, "-i", str(pair(out, name, ".fsa")), "-V", "vb", "-o", str(pair(out, name, ".sqn")),
+                      *(["-t", sbt] if sbt else [])], timeout=nv.TABLE2ASN_TIMEOUT)
+        if not val.is_file():                         # (exit 2 with a .val: validation errors, not a crash)
+            why = f"table2asn exit {p.returncode}, no {val.name}"
+    except subprocess.TimeoutExpired:                 # (it hung on some SeqIDs: never wait for ever)
+        why = f"table2asn did not finish in {nv.TABLE2ASN_TIMEOUT} s"
+    except OSError as exc:
+        why = f"table2asn could not be run ({exc})"
+    if why:
+        print(f"mitom gb2tbl: {why} on {name}.fsa: not validated", file=sys.stderr)
+        for sid in sids or [""]:
+            per[sid]["ERROR"] += 1
+        return per
+    for line in val.read_text(errors="ignore").splitlines():
         m = nv.MSG_RE.match(line.strip())
         if not m or nv.IGNORE_CODES.search(m.group(2)):
             continue
         sid = re.search(r"lcl\|([^\s:\]]+)", m.group(3))
-        per[sid.group(1) if sid else ""][m.group(1).upper()] += 1
+        sev = m.group(1).upper()
+        per[sid.group(1) if sid else ""]["ERROR" if sev in ("REJECT", "CRITICAL", "FATAL") else sev] += 1
     return per
 
 
@@ -649,7 +664,7 @@ def main(argv=None) -> int:
     rows = []
     for name, its in groups.items():
         write_pair(out, name, its, a.source_modifiers == "yes")
-        val = validate(out, name, t2a, a.sbt) if t2a else {}
+        val = validate(out, name, t2a, a.sbt, [e.sid for e in its]) if t2a else {}
         for e in its:
             c = counts(e.rec)
             loc, _ = location(e.rec)

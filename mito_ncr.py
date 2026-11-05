@@ -26,6 +26,9 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from mito_common import cli_guard, iter_gb_files, require_path, require_records, write_gb  # noqa: E402
+
 MIN_LEN = 100                                 # default shortest NCR (--ncr_min_len, the maps' --min_noncoding)
 NOTE = "non-coding region NCR"                # start of the /note that marks MitoM's NCR features
 
@@ -121,20 +124,20 @@ def main(argv: Sequence[str] = None) -> int:
     p.add_argument("-o", "--out", required=True, help="output GenBank file (one file in) or folder (a folder in)")
     p.add_argument("--min_len", type=int, default=MIN_LEN, help=f"shortest NCR in nt (default {MIN_LEN})")
     a = p.parse_args(argv)
-    src, out = Path(a.input), Path(a.out)
-    files = [src] if src.is_file() else sorted(x for x in src.rglob("*") if x.suffix in
-                                               (".gb", ".gbk", ".gbf", ".gbff", ".genbank"))
+    src, out = require_path(a.input), Path(a.out)    # (Kimi 2.7: missing / empty input was exit 0)
+    files = [src] if src.is_file() else iter_gb_files(src)
     total = 0
     for f in files:
         recs = list(SeqIO.parse(str(f), "genbank"))
         total += sum(add_ncr(r, a.min_len) for r in recs)
         dest = out if src.is_file() else out / f.relative_to(src)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        SeqIO.write(recs, str(dest), "genbank")
+        write_gb(recs, dest)
+    require_records(len(files), "GenBank files", a.input)
     print(f"[mito_ncr] {total} non-coding regions of >= {a.min_len} nt in {len(files)} file(s) -> {out}",
           file=sys.stderr)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli_guard(main))

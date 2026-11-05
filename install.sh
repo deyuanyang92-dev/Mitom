@@ -36,6 +36,8 @@ while [ $# -gt 0 ]; do
 done
 
 say() { printf '\n[install] %s\n' "$*"; }
+# the mitom command runs on mitotools: always built, also for --envs "mitos" (D13 / E23, 2026-11-05)
+case " $ENVS " in *" mitotools "*) ;; *) ENVS="mitotools $ENVS" ;; esac
 
 # ── platform ─────────────────────────────────────────────────────────────────
 OS="$(uname -s)"; ARCH="$(uname -m)"
@@ -69,6 +71,7 @@ fi
 if [ -z "$SOLVER" ]; then
   say "no conda/mamba found: installing Miniforge into $HOME/miniforge3"
   MF_OS="$OS"; MF_ARCH="$ARCH"; [ -n "${CONDA_SUBDIR:-}" ] && MF_ARCH="x86_64"
+  [ "$OS" = Darwin ] && MF_OS="MacOSX"   # the release asset: Miniforge3-MacOSX-x86_64.sh, not -Darwin- (D3)
   curl -fsSL -o /tmp/miniforge.sh \
     "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-${MF_OS}-${MF_ARCH}.sh"
   bash /tmp/miniforge.sh -b -p "$HOME/miniforge3"
@@ -87,7 +90,8 @@ for e in $ENVS; do
   fi
   say "creating environment '$e' from env/$e.yml"
   if env_exists "$e"; then "$SOLVER" env remove -y -n "$e"; fi
-  "$SOLVER" env create -y -n "$e" -f "$HERE/env/$e.yml" 2>/dev/null || "$SOLVER" env create -n "$e" -f "$HERE/env/$e.yml"
+  # (a conda without `env create -y`: the retry never waits for a keyboard, D14)
+  "$SOLVER" env create -y -n "$e" -f "$HERE/env/$e.yml" 2>/dev/null || "$SOLVER" env create -n "$e" -f "$HERE/env/$e.yml" </dev/null
 done
 
 # ── Java for MiTFi (its classes are Java 5: any Java runs it): the system one, else openjdk 8 in the environment ──
