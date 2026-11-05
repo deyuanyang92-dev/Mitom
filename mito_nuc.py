@@ -1274,10 +1274,12 @@ def _exonerate_all(target: str, prots: List[str], model: str, td: Path) -> List[
     start, end, length, % identity) or None. One run per protein and model was 22,700 runs of ~20 ms for the 3,700 H3 loci of
     SRR2006110; 2 per locus now"""
     (td / "p.fa").write_text("".join(f">p{i}\n{p}\n" for i, p in enumerate(prots)))
-    out = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
-                          "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
-                          "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"], capture_output=True,
-                         text=True).stdout
+    p = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
+                        "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
+                        "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"], capture_output=True, text=True)
+    if p.returncode:                             # a crash is not 'no alignment' (GLM 4.2, 2026-11-05)
+        logging.warning(f"exonerate failed (exit {p.returncode}) on {target}: {' '.join(p.stderr.split())[-200:]}")
+    out = p.stdout
     res: List[list] = [[None, [], 0, 0, 0, 0.0] for _ in prots]
     ex: List[tuple] = []
     for line in out.splitlines():

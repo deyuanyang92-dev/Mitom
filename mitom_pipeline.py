@@ -309,6 +309,11 @@ def resolve_tools(args: argparse.Namespace) -> str:
             return (f"ERROR: --clade {args.clade} needs --genetic_code (e.g. 4 Cnidaria, 9 Platyhelminthes, "
                     "5 most invertebrates; NCBI table of your taxon)")
         args.genetic_code = CLADE_CODES.get(args.clade, 5)
+        if args.clade == "Chordata" and getattr(args, "input", None):
+            # tunicates 13, lancelets 5: the GenBank records' own code, as --clade auto (GLM 3.2, 2026-11-05)
+            clade, code, _, err = auto_clade(Path(args.input))
+            if clade == "Chordata" and code and not err:
+                args.genetic_code = code
     if not args.intron_bin:
         args.intron_bin = mito_env.bin_with("exonerate", "cmsearch", "blastp", "makeblastdb", "tblastn", "blastn")
     args.mitos_bin = mito_env.mitos_bin(args.mitos_bin)
@@ -672,6 +677,7 @@ def workflow_run(args: argparse.Namespace) -> int:
         for si in phase2_samples:
             if not results2.get(si.internal_id, {}).get("ok"):
                 n_fail2 += 1
+                summary.reannotation_failed.append(si.sample_name)
                 record_event(si.sample_name, "round-2 annotation failed: the shifted round-1 annotation is kept")
         steps.done(f"round 2: {len(phase2_samples) - n_fail2} annotated"
                    + (f", {n_fail2} failed (they keep the shifted round-1 annotation)" if n_fail2 else ""))
@@ -954,7 +960,8 @@ def workflow_transfer_metadata(args: argparse.Namespace) -> int:
                 n_ok += 1
             else:
                 n_skip += 1
-        except Exception:
+        except Exception as exc:
+            logging.error(f"[FAIL] {bf}: {exc!r}")      # the reason, not only 'fail' (GLM 1.7, 2026-11-05)
             if args.overwrite_new_body == "no":
                 safe_copy(bf, out_file)
             n_fail += 1

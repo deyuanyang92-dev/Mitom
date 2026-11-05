@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import REPORTS, reports_dir, safe_copy
+from mito_common import REPORTS, reports_dir, safe_copy, write_gb
 from mitom_log import record_event
 from mitom_inputs import SampleInfo
 from mitom_metadata import (_sync_organism_qualifier, build_organism_index, gb_file_has_meaningful_metadata,
@@ -34,13 +34,14 @@ class RunSummary:
     metadata_skipped:         List[str] = field(default_factory=list)
     metadata_transfer_failed: List[str] = field(default_factory=list)
     reorient_failed:          List[str] = field(default_factory=list)       # reorient workflow (nothing annotated)
+    reannotation_failed:      List[str] = field(default_factory=list)       # round 2: logs kept (GLM 4.1, 2026-11-05)
 
     def all_problem_samples(self) -> List[str]:
         return sorted(set(
             self.annotation_failed + self.final_write_failed
             + self.no_target_gene  + self.metadata_transfer_failed
             + self.metadata_key_mismatch                           # header matched only by a compatible accession
-            + self.reorient_failed
+            + self.reorient_failed + self.reannotation_failed
         ))
 
     def log(self) -> None:
@@ -145,7 +146,7 @@ def rewrite_genbank_record_ids(gb_in: Path, gb_out: Path, new_base_id: str) -> T
             elif feat.type == "rRNA":
                 rrna += 1
     gb_out.parent.mkdir(parents=True, exist_ok=True)
-    SeqIO.write(out_recs, str(gb_out), "genbank")
+    write_gb(out_recs, gb_out)                       # /pseudo stays value-less (GLM 1.9, 2026-11-05)
     return pcg, trna, rrna
 
 

@@ -298,9 +298,9 @@ def reorient_one_gb(
     gb_out.parent.mkdir(parents=True, exist_ok=True)
     gb_no_gene.parent.mkdir(parents=True, exist_ok=True)
     if ok:
-        SeqIO.write(ok, str(gb_out), "genbank")
+        write_gb(ok, gb_out)                           # (GLM 1.9, 2026-11-05)
     if no_gene:
-        SeqIO.write(no_gene, str(gb_no_gene), "genbank")
+        write_gb(no_gene, gb_no_gene)
     return len(ok), len(no_gene), no_gene_ids
 
 

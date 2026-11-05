@@ -242,8 +242,13 @@ def from_input(rec) -> List[Pred]:
             g = re.match(r"trn([A-Z])", f.qualifiers.get("gene", [""])[0])
             aa = g.group(1) if g else ""
         ac = re.search(r"\(([acgtuACGTU]{3})\)", txt)
+        s, e, L = int(f.location.start) + 1, int(f.location.end), len(rec.seq)
+        tail = next((p for p in f.location.parts if int(p.end) == L), None)
+        head = next((p for p in f.location.parts if int(p.start) == 0), None)
+        if len(f.location.parts) == 2 and tail is not None and head is not None and tail is not head:
+            s, e = int(tail.start) + 1, L + int(head.end)   # across the origin: end > L, not the hull 1..L (GLM 2.3)
         if aa:
-            out.append(Pred("input", int(f.location.start) + 1, int(f.location.end), f.location.strand or 1, aa,
+            out.append(Pred("input", s, e, f.location.strand or 1, aa,
                             ac.group(1).lower().replace("u", "t") if ac else ""))
     return out
 
@@ -266,10 +271,10 @@ def group(preds: List[Pred]) -> List[List[Pred]]:
     groups: List[List[Pred]] = []
     for p in sorted(preds, key=lambda x: (x.start, x.end)):
         for g in groups:
-            q = g[0]
-            ov = overlap(p, q)
-            same = p.aa == q.aa and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
-            if p.strand == q.strand and same and ov >= 0.5 * min(p.length, q.length):
+            # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05)
+            if any(p.strand == q.strand and p.aa == q.aa
+                   and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
+                   and overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
                 g.append(p)
                 break
         else:

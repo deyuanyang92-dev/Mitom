@@ -340,3 +340,42 @@ def test_lock_of_a_reused_pid_is_stale(tmp_path):
     assert bm.lock_output(out) == ""
     pid, started = (out / bm.LOCK_NAME).read_text().split()
     assert pid == str(os.getpid()) and started == bm._process_start(os.getpid())
+
+
+# ---- GLM 5.3 review (verified 2026-11-05) ------------------------------------------------------------------------
+def test_input_trna_across_the_origin_is_not_the_whole_record():
+    import mito_trna
+    from Bio.SeqFeature import CompoundLocation
+    r = _rec(n=16000)
+    r.features.append(SeqFeature(CompoundLocation([FeatureLocation(15970, 16000, 1), FeatureLocation(0, 35, 1)]),
+                                 type="tRNA", qualifiers={"gene": ["trnY"], "product": ["tRNA-Tyr"]}))
+    p = mito_trna.from_input(r)[0]
+    assert (p.start, p.end) == (15971, 16035)
+
+
+def test_trna_call_between_two_others_joins_their_group():
+    import mito_trna
+    ps = [mito_trna.Pred(t, s, e, 1, "F", "") for t, s, e in (("arwen", 1, 70), ("trnascan", 30, 100),
+                                                               ("mitos2", 60, 130))]
+    assert len(mito_trna.group(ps)) == 1
+
+
+def test_ncr_command_keeps_pseudo_value_less(tmp_path):
+    import subprocess
+    r = _rec(n=2000)
+    r.features.append(SeqFeature(FeatureLocation(10, 400, 1), type="gene", qualifiers={"gene": ["nad1"], "pseudo": [None]}))
+    SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
+    subprocess.run([sys.executable, "-I", str(ROOT / "mito_ncr.py"), "-i", str(tmp_path / "a.gb"), "-o",
+                    str(tmp_path / "b.gb")], check=True, capture_output=True)
+    txt = (tmp_path / "b.gb").read_text()
+    assert "/pseudo\n" in txt and '/pseudo=""' not in txt
+
+
+def test_explicit_chordata_uses_the_tunicate_code(tmp_path):
+    r = _rec("T1", 400)
+    r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Tunicata", "Ascidiacea"]
+    SeqIO.write(r, str(tmp_path / "t.gb"), "genbank")
+    args = bm.build_parser().parse_args(["run", "-i", str(tmp_path / "t.gb"), "-o", str(tmp_path / "o"),
+                                         "--clade", "Chordata"])
+    bm.resolve_tools(args)
+    assert args.genetic_code == 13

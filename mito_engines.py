@@ -33,7 +33,7 @@ from Bio.SeqRecord import SeqRecord
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
-from mito_common import GB_SUFFIXES, contig_record_id, run_tool, topology_from_header  # noqa: E402
+from mito_common import GB_SUFFIXES, contig_record_id, run_tool, topology_from_header, write_gb  # noqa: E402
 from mito_common import read_fasta as _read_fasta  # noqa: E402
 
 FA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
@@ -365,7 +365,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     except RuntimeError as e:
         print(f"[engine] {e}", file=sys.stderr)
         return 1
-    SeqIO.write(recs, str(out / f"{a.prefix}.gbf"), "genbank")
+    write_gb(recs, out / f"{a.prefix}.gbf")         # (GLM 1.9, 2026-11-05)
     n = {t: sum(f.type == t for r in recs for f in r.features) for t in ("CDS", "rRNA", "tRNA")}
     print(f"[engine] {a.engine}: {len(recs)} record(s), {n['CDS']} protein genes, {n['rRNA']} rRNAs, "
           f"{n['tRNA']} tRNAs -> {out / (a.prefix + '.gbf')}", file=sys.stderr)

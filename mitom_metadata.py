@@ -15,7 +15,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import safe_name, write_text_atomic
+from mito_common import safe_name, write_gb, write_text_atomic
 
 
 def gb_record_accession(rec: "SeqRecord") -> str:
@@ -469,7 +469,7 @@ def replace_organism_in_gb_file(
             logging.warning(
                 f"[REPLACE_ORG_MISS] {acc}: no entry in organism index — unchanged.")
     gb_out.parent.mkdir(parents=True, exist_ok=True)
-    SeqIO.write(out_recs, str(gb_out), "genbank")
+    write_gb(out_recs, gb_out)                       # /pseudo stays value-less, atomic (GLM 1.9, 2026-11-05)
     return n_replaced, n_not_found, len(recs)
 
 
@@ -512,7 +512,7 @@ def _sync_organism_qualifier(gb_in: Path, gb_out: Path) -> int:
         if changed:
             n_fixed += 1
     gb_out.parent.mkdir(parents=True, exist_ok=True)
-    SeqIO.write(out_recs, str(gb_out), "genbank")
+    write_gb(out_recs, gb_out)                       # /pseudo stays value-less, atomic (GLM 1.9, 2026-11-05)
     return n_fixed
 
 

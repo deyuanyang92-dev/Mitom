@@ -124,13 +124,15 @@ def main(argv: Sequence[str] = None) -> int:
     src, out = Path(a.input), Path(a.out)
     files = [src] if src.is_file() else sorted(x for x in src.rglob("*") if x.suffix in
                                                (".gb", ".gbk", ".gbf", ".gbff", ".genbank"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from mito_common import write_gb
     total = 0
     for f in files:
         recs = list(SeqIO.parse(str(f), "genbank"))
         total += sum(add_ncr(r, a.min_len) for r in recs)
         dest = out if src.is_file() else out / f.relative_to(src)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        SeqIO.write(recs, str(dest), "genbank")
+        write_gb(recs, dest)                           # as run_ncr: /pseudo stays value-less (GLM 1.9, 2026-11-05)
     print(f"[mito_ncr] {total} non-coding regions of >= {a.min_len} nt in {len(files)} file(s) -> {out}",
           file=sys.stderr)
     return 0

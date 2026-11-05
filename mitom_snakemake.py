@@ -98,6 +98,10 @@ def main():
             str(p.returncode) + "\n", encoding="utf-8")
     (logs_dir / "core.runtime_sec.txt").write_text(
         f"{dt:.2f}\n", encoding="utf-8")
+    # the sample log the [RECORD] line names, as the threads backend writes it (GLM 4.4, 2026-11-05)
+    (workdir / "sample.log").write_text(
+        f"[CMD] {' '.join(cmd)}\n[EXIT] {p.returncode} ({dt:.0f} s)\n" + tail_text(p.stderr or "") + "\n",
+        encoding="utf-8")
 
     result = {
         "internal_id": internal_id,
