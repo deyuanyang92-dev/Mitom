@@ -114,7 +114,14 @@ for d in "$ENV_PREFIX/bin" "$HOME/.local/bin"; do
 done
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) say "command installed: mitom" ;;
-  *) say "command installed: $HOME/.local/bin/mitom - add it to PATH: echo 'export PATH=\$HOME/.local/bin:\$PATH' >> ~/.bashrc   (zsh, the macOS default shell: ~/.zshrc instead of ~/.bashrc)" ;;
+  *)  # ~/.local/bin onto PATH in the shell start-up files (2026-11-06: a new user had to edit ~/.bashrc by hand)
+    line='export PATH="$HOME/.local/bin:$PATH"   # MitoM (install.sh)'
+    rcs="$HOME/.bashrc"
+    { [ -f "$HOME/.zshrc" ] || [ "$(basename "${SHELL:-}")" = zsh ] || [ "$OS" = Darwin ]; } && rcs="$rcs $HOME/.zshrc"
+    for rc in $rcs; do
+      grep -qsF '# MitoM (install.sh)' "$rc" || printf '\n%s\n' "$line" >> "$rc"
+    done
+    say "command installed: $HOME/.local/bin/mitom; PATH set in$(for rc in $rcs; do printf ' %s' "${rc/#$HOME/~}"; done) - open a new terminal (or: source ~/.bashrc) and run: mitom doctor" ;;
 esac
 
 # ── MITOS2 reference data and the config file (what was found): mitom setup ──

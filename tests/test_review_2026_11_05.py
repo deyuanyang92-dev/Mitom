@@ -689,3 +689,14 @@ def test_launcher_skips_a_python_without_scikit_learn(tmp_path, monkeypatch):
     monkeypatch.setattr(launcher, "_imports", lambda py, modules=launcher.NEEDED: str(py) == good or modules == "Bio")
     monkeypatch.setattr(launcher.sys, "executable", str(bad))         # Biopython only: not taken
     assert launcher.python_with_biopython() == good
+
+
+def test_doctor_accepts_the_new_command_before_a_new_terminal(tmp_path, monkeypatch):
+    import mito_env
+    (tmp_path / ".local" / "bin").mkdir(parents=True)
+    (tmp_path / ".local" / "bin" / "mitom").write_text(f'#!/usr/bin/env bash\nexec "/x/python" "{mito_env.HERE}/mitom" "$@"\n')
+    monkeypatch.setattr(mito_env.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: None)      # install.sh, before a new terminal
+    assert mito_env.command_problems() == []
+    (tmp_path / ".local" / "bin" / "mitom").unlink()
+    assert mito_env.command_problems()                                   # never installed: named

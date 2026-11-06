@@ -25,7 +25,8 @@ genomes, orients them, curates gene ends and names to NCBI rules, and writes NCB
 
 ```bash
 git clone https://github.com/deyuanyang92-dev/Mitom.git MitoM && cd MitoM
-bash install.sh            # 一个 conda 环境 mitotools（Python 包和全部程序）+ 命令 mitom + mitom setup（参考数据、配置）
+bash install.sh            # 一个 conda 环境 mitotools（Python 包和全部程序）+ 命令 mitom + mitom setup（参考数据、配置）；
+                           # 没有 conda 时自动装 Miniforge；~/.local/bin 自动写入 PATH（~/.bashrc），之后开一个新终端
 mitom doctor               # 检查：第一行是正在用的版本和文件夹；所有必需项都应显示 OK
 ```
 

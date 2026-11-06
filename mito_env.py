@@ -331,8 +331,11 @@ def command_problems() -> List[str]:
     old symlinked install, 2026-11-06: ~/.local/bin/mitom still ran a copy from 2 weeks before) - with the fix."""
     fix = f"bash {HERE / 'install.sh'}   (writes the mitom command for this folder and its conda environment)"
     cmd = shutil.which("mitom")
+    local = Path.home() / ".local" / "bin" / "mitom"
+    if not cmd and local.is_file() and launcher_folder(local) == HERE:
+        return []                    # install.sh wrote it and PATH in ~/.bashrc: in effect in a new terminal
     if not cmd:
-        return [f"no `mitom` command on PATH: {fix}; and add ~/.local/bin to PATH"]
+        return [f"no `mitom` command on PATH: {fix}"]
     out = []
     folder = launcher_folder(Path(cmd))
     if folder and folder != HERE:
@@ -381,7 +384,7 @@ def doctor(write: bool = False) -> int:
               + ("\n  scikit-learn / numpy missing for this python: run mitom through install.sh's command "
                  "(the mitotools environment)." if not (skl and npv) else ""))
     elif cmd_problems:
-        print("\nAll required programs found, but the `mitom` command is not this MitoM (above).")
+        print("\nAll required programs found, but the `mitom` command needs the fix above.")
     else:
         print("\nAll required programs found.")
     if write:

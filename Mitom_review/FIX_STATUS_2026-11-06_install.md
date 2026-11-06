@@ -9,3 +9,13 @@
 | `mitotools` 环境是 scikit-learn 1.6.1，`env/mitotools.yml` 要求 1.7.2 | 环境创建后 yml 改过，未再 `install.sh` | 重跑 `install.sh`（env update） |
 | README 没有更新步骤 | — | 加 `git pull && bash install.sh`；求助时附 `mitom doctor` 和 `mitom debug out` 的输出 |
 | Docker 全新安装测试无法进行 | 本机 Docker 守护进程未运行（需要 sudo） | 改用空 HOME、只含系统 PATH 的全新用户模拟安装 |
+
+## 全新用户安装测试（空 HOME，PATH 只有 /usr/bin:/bin，无 conda，2026-11-06）
+
+| 检查 | 结果 |
+|---|---|
+| `bash install.sh` | exit 0：自动装 Miniforge、建 mitotools（scikit-learn 1.7.2）、下载 refseq89m、写配置 |
+| `mitom doctor` | exit 0，必需项全部 OK |
+| `mitom run -i NC_000933.gb -o out` | exit 0，1 分 40 秒；`mitom debug out` 正确读出各步骤 |
+| 发现的手动步骤 | 新系统上 `~/.local/bin` 不在 PATH，需要手改 `~/.bashrc` → `install.sh` 现在自动写入（只写一次；zsh/macOS 也写 `~/.zshrc`） |
+| 测试中发现的新错误 | 新的 doctor 检查在安装过程中（PATH 尚未生效）报 "no mitom on PATH"，使 `install.sh` exit 1 → `~/.local/bin/mitom` 指向本文件夹时不算问题；修复后重装 exit 0 |
