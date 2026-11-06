@@ -356,6 +356,7 @@ def prepare_import(args: argparse.Namespace) -> str:
     for note in notes:
         announce(f"[IMPORT] {note}")
     announce(f"[IMPORT] {len(recs)} annotated record(s) from {args.input}")
+    args.input_given = args.input                  # protected from clear_previous_work (Codex review, 2026-11-06)
     args.input, args.engine = str(out / "imported.gb"), "input"
     return ""
 

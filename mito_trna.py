@@ -267,6 +267,12 @@ def overlap(p: "Pred", q: "Pred") -> int:
     return best
 
 
+def inside_linear(preds: List[Pred], L: int) -> List[Pred]:
+    """The calls of a linear record that lie inside it: one across the ends (start > end, or end > L as MitoM-ML
+    writes it) would join the two physical ends (Codex review, 2026-11-06)."""
+    return [p for p in preds if 1 <= p.start <= p.end <= L]
+
+
 def group(preds: List[Pred]) -> List[List[Pred]]:
     groups: List[List[Pred]] = []
     for p in sorted(preds, key=lambda x: (x.start, x.end)):
@@ -819,7 +825,7 @@ def main(argv=None) -> int:
             global CIRC_L
             topo = rec.annotations.get("topology") or (topology_from_header(rec.description) if fmt == "fasta" else "circular")
             CIRC_L = L if topo == "circular" else 0     # FASTA topology=linear honoured (Kimi 2.3, 2026-11-05)
-            preds = unwrap(preds, L) if CIRC_L else [p for p in preds if p.start <= p.end]
+            preds = unwrap(preds, L) if CIRC_L else inside_linear(preds, L)
             groups = group(preds)
             conf = conflicts(groups)
             sources_run = sorted({x for x in ("MITOS2" if "mitos2" in want else "", "ARWEN" if "arwen" in want else "",

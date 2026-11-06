@@ -618,3 +618,37 @@ def test_subtype_cm_download_waits_a_day_after_a_failure(tmp_path, monkeypatch):
     mito_intron.subtype_cms()
     mito_intron.subtype_cms()
     assert len(calls) == 1 and (tmp_path / ".failed").is_file()
+
+
+# ---- Codex review (gpt-6-astra, 2026-11-06) ----------------------------------------------------------------------
+def test_submission_timeout_is_not_ok(tmp_path, monkeypatch):
+    import mito_env
+    import argparse
+    gb = _gbf_dir(tmp_path, [_rec("S1")])
+    monkeypatch.setattr(mito_env, "find", lambda name, *a, **k: "/bin/true")
+    monkeypatch.setattr(nv, "validate_record", lambda rec, *a, **k: [
+        {"record": rec.id, "severity": "ERROR", "code": "MITOM.Table2asnTimeout", "ours": "no", "message": "timeout"}])
+    assert not mitom_steps.run_submission(argparse.Namespace(), gb, tmp_path / "o").ok
+
+
+def test_linear_trnas_past_the_end_are_left_out():
+    import mito_trna
+    ps = [mito_trna.Pred("mitom", 15970, 16035, 1, "F", ""), mito_trna.Pred("mitom", 100, 170, 1, "V", ""),
+          mito_trna.Pred("arwen", 15990, 20, 1, "L", "")]
+    assert [p.aa for p in mito_trna.inside_linear(ps, 16000)] == ["V"]
+
+
+def test_import_protects_the_given_input(tmp_path):
+    out = tmp_path / "out"
+    src = out / "original_annotation"
+    src.mkdir(parents=True)
+    r = _rec("S1", 400)
+    r.features.append(SeqFeature(FeatureLocation(10, 100, 1), type="CDS", qualifiers={"gene": ["nad1"]}))
+    SeqIO.write(r, str(src / "S1.gb"), "genbank")
+    (src / "notes.txt").write_text("aux")
+    (out / "README.txt").write_text("MitoM output\n")
+    args = bm.build_parser().parse_args(["import", "-i", str(src), "-o", str(out), "--clade", "Annelida-segmented-worms",
+                                         "--genetic_code", "5"])
+    assert bm.prepare_import(args) == ""
+    mitom_output.clear_previous_work(out, keep=("00.input", "00.imported"), protect=bm._inputs(args))
+    assert (src / "notes.txt").exists()

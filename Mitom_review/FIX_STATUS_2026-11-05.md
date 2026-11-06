@@ -261,4 +261,14 @@ S1–S3 已由上面的项覆盖。S4–S12（内含子前移、起止证据分�
 | 9 各处严重级别归并不一致；curate 汇总只数 ERROR | 属实 | `ncbi_validate.BLOCKING` 一处定义；curate 汇总把 REJECT/CRITICAL/FATAL 算进 ERROR |
 | 10 解 gzip 的循环写了两份 | 属实 | 合并为 `_unpack` |
 
-验证：新增 10 个回归测试；全量 **765 passed，0 failed**，3 skipped。Codex 审查：本机登录失败（见下），尚未运行。
+验证：新增 10 个回归测试；全量 **765 passed，0 failed**，3 skipped。
+
+## 第五轮：Codex 审查（gpt-6-astra，deep，`1912f7b..HEAD`，2026-11-06；原文 `SECOND_OPINION_2026-11-06.md`）
+
+| # | 判定 | 处理 |
+|---|---|---|
+| 1 `mitom import -i out/original_annotation -o out` 清理旧结果时会删掉原输入文件夹 | 属实 | `prepare_import` 改写 `args.input` 前先记下 `input_given`，清理时受保护 |
+| 2 线性记录的 tRNA 预测越过末端（MitoM-ML 写成 end > L）仍被接受，写成首尾 join | 属实 | 新增 `inside_linear`：线性记录只保留 `1 <= start <= end <= L` |
+| 3 table2asn 超时时提交步骤仍报成功 | 属实 | `ncbi_validate.NOT_VALIDATED` 含 Failed 和 Timeout，两者都算未校验 |
+
+验证：新增 3 个回归测试（旧代码上都失败）；全量 **768 passed，0 failed**，3 skipped。

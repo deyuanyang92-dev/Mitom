@@ -37,6 +37,7 @@ IGNORE_CODES =re.compile(r"SEQ_DESCR\.(NoPubFound|NoSourceDescriptor|MissingLine
                           r"GENERIC\.MissingPubRequirement|SEQ_PKG\.|SEQ_DESCR\.TitleNotAppropriateForSet")
 # table2asn 1.28 writes Info / Warning / Error / Critical / Fatal; Critical (= REJECT of older versions) was not
 # matched and so never counted (2026-11-05: 'Critical: valid [SEQ_FEAT.Range] ... out of range')
+NOT_VALIDATED = ("MITOM.Table2asnFailed", "MITOM.Table2asnTimeout")   # table2asn gave no .val: nothing was checked
 BLOCKING = ("ERROR", "REJECT", "FATAL")             # severities (CRITICAL read as REJECT) that stop a submission
 MSG_RE = re.compile(r"^(INFO|WARNING|ERROR|REJECT|CRITICAL|FATAL):\s+valid\s+\[([A-Z_]+\.[A-Za-z0-9_]+)\]\s+(.*)$", re.I)
 
