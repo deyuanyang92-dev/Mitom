@@ -25,7 +25,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
+import subprocess
 import sys
 import tarfile
 import urllib.request
@@ -287,7 +289,64 @@ def matplotlib_version() -> Optional[str]:
         return None
 
 
+SKLEARN_VALIDATED = "1.7.2"      # env/mitotools.yml: the version the MitoM-ML tRNA classifiers were validated with
+
+
+def module_version(name: str) -> Optional[str]:
+    """Version of a Python package importable by this interpreter, None when it cannot be imported."""
+    try:
+        return str(__import__(name).__version__)
+    except Exception:                                           # ImportError, or a broken install
+        return None
+
+
+def git_commit(folder: Path) -> str:
+    """'git <sha>' (+ ', uncommitted changes') of a MitoM folder; '' when it is not a git checkout."""
+    try:
+        sha = subprocess.run(["git", "-C", str(folder), "rev-parse", "--short", "HEAD"], capture_output=True,
+                             text=True, timeout=10)
+        if sha.returncode:
+            return ""
+        dirty = subprocess.run(["git", "-C", str(folder), "status", "--porcelain", "--untracked-files=no"],
+                               capture_output=True, text=True, timeout=10).stdout.strip()
+        return f"git {sha.stdout.strip()}" + (", uncommitted changes" if dirty else "")
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def launcher_folder(cmd: Path) -> Optional[Path]:
+    """The MitoM folder a `mitom` command runs: the target of a symlink (old installs), or the folder in the
+    `exec "<python>" "<folder>/mitom"` line install.sh writes; None when it cannot be told."""
+    try:
+        if cmd.is_symlink() or cmd.name != "mitom" or cmd.read_bytes()[:2] != b"#!":
+            return cmd.resolve().parent
+        m = re.search(r'exec "[^"]+" "([^"]+)/mitom"', cmd.read_text(encoding="utf-8", errors="replace"))
+        return Path(m.group(1)).resolve() if m else cmd.resolve().parent
+    except OSError:
+        return None
+
+
+def command_problems() -> List[str]:
+    """What is wrong with the `mitom` command on PATH: missing, or running another MitoM folder (an old clone or an
+    old symlinked install, 2026-11-06: ~/.local/bin/mitom still ran a copy from 2 weeks before) - with the fix."""
+    fix = f"bash {HERE / 'install.sh'}   (writes the mitom command for this folder and its conda environment)"
+    cmd = shutil.which("mitom")
+    if not cmd:
+        return [f"no `mitom` command on PATH: {fix}; and add ~/.local/bin to PATH"]
+    out = []
+    folder = launcher_folder(Path(cmd))
+    if folder and folder != HERE:
+        out.append(f"`mitom` on PATH ({cmd}) runs MitoM in {folder} ({git_commit(folder) or 'no git'}), "
+                   f"not this one ({HERE}): {fix}")
+    elif Path(cmd).is_symlink():
+        out.append(f"`mitom` on PATH ({cmd}) is a symlink of an old install: it runs on the first python3 on PATH, "
+                   f"not the mitotools environment: {fix}")
+    return out
+
+
 def doctor(write: bool = False) -> int:
+    print(f"MitoM {os.environ.get('MITOM_VERSION', '?')}   folder: {HERE}   {git_commit(HERE)}")
+    print(f"python: {sys.executable} ({sys.version.split()[0]})")
     print(f"config: {config_path()}{'' if config_path().exists() else ' (not present)'}")
     print(f"conda/mamba: {', '.join(map(str, conda_roots())) or 'not found'}")
     missing = []
@@ -302,16 +361,27 @@ def doctor(write: bool = False) -> int:
     bio = biopython_version()          # required: all MitoM scripts read GenBank files with it
     print(f"  {'OK ' if bio else '!! '}{'Biopython':12} "
           f"{('version ' + bio) if bio else 'not found for ' + sys.executable:60} sequence input / output (all scripts)")
+    skl, npv = module_version("sklearn"), module_version("numpy")   # required: MitoM-ML tRNA caller (trna_ml.py)
+    print(f"  {'OK ' if skl and npv else '!! '}{'scikit-learn':12} "
+          f"{('version ' + skl + ('' if skl == SKLEARN_VALIDATED else f' (validated: {SKLEARN_VALIDATED})')) if skl else 'not found for ' + sys.executable:60} "
+          "MitoM-ML tRNA caller (trna_ml.py, the default tRNAs)")
     mpl = matplotlib_version()         # optional: without it run with --plot no
     print(f"  {'OK ' if mpl else '-- '}{'matplotlib':12} "
           f"{('version ' + mpl) if mpl else 'not found for ' + sys.executable:60} genome maps (mito_plot.py, --plot)")
     req = [n for n, _ in missing if n in REQUIRED]
-    if req or not ref or not bio:
+    cmd_problems = command_problems()
+    for c in cmd_problems:
+        print(f"\n!! {c}")
+    if req or not ref or not bio or not (skl and npv):
         envs = sorted({e for n, e in missing if n in REQUIRED})
         print("\nMissing required parts. Install everything with one command:\n"
               f"  bash {HERE / 'install.sh'}" + (f"   (environments: {', '.join(envs)})" if envs else "")
               + ("\n  MITOS2 reference data: mitom setup (install.sh runs it)." if not ref else "")
-              + ("\n  Biopython is missing: pip install biopython (install.sh does this too)." if not bio else ""))
+              + ("\n  Biopython is missing: pip install biopython (install.sh does this too)." if not bio else "")
+              + ("\n  scikit-learn / numpy missing for this python: run mitom through install.sh's command "
+                 "(the mitotools environment)." if not (skl and npv) else ""))
+    elif cmd_problems:
+        print("\nAll required programs found, but the `mitom` command is not this MitoM (above).")
     else:
         print("\nAll required programs found.")
     if write:
@@ -324,7 +394,7 @@ def doctor(write: bool = False) -> int:
         cfg_file.parent.mkdir(parents=True, exist_ok=True)
         cfg_file.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(f"config written: {cfg_file}")
-    return 1 if req or not ref or not bio else 0
+    return 1 if req or not ref or not bio or not (skl and npv) or cmd_problems else 0
 
 
 def extract_tar(tgz: Path, dest: Path) -> None:

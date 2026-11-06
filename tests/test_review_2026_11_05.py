@@ -652,3 +652,40 @@ def test_import_protects_the_given_input(tmp_path):
     assert bm.prepare_import(args) == ""
     mitom_output.clear_previous_work(out, keep=("00.input", "00.imported"), protect=bm._inputs(args))
     assert (src / "notes.txt").exists()
+
+
+# ---- install / self-check (2026-11-06: ~/.local/bin/mitom still ran an old copy on a python without scikit-learn) -
+def test_doctor_names_a_mitom_command_of_another_folder(tmp_path, monkeypatch):
+    import mito_env
+    other = tmp_path / "old_clone"
+    other.mkdir()
+    (other / "mitom").write_text("#!/usr/bin/env python3\n")
+    link = tmp_path / "bin" / "mitom"
+    link.parent.mkdir()
+    link.symlink_to(other / "mitom")
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: str(link))
+    probs = mito_env.command_problems()
+    assert probs and str(other) in probs[0] and "install.sh" in probs[0]
+    wrapper = tmp_path / "bin2" / "mitom"                      # what install.sh writes, for this folder: fine
+    wrapper.parent.mkdir()
+    wrapper.write_text(f'#!/usr/bin/env bash\nexec "/x/python" "{mito_env.HERE}/mitom" "$@"\n')
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: str(wrapper))
+    assert mito_env.command_problems() == []
+
+
+def test_launcher_skips_a_python_without_scikit_learn(tmp_path, monkeypatch):
+    import importlib.machinery
+    import importlib.util
+    loader = importlib.machinery.SourceFileLoader("mitom_launcher", str(ROOT / "mitom"))
+    launcher = importlib.util.module_from_spec(importlib.util.spec_from_loader("mitom_launcher", loader))
+    loader.exec_module(launcher)
+    bad = tmp_path / "envs" / "aaa" / "bin" / "python3"
+    bad.parent.mkdir(parents=True)
+    bad.write_text("#!/bin/sh\n")
+    bad.chmod(0o755)
+    import mito_env
+    good = str(Path(sys.executable).parent / "python3")
+    monkeypatch.setattr(mito_env, "env_bins", lambda: [bad.parent, Path(good).parent])
+    monkeypatch.setattr(launcher, "_imports", lambda py, modules=launcher.NEEDED: str(py) == good or modules == "Bio")
+    monkeypatch.setattr(launcher.sys, "executable", str(bad))         # Biopython only: not taken
+    assert launcher.python_with_biopython() == good

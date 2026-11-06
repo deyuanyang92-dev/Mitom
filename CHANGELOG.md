@@ -28,6 +28,10 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- Install and self-check: the `mitom` command picks a Python with Biopython, numpy and scikit-learn (the
+  mitotools environment first; an old symlinked command ran a Python without scikit-learn and the MitoM-ML tRNAs
+  failed); `mitom doctor` shows the version, folder, git commit and Python in use, checks scikit-learn / numpy, and
+  flags a `mitom` on PATH that runs another copy (with the fix); README: how to update (`git pull && bash install.sh`).
 - Cursor review of the fixes (Mitom_review/FIX_REVIEW_2026-11-05.md): explicit `--clade Chordata` with
   records of different codes (vertebrates 2 + tunicates 13) is an error, not code 2 for all; `--clade auto` reads
   .gb.gz; a.fa.gz.gz unpacks to a.fa; a failed group's tables stay out of the merged reports; a tRNA call between
