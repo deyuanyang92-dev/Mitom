@@ -190,6 +190,7 @@ def test_previous_results_removed_but_never_the_input(tmp_path):
     (out / "plots").mkdir()
     (out / "original_vs_mitom.tsv").write_text("old")
     (out / "my_notes.txt").write_text("user's")
+    (out / "run.log").write_text("2026-11-05 13:41:11,237 [INFO] [ENV] MitoM 1.0.0  /x\n")   # a previous run
     mitom_output.clear_previous_work(out, protect=[out / "final_annotation"])
     assert (out / "final_annotation" / "a.gb").exists()          # the input of this run
     assert not (out / "plots").exists() and not (out / "original_vs_mitom.tsv").exists()
@@ -516,3 +517,104 @@ def test_curate_keeps_the_code_when_a_record_fails(tmp_path, monkeypatch):
     out = next((tmp_path / "o").rglob("*.gb*"))
     codes = {f.qualifiers.get("transl_table", [""])[0] for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS"}
     assert codes == {"4"}
+
+
+# ---- Claude Code /code-review of the fixes (2026-11-06) ----------------------------------------------------------
+def test_user_files_in_the_output_folder_are_kept(tmp_path):
+    (tmp_path / "README.txt").write_text("my notes\n")
+    (tmp_path / "summary.tsv").write_text("mine\n")
+    (tmp_path / "plots").mkdir()
+    assert mitom_output.clear_previous_work(tmp_path) == []
+    assert (tmp_path / "README.txt").exists() and (tmp_path / "summary.tsv").exists() and (tmp_path / "plots").is_dir()
+    (tmp_path / "README.txt").write_text("MitoM output\n====\n")              # a previous MitoM run: replaced
+    removed = mitom_output.clear_previous_work(tmp_path)
+    assert {"README.txt", "summary.tsv", "plots/"} <= set(removed) and not (tmp_path / "summary.tsv").exists()
+
+
+def test_given_input_is_protected_when_normalized(tmp_path):
+    out = tmp_path / "out"
+    (out / "final_annotation").mkdir(parents=True)
+    (out / "README.txt").write_text("MitoM output\n")
+    args = bm.build_parser().parse_args(["run", "-i", str(out / "00.input"), "-o", str(out)])
+    args.input_given = str(out / "final_annotation")
+    mitom_output.clear_previous_work(out, keep=("00.input",), protect=bm._inputs(args))
+    assert (out / "final_annotation").is_dir()
+
+
+def test_gzipped_embl_becomes_genbank(tmp_path):
+    from mitom_inputs import normalize_input
+    embl = (HERE / "data").glob("*.embl")
+    r = _rec("E1", 400)
+    buf = io.StringIO()
+    SeqIO.write(r, buf, "embl")
+    (tmp_path / "x.embl.gz").write_bytes(gzip.compress(buf.getvalue().encode()))
+    out, _ = normalize_input(tmp_path / "x.embl.gz", tmp_path / "o")
+    assert out.name == "x.gb" and SeqIO.read(str(out), "genbank").id.startswith("E1")
+
+
+def test_failed_log_collision_keeps_versioned_sample_name(tmp_path):
+    outs = {}
+    for g in ("g1", "g2"):
+        o = tmp_path / g
+        (o / "reports" / "failed_logs").mkdir(parents=True)
+        (o / "reports" / "failed_logs" / "NC_012920.1.01.anno_round1.sample.log").write_text(g)
+        outs[g] = o
+    root = tmp_path / "root"
+    root.mkdir()
+    mitom_groups.merge_outputs(root, outs)
+    names = sorted(p.name for p in (root / "reports" / "failed_logs").glob("NC_012920.1.*"))
+    assert len(names) == 2
+
+
+def test_import_keeps_genbank_beside_a_mitoz_result(tmp_path):
+    (tmp_path / "S1.result").mkdir()
+    (tmp_path / "S1.result" / "S1.gbf").write_text("x")
+    (tmp_path / "tmp_S1").mkdir()
+    (tmp_path / "tmp_S1" / "draft.gbf").write_text("x")
+    (tmp_path / "S2.gb").write_text("x")
+    gbs, _ = mito_engines.find_results(tmp_path)
+    assert sorted(p.name for p in gbs) == ["S1.gbf", "S2.gb"]
+
+
+def test_curate_does_not_write_a_guessed_code(tmp_path):
+    import mito_curate
+    r = next(SeqIO.parse(str(HERE / "data" / "NC_000933.gb"), "genbank"))
+    r.annotations["taxonomy"] = []
+    for f in r.features:
+        f.qualifiers.pop("transl_table", None)
+    SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
+    mito_curate.main(["-i", str(tmp_path / "a.gb"), "-o", str(tmp_path / "o"), "--no_validate"])
+    out = next((tmp_path / "o").rglob("*.gb*"))
+    assert not any("transl_table" in f.qualifiers for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS")
+
+
+def test_lineage_code_without_organelle():
+    r = _rec()
+    r.features[0].qualifiers.pop("organelle")
+    r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Vertebrata", "Mammalia"]
+    assert mito_tbl.lineage_code(r)[0] == 2
+
+
+def test_dropped_feature_is_a_record_event(caplog):
+    r = _rec("R1", 400)
+    r.annotations["topology"] = "circular"
+    r.features.append(SeqFeature(FeatureLocation(10, 100, 1), type="CDS", qualifiers={"gene": ["nad1"]}))
+    import mitom_orient
+    caplog.set_level("WARNING")
+    orig = mitom_orient.shift_location
+    try:
+        mitom_orient.shift_location = lambda *a: (_ for _ in ()).throw(ValueError("fuzzy"))
+        mitom_orient.rotate_record(r, 50)
+    finally:
+        mitom_orient.shift_location = orig
+    assert any(m.startswith("[RECORD R1]") for m in caplog.messages)
+
+
+def test_subtype_cm_download_waits_a_day_after_a_failure(tmp_path, monkeypatch):
+    import urllib.request
+    monkeypatch.setattr(mito_intron, "SUBTYPE_CM_DIR", tmp_path)
+    calls = []
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: calls.append(1) or (_ for _ in ()).throw(OSError("offline")))
+    mito_intron.subtype_cms()
+    mito_intron.subtype_cms()
+    assert len(calls) == 1 and (tmp_path / ".failed").is_file()

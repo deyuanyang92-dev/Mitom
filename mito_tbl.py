@@ -232,12 +232,18 @@ def record_code(rec, override: Optional[int]) -> Tuple[Optional[int], str]:
     code = nv.record_gencode(rec)
     if code or location(rec)[0] != "mitochondrion" or not any(f.type == "CDS" for f in rec.features):
         return code, ""
+    code, phylum = lineage_code(rec)
+    code = code or 5
+    return code, (f"no /transl_table: genetic code {code} assumed ({phylum or 'phylum unknown'}); "
+                  "give --genetic_code to set it")
+
+
+def lineage_code(rec) -> Tuple[Optional[int], str]:
+    """(the usual mitochondrial code of the record's taxonomy, phylum); (None, '') when no known taxon."""
     tax = rec.annotations.get("taxonomy", []) or []
     phylum = next((t for t in tax if t in METAZOAN_PHYLA), "") or next((PHYLUM_SYNONYMS[t] for t in tax
                                                                        if t in PHYLUM_SYNONYMS), "")
-    code = next((SUBPHYLUM_CODE[t] for t in tax if t in SUBPHYLUM_CODE), PHYLUM_CODE.get(phylum, 5))
-    return code, (f"no /transl_table: genetic code {code} assumed ({phylum or 'phylum unknown'}); "
-                  "give --genetic_code to set it")
+    return next((SUBPHYLUM_CODE[t] for t in tax if t in SUBPHYLUM_CODE), PHYLUM_CODE.get(phylum)), phylum
 
 
 def source_of(rec) -> Dict[str, List[str]]:

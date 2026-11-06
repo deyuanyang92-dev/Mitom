@@ -37,6 +37,7 @@ IGNORE_CODES =re.compile(r"SEQ_DESCR\.(NoPubFound|NoSourceDescriptor|MissingLine
                           r"GENERIC\.MissingPubRequirement|SEQ_PKG\.|SEQ_DESCR\.TitleNotAppropriateForSet")
 # table2asn 1.28 writes Info / Warning / Error / Critical / Fatal; Critical (= REJECT of older versions) was not
 # matched and so never counted (2026-11-05: 'Critical: valid [SEQ_FEAT.Range] ... out of range')
+BLOCKING = ("ERROR", "REJECT", "FATAL")             # severities (CRITICAL read as REJECT) that stop a submission
 MSG_RE = re.compile(r"^(INFO|WARNING|ERROR|REJECT|CRITICAL|FATAL):\s+valid\s+\[([A-Z_]+\.[A-Za-z0-9_]+)\]\s+(.*)$", re.I)
 
 
@@ -183,7 +184,7 @@ def main(argv=None) -> int:
     sev = Counter(r["severity"] for r in sel)
     print(f"[ncbi_validate] {n} record(s); messages: " + ", ".join(f"{k} {v}" for k, v in sev.most_common()),
           file=sys.stderr)
-    for (s, c), k in Counter((r["severity"], r["code"]) for r in sel if r["severity"] in ("ERROR", "REJECT", "FATAL")).most_common(15):
+    for (s, c), k in Counter((r["severity"], r["code"]) for r in sel if r["severity"] in BLOCKING).most_common(15):
         print(f"   {s:6s} {c:40s} {k}", file=sys.stderr)
     return 0
 

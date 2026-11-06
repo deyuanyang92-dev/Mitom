@@ -367,12 +367,23 @@ KNOWN_LIMITATION = ("[KNOWN_LIMITATION] the annotation core does not annotate in
                     "and intron_ref_report.tsv.")
 
 
+def _inputs(args: argparse.Namespace) -> List[str]:
+    """-i as given and as read (00.input/ copy): neither may be removed as a previous run's output."""
+    return [x for x in (getattr(args, "input", None), getattr(args, "input_given", None)) if x]
+
+
+def _log_removed(out_root: Path, removed: List[str]) -> None:
+    if removed:
+        logging.info(f"[CLEAN] removed the previous run's files from {out_root}: {', '.join(removed)}")
+
+
 def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=[args.input])
+    removed = clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=_inputs(args))
     new_reports(out_root)
     setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
+    _log_removed(out_root, removed)
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
@@ -535,10 +546,12 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=[args.input])   # made by this run (input copies, `import`)
+    removed = clear_previous_work(out_root, keep=("00.input", "00.imported"),   # made by this run (input copies, `import`)
+                                  protect=_inputs(args))
     new_reports(out_root)
     setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w",   # one run, one log
                       debug=getattr(args, "debug", False))
+    _log_removed(out_root, removed)
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
@@ -1581,6 +1594,7 @@ def main() -> int:
                 return error_exit_code(err)
         if args.cmd in ("annotate", "run") and Path(args.input).exists():   # .gz unpacked, Latin-1 text converted
             new_input, notes = normalize_input(Path(args.input), Path(args.out_root))
+            args.input_given = args.input              # the user's -i, protected from clear_previous_work
             args.input = str(new_input)
             for n in notes:
                 print(f"    [INPUT] {n} ({Path(args.out_root) / NORMALIZED_DIR})", file=sys.stderr)

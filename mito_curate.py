@@ -1366,10 +1366,12 @@ def main(argv=None) -> int:
         for i, rec in enumerate(recs):
             # no --genetic_code and no CDS /transl_table: the code of the record's taxonomy as gb2tbl takes it (Grok
             # 1.3, 2026-11-05: always 5 - a vertebrate's AGR stops read through); written on the CDS that lack one
-            code = a.genetic_code or record_code(rec) or mito_tbl.record_code(rec, None)[0] or 5
+            # the fallback 5 is used, never written: a guess must not look like the record's code (code review, 2026-11-06)
+            known = a.genetic_code or record_code(rec) or mito_tbl.lineage_code(rec)[0]
+            code = known or 5
             if t2a:
                 val_before += nv.validate_record(copy.deepcopy(rec), out / "validation" / "before", t2a, code=code)
-            for ft in rec.features:                      # before the backup: kept when curation fails (Bugbot, PR #3)
+            for ft in rec.features if known else ():     # before the backup: kept when curation fails (Bugbot, PR #3)
                 if ft.type == "CDS" and not str(ft.qualifiers.get("transl_table", [""])[0]).isdigit():
                     ft.qualifiers["transl_table"] = [str(code)]
             codes.append(code)
@@ -1401,9 +1403,11 @@ def main(argv=None) -> int:
         cmp_rows = compare_validation(val_before, val_after)
         vcols = ["record", "severity", "code", "feature", "before", "after", "status"]
         write_tsv(out / "validation_compare.tsv", vcols, cmp_rows)
-        nb = Counter(r["severity"] for r in val_before)
-        na = Counter(r["severity"] for r in val_after)
-        st = Counter((r["severity"], r["status"]) for r in cmp_rows)
+        # ERROR = every severity that stops a submission (REJECT / CRITICAL, FATAL too; code review, 2026-11-06)
+        sev = lambda r: "ERROR" if r["severity"] in nv.BLOCKING else r["severity"]   # noqa: E731
+        nb = Counter(sev(r) for r in val_before)
+        na = Counter(sev(r) for r in val_after)
+        st = Counter((sev(r), r["status"]) for r in cmp_rows)
         print(f"[mito_curate] NCBI table2asn before -> after: ERROR {nb['ERROR']} -> {na['ERROR']}, "
               f"WARNING {nb['WARNING']} -> {na['WARNING']}; ERROR types fixed {st[('ERROR', 'fixed')]}, "
               f"remaining {st[('ERROR', 'remaining')]}, new {st[('ERROR', 'new')]} -> {out / 'validation_compare.tsv'}",

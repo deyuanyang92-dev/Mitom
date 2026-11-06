@@ -123,14 +123,18 @@ def _plain_suffix(p: Path) -> str:
     return Path(_unzipped_name(p.name)).suffix.lower()
 
 
-def _read_text(p: Path) -> str:
-    """A file as text, gzip layers unpacked."""
-    data = p.read_bytes()
+def _unpack(data: bytes) -> bytes:
+    """Bytes with up to 3 gzip layers unpacked."""
     for _ in range(3):
         if data[:2] != b"\x1f\x8b":
             break
         data = gzip.decompress(data)
-    return data.decode("utf-8-sig", errors="replace")
+    return data
+
+
+def _read_text(p: Path) -> str:
+    """A file as text, gzip layers unpacked."""
+    return _unpack(p.read_bytes()).decode("utf-8-sig", errors="replace")
 
 
 NORMALIZED_DIR = "00.input"
@@ -176,24 +180,20 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
     for p, what in todo.items():
         rel = p.relative_to(base)
         t = dest / (rel.parent / _unzipped_name(rel.name) if what == "gzip" else rel)
-        if what == "embl":
-            t = t.with_suffix(".gb")
+        data = _unpack(p.read_bytes())                # gzip of a gzip file too (E19: it was read as Latin-1 junk)
+        try:
+            text, latin = data.decode("utf-8-sig"), False
+        except UnicodeDecodeError:
+            text, latin = data.decode("latin-1"), True
+        embl = what == "embl" or (what == "gzip" and text.startswith("ID   "))
+        if embl:
+            t = t.with_suffix(".gb")                  # x.embl.gz too: written as GenBank (code review, 2026-11-06)
         if t in made:                                 # same.fa + same.fa.gz: one would silently replace the other (R8)
             raise InputError(f"{made[t]} and {p} both become {t.relative_to(dest)} once unpacked / converted: "
                              f"rename one of them")
         made[t] = p
         t.parent.mkdir(parents=True, exist_ok=True)
-        data = p.read_bytes()
-        for _ in range(3):                            # gzip of a gzip file too (E19: it was read as Latin-1 junk)
-            if data[:2] != b"\x1f\x8b":
-                break
-            data = gzip.decompress(data)
-        try:
-            text, latin = data.decode("utf-8-sig"), False
-        except UnicodeDecodeError:
-            text, latin = data.decode("latin-1"), True
-        if what == "embl" or (what == "gzip" and text.startswith("ID   ")):
-            t = t.with_suffix(".gb") if what == "embl" else t
+        if embl:
             recs = list(SeqIO.parse(io.StringIO(text), "embl"))
             for r in recs:                               # (GenBank needs molecule_type)
                 r.annotations.setdefault("molecule_type", "DNA")
@@ -202,12 +202,11 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
             t.write_text(text, encoding="utf-8")
         if what:
             notes.append(f"{p.name}: " + "; ".join(x for x in ("unpacked" if what == "gzip" else "",
-                                                               "EMBL written as GenBank" if what == "embl" else "",
+                                                               "EMBL written as GenBank" if embl else "",
                                                                "byte-order mark removed" if what == "bom" else "",
                                                                "not UTF-8 text: read as Latin-1" if latin else "") if x))
     if in_path.is_file():
-        name = _unzipped_name(in_path.name) if todo[in_path] == "gzip" else in_path.name
-        return (dest / Path(name).with_suffix(".gb").name if todo[in_path] == "embl" else dest / name), notes
+        return next(t for t, s in made.items() if s == in_path), notes
     return dest, notes
 
 

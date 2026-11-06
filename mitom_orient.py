@@ -123,8 +123,8 @@ def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
                                             qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, start_pos)))
         except Exception as exc:             # its old coordinates would be wrong on the rotated sequence (E22)
             if feat.type != "source":
-                logging.warning(f"[ROTATE] {record.id}: {feat.type} {feat.qualifiers.get('gene', [''])[0]} "
-                                f"{feat.location} not moved to the new origin ({exc}): left out")
+                logging.warning(f"[RECORD {record.id}] [ROTATE] {feat.type} {feat.qualifiers.get('gene', [''])[0]} "
+                                f"{feat.location} not moved to the new origin ({exc}): left out")   # mitom debug lists it
             else:
                 new_features.append(feat)
     new_features.sort(key=lambda f: feature_start_pos(f))

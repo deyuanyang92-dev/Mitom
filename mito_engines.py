@@ -274,8 +274,11 @@ def find_results(src: Path) -> Tuple[List[Path], List[Path]]:
     mitos = sorted({p.parent for p in src.rglob("result.bed")})
     mitoz = sorted(src.rglob("*.result/*.gbf"))
     runs = {p.parent.parent for p in mitoz}                # a MitoZ output folder: only its *.result/*.gbf
+    def mitoz_draft(p: Path) -> bool:                      # <run>/tmp*/...: the draft, not a result (code review 2026-11-06:
+        return any(r in p.parents and any(d.startswith("tmp") for d in p.relative_to(r).parts[:-1])   # S2.gb beside
+                   for r in runs)                                                                   # S1.result/ was dropped)
     gbs = sorted(p for p in src.rglob("*") if p.is_file() and p.suffix.lower() in GB_SUFFIXES
-                 and not any(m in p.parents for m in mitos) and not any(r in p.parents for r in runs))
+                 and not any(m in p.parents for m in mitos) and not mitoz_draft(p))
     # GenBank files outside the MitoZ folders are imported too (E5, 2026-11-05: they were left out)
     return sorted(set(mitoz) | set(gbs)), mitos
 

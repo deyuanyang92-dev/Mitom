@@ -34,6 +34,10 @@ installed one.
   two separate same-aa tRNAs no longer merges them; a site at the origin of a circular record is join(n..n,1..1).
   Bugbot on PR #3: tRNA conflicts are checked on every member of a group, a call without anticodon no longer
   chains trnL1 and trnL2; `mitom curate` keeps the inferred /transl_table when a record fails.
+  Code review: previous results are cleared only from a MitoM output folder (README.txt / run log), the given -i
+  is protected and every removal is logged; x.embl.gz becomes GenBank; `import` keeps GenBank files beside a MitoZ
+  *.result/; curate never writes the fallback code 5; dropped features are [RECORD] events; a failed subtype-model
+  download is retried after a day.
 - Model reviews round 2 (Grok 4.7, GLM 5.3, Kimi K3, 11-03 static review; each item checked and reproduced,
   Mitom_review/FIX_STATUS_2026-11-05.md). Annotation: input tRNAs across the origin are no longer the whole record;
   tRNA calls between two others join their group; intron-step neighbours read by part (a join across the origin or

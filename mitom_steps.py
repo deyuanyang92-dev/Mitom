@@ -125,9 +125,6 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
                       "(misc_feature 'non-coding region NCR<k>'; --ncr no: none)")
 
 
-BLOCKING = ("ERROR", "REJECT", "FATAL")             # table2asn severities that stop an NCBI submission
-
-
 def _submission_line(out_root: Path) -> str:
     sub_sum = out_root / "06.ncbi_submission" / "submission_summary.tsv"
     n_rec = count_rows(sub_sum)
@@ -163,7 +160,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
                 if (d / f"rec{ext}").exists():
                     shutil.copy2(d / f"rec{ext}", sub / f"{d.name}{ext}")
             # REJECT / FATAL block a submission as ERROR does: counted in the ERROR column (Codex R3, 2026-11-05)
-            errs = [r for r in rows if r["severity"] in BLOCKING]
+            errs = [r for r in rows if r["severity"] in nv.BLOCKING]   # stop a submission
             n = {"ERROR": len(errs), "WARNING": sum(r["severity"] == "WARNING" for r in rows)}
             unchecked += any(r["code"] == "MITOM.Table2asnFailed" for r in rows)
             if n["ERROR"]:
