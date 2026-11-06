@@ -700,3 +700,13 @@ def test_doctor_accepts_the_new_command_before_a_new_terminal(tmp_path, monkeypa
     assert mito_env.command_problems() == []
     (tmp_path / ".local" / "bin" / "mitom").unlink()
     assert mito_env.command_problems()                                   # never installed: named
+
+
+def test_partial_subtype_models_are_not_used(tmp_path, monkeypatch):
+    import urllib.request
+    monkeypatch.setattr(mito_intron, "SUBTYPE_CM_DIR", tmp_path)
+    (tmp_path / "IA1.cm").write_text("x")                                # left by an interrupted download
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(OSError("offline")))
+    assert mito_intron.subtype_cms() == []
+    (tmp_path / ".complete").touch()
+    assert [p.name for p in mito_intron.subtype_cms()] == ["IA1.cm"]

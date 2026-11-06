@@ -575,7 +575,9 @@ def subtype_cms() -> List[Path]:
                 failed.touch()
             except OSError:
                 pass
-    return sorted(SUBTYPE_CM_DIR.glob("*.cm"))
+    # only a complete set: an interrupted download's first models alone would type introns on part of the
+    # subtypes while the message says Rfam only (Bugbot on PR #4, 2026-11-06)
+    return sorted(SUBTYPE_CM_DIR.glob("*.cm")) if (SUBTYPE_CM_DIR / ".complete").is_file() else []
 
 
 def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: float, tmp: Path
