@@ -2,7 +2,7 @@
 # the release tarball; build it once with conda-build / rattler-build before submitting - not built yet). Users then install everything with one command:
 #   mamba create -n mitom -c conda-forge -c bioconda mitom && conda activate mitom && mitom setup
 {% set name = "mitom" %}
-{% set version = "1.0.0" %}
+{% set version = "0.0.1" %}
 
 package:
   name: {{ name }}

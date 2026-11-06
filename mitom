@@ -50,7 +50,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-VERSION = "1.0.0"
+VERSION = "0.0.1"
 HERE = Path(os.path.realpath(__file__)).parent
 COMMANDS = {
     **{c: ("mitom_pipeline.py", [c]) for c in ("run", "import", "annotate", "reorient", "transfer_metadata",

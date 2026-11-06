@@ -3,7 +3,10 @@
 Notable changes of MitoM. Versions follow semantic versioning (major.minor.patch); `mitom --version` prints the
 installed one.
 
-## Unreleased
+## 0.0.1 - 2026-11-07
+
+First numbered test release. MitoM is still being tested, so the version starts again at 0.0.x; the
+internal numbers 0.9.0 and 1.0.0 below were never released (logs of those runs still say them).
 
 ### Changed
 - `--clade auto` (default) per record, no clade needed: a GenBank record by its taxonomy and CDS /transl_table (no CDS:

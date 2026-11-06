@@ -1,5 +1,7 @@
 # MitoM：动物线粒体基因组注释 / Annotation of animal mitochondrial genomes
 
+> **版本 / Version**：v0.0.1（测试版 / test release）。
+>
 > **说明**：MitoM 目前仍在测试中，是本团队内部使用的软件，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
 > MitoM is still being tested and is used inside our group only; check the results before publishing or submitting them.
 
@@ -44,7 +46,7 @@ Docker：`docker build -t mitom . && docker run --rm -v "$PWD":/data mitom mitom
 
 | 软件 / tool | 下载 / download | 安装后 / installed | conda 包 / packages |
 |---|---|---|---|
-| MitoM 1.0.0 | 0.48 GB | 1.8 GB（首次运行再解压 0.19 GB tRNA 模型） | 157 |
+| MitoM | 0.48 GB | 1.8 GB（首次运行再解压 0.19 GB tRNA 模型） | 157 |
 | MITOS2 2.1.10 | 0.75 GB | 2.9 GB | 185 |
 | MitoZ 3.6 | 1.37 GB | 4.5 GB | 380 |
 
