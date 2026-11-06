@@ -49,14 +49,14 @@ def auto_clade(in_path: Path, genetic_code: Optional[int] = None) -> Tuple[Optio
     known phylum of the others. A non-empty taxonomy that matches nothing is an ERROR, never a fallback."""
     in_path = Path(in_path)
     files = [in_path] if in_path.is_file() else sorted(p for p in in_path.rglob("*") if p.is_file())
-    files = [p for p in files if p.suffix.lower() in GB_SUFFIXES]
+    files = [p for p in files if _plain_suffix(p) in GB_SUFFIXES]     # .gb.gz too: `import` (Cursor F1)
     need = "give --clade (and --genetic_code), e.g. --clade Animal --genetic_code 5"
     phyla: Dict[str, int] = {}
     codes: Dict[int, int] = {}              # genetic code -> number of RECORDS (not CDS)
     unmatched: Dict[str, int] = {}          # lineage of records whose taxonomy names no known phylum
     for f in files:
         try:
-            for rec in SeqIO.parse(str(f), "genbank"):
+            for rec in SeqIO.parse(io.StringIO(_read_text(f)), "genbank"):
                 tax = rec.annotations.get("taxonomy")
                 tax = [str(t) for t in tax] if isinstance(tax, list) else []
                 p = next((t for t in tax if t in METAZOAN_PHYLA), "") \
@@ -111,9 +111,30 @@ EMBL_EXTS = {".embl", ".ebl", ".ena"}
 _GB_EXTS    = GB_SUFFIXES
 
 
+def _unzipped_name(name: str) -> str:
+    """A file name without its trailing .gz, all of them (a.gb.gz.gz -> a.gb; Cursor F2, 2026-11-06)."""
+    while name.lower().endswith(".gz") and len(name) > 3:
+        name = name[:-3]
+    return name
+
+
 def _plain_suffix(p: Path) -> str:
     """The suffix of a file name without a trailing .gz (genome.fasta.gz -> .fasta)."""
-    return Path(p.name[:-3]).suffix.lower() if p.name.lower().endswith(".gz") else p.suffix.lower()
+    return Path(_unzipped_name(p.name)).suffix.lower()
+
+
+def _unpack(data: bytes) -> bytes:
+    """Bytes with up to 3 gzip layers unpacked."""
+    for _ in range(3):
+        if data[:2] != b"\x1f\x8b":
+            break
+        data = gzip.decompress(data)
+    return data
+
+
+def _read_text(p: Path) -> str:
+    """A file as text, gzip layers unpacked."""
+    return _unpack(p.read_bytes()).decode("utf-8-sig", errors="replace")
 
 
 NORMALIZED_DIR = "00.input"
@@ -158,25 +179,21 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
     made: Dict[Path, Path] = {}                       # written file -> its source
     for p, what in todo.items():
         rel = p.relative_to(base)
-        t = dest / (rel.parent / rel.name[:-3] if what == "gzip" and rel.name.lower().endswith(".gz") else rel)
-        if what == "embl":
-            t = t.with_suffix(".gb")
+        t = dest / (rel.parent / _unzipped_name(rel.name) if what == "gzip" else rel)
+        data = _unpack(p.read_bytes())                # gzip of a gzip file too (E19: it was read as Latin-1 junk)
+        try:
+            text, latin = data.decode("utf-8-sig"), False
+        except UnicodeDecodeError:
+            text, latin = data.decode("latin-1"), True
+        embl = what == "embl" or (what == "gzip" and text.startswith("ID   "))
+        if embl:
+            t = t.with_suffix(".gb")                  # x.embl.gz too: written as GenBank (code review, 2026-11-06)
         if t in made:                                 # same.fa + same.fa.gz: one would silently replace the other (R8)
             raise InputError(f"{made[t]} and {p} both become {t.relative_to(dest)} once unpacked / converted: "
                              f"rename one of them")
         made[t] = p
         t.parent.mkdir(parents=True, exist_ok=True)
-        data = p.read_bytes()
-        for _ in range(3):                            # gzip of a gzip file too (E19: it was read as Latin-1 junk)
-            if data[:2] != b"\x1f\x8b":
-                break
-            data = gzip.decompress(data)
-        try:
-            text, latin = data.decode("utf-8-sig"), False
-        except UnicodeDecodeError:
-            text, latin = data.decode("latin-1"), True
-        if what == "embl" or (what == "gzip" and text.startswith("ID   ")):
-            t = t.with_suffix(".gb") if what == "embl" else t
+        if embl:
             recs = list(SeqIO.parse(io.StringIO(text), "embl"))
             for r in recs:                               # (GenBank needs molecule_type)
                 r.annotations.setdefault("molecule_type", "DNA")
@@ -185,12 +202,11 @@ def normalize_input(in_path: Path, out_root: Path) -> Tuple[Path, List[str]]:
             t.write_text(text, encoding="utf-8")
         if what:
             notes.append(f"{p.name}: " + "; ".join(x for x in ("unpacked" if what == "gzip" else "",
-                                                               "EMBL written as GenBank" if what == "embl" else "",
+                                                               "EMBL written as GenBank" if embl else "",
                                                                "byte-order mark removed" if what == "bom" else "",
                                                                "not UTF-8 text: read as Latin-1" if latin else "") if x))
     if in_path.is_file():
-        name = in_path.name[:-3] if todo[in_path] == "gzip" and in_path.name.lower().endswith(".gz") else in_path.name
-        return (dest / Path(name).with_suffix(".gb").name if todo[in_path] == "embl" else dest / name), notes
+        return next(t for t, s in made.items() if s == in_path), notes
     return dest, notes
 
 

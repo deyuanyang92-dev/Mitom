@@ -267,14 +267,24 @@ def overlap(p: "Pred", q: "Pred") -> int:
     return best
 
 
+def inside_linear(preds: List[Pred], L: int) -> List[Pred]:
+    """The calls of a linear record that lie inside it: one across the ends (start > end, or end > L as MitoM-ML
+    writes it) would join the two physical ends (Codex review, 2026-11-06)."""
+    return [p for p in preds if 1 <= p.start <= p.end <= L]
+
+
 def group(preds: List[Pred]) -> List[List[Pred]]:
     groups: List[List[Pred]] = []
     for p in sorted(preds, key=lambda x: (x.start, x.end)):
         for g in groups:
-            # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05)
-            if any(p.strand == q.strand and p.aa == q.aa
-                   and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
-                   and overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
+            # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05);
+            # but it must touch every member, so a call between two separate same-aa tRNAs never merges them
+            # (Cursor F4, 2026-11-06)
+            # same strand, aa and anticodon as every member: a call without anticodon must not chain trnL1 and
+            # trnL2 (Bugbot on PR #3, 2026-11-06)
+            if all(p.strand == q.strand and p.aa == q.aa and overlap(p, q) > 0
+                   and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon) for q in g) \
+                    and any(overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
                 g.append(p)
                 break
         else:
@@ -292,7 +302,8 @@ def conflicts(groups: List[List[Pred]]) -> Dict[int, List[int]]:
         for j, h in enumerate(groups):
             if i == j or g[0].strand != h[0].strand:
                 continue
-            if overlap(g[0], h[0]) >= 0.5 * min(g[0].length, h[0].length):
+            # any members, not only the first: groups have several (Bugbot on PR #3, 2026-11-06)
+            if any(overlap(p, q) >= 0.5 * min(p.length, q.length) for p in g for q in h):
                 out.setdefault(i + 1, []).append(j + 1)
     return out
 
@@ -814,7 +825,7 @@ def main(argv=None) -> int:
             global CIRC_L
             topo = rec.annotations.get("topology") or (topology_from_header(rec.description) if fmt == "fasta" else "circular")
             CIRC_L = L if topo == "circular" else 0     # FASTA topology=linear honoured (Kimi 2.3, 2026-11-05)
-            preds = unwrap(preds, L) if CIRC_L else [p for p in preds if p.start <= p.end]
+            preds = unwrap(preds, L) if CIRC_L else inside_linear(preds, L)
             groups = group(preds)
             conf = conflicts(groups)
             sources_run = sorted({x for x in ("MITOS2" if "mitos2" in want else "", "ARWEN" if "arwen" in want else "",

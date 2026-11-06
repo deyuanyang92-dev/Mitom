@@ -314,7 +314,8 @@ def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
                                             qualifiers=move_position_qualifiers(feat.qualifiers, seq_len, rc=True)))
         except Exception as exc:                 # old coordinates would be wrong on the reverse strand (Kimi 1.11)
             if feat.type != "source":
-                logging.warning(f"[REVCOMP] {record.id}: {feat.type} {feat.location} not moved ({exc}): left out")
+                logging.warning(f"[RECORD {record.id}] [REVCOMP] {feat.type} {feat.location} not moved ({exc}): "
+                                f"left out")                     # mitom debug lists it
             else:
                 new_features.append(feat)
     new_rec.features = new_features

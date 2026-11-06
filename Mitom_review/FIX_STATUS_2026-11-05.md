@@ -224,3 +224,57 @@ S1–S3 已由上面的项覆盖。S4–S12（内含子前移、起止证据分�
 | 名称快照 `tests/data/name_expected.tsv.gz` | 已重新生成；190 行变化，逐行核对，全部来自 Grok 1.9（裸 `atp`）和 1.15（"subunit 1/2/3"）两条规则 |
 | 真实数据新旧对比：从 NCBI 下载 49 条记录（内含子金标准中的 25 条：刺胞 16 + 环节/扁盘/海绵；mini 基准 24 条，覆盖 8 个门），裸序列 `mitom run --clade auto`，旧代码 `7cb43d0` 对比新代码 | 49 条全部写出，exit 0；所有 CDS/tRNA/rRNA/intron 的坐标**完全相同（0 处差异）**；文本只多了 2 行 tRNA `/note="anticodon: …"`（Grok 2.8）；NCBI ERROR 新旧都是 0 |
 | 说明 | 改变注释结果的几项（Grok 2.2 内含子端、2.6 跨原点 ORF、GLM 2.2 tRNA 分组、GLM 2.3 输入 tRNA）在这 49 条记录上没有触发。完整的内含子金标准（309 个内含子，需要另一台机器上的 `mitom_work/intron_gold_2026-10-29/gold/gb`）尚未重跑 |
+
+## 第三轮：Cursor 复查（`FIX_REVIEW_2026-11-05.md`，2026-11-06）
+
+| ID | 判定 | 处理 |
+|---|---|---|
+| F1 显式 `--clade Chordata` 混合密码 | 属实 | 记录间密码不同（如脊椎 2 + 被囊 13）时现在报 ERROR，提示用 `--clade auto`（按密码分组注释）或 `--genetic_code`，不再静默全部用 2。`auto_clade` 现在也能读 `.gb.gz`（`import` 在解压前调用它） |
+| F2 双层 gzip 文件名 | 属实 | `a.fa.gz.gz` → `a.fa`（结尾的 `.gz` 全部去掉，单文件和目录输入都一样） |
+| F3 失败组的 tsv 进总报告 | 属实 | `reports/*.tsv` 只合并成功的组；失败组的日志、.json、failed_logs 仍保留（N3 的原意） |
+| F4 tRNA 分组桥接 | 属实，报告中的例子不成立 | 150..230 与 1..70 不重叠，不会桥接；真实情况是相邻的同氨基酸 tRNA（1..70、71..140）中间夹一条 36..105。现在新预测必须与组内每一条都有重叠才加入；GLM 2.2 的夹心情况仍是一组 |
+| F5 环上 `n^1` | 属实 | 环状记录写成 `join(n..n,1..1)`；线性记录仍取末端 1 nt |
+
+验证：新增 6 个回归测试；全量 `pytest` **753 passed，0 failed**，3 skipped。
+
+## Cursor Bugbot 在 PR #3 上的 2 条评论（2026-11-06）
+
+| 评论 | 判定 | 处理 |
+|---|---|---|
+| tRNA `conflicts()` 只比较每组第一条 | 属实 | 改为比较两组的所有成员；分组时新预测须与组内每一条同链、同氨基酸、反密码子兼容（无反密码子的中间预测不再把 trnL1/trnL2 连成一组） |
+| curate 失败时丢掉推断的 `/transl_table`；前后校验密码不一致 | 属实 | `/transl_table` 在备份前写入；校正后的校验也传同一个 `code=` |
+
+验证：新增 3 个回归测试（旧代码上 3 个都失败）；全量 **756 passed，0 failed**，3 skipped。
+
+## 第四轮：Claude Code `/code-review`（high，`1912f7b..HEAD`，2026-11-06）
+
+| # | 判定 | 处理 |
+|---|---|---|
+| 1 清理旧结果会删用户自己的 README.txt / summary.tsv / plots/；输入被解压后原 `-i` 不受保护 | 属实 | 只有文件夹里有 MitoM 的 README.txt 或 run.log / pipeline.log 时才清旧结果；原 `-i` 和 00.input 副本都受保护 |
+| 2 `x.embl.gz` 解压后不转成 .gb | 属实 | 按内容（`ID   `）判断，写成 GenBank 并改名 `.gb` |
+| 3 failed_logs 重名改名切在第一个点，`NC_012920.1` 被拆开 | 属实 | 组名插在最后一个后缀前，`<sample>.*` 仍能找到 |
+| 4 `import` 时与 `*.result/` 同级的 GenBank 被丢掉 | 属实 | 只排除 MitoZ 的 `tmp*` 草稿文件夹 |
+| 5 curate 把猜测的 code 5 写进 `/transl_table`；无 `/organelle` 时不看分类 | 属实 | 新增 `mito_tbl.lineage_code`（不要求 organelle）；兜底的 5 只用来计算，不写入 |
+| 6 旋转 / 反向互补丢掉的特征只是普通警告 | 属实 | 改成 `[RECORD <id>]` 行，`mitom debug` 会列出该记录 |
+| 7 亚型 CM 下载失败后每次运行都重试 | 属实 | 失败后写 `.failed`，一天内不再重试 |
+| 8 删除不写日志（违反"记录删除"规则） | 属实 | `clear_previous_work` 返回删除清单，写进 run.log / pipeline.log（`[CLEAN]`） |
+| 9 各处严重级别归并不一致；curate 汇总只数 ERROR | 属实 | `ncbi_validate.BLOCKING` 一处定义；curate 汇总把 REJECT/CRITICAL/FATAL 算进 ERROR |
+| 10 解 gzip 的循环写了两份 | 属实 | 合并为 `_unpack` |
+
+验证：新增 10 个回归测试；全量 **765 passed，0 failed**，3 skipped。
+
+## 第五轮：Codex 审查（gpt-6-astra，deep，`1912f7b..HEAD`，2026-11-06；原文 `SECOND_OPINION_2026-11-06.md`）
+
+| # | 判定 | 处理 |
+|---|---|---|
+| 1 `mitom import -i out/original_annotation -o out` 清理旧结果时会删掉原输入文件夹 | 属实 | `prepare_import` 改写 `args.input` 前先记下 `input_given`，清理时受保护 |
+| 2 线性记录的 tRNA 预测越过末端（MitoM-ML 写成 end > L）仍被接受，写成首尾 join | 属实 | 新增 `inside_linear`：线性记录只保留 `1 <= start <= end <= L` |
+| 3 table2asn 超时时提交步骤仍报成功 | 属实 | `ncbi_validate.NOT_VALIDATED` 含 Failed 和 Timeout，两者都算未校验 |
+
+验证：新增 3 个回归测试（旧代码上都失败）；全量 **768 passed，0 failed**，3 skipped。
+
+## Bugbot 在 PR #4 上的评论（2026-11-06）
+
+| 评论 | 判定 | 处理 |
+|---|---|---|
+| 亚型 CM 下载中断后写了 `.failed`，但已下载的部分 `.cm` 仍被使用（日志却说只用 Rfam） | 属实（第四轮 #7 的修复引入） | 只有 `.complete` 存在时才用亚型模型，否则只用 Rfam；本机缓存完整（14 个 + `.complete`），不受影响 |

@@ -75,7 +75,7 @@ from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from Bio import SeqIO
-from Bio.SeqFeature import FeatureLocation, SeqFeature
+from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
@@ -178,8 +178,14 @@ def clean_record(rec) -> Tuple[object, List[str]]:
     for f in rec.features:
         loc = f.location
         if loc is not None and len(loc.parts) == 1 and int(loc.start) == int(loc.end) and 0 <= int(loc.start) <= n:
-            # a site between two bases (GenBank 100^101): the 2-nt interval around it, as NCBI's gbf2tbl writes it
-            f.location = FeatureLocation(max(0, int(loc.start) - 1), min(n, int(loc.start) + 1), loc.strand)   # n^1: Kimi 3.4
+            # a site between two bases (GenBank 100^101): the 2-nt interval around it, as NCBI's gbf2tbl writes it;
+            # n^1 of a circular record: join(n..n,1..1) (Cursor F5, 2026-11-06), of a linear one the end base (Kimi 3.4)
+            s = int(loc.start)
+            if s in (0, n) and n > 1 and str(rec.annotations.get("topology", "")).lower() == "circular":
+                parts = [FeatureLocation(n - 1, n, loc.strand), FeatureLocation(0, 1, loc.strand)]
+                f.location = CompoundLocation(parts[::-1] if loc.strand == -1 else parts)
+            else:
+                f.location = FeatureLocation(max(0, s - 1), min(n, s + 1), loc.strand)
             sites += 1
         if f.type not in FEATURE_KEYS:
             keys[f.type] += 1
@@ -226,12 +232,18 @@ def record_code(rec, override: Optional[int]) -> Tuple[Optional[int], str]:
     code = nv.record_gencode(rec)
     if code or location(rec)[0] != "mitochondrion" or not any(f.type == "CDS" for f in rec.features):
         return code, ""
+    code, phylum = lineage_code(rec)
+    code = code or 5
+    return code, (f"no /transl_table: genetic code {code} assumed ({phylum or 'phylum unknown'}); "
+                  "give --genetic_code to set it")
+
+
+def lineage_code(rec) -> Tuple[Optional[int], str]:
+    """(the usual mitochondrial code of the record's taxonomy, phylum); (None, '') when no known taxon."""
     tax = rec.annotations.get("taxonomy", []) or []
     phylum = next((t for t in tax if t in METAZOAN_PHYLA), "") or next((PHYLUM_SYNONYMS[t] for t in tax
                                                                        if t in PHYLUM_SYNONYMS), "")
-    code = next((SUBPHYLUM_CODE[t] for t in tax if t in SUBPHYLUM_CODE), PHYLUM_CODE.get(phylum, 5))
-    return code, (f"no /transl_table: genetic code {code} assumed ({phylum or 'phylum unknown'}); "
-                  "give --genetic_code to set it")
+    return next((SUBPHYLUM_CODE[t] for t in tax if t in SUBPHYLUM_CODE), PHYLUM_CODE.get(phylum)), phylum
 
 
 def source_of(rec) -> Dict[str, List[str]]:

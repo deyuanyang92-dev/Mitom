@@ -314,6 +314,10 @@ def resolve_tools(args: argparse.Namespace) -> str:
             clade, code, _, err = auto_clade(Path(args.input))
             if clade == "Chordata" and code and not err:
                 args.genetic_code = code
+            elif "differs between records" in err:
+                # vertebrates 2 + tunicates 13 / lancelets 5 in one input: never one code for all (Cursor F1, 2026-11-06)
+                return (f"ERROR: --clade Chordata: {err.replace('--clade auto: ', '')}. `mitom run --clade auto` "
+                        f"annotates each code separately; or give --genetic_code")
     if not args.intron_bin:
         args.intron_bin = mito_env.bin_with("exonerate", "cmsearch", "blastp", "makeblastdb", "tblastn", "blastn")
     args.mitos_bin = mito_env.mitos_bin(args.mitos_bin)
@@ -352,6 +356,7 @@ def prepare_import(args: argparse.Namespace) -> str:
     for note in notes:
         announce(f"[IMPORT] {note}")
     announce(f"[IMPORT] {len(recs)} annotated record(s) from {args.input}")
+    args.input_given = args.input                  # protected from clear_previous_work (Codex review, 2026-11-06)
     args.input, args.engine = str(out / "imported.gb"), "input"
     return ""
 
@@ -363,12 +368,23 @@ KNOWN_LIMITATION = ("[KNOWN_LIMITATION] the annotation core does not annotate in
                     "and intron_ref_report.tsv.")
 
 
+def _inputs(args: argparse.Namespace) -> List[str]:
+    """-i as given and as read (00.input/ copy): neither may be removed as a previous run's output."""
+    return [x for x in (getattr(args, "input", None), getattr(args, "input_given", None)) if x]
+
+
+def _log_removed(out_root: Path, removed: List[str]) -> None:
+    if removed:
+        logging.info(f"[CLEAN] removed the previous run's files from {out_root}: {', '.join(removed)}")
+
+
 def workflow_annotate(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=[args.input])
+    removed = clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=_inputs(args))
     new_reports(out_root)
     setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
+    _log_removed(out_root, removed)
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
@@ -531,10 +547,12 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
 def workflow_run(args: argparse.Namespace) -> int:
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
-    clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=[args.input])   # made by this run (input copies, `import`)
+    removed = clear_previous_work(out_root, keep=("00.input", "00.imported"),   # made by this run (input copies, `import`)
+                                  protect=_inputs(args))
     new_reports(out_root)
     setup_root_logger(out_root / "run.log", console_level=logging.WARNING, mode="w",   # one run, one log
                       debug=getattr(args, "debug", False))
+    _log_removed(out_root, removed)
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
@@ -1577,6 +1595,7 @@ def main() -> int:
                 return error_exit_code(err)
         if args.cmd in ("annotate", "run") and Path(args.input).exists():   # .gz unpacked, Latin-1 text converted
             new_input, notes = normalize_input(Path(args.input), Path(args.out_root))
+            args.input_given = args.input              # the user's -i, protected from clear_previous_work
             args.input = str(new_input)
             for n in notes:
                 print(f"    [INPUT] {n} ({Path(args.out_root) / NORMALIZED_DIR})", file=sys.stderr)

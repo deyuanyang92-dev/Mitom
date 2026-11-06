@@ -54,9 +54,12 @@ def test_version():
 
 
 @pytest.mark.skipif(not _tools_present(), reason="required programs not installed here")
-def test_doctor_runs_and_exits_zero():
-    """B23 review: test_mitom_cli never ran `mitom doctor`; the doctor now also checks Biopython (B1)."""
-    p = run("doctor")
+def test_doctor_runs_and_exits_zero(tmp_path):
+    """B23 review: test_mitom_cli never ran `mitom doctor`; the doctor now also checks Biopython (B1). The `mitom`
+    on PATH is the command install.sh writes for this folder (doctor flags a command of another copy)."""
+    (tmp_path / "mitom").write_text(f'#!/usr/bin/env bash\nexec "{sys.executable}" "{MITOM.parent}/mitom" "$@"\n')
+    (tmp_path / "mitom").chmod(0o755)
+    p = run("doctor", env={**os.environ, "PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}"})
     assert p.returncode == 0, p.stdout[-800:] + p.stderr[-800:]
     assert "Biopython" in p.stdout and "All required programs found" in p.stdout
 

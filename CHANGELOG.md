@@ -28,6 +28,21 @@ installed one.
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- Install and self-check: the `mitom` command picks a Python with Biopython, numpy and scikit-learn (the
+  mitotools environment first; an old symlinked command ran a Python without scikit-learn and the MitoM-ML tRNAs
+  failed); `mitom doctor` shows the version, folder, git commit and Python in use, checks scikit-learn / numpy, and
+  flags a `mitom` on PATH that runs another copy (with the fix); README: how to update (`git pull && bash install.sh`).
+- Cursor review of the fixes (Mitom_review/FIX_REVIEW_2026-11-05.md): explicit `--clade Chordata` with
+  records of different codes (vertebrates 2 + tunicates 13) is an error, not code 2 for all; `--clade auto` reads
+  .gb.gz; a.fa.gz.gz unpacks to a.fa; a failed group's tables stay out of the merged reports; a tRNA call between
+  two separate same-aa tRNAs no longer merges them; a site at the origin of a circular record is join(n..n,1..1).
+  Bugbot on PR #3: tRNA conflicts are checked on every member of a group, a call without anticodon no longer
+  chains trnL1 and trnL2; `mitom curate` keeps the inferred /transl_table when a record fails.
+  Code review: previous results are cleared only from a MitoM output folder (README.txt / run log), the given -i
+  is protected and every removal is logged; x.embl.gz becomes GenBank; `import` keeps GenBank files beside a MitoZ
+  *.result/; curate never writes the fallback code 5; dropped features are [RECORD] events; a failed subtype-model
+  download is retried after a day. Codex review: `import` protects its -i; tRNA calls past the end of a linear
+  record are left out; a table2asn timeout makes the submission step fail like a crash.
 - Model reviews round 2 (Grok 4.7, GLM 5.3, Kimi K3, 11-03 static review; each item checked and reproduced,
   Mitom_review/FIX_STATUS_2026-11-05.md). Annotation: input tRNAs across the origin are no longer the whole record;
   tRNA calls between two others join their group; intron-step neighbours read by part (a join across the origin or

@@ -92,6 +92,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -549,7 +550,9 @@ def subtype_cms() -> List[Path]:
     """Group I subtype covariance models (IA1..IE3) of Selles Vidal et al. 2025, trained on 42,459
     group I introns. Not redistributed (no licence stated): downloaded once into a local cache;
     if the download fails the bundled Rfam models are used alone."""
-    if not (SUBTYPE_CM_DIR / ".complete").is_file():      # an interrupted download is fetched again (Kimi 1.14)
+    failed = SUBTYPE_CM_DIR / ".failed"                    # offline / rate limited: try again after a day, not every
+    recent = failed.is_file() and time.time() - failed.stat().st_mtime < 86400   # run (code review, 2026-11-06)
+    if not (SUBTYPE_CM_DIR / ".complete").is_file() and not recent:   # interrupted: fetched again (Kimi 1.14)
         try:
             import json
             import urllib.request
@@ -564,10 +567,17 @@ def subtype_cms() -> List[Path]:
                         shutil.copyfileobj(r, h)
                     part.replace(SUBTYPE_CM_DIR / name)
             (SUBTYPE_CM_DIR / ".complete").touch()
+            failed.unlink(missing_ok=True)
         except Exception as exc:                       # offline: carry on with Rfam only
-            print(f"[mito_intron] group I subtype models not available ({exc}); using Rfam only",
-                  file=sys.stderr)
-    return sorted(SUBTYPE_CM_DIR.glob("*.cm"))
+            print(f"[mito_intron] group I subtype models not available ({exc}); using Rfam only (next try in a "
+                  f"day; delete {failed} to try now)", file=sys.stderr)
+            try:
+                failed.touch()
+            except OSError:
+                pass
+    # only a complete set: an interrupted download's first models alone would type introns on part of the
+    # subtypes while the message says Rfam only (Bugbot on PR #4, 2026-11-06)
+    return sorted(SUBTYPE_CM_DIR.glob("*.cm")) if (SUBTYPE_CM_DIR / ".complete").is_file() else []
 
 
 def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: float, tmp: Path

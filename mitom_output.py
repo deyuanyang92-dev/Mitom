@@ -414,25 +414,46 @@ def write_summary(out_root: Path) -> None:
     src.unlink()
 
 
-def clear_previous_work(out_root: Path, keep: tuple = ("00.input",), protect=()) -> None:
+def clear_previous_work(out_root: Path, keep: tuple = ("00.input",), protect=()) -> List[str]:
     """Remove the intermediate folders a previous run left in out_root (interrupted, or --keep_intermediate yes):
     they were picked up as this run's results (2026-10-31 review: a stale 04.final_gb/*.gbf was published, a stale
-    reoriented body of another genome became a final record). Only MitoM's own folder names; `keep` = made by this run."""
+    reoriented body of another genome became a final record). Only MitoM's own folder names; `keep` = made by this run.
+    Returns what was removed (for the log: the run's logger does not exist yet)."""
+    removed: List[str] = []
     for name in WORK_DIRS + ("06.ncbi_submission", "work"):
         d = Path(out_root) / name
         if name not in keep and d.is_dir() and not d.is_symlink() and not any(_overlaps(d, x) for x in protect):
             shutil.rmtree(d)
+            removed.append(name + "/")
     # and the previous run's results: a table / map this run does not write (FASTA input: no original_vs_mitom.tsv)
-    # stayed beside the new ones (Codex R9 / N14, 2026-11-05). run.log is this run's; reports/: new_reports()
-    for name in [n.rstrip("/") for n, _ in OUTPUT_LAYOUT if n not in ("run.log", "reports/", "work/")] + \
-            ["annotation-summary.tsv", "all.final.gbf", "README.txt"]:
+    # stayed beside the new ones (Codex R9 / N14, 2026-11-05). run.log is this run's; reports/: new_reports().
+    # Only when the folder holds a MitoM output (README.txt of `run`, the log of `run` / `annotate`): a user's own
+    # README.txt / plots/ in -o are not ours to delete (code review, 2026-11-06)
+    names = [n.rstrip("/") for n, _ in OUTPUT_LAYOUT if n not in ("run.log", "reports/", "work/")] + \
+        ["annotation-summary.tsv", "all.final.gbf", "README.txt"]
+    for name in names if _mitom_output(Path(out_root)) else ():
         d = Path(out_root) / name
         if name in keep or d.is_symlink() or any(_overlaps(d, x) for x in protect):
             continue                                 # (-i out/final_annotation -o out: never the input)
         if d.is_dir():
             shutil.rmtree(d)
+            removed.append(name + "/")
         elif d.is_file():
             d.unlink()
+            removed.append(name)
+    return removed
+
+
+def _mitom_output(out_root: Path) -> bool:
+    """out_root holds the output of an earlier MitoM run: its README.txt, or a run.log / pipeline.log MitoM wrote."""
+    for name, mark in (("README.txt", "MitoM output"), ("run.log", "[ENV] MitoM "), ("pipeline.log", "[ENV] MitoM ")):
+        try:
+            with (out_root / name).open(encoding="utf-8", errors="replace") as fh:
+                if mark in fh.read(4096):
+                    return True
+        except OSError:
+            continue
+    return False
 
 
 def _overlaps(a: Path, b) -> bool:

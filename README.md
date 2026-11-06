@@ -25,9 +25,14 @@ genomes, orients them, curates gene ends and names to NCBI rules, and writes NCB
 
 ```bash
 git clone https://github.com/deyuanyang92-dev/Mitom.git MitoM && cd MitoM
-bash install.sh            # 一个 conda 环境 mitotools（Python 包和全部程序）+ 命令 mitom + mitom setup（参考数据、配置）
-mitom doctor               # 检查：所有必需程序都应显示 OK；mitom --version 显示版本
+bash install.sh            # 一个 conda 环境 mitotools（Python 包和全部程序）+ 命令 mitom + mitom setup（参考数据、配置）；
+                           # 没有 conda 时自动装 Miniforge；~/.local/bin 自动写入 PATH（~/.bashrc），之后开一个新终端
+mitom doctor               # 检查：第一行是正在用的版本和文件夹；所有必需项都应显示 OK
 ```
+
+**更新 / Update**：`cd MitoM && git pull && bash install.sh`（已有的环境只更新，可重复运行）。只 `git pull` 而不重跑
+`install.sh` 时，命令 `mitom` 可能仍指向旧的副本或别的 Python；`mitom doctor` 会用 `!!` 指出并给出修复命令。
+Update: `git pull && bash install.sh`; `mitom doctor` flags a `mitom` command that runs an old copy or another Python.
 
 全部依赖都在一个 conda 环境 `mitotools` 里（`env/mitotools.yml`，Python 包也在内），不往系统 Python 装任何东西；`mitom` 用这个环境的 Python 和程序。
 All dependencies, the Python packages included, live in one conda environment (`env/mitotools.yml`); nothing is installed into the system Python.
@@ -157,9 +162,11 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。
 **5. 出问题时 / When something goes wrong**
 
 ```bash
+mitom doctor                         # 先查安装：版本和文件夹、Python、每个程序；有问题的行标 !!，并给出修复命令
 mitom debug out                      # 读 out/run.log：哪一步、哪条记录、哪个程序失败，错误信息，缺什么程序及安装命令，复现命令
 mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序版本、配置、数据目录）、每条命令的完整输出，保留中间文件
 ```
+求助时请附上 `mitom doctor` 和 `mitom debug out` 的输出。/ When asking for help, include the output of both.
 
 **文档 / Documentation**：完整使用手册 [docs/USAGE_zh.md](docs/USAGE_zh.md)（安装、输入、流程、每个命令、输出、调试、常见问题）；
 全部命令与参数 [docs/OPTIONS.md](docs/OPTIONS.md)；方法与评测 [docs/METHODS.md](docs/METHODS.md)；版本变化 [CHANGELOG.md](CHANGELOG.md)；评测数据 `benchmark/results/`。

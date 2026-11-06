@@ -9,6 +9,7 @@ _concat_tsv headers (D17), lock of another user's run (N8), rescue / reorient ge
 Run: python3 -m pytest -q tests/test_review_2026_11_05.py
 """
 import gzip
+import io
 import os
 import sys
 from pathlib import Path
@@ -189,6 +190,7 @@ def test_previous_results_removed_but_never_the_input(tmp_path):
     (out / "plots").mkdir()
     (out / "original_vs_mitom.tsv").write_text("old")
     (out / "my_notes.txt").write_text("user's")
+    (out / "run.log").write_text("2026-11-05 13:41:11,237 [INFO] [ENV] MitoM 1.0.0  /x\n")   # a previous run
     mitom_output.clear_previous_work(out, protect=[out / "final_annotation"])
     assert (out / "final_annotation" / "a.gb").exists()          # the input of this run
     assert not (out / "plots").exists() and not (out / "original_vs_mitom.tsv").exists()
@@ -414,3 +416,297 @@ def test_curate_without_code_uses_the_taxonomy_and_writes_it(tmp_path):
     out = next((tmp_path / "o").rglob("*.gb*"))
     codes = {f.qualifiers.get("transl_table", [""])[0] for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS"}
     assert codes == {"4"}                                                   # Cnidaria (NC_000933: Metridium)
+
+
+# ---- Cursor review of the fixes (2026-11-06) ---------------------------------------------------------------------
+def test_explicit_chordata_with_two_codes_is_an_error(tmp_path):
+    recs = []
+    for rid, sub_ in (("V1", ["Vertebrata", "Mammalia"]), ("T1", ["Tunicata", "Ascidiacea"])):
+        r = _rec(rid, 400)
+        r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata"] + sub_
+        recs.append(r)
+    SeqIO.write(recs, str(tmp_path / "m.gb"), "genbank")
+    args = bm.build_parser().parse_args(["run", "-i", str(tmp_path / "m.gb"), "-o", str(tmp_path / "o"),
+                                         "--clade", "Chordata"])
+    err = bm.resolve_tools(args)
+    assert err.startswith("ERROR") and "--clade auto" in err
+
+
+def test_auto_clade_reads_gzip_genbank(tmp_path):
+    import gzip
+    r = _rec("T1", 400)
+    r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Tunicata", "Ascidiacea"]
+    buf = io.StringIO()
+    SeqIO.write(r, buf, "genbank")
+    (tmp_path / "t.gb.gz").write_bytes(gzip.compress(buf.getvalue().encode()))
+    from mitom_inputs import auto_clade
+    assert auto_clade(tmp_path / "t.gb.gz")[:2] == ("Chordata", 13)
+
+
+def test_double_gzip_loses_every_gz_suffix(tmp_path):
+    import gzip
+    from mitom_inputs import normalize_input
+    d = tmp_path / "in"
+    d.mkdir()
+    (d / "a.fa.gz.gz").write_bytes(gzip.compress(gzip.compress(b">a\nACGT\n")))
+    out, _ = normalize_input(d, tmp_path / "o")
+    assert [p.name for p in out.iterdir()] == ["a.fa"]
+    out, _ = normalize_input(d / "a.fa.gz.gz", tmp_path / "o2")
+    assert out.name == "a.fa" and out.read_text() == ">a\nACGT\n"
+
+
+def test_failed_group_tables_are_not_merged(tmp_path):
+    outs = {}
+    for g in ("ok", "bad"):
+        o = tmp_path / g / "out"
+        (o / "reports").mkdir(parents=True)
+        (o / "reports" / "t.tsv").write_text(f"sample\n{g}\n")
+        (o / "reports" / "only_bad.tsv").write_text("sample\nx\n") if g == "bad" else None
+        outs[g] = o
+    root = tmp_path / "root"
+    root.mkdir()
+    mitom_groups.merge_outputs(root, outs, failed=["bad"])
+    assert (root / "reports" / "t.tsv").read_text().splitlines() == ["sample", "ok"]
+    assert not (root / "reports" / "only_bad.tsv").exists()
+
+
+def test_call_between_two_separate_trnas_does_not_merge_them():
+    import mito_trna
+    ps = [mito_trna.Pred(t, s, e, 1, "F", "") for t, s, e in (("arwen", 1, 70), ("trnascan", 36, 105),
+                                                               ("mitos2", 71, 140))]
+    assert len(mito_trna.group(ps)) == 2
+
+
+def test_site_at_the_origin_of_a_circular_record():
+    r = _rec("C1", 400)
+    r.annotations["topology"] = "circular"
+    r.features.append(SeqFeature(FeatureLocation(400, 400, 1), type="misc_feature", qualifiers={"note": ["x"]}))
+    loc = mito_tbl.clean_record(r)[0].features[-1].location
+    assert [(int(p.start), int(p.end)) for p in loc.parts] == [(399, 400), (0, 1)]
+    r.annotations["topology"] = "linear"
+    loc = mito_tbl.clean_record(r)[0].features[-1].location
+    assert (int(loc.start), int(loc.end)) == (399, 400)
+
+
+def test_trna_conflict_found_through_a_later_member():
+    import mito_trna
+    f = [mito_trna.Pred("arwen", 1, 70, 1, "F", ""), mito_trna.Pred("mitos2", 30, 100, 1, "F", "")]
+    v = [mito_trna.Pred("trnascan", 60, 125, 1, "V", "")]
+    groups = mito_trna.group(f + v)
+    assert len(groups) == 2 and mito_trna.conflicts(groups)       # F's 2nd call overlaps V; first calls do not
+
+
+def test_call_without_anticodon_does_not_chain_two_leu_trnas():
+    import mito_trna
+    ps = [mito_trna.Pred("arwen", 1, 70, 1, "L", "TAG"), mito_trna.Pred("trnascan", 30, 100, 1, "L", ""),
+          mito_trna.Pred("mitos2", 60, 130, 1, "L", "TAA")]
+    assert len(mito_trna.group(ps)) == 2
+
+
+def test_curate_keeps_the_code_when_a_record_fails(tmp_path, monkeypatch):
+    import mito_curate
+    r = next(SeqIO.parse(str(HERE / "data" / "NC_000933.gb"), "genbank"))
+    for f in r.features:
+        f.qualifiers.pop("transl_table", None)
+    SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
+
+    def boom(self):
+        raise RuntimeError("x")
+    monkeypatch.setattr(mito_curate.Curator, "run", boom)
+    mito_curate.main(["-i", str(tmp_path / "a.gb"), "-o", str(tmp_path / "o"), "--no_validate"])
+    out = next((tmp_path / "o").rglob("*.gb*"))
+    codes = {f.qualifiers.get("transl_table", [""])[0] for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS"}
+    assert codes == {"4"}
+
+
+# ---- Claude Code /code-review of the fixes (2026-11-06) ----------------------------------------------------------
+def test_user_files_in_the_output_folder_are_kept(tmp_path):
+    (tmp_path / "README.txt").write_text("my notes\n")
+    (tmp_path / "summary.tsv").write_text("mine\n")
+    (tmp_path / "plots").mkdir()
+    assert mitom_output.clear_previous_work(tmp_path) == []
+    assert (tmp_path / "README.txt").exists() and (tmp_path / "summary.tsv").exists() and (tmp_path / "plots").is_dir()
+    (tmp_path / "README.txt").write_text("MitoM output\n====\n")              # a previous MitoM run: replaced
+    removed = mitom_output.clear_previous_work(tmp_path)
+    assert {"README.txt", "summary.tsv", "plots/"} <= set(removed) and not (tmp_path / "summary.tsv").exists()
+
+
+def test_given_input_is_protected_when_normalized(tmp_path):
+    out = tmp_path / "out"
+    (out / "final_annotation").mkdir(parents=True)
+    (out / "README.txt").write_text("MitoM output\n")
+    args = bm.build_parser().parse_args(["run", "-i", str(out / "00.input"), "-o", str(out)])
+    args.input_given = str(out / "final_annotation")
+    mitom_output.clear_previous_work(out, keep=("00.input",), protect=bm._inputs(args))
+    assert (out / "final_annotation").is_dir()
+
+
+def test_gzipped_embl_becomes_genbank(tmp_path):
+    from mitom_inputs import normalize_input
+    embl = (HERE / "data").glob("*.embl")
+    r = _rec("E1", 400)
+    buf = io.StringIO()
+    SeqIO.write(r, buf, "embl")
+    (tmp_path / "x.embl.gz").write_bytes(gzip.compress(buf.getvalue().encode()))
+    out, _ = normalize_input(tmp_path / "x.embl.gz", tmp_path / "o")
+    assert out.name == "x.gb" and SeqIO.read(str(out), "genbank").id.startswith("E1")
+
+
+def test_failed_log_collision_keeps_versioned_sample_name(tmp_path):
+    outs = {}
+    for g in ("g1", "g2"):
+        o = tmp_path / g
+        (o / "reports" / "failed_logs").mkdir(parents=True)
+        (o / "reports" / "failed_logs" / "NC_012920.1.01.anno_round1.sample.log").write_text(g)
+        outs[g] = o
+    root = tmp_path / "root"
+    root.mkdir()
+    mitom_groups.merge_outputs(root, outs)
+    names = sorted(p.name for p in (root / "reports" / "failed_logs").glob("NC_012920.1.*"))
+    assert len(names) == 2
+
+
+def test_import_keeps_genbank_beside_a_mitoz_result(tmp_path):
+    (tmp_path / "S1.result").mkdir()
+    (tmp_path / "S1.result" / "S1.gbf").write_text("x")
+    (tmp_path / "tmp_S1").mkdir()
+    (tmp_path / "tmp_S1" / "draft.gbf").write_text("x")
+    (tmp_path / "S2.gb").write_text("x")
+    gbs, _ = mito_engines.find_results(tmp_path)
+    assert sorted(p.name for p in gbs) == ["S1.gbf", "S2.gb"]
+
+
+def test_curate_does_not_write_a_guessed_code(tmp_path):
+    import mito_curate
+    r = next(SeqIO.parse(str(HERE / "data" / "NC_000933.gb"), "genbank"))
+    r.annotations["taxonomy"] = []
+    for f in r.features:
+        f.qualifiers.pop("transl_table", None)
+    SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
+    mito_curate.main(["-i", str(tmp_path / "a.gb"), "-o", str(tmp_path / "o"), "--no_validate"])
+    out = next((tmp_path / "o").rglob("*.gb*"))
+    assert not any("transl_table" in f.qualifiers for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS")
+
+
+def test_lineage_code_without_organelle():
+    r = _rec()
+    r.features[0].qualifiers.pop("organelle")
+    r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Vertebrata", "Mammalia"]
+    assert mito_tbl.lineage_code(r)[0] == 2
+
+
+def test_dropped_feature_is_a_record_event(caplog):
+    r = _rec("R1", 400)
+    r.annotations["topology"] = "circular"
+    r.features.append(SeqFeature(FeatureLocation(10, 100, 1), type="CDS", qualifiers={"gene": ["nad1"]}))
+    import mitom_orient
+    caplog.set_level("WARNING")
+    orig = mitom_orient.shift_location
+    try:
+        mitom_orient.shift_location = lambda *a: (_ for _ in ()).throw(ValueError("fuzzy"))
+        mitom_orient.rotate_record(r, 50)
+    finally:
+        mitom_orient.shift_location = orig
+    assert any(m.startswith("[RECORD R1]") for m in caplog.messages)
+
+
+def test_subtype_cm_download_waits_a_day_after_a_failure(tmp_path, monkeypatch):
+    import urllib.request
+    monkeypatch.setattr(mito_intron, "SUBTYPE_CM_DIR", tmp_path)
+    calls = []
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: calls.append(1) or (_ for _ in ()).throw(OSError("offline")))
+    mito_intron.subtype_cms()
+    mito_intron.subtype_cms()
+    assert len(calls) == 1 and (tmp_path / ".failed").is_file()
+
+
+# ---- Codex review (gpt-6-astra, 2026-11-06) ----------------------------------------------------------------------
+def test_submission_timeout_is_not_ok(tmp_path, monkeypatch):
+    import mito_env
+    import argparse
+    gb = _gbf_dir(tmp_path, [_rec("S1")])
+    monkeypatch.setattr(mito_env, "find", lambda name, *a, **k: "/bin/true")
+    monkeypatch.setattr(nv, "validate_record", lambda rec, *a, **k: [
+        {"record": rec.id, "severity": "ERROR", "code": "MITOM.Table2asnTimeout", "ours": "no", "message": "timeout"}])
+    assert not mitom_steps.run_submission(argparse.Namespace(), gb, tmp_path / "o").ok
+
+
+def test_linear_trnas_past_the_end_are_left_out():
+    import mito_trna
+    ps = [mito_trna.Pred("mitom", 15970, 16035, 1, "F", ""), mito_trna.Pred("mitom", 100, 170, 1, "V", ""),
+          mito_trna.Pred("arwen", 15990, 20, 1, "L", "")]
+    assert [p.aa for p in mito_trna.inside_linear(ps, 16000)] == ["V"]
+
+
+def test_import_protects_the_given_input(tmp_path):
+    out = tmp_path / "out"
+    src = out / "original_annotation"
+    src.mkdir(parents=True)
+    r = _rec("S1", 400)
+    r.features.append(SeqFeature(FeatureLocation(10, 100, 1), type="CDS", qualifiers={"gene": ["nad1"]}))
+    SeqIO.write(r, str(src / "S1.gb"), "genbank")
+    (src / "notes.txt").write_text("aux")
+    (out / "README.txt").write_text("MitoM output\n")
+    args = bm.build_parser().parse_args(["import", "-i", str(src), "-o", str(out), "--clade", "Annelida-segmented-worms",
+                                         "--genetic_code", "5"])
+    assert bm.prepare_import(args) == ""
+    mitom_output.clear_previous_work(out, keep=("00.input", "00.imported"), protect=bm._inputs(args))
+    assert (src / "notes.txt").exists()
+
+
+# ---- install / self-check (2026-11-06: ~/.local/bin/mitom still ran an old copy on a python without scikit-learn) -
+def test_doctor_names_a_mitom_command_of_another_folder(tmp_path, monkeypatch):
+    import mito_env
+    other = tmp_path / "old_clone"
+    other.mkdir()
+    (other / "mitom").write_text("#!/usr/bin/env python3\n")
+    link = tmp_path / "bin" / "mitom"
+    link.parent.mkdir()
+    link.symlink_to(other / "mitom")
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: str(link))
+    probs = mito_env.command_problems()
+    assert probs and str(other) in probs[0] and "install.sh" in probs[0]
+    wrapper = tmp_path / "bin2" / "mitom"                      # what install.sh writes, for this folder: fine
+    wrapper.parent.mkdir()
+    wrapper.write_text(f'#!/usr/bin/env bash\nexec "/x/python" "{mito_env.HERE}/mitom" "$@"\n')
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: str(wrapper))
+    assert mito_env.command_problems() == []
+
+
+def test_launcher_skips_a_python_without_scikit_learn(tmp_path, monkeypatch):
+    import importlib.machinery
+    import importlib.util
+    loader = importlib.machinery.SourceFileLoader("mitom_launcher", str(ROOT / "mitom"))
+    launcher = importlib.util.module_from_spec(importlib.util.spec_from_loader("mitom_launcher", loader))
+    loader.exec_module(launcher)
+    bad = tmp_path / "envs" / "aaa" / "bin" / "python3"
+    bad.parent.mkdir(parents=True)
+    bad.write_text("#!/bin/sh\n")
+    bad.chmod(0o755)
+    import mito_env
+    good = str(Path(sys.executable).parent / "python3")
+    monkeypatch.setattr(mito_env, "env_bins", lambda: [bad.parent, Path(good).parent])
+    monkeypatch.setattr(launcher, "_imports", lambda py, modules=launcher.NEEDED: str(py) == good or modules == "Bio")
+    monkeypatch.setattr(launcher.sys, "executable", str(bad))         # Biopython only: not taken
+    assert launcher.python_with_biopython() == good
+
+
+def test_doctor_accepts_the_new_command_before_a_new_terminal(tmp_path, monkeypatch):
+    import mito_env
+    (tmp_path / ".local" / "bin").mkdir(parents=True)
+    (tmp_path / ".local" / "bin" / "mitom").write_text(f'#!/usr/bin/env bash\nexec "/x/python" "{mito_env.HERE}/mitom" "$@"\n')
+    monkeypatch.setattr(mito_env.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: None)      # install.sh, before a new terminal
+    assert mito_env.command_problems() == []
+    (tmp_path / ".local" / "bin" / "mitom").unlink()
+    assert mito_env.command_problems()                                   # never installed: named
+
+
+def test_partial_subtype_models_are_not_used(tmp_path, monkeypatch):
+    import urllib.request
+    monkeypatch.setattr(mito_intron, "SUBTYPE_CM_DIR", tmp_path)
+    (tmp_path / "IA1.cm").write_text("x")                                # left by an interrupted download
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(OSError("offline")))
+    assert mito_intron.subtype_cms() == []
+    (tmp_path / ".complete").touch()
+    assert [p.name for p in mito_intron.subtype_cms()] == ["IA1.cm"]

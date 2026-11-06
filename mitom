@@ -73,32 +73,36 @@ COMMANDS = {
 }
 
 
-def _imports_biopython(py):
-    """True when interpreter `py` (Python >= 3.8) can import Biopython."""
+# the Python packages every `mitom run` needs (Biopython; numpy + scikit-learn: the MitoM-ML tRNA caller, trna_ml.py)
+NEEDED = "Bio, numpy, sklearn"
+
+
+def _imports(py, modules=NEEDED):
+    """True when interpreter `py` (Python >= 3.8) can import `modules`."""
     try:
-        return subprocess.run([py, "-c", "import sys, Bio; sys.exit(sys.version_info < (3, 8))"],
+        return subprocess.run([py, "-c", f"import sys, {modules}; sys.exit(sys.version_info < (3, 8))"],
                               capture_output=True, timeout=120).returncode == 0
     except (OSError, subprocess.SubprocessError):
         return False
 
 
 def python_with_biopython():
-    """The interpreter that runs the scripts: the current one when it imports Biopython, else the python of the
-    first conda environment mito_env knows that does (the first python3 on PATH may be a Miniforge base or an
-    activated conda env without Biopython); None when there is none."""
-    try:
-        import Bio  # noqa: F401
+    """The interpreter that runs the scripts: the current one when it imports every NEEDED package, else the python
+    of the conda environment mitotools (install.sh), else of the first environment that does; else one with
+    Biopython only (`mitom doctor` then names what is missing); None when there is none. 2026-11-06: an old
+    symlinked `mitom` ran on another environment's python3 without scikit-learn - the MitoM-ML tRNAs failed."""
+    if _imports(sys.executable):
         return sys.executable
-    except ImportError:
-        pass
     sys.path.insert(0, str(HERE))
     import mito_env
-    for b in mito_env.env_bins():
-        for name in ("python3", "python"):
-            py = b / name
-            if py.is_file() and os.access(py, os.X_OK) and _imports_biopython(str(py)):
-                return str(py)
-    return None
+    pys = [b / n for b in sorted(mito_env.env_bins(), key=lambda b: b.parent.name != "mitotools")
+           for n in ("python3", "python") if (b / n).is_file() and os.access(b / n, os.X_OK)]
+    for py in pys:
+        if _imports(str(py)):
+            return str(py)
+    if _imports(sys.executable, "Bio"):
+        return sys.executable
+    return next((str(py) for py in pys if _imports(str(py), "Bio")), None)
 
 
 def main(argv):
