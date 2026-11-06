@@ -32,6 +32,8 @@ installed one.
   records of different codes (vertebrates 2 + tunicates 13) is an error, not code 2 for all; `--clade auto` reads
   .gb.gz; a.fa.gz.gz unpacks to a.fa; a failed group's tables stay out of the merged reports; a tRNA call between
   two separate same-aa tRNAs no longer merges them; a site at the origin of a circular record is join(n..n,1..1).
+  Bugbot on PR #3: tRNA conflicts are checked on every member of a group, a call without anticodon no longer
+  chains trnL1 and trnL2; `mitom curate` keeps the inferred /transl_table when a record fails.
 - Model reviews round 2 (Grok 4.7, GLM 5.3, Kimi K3, 11-03 static review; each item checked and reproduced,
   Mitom_review/FIX_STATUS_2026-11-05.md). Annotation: input tRNAs across the origin are no longer the whole record;
   tRNA calls between two others join their group; intron-step neighbours read by part (a join across the origin or

@@ -274,10 +274,11 @@ def group(preds: List[Pred]) -> List[List[Pred]]:
             # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05);
             # but it must touch every member, so a call between two separate same-aa tRNAs never merges them
             # (Cursor F4, 2026-11-06)
-            if any(p.strand == q.strand and p.aa == q.aa
-                   and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
-                   and overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g) \
-                    and all(overlap(p, q) > 0 for q in g):
+            # same strand, aa and anticodon as every member: a call without anticodon must not chain trnL1 and
+            # trnL2 (Bugbot on PR #3, 2026-11-06)
+            if all(p.strand == q.strand and p.aa == q.aa and overlap(p, q) > 0
+                   and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon) for q in g) \
+                    and any(overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
                 g.append(p)
                 break
         else:
@@ -295,7 +296,8 @@ def conflicts(groups: List[List[Pred]]) -> Dict[int, List[int]]:
         for j, h in enumerate(groups):
             if i == j or g[0].strand != h[0].strand:
                 continue
-            if overlap(g[0], h[0]) >= 0.5 * min(g[0].length, h[0].length):
+            # any members, not only the first: groups have several (Bugbot on PR #3, 2026-11-06)
+            if any(overlap(p, q) >= 0.5 * min(p.length, q.length) for p in g for q in h):
                 out.setdefault(i + 1, []).append(j + 1)
     return out
 

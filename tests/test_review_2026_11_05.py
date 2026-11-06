@@ -485,3 +485,34 @@ def test_site_at_the_origin_of_a_circular_record():
     r.annotations["topology"] = "linear"
     loc = mito_tbl.clean_record(r)[0].features[-1].location
     assert (int(loc.start), int(loc.end)) == (399, 400)
+
+
+def test_trna_conflict_found_through_a_later_member():
+    import mito_trna
+    f = [mito_trna.Pred("arwen", 1, 70, 1, "F", ""), mito_trna.Pred("mitos2", 30, 100, 1, "F", "")]
+    v = [mito_trna.Pred("trnascan", 60, 125, 1, "V", "")]
+    groups = mito_trna.group(f + v)
+    assert len(groups) == 2 and mito_trna.conflicts(groups)       # F's 2nd call overlaps V; first calls do not
+
+
+def test_call_without_anticodon_does_not_chain_two_leu_trnas():
+    import mito_trna
+    ps = [mito_trna.Pred("arwen", 1, 70, 1, "L", "TAG"), mito_trna.Pred("trnascan", 30, 100, 1, "L", ""),
+          mito_trna.Pred("mitos2", 60, 130, 1, "L", "TAA")]
+    assert len(mito_trna.group(ps)) == 2
+
+
+def test_curate_keeps_the_code_when_a_record_fails(tmp_path, monkeypatch):
+    import mito_curate
+    r = next(SeqIO.parse(str(HERE / "data" / "NC_000933.gb"), "genbank"))
+    for f in r.features:
+        f.qualifiers.pop("transl_table", None)
+    SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
+
+    def boom(self):
+        raise RuntimeError("x")
+    monkeypatch.setattr(mito_curate.Curator, "run", boom)
+    mito_curate.main(["-i", str(tmp_path / "a.gb"), "-o", str(tmp_path / "o"), "--no_validate"])
+    out = next((tmp_path / "o").rglob("*.gb*"))
+    codes = {f.qualifiers.get("transl_table", [""])[0] for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS"}
+    assert codes == {"4"}
