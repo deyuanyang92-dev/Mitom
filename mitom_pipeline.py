@@ -314,6 +314,10 @@ def resolve_tools(args: argparse.Namespace) -> str:
             clade, code, _, err = auto_clade(Path(args.input))
             if clade == "Chordata" and code and not err:
                 args.genetic_code = code
+            elif "differs between records" in err:
+                # vertebrates 2 + tunicates 13 / lancelets 5 in one input: never one code for all (Cursor F1, 2026-11-06)
+                return (f"ERROR: --clade Chordata: {err.replace('--clade auto: ', '')}. `mitom run --clade auto` "
+                        f"annotates each code separately; or give --genetic_code")
     if not args.intron_bin:
         args.intron_bin = mito_env.bin_with("exonerate", "cmsearch", "blastp", "makeblastdb", "tblastn", "blastn")
     args.mitos_bin = mito_env.mitos_bin(args.mitos_bin)

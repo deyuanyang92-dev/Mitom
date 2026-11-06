@@ -309,11 +309,15 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path], failed: Iterable[
     names = sorted({p.relative_to(o / "reports") for o in outs_all if (o / "reports").is_dir()
                     for p in (o / "reports").rglob("*") if p.is_file()})
     for rel in names:
-        srcs = [o / "reports" / rel for o in outs_all if (o / "reports" / rel).is_file()]
+        # tables only of the groups that finished: a failed group has no final GenBank for its rows (Cursor F3,
+        # 2026-11-06); its logs, .json and failed_logs/ are kept
+        srcs = [o / "reports" / rel for o in (outs if rel.suffix == ".tsv" else outs_all)
+                if (o / "reports" / rel).is_file()]
         t = rep / rel
         t.parent.mkdir(parents=True, exist_ok=True)
         if rel.suffix == ".tsv":
-            _concat_tsv(srcs, t)
+            if srcs:
+                _concat_tsv(srcs, t)
         elif rel.suffix == ".json" or rel.parts[0] == "failed_logs":
             for g, o in group_outs.items():
                 if (o / "reports" / rel).is_file():
@@ -322,7 +326,7 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path], failed: Iterable[
                         dst = t.with_name(f"{t.name.split('.')[0]}.{g}.{t.name.split('.', 1)[1]}")
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(o / "reports" / rel, dst)
-        else:
+        elif srcs:
             t.write_text("".join(s.read_text(encoding="utf-8", errors="replace") for s in srcs), encoding="utf-8")
     first = next((o / "README.txt" for o in outs if (o / "README.txt").is_file()), None)
     if first:

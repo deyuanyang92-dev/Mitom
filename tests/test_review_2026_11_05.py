@@ -9,6 +9,7 @@ _concat_tsv headers (D17), lock of another user's run (N8), rescue / reorient ge
 Run: python3 -m pytest -q tests/test_review_2026_11_05.py
 """
 import gzip
+import io
 import os
 import sys
 from pathlib import Path
@@ -414,3 +415,73 @@ def test_curate_without_code_uses_the_taxonomy_and_writes_it(tmp_path):
     out = next((tmp_path / "o").rglob("*.gb*"))
     codes = {f.qualifiers.get("transl_table", [""])[0] for f in SeqIO.read(str(out), "genbank").features if f.type == "CDS"}
     assert codes == {"4"}                                                   # Cnidaria (NC_000933: Metridium)
+
+
+# ---- Cursor review of the fixes (2026-11-06) ---------------------------------------------------------------------
+def test_explicit_chordata_with_two_codes_is_an_error(tmp_path):
+    recs = []
+    for rid, sub_ in (("V1", ["Vertebrata", "Mammalia"]), ("T1", ["Tunicata", "Ascidiacea"])):
+        r = _rec(rid, 400)
+        r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata"] + sub_
+        recs.append(r)
+    SeqIO.write(recs, str(tmp_path / "m.gb"), "genbank")
+    args = bm.build_parser().parse_args(["run", "-i", str(tmp_path / "m.gb"), "-o", str(tmp_path / "o"),
+                                         "--clade", "Chordata"])
+    err = bm.resolve_tools(args)
+    assert err.startswith("ERROR") and "--clade auto" in err
+
+
+def test_auto_clade_reads_gzip_genbank(tmp_path):
+    import gzip
+    r = _rec("T1", 400)
+    r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Tunicata", "Ascidiacea"]
+    buf = io.StringIO()
+    SeqIO.write(r, buf, "genbank")
+    (tmp_path / "t.gb.gz").write_bytes(gzip.compress(buf.getvalue().encode()))
+    from mitom_inputs import auto_clade
+    assert auto_clade(tmp_path / "t.gb.gz")[:2] == ("Chordata", 13)
+
+
+def test_double_gzip_loses_every_gz_suffix(tmp_path):
+    import gzip
+    from mitom_inputs import normalize_input
+    d = tmp_path / "in"
+    d.mkdir()
+    (d / "a.fa.gz.gz").write_bytes(gzip.compress(gzip.compress(b">a\nACGT\n")))
+    out, _ = normalize_input(d, tmp_path / "o")
+    assert [p.name for p in out.iterdir()] == ["a.fa"]
+    out, _ = normalize_input(d / "a.fa.gz.gz", tmp_path / "o2")
+    assert out.name == "a.fa" and out.read_text() == ">a\nACGT\n"
+
+
+def test_failed_group_tables_are_not_merged(tmp_path):
+    outs = {}
+    for g in ("ok", "bad"):
+        o = tmp_path / g / "out"
+        (o / "reports").mkdir(parents=True)
+        (o / "reports" / "t.tsv").write_text(f"sample\n{g}\n")
+        (o / "reports" / "only_bad.tsv").write_text("sample\nx\n") if g == "bad" else None
+        outs[g] = o
+    root = tmp_path / "root"
+    root.mkdir()
+    mitom_groups.merge_outputs(root, outs, failed=["bad"])
+    assert (root / "reports" / "t.tsv").read_text().splitlines() == ["sample", "ok"]
+    assert not (root / "reports" / "only_bad.tsv").exists()
+
+
+def test_call_between_two_separate_trnas_does_not_merge_them():
+    import mito_trna
+    ps = [mito_trna.Pred(t, s, e, 1, "F", "") for t, s, e in (("arwen", 1, 70), ("trnascan", 36, 105),
+                                                               ("mitos2", 71, 140))]
+    assert len(mito_trna.group(ps)) == 2
+
+
+def test_site_at_the_origin_of_a_circular_record():
+    r = _rec("C1", 400)
+    r.annotations["topology"] = "circular"
+    r.features.append(SeqFeature(FeatureLocation(400, 400, 1), type="misc_feature", qualifiers={"note": ["x"]}))
+    loc = mito_tbl.clean_record(r)[0].features[-1].location
+    assert [(int(p.start), int(p.end)) for p in loc.parts] == [(399, 400), (0, 1)]
+    r.annotations["topology"] = "linear"
+    loc = mito_tbl.clean_record(r)[0].features[-1].location
+    assert (int(loc.start), int(loc.end)) == (399, 400)

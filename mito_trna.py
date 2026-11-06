@@ -271,10 +271,13 @@ def group(preds: List[Pred]) -> List[List[Pred]]:
     groups: List[List[Pred]] = []
     for p in sorted(preds, key=lambda x: (x.start, x.end)):
         for g in groups:
-            # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05)
+            # any member, not only the first: a call between two others joins their group (GLM 2.2, 2026-11-05);
+            # but it must touch every member, so a call between two separate same-aa tRNAs never merges them
+            # (Cursor F4, 2026-11-06)
             if any(p.strand == q.strand and p.aa == q.aa
                    and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon)
-                   and overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
+                   and overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g) \
+                    and all(overlap(p, q) > 0 for q in g):
                 g.append(p)
                 break
         else:

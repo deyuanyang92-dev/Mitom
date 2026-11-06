@@ -75,7 +75,7 @@ from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from Bio import SeqIO
-from Bio.SeqFeature import FeatureLocation, SeqFeature
+from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
@@ -178,8 +178,14 @@ def clean_record(rec) -> Tuple[object, List[str]]:
     for f in rec.features:
         loc = f.location
         if loc is not None and len(loc.parts) == 1 and int(loc.start) == int(loc.end) and 0 <= int(loc.start) <= n:
-            # a site between two bases (GenBank 100^101): the 2-nt interval around it, as NCBI's gbf2tbl writes it
-            f.location = FeatureLocation(max(0, int(loc.start) - 1), min(n, int(loc.start) + 1), loc.strand)   # n^1: Kimi 3.4
+            # a site between two bases (GenBank 100^101): the 2-nt interval around it, as NCBI's gbf2tbl writes it;
+            # n^1 of a circular record: join(n..n,1..1) (Cursor F5, 2026-11-06), of a linear one the end base (Kimi 3.4)
+            s = int(loc.start)
+            if s in (0, n) and n > 1 and str(rec.annotations.get("topology", "")).lower() == "circular":
+                parts = [FeatureLocation(n - 1, n, loc.strand), FeatureLocation(0, 1, loc.strand)]
+                f.location = CompoundLocation(parts[::-1] if loc.strand == -1 else parts)
+            else:
+                f.location = FeatureLocation(max(0, s - 1), min(n, s + 1), loc.strand)
             sites += 1
         if f.type not in FEATURE_KEYS:
             keys[f.type] += 1
