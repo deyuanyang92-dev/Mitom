@@ -49,7 +49,9 @@ from mito_names import PCG, gene_name  # noqa: E402
 MIN_REF_PCG = 12                          # a MitoFinder reference must carry (nearly) all genes with standard names
 
 TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder",
-         "mitom_nocur", "mitoz_cur", "mitos2_cur")
+         "mitom_nocur", "mitoz_cur", "mitos2_cur", "mitom_blind")
+# mitom_blind = `mitom run` on in.fa (sequence only) with no --clade / --genetic_code (--clade auto decides both, as a user
+# with a new assembly would run it; the other MitoM tools are given the NCBI record's clade and code);
 # mitom_nocur = mitom_native with --curate no; mitoz_cur / mitos2_cur = the record's MitoZ / MITOS2 output (runs/mitoz,
 # runs/mitos2 of the same root) through `mitom import` with curation only (no rRNA HMM, introns, rescue)
 # mitom_lo = mitom_native without the record's own proteins among the core's references (refseq89m holds the proteins of
@@ -88,6 +90,9 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
                  "--rrna_hmm", "no", "--intron_fix", "no", "--rescue", "no", "--plot", "no",
                  *(["--topology", row.get("topology") or "circular"] if tool == "mitoz_cur" else
                    ["--fasta", str(src / "in.fa")])]]
+    if tool == "mitom_blind":                          # nothing from the NCBI record but the sequence (frozen evaluation)
+        return [[sys.executable, str(PIPE / "mitom_pipeline.py"), "run", "-i", str(out / "in.fa"), "-o", str(out / "raw"),
+                 "--threads", str(threads), "--jobs", "1"]]           # in.fa: '>acc' + sequence, no taxonomy / topology
     if tool in ("mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitom_nocur"):   # annotation, MitoM steps, curation
         clade = row["mitoz_clade"] or EXTRA_CLADE.get(row.get("phylum", ""), "Animal")
         return [[*(["env", f"MITOM_EXCLUDE_REF={acc}"] if tool == "mitom_lo" else []),
@@ -297,6 +302,7 @@ def collect(tool: str, out: Path, ncbi: SeqRecord) -> SeqRecord:
         return mitos_to_record(out / "mitos", Seq(str(ncbi.seq)), str(ncbi.id))
     pattern = {"ours": "curated/*.gbf", "mitom": "raw/final_annotation/*.gb",
                "mitom_auto": "raw/final_annotation/*.gb", "mitom_native": "raw/final_annotation/*.gb",
+               "mitom_blind": "raw/final_annotation/*.gb",
                "mitom_lo": "raw/final_annotation/*.gb", "mitoz": "w/**/*.gbf",
                "mitom_nocur": "raw/final_annotation/*.gb", "mitoz_cur": "raw/final_annotation/*.gb",
                "mitos2_cur": "raw/final_annotation/*.gb",
