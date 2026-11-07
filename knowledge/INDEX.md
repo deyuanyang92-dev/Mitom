@@ -3,6 +3,9 @@
 用途：各注释软件的算法、源码关键位置、默认参数、已知 bug、类群局限，带出处，供优化 Mitoz-annotate 流程时查证，避免重复学习。
 规则：每条结论注明出处（`path:line`、DOI、URL）、软件版本与查阅日期；没有依据的标 `未确证`。检查：`python3 benchmark/check_knowledge.py knowledge/`。
 
+## TEST_REGISTRY.md
+所有已做测试（两台电脑）的一行索引：测前先查，测后加一行 / every test done, one row each: check before, add after.
+
 ## tools/
 
 | 文件 | 范围 |

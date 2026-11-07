@@ -111,8 +111,18 @@ tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6: 5�
 | MITOS2 + MitoM 整理 / curation | 6/13 | 2/2 | 22/22 | 0 | +8 s |
 | MitoM 自身注释 / own annotation | 10/13 | 2/2 | 22/22 | 0 | 35 s |
 
-1,050 条 RefSeq（24 门）/ 1,050 RefSeq records: 蛋白基因两端一致 / PCG both ends exact 84.0 % vs MITOS2 59.4 %；tRNA 召回 / recall 96.8 vs 95.8 %
-（详见 / see [METHODS.md](METHODS.md)）。
+24 条 RefSeq（8 门，MITOS2 2.1.10）中三者都完成的 18 条，整理前后 / 18 of 24 RefSeq records (8 phyla), before and after curation
+（[benchmark/results/curation_cmp_2026-10-28](../benchmark/results/curation_cmp_2026-10-28/README.md)）:
+
+| | 蛋白基因两端一致 / PCG exact | rRNA ≤ 3 nt | tRNA 找到 / found | 有 NCBI ERROR 的记录 / records with ERROR | 端点偏 > 30 nt / ends > 30 nt off |
+|---|---|---|---|---|---|
+| MITOS2 | 50.0 % | 23.5 % | 95.9 % | 18 / 18 | 56 |
+| MITOS2 + MitoM 整理 / curation | 56.5 % | 64.7 % | 95.9 % | 0 / 18 | 48 |
+| MitoM 自身注释 / own annotation | 83.0 % | 61.8 % | 99.5 % | 0 / 18 | 10 |
+
+整理让结果全部通过 NCBI 检查、rRNA 端点明显改善，但不能补回 MITOS2 漏的基因，蛋白基因端点仍有不少偏差。
+Curation makes every record NCBI-valid and fixes rRNA ends; it cannot add missed genes, and many MITOS2 protein ends stay off.
+1,050 条 RefSeq（24 门）/ 1,050 records: PCG exact MitoM 84.0 % vs MITOS2 59.4 %（[METHODS.md](METHODS.md)）。
 
 “一致”指与 NCBI 写法一致，不等于生物学上正确；MitoM 的规则来自 NCBI 记录。找基因的能力两者接近，差别主要在端点。请人工核对结果。
 “Exact” means as NCBI writes it, not proven biologically right; MitoM's rules were learned from NCBI records. Gene

@@ -1,0 +1,136 @@
+# 测试登记表 / Test registry
+
+**做任何测试前先查这里；测完立即在对应分组末尾加一行。** 目的：两台电脑、多个会话不重复测试。
+**Check here before running any test; add a row right after it.** Two machines, many sessions: no repeated tests.
+
+- machine：`deyuan` = 另一台电脑（结果路径 `/media/deyuan/18T_B/yzz/mitom_work/`），`cody` = 本机（`/media/cody/18T_R1/`），`?` = 来源未写。
+- 每行：日期、机器、问题、数据、比较的工具与版本、关键数字（照抄来源）、结论 / 动作（commit）、详细记录位置。
+- 详细结果仍放 `benchmark/results/<名称_日期>/README.md`（含 run.sh）；这里只放一行索引。
+- 另一台电脑的测试若只在本地、未提交到仓库，这里看不到：测完请 commit + push（至少 README 和汇总表）。
+- “PCG exact” = 蛋白基因两端与 NCBI 完全一致。真值默认是 NCBI RefSeq 注释。
+
+建立：2026-11-08，从 knowledge/benchmark_findings.md、benchmark/results/*、docs/benchmark_*.md、docs/METHODS.md、
+knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字照抄来源，未重新运行）。
+
+## 1. 准确度基准（对 NCBI / 其他工具）/ Accuracy benchmarks
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-20 | ? | Metazoa 优化用样本集 | 173 RefSeq NC_，30 门 | MitoM（MitoZ 路线 mitom_v1） | 集合建立；错误类型驱动 P1/P3/P7/D1 规则 | 07ccd14 | benchmark/sets/mito_bench_2026-10.tsv; docs/benchmark_metazoa_2026-10.md |
+| 2026-10-21 | deyuan | MitoM vs 3 工具，环节动物 | 40 环节动物 RefSeq（15 目 29 科，code 5） | MitoM（MitoZ 3.6 + MITOS2 核心）、MitoZ 3.6、MITOS2 2.1.10、MitoFinder 1.4.2 | PCG exact（517）80.1 / 63.2 / 53.6 / 48.4 %；rRNA exact 30.0/17.5/20.0/12.5 %；明显错误记录 16/36/39/34；中位 100/244/353/206 s | P3 终止修正、D1 去重、ND5/ND4L 上游起始；PCG exact 383→407→414/517 | docs/benchmark_annelida_2026-10.md; benchmark/results/annelida_2026-10/ |
+| 2026-10-21 | ? | `--if_reannotation_2 auto` vs `yes` | 6 条开发记录（6 门） | MitoM b4c1b93 | 0 个特征不同；NC_026995.1 293.8→169.0 s | auto 设为默认（commit ?） | knowledge/experiments/reannotation/ab_dev6.tsv |
+| 2026-10-22 | deyuan | 4 工具小集对比 | 24 RefSeq（8 门×3） | MitoM（MitoZ 路线）、MitoZ 3.6、MITOS2 2.1.10、MitoFinder 1.4.2 | 17 条共同：PCG exact 82.1/78.4/50.5/59.2 %；rRNA exact 37.5/25.0/15.6/9.4 %；有错误记录 7/16/17/17；中位 175/249/385/204 s | 7455075 | docs/benchmark_metazoa_2026-10.md; benchmark/results/metazoa_mini_2026-10/ |
+| 2026-10-22 | deyuan | 原生核心 vs MitoZ 路线（24） | 同上 | mitom_native / mitom / MitoZ | PCG exact 247/240/174；中位 109/175/249 s；内存 0.32/0.73/0.49 GB | 原生核心为默认（5bac38a, b3b1336） | benchmark/results/metazoa_mini_2026-10/report_native.md |
+| 2026-10-22 | deyuan | 原生核心 vs MitoZ 路线（173） | 173 RefSeq，30 门 | mitom_native vs mitom_v1 | PCG exact 79.0 / 66.7 %；漏 21/39；NCBI 错误记录 11/113；25/30 门领先 | 9e888d0 | benchmark/results/metazoa_173_2026-10/ |
+| 2026-10-22 | deyuan | 起止规则留一法调参 | 255 RefSeq | MitoM native | PCG 两端 2186→2261；P1 移动 ≤15 nt 31 对/12 错 | MAX_START_MOVE 15、MAX_PCG_OVERLAP 30（695d570） | docs/benchmark_six_tools_2026-10-22.md |
+| 2026-10-22 | deyuan | 5 工具（含 MITOS1）+ 棘皮 | 24 集 + 6 棘皮；MITOS1 8 条 | MitoM、MitoZ 3.6、MITOS2 2.1.10、MitoFinder 1.4.2、MITOS1 1.1.7 | 17 条：PCG exact 84.9/78.4/50.9/59.2 %（留一 82.6）；棘皮 94.9 vs 91.5 %；MITOS1 4/8 崩溃 | 7455075 | docs/benchmark_six_tools_2026-10-22.md; benchmark/results/six_tools_2026-10-22/ |
+| 2026-10-27 | deyuan | 完整流程 v30 vs MITOS2（大集） | 1050（24 门）/669 环节/577 未训练科/188 脊椎/13 锚定 | MitoM v30 vs MITOS2 2.1.10 | PCG exact 84.0/59.4、81.2/51.4、80.9/53.4、88.9/72.7、87.3/47.9 %；rRNA 48.9/16.9 …；ERROR 记录全部 0 | 6575782, 6ab18fd | benchmark/results/full_v30_2026-10-27/; docs/METHODS.md |
+| 2026-11-07 | ? | 审查修复 3–5 轮前后真实数据对比 | 49 NCBI 记录（8 门），FASTA+GenBank，8 次运行 | MitoM eaa8ef5 vs e930614 | 坐标 0 差异；ERROR 0 | 无回归（a70f8eb） | Mitom_review/FIX_STATUS_2026-11-05.md |
+| ? | ? | 真实 MitoZ 结果经 curate | 31 条鳞沙蚕 MitoZ 注释 | MitoZ vs mito_curate | PCG 5′/3′ 同 NCBI 253/211→265/254；table2asn ERROR 128→4 | 软体动物数据未测 | docs/METHODS.md（curation） |
+
+## 2. MITOS2 / MitoZ / import / curate
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-20 | ? | MITOS2 蛋白基因边界准确度 | 6 基因组（76 位点，含 NC_000931.1） | MITOS2 2.1.x | 5′ 一致 66 %，3′ 78 %，两端 51 % | 用于边界方法设计 | knowledge/experiments/mitos2_pcg/; knowledge/topics/pcg_boundary_methods.md |
+| 2026-10-28 | deyuan | **curate 对各工具结果的作用** | 24 RefSeq（三者都完成 18） | MitoM、MitoZ 3.6、MITOS2 2.1.10，各自 + `mitom import` | PCG exact：MITOS2 50.0→56.5 %，MitoZ 75.7→78.7 %，MitoM 58.7→83.0 %；rRNA ≤3 nt 24–29→62–65 %；ERROR 记录 18/18→0/18 | curate 不能补漏注基因；MITOS2 端点仍偏（48 个 >30 nt） | benchmark/results/curation_cmp_2026-10-28/README.md |
+| 2026-11-08 | cody | MITOS2 调用 / 导入 / curate 实际演示（**与上一行重复，仅单条**） | NC_000931 去注释 | MITOS2 2.1.10（`--engine mitos2 --mitos_args`）、2.1.9 单独运行 + import | PCG exact 4/13→6/13（MitoM 自身 10/13）；rRNA 0/2→2/2；ERROR 2→0；295 s +8 s vs 35 s；curate 保留 MITOS2 越过下游 tRNA 5–20 nt 的完整终止（cox1/atp8/cox3/nad6） | `--mitos_args`、runmitos.py 支持、docs/MITOS2.md（766653c） | docs/MITOS2.md |
+
+## 3. tRNA
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-20 | ? | tRNA 各工具 vs NCBI | 85 刺胞/海绵/扁盘；40 环节 | MITOS2、ARWEN、ARAGORN、tRNAscan-SE 2 | MITOS2 96.7 %/FP 21、97.3 %/FP 3；ARWEN/ARAGORN FP 348/462、79/117；tRNAscan 61.2/46.1 % | MITOS2 为默认，其余只作参考 | docs/METHODS.md; benchmark/trna_sets.tsv |
+| 2026-10-20 | ? | tRNAscan-SE `-O` | NC_000931.1 | tRNAscan-SE | 不加 `-g` 时 Trp(TCA) 判为 Sup | 记录 | knowledge/experiments/trnascan/ |
+| 2026-10-27 | deyuan | MitoM-ML vs MITOS2（未训练类群） | 1,043 无脊椎（565 未调参）；188 脊椎；501 环节 | MitoM-ML+MiTFi vs MITOS2 | 召回/精确/两端：无脊椎 98.55/99.04/86.48 vs 96.59/98.79/84.63 %；脊椎 98.38/98.55/92.66 vs 98.31/98.24/92.61 | MitoM-ML 默认；补搜 CPU 11.9→1.0 h（4e9b99e, 6ab18fd） | docs/METHODS.md |
+| 2026-10-27 | deyuan | tRNA 锚定集 | 13 锚定基因组 | native / v27 / MITOS2 | 召回 98.61/97.57/96.88 % | — | benchmark/results/full_v30_2026-10-27/ |
+| 2026-10-31 | ? | Leu/Ser 编号 | 规则测试 | MITOS2 2.1.10 规则 | 所有类群按 MITOS2（与 NCBI 脊椎动物相反），有意 | 655a75c | docs/METHODS.md |
+
+## 4. rRNA
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-21 | ? | 按门 HMM vs CM vs BLAST | 93 开发记录，186 rRNA | CM、HMM、BLAST | 留种找到 cm 165、hmm 153、blast 145、cm+hmm 175/186 | HMM + CM 兜底（4d0846b, 1fba3f2） | knowledge/experiments/rrna_ref/ |
+| 2026-10-21 | ? | EMMA HMM vs MITOS2 CM | 22 门 184 特征 | EMMA vs CM | 83 vs 158/184 | 不采用 EMMA | knowledge/experiments/emma_hmm/ |
+| 2026-10-21 | ? | CM glocal rRNA 端点 | 91 记录 | MITOS2 CM | mt12 两端 ≤3 nt 25/91 | 无单一规则 | knowledge/experiments/rrna_ends/ |
+| 2026-10-26 | deyuan | rRNA 端点能否到 95 % | 1,050 + 669，1,719 留一 | MitoM vs MitoZ vs MITOS2 | NCBI 近缘自身两端一致仅 72 %；两端 exact 48.3/32.5 %；共识 ≤3 nt 94.0/95.7 % | 对 NCBI 不可达（NCBI 不一致）（5368d07） | knowledge/experiments/rrna_ceiling/README.md |
+| 2026-10-26 | ? | 文献实验 rRNA 端点 | 13 基因组 32 端点 | MitoM、NCBI、MitoZ、MITOS2 | 16 个 paper 端点 exact 12/14/2/2 | 仅记录 | rrna_ceiling/README.md §6 |
+| 2026-10-26 | ? | RNA-seq 定 rRNA 端点 | ENA 5 条 | RNA-seq | 普通 RNA-seq 无单碱基分辨率 | 放弃 | rrna_ceiling/README.md |
+| 2026-11-04/05 | cody | 去掉 rRNA 的 NC_000931 用 `rrna-hmm search` | NC_000931 | mito_rrna_hmm | 补回 2 个（覆盖 0.99/0.97） | — | Mitom_review/VERIFICATION_REPORT.md |
+
+## 5. 内含子 / Introns
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-09 | ? | 从头内含子 vs MFannot | 85 记录 138 内含子；20 环节阴性 | mito_intron.py vs MFannot（Docker） | exact 97 vs 65；漏 4 vs 53；阴性 FP 0 | 采用 MFannot 移植 | docs/METHODS.md |
+| 2026-10-29 | deyuan | 内含子金标准 + 端到端 | 193 记录 309 内含子；76 无内含子 | `mitom run` | 309/309；留一 299；0 假阳性；ERROR 0 | 位点库（f270b92） | benchmark/results/intron_gold_2026-10-29/ |
+| 2026-10-30 | ? | 起点在基因内的旋转测试 | 270 记录 × 5 种旋转 | mitom_lo | near3 232→295；near5 190(+12 假)→295 | 738f84d, 66e0e09, 2dae5b3 | benchmark/results/intron_rotation_2026-10-30/ |
+| 2026-10-30 | ? | MJ20260820041 cox1 内含子 | 22 MJ 线粒体基因组 | MitoM | 18 条加了 cox1 内含子；0 ERROR | 已核实 | docs/METHODS.md |
+| 2026-10-30 | ? | NCR 注释 | 22 MJ；20 NCBI Hesionidae | `--ncr` | 26 NCR，0 ERROR | a50402d | docs/METHODS.md |
+
+## 6. 拓扑 / 方向 / 类群 / Topology, orientation, clade
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-30 | ? | 全部首尾相接 vs 线状注释 | 93 记录 | MitoM | PCG 差 ≤2 点；+22 % 时间 | 不全部相接，只查端点 | docs/METHODS.md |
+| 2026-10-30 | ? | `--topology auto` vs 标签 | 93 + 20 基因内切开 + 20 缺口 | MitoM | 基因内切开 20/20 环状，PCG 78.9 vs 72.9 % | auto 默认（de5ec0c, c2fe1c3） | docs/METHODS.md |
+| 2026-10-31 | ? | 无标签判断环/线 | 91 基因组 × 4 = 360 序列 | MitoM a50402d/2dae5b3/cc8e82f | 正确 64.4→85.8→84.3 % | 去掉 21 tRNA 规则（cc8e82f） | benchmark/results/topology_unlabelled_2026-10-31/ |
+| 2026-10-31 | ? | `--clade auto` | 238 RefSeq（29 门）+ 片段 / 突变 / N | mito_classify.py | 密码 93.3 %；门 对/不定/错 63.0/32.4/4.6 % | 不定时用 Animal（79b4b8d） | docs/METHODS.md |
+| ? | ? | 起始密码子模型 P11 | 1,683 留一记录 | 梯度提升树 | exact 起点 89.1→90.7 % | fc56b1e | CHANGELOG.md |
+
+## 7. NCBI 提交 / table2asn / gb2tbl
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-20 | ? | table2asn 对遗传密码 / transl_except / T-TA 的行为 | 手工 fsa/tbl 用例 | table2asn | 需 transl_except 才去掉 NoStop | 采用 | knowledge/experiments/table2asn/ |
+| 2026-10-22 | deyuan | `/transl_except` 坐标迁移 | 173 记录 | MitoM 评测 | ERROR 记录 110→37 | 修评测 | knowledge/benchmark_findings.md |
+| 2026-10-27 | deyuan | 全部基准输出 table2asn | 2,497 记录 | MitoM v30 | ERROR 记录 0 | — | benchmark/results/full_v30_2026-10-27/ncbi_errors.txt |
+| 2026-10-30 | deyuan | gb2tbl vs NCBI gbf2tbl | 17 手工用例 | `mitom gb2tbl` vs gbf2tbl/gbf2fsa | 15 个有效用例 ERROR 0 vs 51 | d3247dc, 171154d | benchmark/results/gb2tbl_stress_2026-10-30/ |
+| 2026-11-04/05 | cody | table2asn 失败被当作 0 ERROR | 本地复现 | table2asn 1.28 | 退出码不可用；Critical 未读取 | 需 `.val`；Critical 计入 | Mitom_review/FIX_STATUS_2026-11-05.md |
+
+## 8. 稳健性 / 安装 / 审查复现 / Robustness, install, reviews
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-20 | ? | 安装难度 | Docker Linux、macOS | install | 表已记录 | f1c4201 | docs/benchmark_metazoa_2026-10.md |
+| 2026-10-30 | ? | 线程库 | 4 记录 | MitoM | 47 min→34 s（128 核） | 738f84d | CHANGELOG.md |
+| 2026-10-31 | ? | 每命令模糊测试 | 19 命令 × 24 种坏输入 | MitoM | 无 traceback，exit 2 | 7b0522d, 79b4b8d | docs/METHODS.md |
+| 2026-10-31 | ? | 坐标 / 旋转不变 | 5 记录 × 12 旋转 × 反向互补；55 记录 | MitoM | 特征序列不变 | 已修 | docs/METHODS.md |
+| 2026-10-31 | ? | 续跑 / 锁 | 重跑、Ctrl-C、kill -9、并发 | MitoM | 结果相同；同目录第二次运行被拒 | `.mitom.lock` | docs/METHODS.md |
+| 2026-10-31 | ? | 每记录线程数 | 148 记录 | MitoM | 57 min vs 约 4 min | 8462e88 | CHANGELOG.md |
+| 2026-11-04/05 | cody | 模型审查问题能否复现 | 1912f7b 最小复现 + 真实数据 | MitoM 1.0.0 | R2–R9 复现（R1 不成立）；`curate -i tests/data` ERROR 9→0 | fix/review-2026-11-05 | Mitom_review/VERIFICATION_REPORT.md |
+| 2026-11-05 | ? | Cursor 复审 | 1912f7b→eaa8ef5 | 审查 | F1–F5 | a04228b | Mitom_review/FIX_REVIEW_2026-11-05.md |
+| 2026-11-06 | cody | Codex 第二意见 | 未提交修复 | Codex | 3 项（import 删输入、线状 tRNA 跨端、超时算成功） | 已修 fc7ed54 | Mitom_review/SECOND_OPINION_2026-11-06.md |
+| 2026-11-06 | cody | 全新用户安装 | 空 HOME，PATH=/usr/bin:/bin | install.sh、doctor、`mitom run` NC_000933 | exit 0，1 min 40 s；发现旧链接、scikit-learn 不符 | 87ebf24, 17947a4 | Mitom_review/FIX_STATUS_2026-11-06_install.md |
+| 2026-11-08 | cody | MITOS2 环境 | 本机 env `mitos2`（2.1.9）、新装 `mitos`（2.1.10） | runmitos | 2.1.9 只有 runmitos.py；不激活环境直接运行缺 cmsearch | 两种名字都认（766653c） | docs/MITOS2.md §6 |
+
+## 9. 核标记 / mitom nuc
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-25 | ? | rDNA 边界 vs barrnap | 378 种；71 独立；组蛋白 677+172 | mito_nuc vs barrnap 0.9 | exact 83.2 vs 1.8 %；组蛋白 97.5/97.7 % | 8a0debe | docs/METHODS.md |
+| 2026-10-25/26 | ? | RefSeq rRNA 金标准 | 336 记录 558 边界 | mito_nuc | exact 85.8→96.2 % | Rfam 端点细化 | docs/METHODS.md |
+| 2026-10-25 | ? | 假阳性与 table2asn | 898 rDNA；2,012 组蛋白；200 线粒体 | table2asn 1.28 | 0 ERROR | 已修 | docs/METHODS.md |
+| 2026-10-26 | ? | 大组装运行时间 | SRR16188826（148 万 contig） | mito_nuc | 200 记录 24 min→3 min | 预筛 | docs/METHODS.md |
+| ? | ? | 30 个 SPAdes 组装（≤1.7 Gb） | 30 组装 | mito_nuc | 6 s–2.2 min（8 线程） | 低复杂度屏蔽 | CHANGELOG.md |
+
+## 10. 其他 / Other
+
+| date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
+|---|---|---|---|---|---|---|---|
+| 2026-10-26 | ? | 蛋白基因第二拷贝 | 鹭、鸬鹚等记录 | MitoM | 多得 9 个 NCBI 有的基因、1 个 NCBI 没有 | COPY_IDENTITY 95 % | CHANGELOG.md |
+
+## 未测 / 未定 / Not yet tested or open
+
+| item | source |
+|---|---|
+| MITOS2 导入后 curate：完整终止越过下游 tRNA ≤ 20 nt 被保留（按核心调定），对 MITOS2 结果是否截成 T/TA 未在 24 条集上测 | mito_curate.py OVERLAP_FALLBACK；本表 §2 2026-11-08 |
+| 软体动物数据上的 curate 规则未测 | docs/METHODS.md（curation） |
+| rRNA：13 条环节 RefSeq 端点自相矛盾；牡蛎分裂 16S、被囊 rrnL、刺胞 R1 填充 | knowledge/benchmark_findings.md; knowledge/experiments/rrna_ceiling/README.md |
+| 起始密码子：NCBI 无蛋白证据选下游起始；双壳类 N 端与 12S；线虫 atp8；线虫/棘头 MiTFi 漏 tRNA（ARWEN 43 对/20 错，未采用） | knowledge/benchmark_findings.md |
+| NC_027103.1（Rhodactis 20 kb nad5）、NC_061743.1 所有工具都错 | knowledge/benchmark_findings.md |
+| P11 对已 curate 记录再 curate 会改变起点（2 例，待定） | docs/METHODS.md |
+| 混合门嵌合体无警告；小门的门判断常错（--clade auto） | docs/METHODS.md（clade auto） |
+| 拓扑：只缺非编码区/tRNA 的 contig 判为环状；myxozoa 判为线状 | benchmark/results/topology_unlabelled_2026-10-31/README.md |
+| 内含子：Chaetopterus 约 300 nt 预测、Decemunciger ND4 未确证 | docs/METHODS.md; benchmark/results/intron_gold_2026-10-29/gold_README.md |
+| 注释步骤超时、[organism=.] 占位待用户决定；Docker 全新安装未测 | Mitom_review/FIX_REVIEW_2026-11-05.md; Mitom_review/FIX_STATUS_2026-11-06_install.md |
