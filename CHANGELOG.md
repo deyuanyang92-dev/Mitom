@@ -31,6 +31,8 @@ internal numbers 0.9.0 and 1.0.0 below were never released (logs of those runs s
   0.5-2 kb, 88 before); NCBI 'partial' genomes holding every gene too; myxozoans (8-11 protein genes) linear.
 
 ### Fixed
+- `mitom import` reads gzip-compressed GenBank (`.gb.gz`, `.gbf.gz`): a single `.gb.gz` was `no GenBank`, and
+  in a folder with `.gb` and `.gb.gz` files the compressed ones were left out without a note.
 - Install and self-check: the `mitom` command picks a Python with Biopython, numpy and scikit-learn (the
   mitotools environment first; an old symlinked command ran a Python without scikit-learn and the MitoM-ML tRNAs
   failed); `mitom doctor` shows the version, folder, git commit and Python in use, checks scikit-learn / numpy, and

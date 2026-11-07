@@ -290,3 +290,11 @@ S1–S3 已由上面的项覆盖。S4–S12（内含子前移、起止证据分�
 | `original_vs_mitom.tsv`（坐标映射回原记录） | 新旧文件**完全相同**；蛋白基因两端与 NCBI 一致：金标准 279/321，mini 256/306；tRNA 156/199、322/467 |
 | NCBI table2asn ERROR | 新旧都是 0 |
 | 说明 | 本轮修复针对的情形（混合遗传密码、双层 gzip、失败组、跨原点位点等）在这 49 条记录里没有出现，所以结果不变；比对脚本 `cmp.py` 对 NCBI 的绝对计数受旋转和 tRNA 命名影响偏低，只用于新旧比较，与 NCBI 的一致性以 `original_vs_mitom.tsv` 为准 |
+
+## Codex 复查（release/v0.0.1 `a70f8eb`；2026-11-07）
+
+上轮 F1–F5 和三条 Codex 发现（import 删原始输入、线性 tRNA 跨末端、table2asn 超时算成功）复查确认已修。新发现一处：
+
+| 发现 | 判定 | 处理 |
+|---|---|---|
+| `mitom import` 不认 `.gb.gz`：单个 `tunicate.gb.gz` 报「没有 GenBank」；目录里 `.gb` 和 `.gb.gz` 混放时压缩的被悄悄丢掉 | 属实（`find_results` 按 `p.suffix` 过滤，`.gz` 不在 GenBank 后缀里） | `find_results` / `import_results` 用去掉 `.gz` 的后缀，经 gzip 读入 GenBank 和 MITOS2 旁的 FASTA；测试 `test_import_reads_single_gb_gz`、`test_import_keeps_gb_gz_beside_gb`（旧代码上都失败） |

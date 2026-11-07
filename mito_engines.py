@@ -19,6 +19,7 @@ Usage (mitom_pipeline.py runs this per sample; the output is <workdir>/<prefix>.
 from __future__ import annotations
 
 import argparse
+import io
 import os
 import re
 import sys
@@ -35,6 +36,7 @@ import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import GB_SUFFIXES, contig_record_id, run_tool, topology_from_header, write_gb  # noqa: E402
 from mito_common import read_fasta as _read_fasta  # noqa: E402
+from mitom_inputs import _plain_suffix, _read_text  # noqa: E402
 
 FA_SUFFIXES = (".fa", ".fasta", ".fna", ".fas")
 MITOZ_INSTALL = "mamba create -n mitoz -c bioconda -c conda-forge mitoz=3.6"
@@ -270,14 +272,14 @@ def find_results(src: Path) -> Tuple[List[Path], List[Path]]:
     a result.bed."""
     src = Path(src)
     if src.is_file():
-        return ([src], []) if src.suffix.lower() in GB_SUFFIXES else ([], [src.parent] if src.name == "result.bed" else [])
+        return ([src], []) if _plain_suffix(src) in GB_SUFFIXES else ([], [src.parent] if src.name == "result.bed" else [])
     mitos = sorted({p.parent for p in src.rglob("result.bed")})
     mitoz = sorted(src.rglob("*.result/*.gbf"))
     runs = {p.parent.parent for p in mitoz}                # a MitoZ output folder: only its *.result/*.gbf
     def mitoz_draft(p: Path) -> bool:                      # <run>/tmp*/...: the draft, not a result (code review 2026-11-06:
         return any(r in p.parents and any(d.startswith("tmp") for d in p.relative_to(r).parts[:-1])   # S2.gb beside
                    for r in runs)                                                                   # S1.result/ was dropped)
-    gbs = sorted(p for p in src.rglob("*") if p.is_file() and p.suffix.lower() in GB_SUFFIXES
+    gbs = sorted(p for p in src.rglob("*") if p.is_file() and _plain_suffix(p) in GB_SUFFIXES   # .gb.gz too (Codex 2026-11-07)
                  and not any(m in p.parents for m in mitos) and not mitoz_draft(p))
     # GenBank files outside the MitoZ folders are imported too (E5, 2026-11-05: they were left out)
     return sorted(set(mitoz) | set(gbs)), mitos
@@ -299,7 +301,7 @@ def import_results(src: Path, fastas: Sequence[Path] = (), code: Optional[int] =
     recs: List[SeqRecord] = []
     n_mitoz = 0
     for g in gbs:
-        for r in SeqIO.parse(str(g), "genbank"):
+        for r in SeqIO.parse(io.StringIO(_read_text(g)), "genbank"):
             if topology != "auto":
                 r.annotations["topology"] = topology
             elif written_by_mitoz(r):
@@ -316,8 +318,8 @@ def import_results(src: Path, fastas: Sequence[Path] = (), code: Optional[int] =
             raise ValueError("MITOS2 results: give --genetic_code (the code MITOS2 ran with)")
         seqs: Dict[str, str] = {}
         for fa in [*fastas, *(p for m in mitos for d in (m, m.parent) for p in sorted(d.glob("*"))
-                               if p.is_file() and p.suffix.lower() in FA_SUFFIXES)]:
-            for r in SeqIO.parse(str(fa), "fasta"):
+                               if p.is_file() and _plain_suffix(p) in FA_SUFFIXES)]:
+            for r in SeqIO.parse(io.StringIO(_read_text(Path(fa))), "fasta"):
                 seqs.setdefault(r.id, str(r.seq).upper())
         for m in mitos:
             for sid in mitos2_seq_ids(m):

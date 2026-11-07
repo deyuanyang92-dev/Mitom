@@ -710,3 +710,28 @@ def test_partial_subtype_models_are_not_used(tmp_path, monkeypatch):
     assert mito_intron.subtype_cms() == []
     (tmp_path / ".complete").touch()
     assert [p.name for p in mito_intron.subtype_cms()] == ["IA1.cm"]
+
+
+# ── Codex re-check 2026-11-07: mitom import and .gb.gz ────────────────────────────────────────────────────────────
+def _gb_text(rid):
+    r = _rec(rid)
+    r.annotations.update(molecule_type="DNA", topology="circular")
+    h = io.StringIO()
+    SeqIO.write([r], h, "genbank")
+    return h.getvalue()
+
+
+def test_import_reads_single_gb_gz(tmp_path):
+    """run/annotate unpack .gz; import said `no GenBank` for tunicate.gb.gz."""
+    f = tmp_path / "tunicate.gb.gz"
+    f.write_bytes(gzip.compress(_gb_text("T1").encode()))
+    recs, _ = mito_engines.import_results(f)
+    assert [r.id for r in recs] == ["T1"]
+
+
+def test_import_keeps_gb_gz_beside_gb(tmp_path):
+    """A folder with a.gb and b.gb.gz imported only a.gb: the compressed record was dropped silently."""
+    (tmp_path / "a.gb").write_text(_gb_text("A1"))
+    (tmp_path / "b.gb.gz").write_bytes(gzip.compress(_gb_text("B1").encode()))
+    recs, _ = mito_engines.import_results(tmp_path)
+    assert sorted(r.id for r in recs) == ["A1", "B1"]
