@@ -76,6 +76,8 @@ mitom import -i mitoz_results/ -o out --clade Mollusca --genetic_code 5         
 mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5   # MITOS2 结果目录
 ```
 
+MITOS2 用户 / MITOS2 users：MitoM 把 MITOS2 结果批量转成 GenBank、统一方向、修整端点、生成 NCBI 文件，见 / see **[docs/MITOS2.md](docs/MITOS2.md)**。
+
 `--clade` 可选：`Chordata Arthropoda Echinodermata Annelida-segmented-worms Bryozoa Mollusca Nematoda
 Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaetognatha-arrow-worms Animal`
 （`Animal` = 全动物蛋白库，用于其他门）。常用：`--threads 8 --jobs 4`（每个任务线程数 / 同时任务数）、

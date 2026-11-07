@@ -330,6 +330,14 @@ def resolve_tools(args: argparse.Namespace) -> str:
                     f"{', '.join(BASE_CLADES)}); use --engine native or mitos2")
         if not mito_env.find("mitoz", getattr(args, "mitoz_bin", None)):
             return f"ERROR: --engine mitoz: MitoZ not found (install: {mito_engines.MITOZ_INSTALL}; or give --mitoz_bin)"
+    if getattr(args, "mitos_args", ""):
+        import mito_engines
+        if engine != "mitos2":
+            return "ERROR: --mitos_args is for --engine mitos2 (MITOS2 options)"
+        try:
+            mito_engines.mitos_extra_args(args.mitos_args)
+        except ValueError as e:
+            return f"ERROR: {e}"
     if engine == "mitos2" and not (args.mitos_bin and args.mitos_refdir):
         import mito_engines
         return ("ERROR: --engine mitos2: MITOS2 (runmitos) or its reference data refseq89m not found (install: "
@@ -1338,6 +1346,11 @@ def build_parser() -> argparse.ArgumentParser:
                             "their annotation: reorientation, round 2, curation, NCBI files, genome maps.")
         g.add_argument("--mitoz_bin", default=None,
                        help="Folder with the mitoz program (--engine mitoz). Default: found automatically.")
+        g.add_argument("--mitos_args", default="",
+                       help='Further runmitos options for --engine mitos2, as one quoted string written with "=", '
+                            'e.g. --mitos_args="--best --finovl 30" (runmitos -h lists them). MitoM sets the input, output, '
+                            '-c (--genetic_code), -r/--refdir (refseq89m, --refdir) and --linear (topology) itself; '
+                            'default: none (runmitos defaults, --noplots).')
 
     def add_metadata(sp: argparse.ArgumentParser) -> None:
         sp.add_argument("--preserve_phase1_metadata", choices=["yes", "no"], default="yes",

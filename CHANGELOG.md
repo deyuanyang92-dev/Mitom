@@ -3,6 +3,20 @@
 Notable changes of MitoM. Versions follow semantic versioning (major.minor.patch); `mitom --version` prints the
 installed one.
 
+## Unreleased
+
+### Added
+- `--mitos_args` (run, annotate): further runmitos options for `--engine mitos2`, written `--mitos_args="--best --finovl 30"`;
+  options MitoM sets itself (input, output, -c, -r / --refdir, --linear, --json) are refused before the run; without it
+  the MITOS2 command is unchanged. Real run (NC_000931): the option reaches runmitos (run.log, core.stderr.log).
+- docs/MITOS2.md (Chinese / English): MitoM as batch post-processing of MITOS2 - GenBank output, orientation, curation,
+  NCBI files; `--engine mitos2` and its options, `mitom import`, every output file, Geneious -> `mitom curate`,
+  accuracy, from one real run (NC_000931).
+
+### Fixed
+- MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:
+  runmitos not found): both names are accepted.
+
 ## 0.0.1 - 2026-11-07
 
 First numbered test release. MitoM is still being tested, so the version starts again at 0.0.x; the

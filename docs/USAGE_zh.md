@@ -204,9 +204,11 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   mitom run -i genomes/ -o out --threads 4 --jobs 8                      # 目录：8 条同时注释，每条 4 线程
   mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5 --engine mitoz   # 用 MitoZ 找基因（需另装）
   ```
-- **常用参数**：`--clade`、`--genetic_code`（见 3.3）；`--threads`、`--jobs`；`--engine native|mitoz|mitos2`；`--sbt template.sbt`（NCBI 提交者模板）；`--infq <FASTQ 目录>`（基因组图加测序深度）；`--keep_intermediate yes`（保留中间文件）；`--debug`（调试模式，见第 8 节）。
+- **常用参数**：`--clade`、`--genetic_code`（见 3.3）；`--threads`、`--jobs`；`--engine native|mitoz|mitos2`（MITOS2 自身参数用 `--mitos_args="--best ..."`，见 [MITOS2.md](MITOS2.md)）；`--sbt template.sbt`（NCBI 提交者模板）；`--infq <FASTQ 目录>`（基因组图加测序深度）；`--keep_intermediate yes`（保留中间文件）；`--debug`（调试模式，见第 8 节）。
 
 ### `mitom import`：整理已有注释，不重新注释
+
+> MITOS2 的调用、参数（`--mitos_args`）、导入已有 MITOS2 结果、Geneious 修改后 `curate`、与 MITOS2 的准确度对比：完整实例见 **[MITOS2.md](MITOS2.md)**。
 
 - **做什么**：保留输入里已有的基因（MitoZ / MITOS2 结果或任何已注释的 GenBank），做统一起点、补漏、内含子、修整边界和名称、NCBI 文件、作图。
 - **输入**：MitoZ 结果目录或 `.gbf`；MITOS2 结果目录（要用 `--fasta` 给基因组序列）；已注释的 GenBank。

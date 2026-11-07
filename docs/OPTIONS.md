@@ -46,9 +46,9 @@ usage: mitom run [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_maxlen
                  [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
                  [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
                  [--smk_extra FLAG] [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN]
-                 [--topology {auto,label,circular,linear}] [--if_reannotation_2 {yes,auto,no}]
-                 [--preserve_phase1_metadata {yes,no}] [--smart_metadata {yes,no}]
-                 [--auto_accept_metadata {yes,no}]
+                 [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
+                 [--if_reannotation_2 {yes,auto,no}] [--preserve_phase1_metadata {yes,no}]
+                 [--smart_metadata {yes,no}] [--auto_accept_metadata {yes,no}]
 
 options:
   -h, --help            show this help message and exit
@@ -158,7 +158,7 @@ Annotation:
                         moved to work/). Default no: deleted after the final output is written; core logs of
                         problem samples are always kept (reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
-  --jobs N              Records annotated at the same time (default: CPUs // threads = 9).
+  --jobs N              Records annotated at the same time (default: CPUs // threads = 16).
   --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
                         - the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a
                         taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
@@ -199,6 +199,11 @@ Annotation engine:
                         genome maps.
   --mitoz_bin MITOZ_BIN
                         Folder with the mitoz program (--engine mitoz). Default: found automatically.
+  --mitos_args MITOS_ARGS
+                        Further runmitos options for --engine mitos2, as one quoted string written with "=",
+                        e.g. --mitos_args="--best --finovl 30" (runmitos -h lists them). MitoM sets the
+                        input, output, -c (--genetic_code), -r/--refdir (refseq89m, --refdir) and --linear
+                        (topology) itself; default: none (runmitos defaults, --noplots).
 ```
 
 ## mitom import
@@ -313,7 +318,7 @@ Annotation:
                         moved to work/). Default no: deleted after the final output is written; core logs of
                         problem samples are always kept (reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
-  --jobs N              Records annotated at the same time (default: CPUs // threads = 9).
+  --jobs N              Records annotated at the same time (default: CPUs // threads = 16).
   --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
                         - the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a
                         taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
@@ -362,7 +367,7 @@ usage: mitom annotate [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_m
                       [--suffix_fq SUFFIX_FQ] [--scheduler_backend {auto,snakemake,threads}]
                       [--snakemake_bin SNAKEMAKE_BIN] [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
                       [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG]
-                      [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN]
+                      [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN] [--mitos_args MITOS_ARGS]
                       [--topology {auto,label,circular,linear}] [--preserve_phase1_metadata {yes,no}]
 
 options:
@@ -461,7 +466,7 @@ Annotation:
                         moved to work/). Default no: deleted after the final output is written; core logs of
                         problem samples are always kept (reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
-  --jobs N              Records annotated at the same time (default: CPUs // threads = 9).
+  --jobs N              Records annotated at the same time (default: CPUs // threads = 16).
   --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
                         - the taxonomy and CDS transl_table of a GenBank record; FASTA and records without a
                         taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
@@ -502,6 +507,11 @@ Annotation engine:
                         genome maps.
   --mitoz_bin MITOZ_BIN
                         Folder with the mitoz program (--engine mitoz). Default: found automatically.
+  --mitos_args MITOS_ARGS
+                        Further runmitos options for --engine mitos2, as one quoted string written with "=",
+                        e.g. --mitos_args="--best --finovl 30" (runmitos -h lists them). MitoM sets the
+                        input, output, -c (--genetic_code), -r/--refdir (refseq89m, --refdir) and --linear
+                        (topology) itself; default: none (runmitos defaults, --noplots).
 ```
 
 ## mitom reorient
@@ -730,8 +740,9 @@ options:
   -i INPUT, --input INPUT
   -o OUT, --out OUT
   --genetic_code GENETIC_CODE
-                        Genetic code (default: each record's CDS /transl_table, else 5; 2026-10-31 review:
-                        code 5 was used for every record - vertebrate AGG stops read through)
+                        Genetic code (default: each record's CDS /transl_table, else the usual code of its
+                        phylum, else 5; 2026-10-31 review: code 5 was used for every record - vertebrate AGG
+                        stops read through)
   --rrna_bounds {trim,fill}
                         fill (default): remove overlaps with flanking genes and extend rRNA ends to them
                         (gaps <= --max_fill), the GenBank convention; trim: only remove overlaps (Fourdrilis

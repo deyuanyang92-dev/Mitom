@@ -14,7 +14,7 @@ Neither program is installed with MitoM; mito_env finds them on PATH or in a con
 
 Usage (mitom_pipeline.py runs this per sample; the output is <workdir>/<prefix>.gbf):
   mito_engines.py mitoz  -i sample.fasta -o workdir --prefix S00001 --clade Mollusca --genetic_code 5 [--threads 4]
-  mito_engines.py mitos2 -i sample.fasta -o workdir --prefix S00001 --genetic_code 5
+  mito_engines.py mitos2 -i sample.fasta -o workdir --prefix S00001 --genetic_code 5 [--mitos_args "--best"]
 """
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ import argparse
 import io
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
@@ -89,21 +90,39 @@ def run_mitoz(fa: Path, workdir: Path, prefix: str, clade: str, code: int, threa
 
 # ── MITOS2 ───────────────────────────────────────────────────────────────────
 RUNMITOS_FAST = Path(__file__).resolve().parent / "scripts" / "runmitos_fast.py"
+# runmitos options MitoM sets itself (input, output, genetic code, reference data, topology): not allowed in --mitos_args
+MITOS_OWN_OPTS = {"-i", "--input", "--fasta", "-o", "--outdir", "-c", "--code", "-r", "--refseqver", "-R", "--refdir",
+                  "--json", "--linear"}
+
+
+def mitos_extra_args(text: Optional[str]) -> List[str]:
+    """--mitos_args "<runmitos options>" as a list (e.g. "--best --finovl 35 --evalue 2"); ValueError for an option
+    MitoM sets itself (MITOS_OWN_OPTS: give --genetic_code, --refdir, the topology instead)."""
+    extra = shlex.split(text or "")
+    bad = sorted({x.split("=", 1)[0] for x in extra if x.split("=", 1)[0] in MITOS_OWN_OPTS})
+    if bad:
+        raise ValueError(f"--mitos_args: {', '.join(bad)} is set by MitoM (input, output, --genetic_code, reference "
+                         f"data, topology); give only other runmitos options, e.g. --best --finovl 35")
+    return extra
 
 
 def mitos2_command(fa: Path, out: Path, code: int, bin_dir: str, refdir: str, ref: str = mito_env.MITOS_REF,
                    mode: str = "full", skip: Sequence[str] = (), linear: bool = False, noplots: bool = True,
-                   jobs: Optional[int] = None) -> List[str]:
+                   jobs: Optional[int] = None, extra: Sequence[str] = ()) -> List[str]:
     """The MITOS2 command of every MitoM module (run it with engine_env(bin_dir, isolated=True)): mode full = runmitos
     as installed; sensitive / fast = scripts/runmitos_fast.py (the Infernal searches in parallel, same results; fast
     also skips the sensitive re-search of missing tRNAs); skip = MITOS2 parts not annotated (prot, rrna, trna,
-    intron, oril, orih); jobs = parallel cmsearch processes of runmitos_fast.py (default: all CPUs, max 16)."""
-    exe = [str(Path(bin_dir) / "runmitos")] if mode == "full" else \
+    intron, oril, orih); jobs = parallel cmsearch processes of runmitos_fast.py (default: all CPUs, max 16); extra =
+    further runmitos options (--mitos_args of --engine mitos2, checked by mitos_extra_args)."""
+    run = Path(bin_dir) / "runmitos"
+    if not run.exists() and (Path(bin_dir) / "runmitos.py").exists():      # mitos 2.1.9 package (user env, 2026-11-08)
+        run = Path(bin_dir) / "runmitos.py"
+    exe = [str(run)] if mode == "full" else \
         [str(Path(bin_dir) / "python"), str(RUNMITOS_FAST), *(["--no_sensitive"] if mode == "fast" else []),
          *(["--jobs", str(max(1, int(jobs)))] if jobs else [])]
     return [*exe, "-i", str(fa), "-c", str(code), "-o", str(out), "-r", ref, "--refdir", str(refdir),
             *[x for part in skip for x in (f"--{part}", "0")], *(["--noplots"] if noplots else []),
-            *(["--linear"] if linear else [])]
+            *(["--linear"] if linear else []), *extra]
 
 
 class BedRow(NamedTuple):
@@ -197,8 +216,9 @@ def mitos_to_record(result_dir: Path, seq: Seq, acc: str) -> SeqRecord:
 
 
 def run_mitos2(fa: Path, workdir: Path, prefix: str, code: int, refdir: Optional[str] = None,
-               bin_dir: Optional[str] = None) -> List[SeqRecord]:
-    """MITOS2 runmitos (unchanged, refseq89m) on each sequence of one sample (in workdir/mitos2/<record>)."""
+               bin_dir: Optional[str] = None, extra: Sequence[str] = ()) -> List[SeqRecord]:
+    """MITOS2 runmitos (unchanged, refseq89m; extra = further runmitos options) on each sequence of one sample (in
+    workdir/mitos2/<record>)."""
     b, d = mito_env.mitos_bin(bin_dir), mito_env.mitos_refdir(refdir)
     if not b:
         raise RuntimeError(f"MITOS2 (runmitos) not found: install it ({MITOS2_INSTALL}) or give --mitos_bin")
@@ -211,7 +231,7 @@ def run_mitos2(fa: Path, workdir: Path, prefix: str, code: int, refdir: Optional
         out = workdir / "mitos2" / rid
         (out / "result").mkdir(parents=True, exist_ok=True)       # runmitos refuses a missing -o folder
         (out / "in.fa").write_text(f">{rid}\n{seq}\n")
-        cmd = mitos2_command(out / "in.fa", out / "result", code, b, d, linear=topology == "linear")
+        cmd = mitos2_command(out / "in.fa", out / "result", code, b, d, linear=topology == "linear", extra=extra)
         print("[engine] " + " ".join(cmd), file=sys.stderr, flush=True)
         rc = run_tool(cmd, cwd=out, env=engine_env(b, isolated=True), capture=False).returncode
         if rc or not (out / "result" / "result.bed").is_file():
@@ -358,6 +378,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             s.add_argument("--refdir", default=None, help="folder that holds refseq89m")
             s.add_argument("--mitos_bin", default=None, help="folder with runmitos")
+            s.add_argument("--mitos_args", default="", help='further runmitos options, one string, e.g. "--best"')
     a = p.parse_args(argv)
     out = Path(a.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -366,8 +387,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         if a.engine == "mitoz":
             recs = run_mitoz(fa, out, a.prefix, a.clade, a.genetic_code, a.threads, a.mitoz_bin, a.species_name)
         else:
-            recs = run_mitos2(fa, out, a.prefix, a.genetic_code, a.refdir, a.mitos_bin)
-    except RuntimeError as e:
+            recs = run_mitos2(fa, out, a.prefix, a.genetic_code, a.refdir, a.mitos_bin, mitos_extra_args(a.mitos_args))
+    except (RuntimeError, ValueError) as e:
         print(f"[engine] {e}", file=sys.stderr)
         return 1
     write_gb(recs, out / f"{a.prefix}.gbf")         # (GLM 1.9, 2026-11-05)

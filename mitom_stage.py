@@ -121,6 +121,7 @@ def engine_cmd(fasta_file: Path, workdir: Path, internal_id: str, args, lineage:
     else:
         cmd += ["--refdir", str(g("mitos_refdir"))] if g("mitos_refdir") else []
         cmd += ["--mitos_bin", str(g("mitos_bin"))] if g("mitos_bin") else []
+        cmd += [f"--mitos_args={g('mitos_args')}"] if g("mitos_args") else []
     return cmd
 
 

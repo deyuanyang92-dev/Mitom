@@ -194,7 +194,8 @@ def bin_with(*names: str, explicit: Optional[str] = None) -> Optional[str]:
 
 
 def mitos_bin(explicit: Optional[str] = None) -> Optional[str]:
-    exe = find("runmitos", explicit, "mitos_bin")
+    """Folder with MITOS2's runmitos (bioconda mitos 2.1.10); older packages (2.1.9) have only runmitos.py."""
+    exe = find("runmitos", explicit, "mitos_bin") or find("runmitos.py", explicit, "mitos_bin")
     return str(Path(exe).parent) if exe else None
 
 

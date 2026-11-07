@@ -97,6 +97,24 @@ def test_engine_cmd_per_engine():
     assert mz[mz.index("--clade") + 1] == "Mollusca" and mz[mz.index("--mitoz_bin") + 1] == "/opt/mz/bin"
     m2 = cmd("--engine", "mitos2", "--mitos_bin", "/opt/m2/bin")
     assert m2[4] == "mitos2" and m2[m2.index("--mitos_bin") + 1] == "/opt/m2/bin" and "--clade" not in m2
+    assert not any(x.startswith("--mitos_args") for x in m2)               # default: runmitos as before
+    m3 = cmd("--engine", "mitos2", "--mitos_args", "--best --finovl 30")
+    assert "--mitos_args=--best --finovl 30" in m3
+
+
+def test_mitos_args_passed_to_runmitos_and_checked():
+    """--mitos_args (user 2026-11-08: how to set MITOS2's own parameters): further runmitos options go to the end of
+    the command; the options MitoM sets itself are refused, before any run."""
+    assert me.mitos_extra_args("") == [] and me.mitos_extra_args(None) == []
+    assert me.mitos_extra_args("--best --finovl 35 --evalue 2") == ["--best", "--finovl", "35", "--evalue", "2"]
+    for bad in ("-c 2", "--code=2", "-r refseq63m", "--refdir /x", "--linear", "-o x", "--json p.json"):
+        with pytest.raises(ValueError):
+            me.mitos_extra_args(bad)
+    cmd = me.mitos2_command(Path("/w/in.fa"), Path("/w/res"), 5, "/m/bin", "/refs", extra=["--best"])
+    assert cmd[-2:] == ["--noplots", "--best"]
+    a = mp.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--genetic_code", "5",
+                                      "--engine", "native", "--mitos_args=--best"])
+    assert "--mitos_args" in mp.resolve_tools(a)
 
 
 FAKE_MITOZ = """#!/bin/sh
@@ -205,3 +223,13 @@ def test_result_bed_reader(tmp_path):
     rows = me.read_result_bed(tmp_path)
     assert rows == [me.BedRow("s1", 10, 80, "trnL1(tag)", "1e-9", 1), me.BedRow("s1", 15000, 20, "cox1", "0", -1)]
     assert me.mitos2_seq_ids(tmp_path) == ["s1"]
+
+
+def test_mitos2_found_as_runmitos_py(tmp_path):
+    """bioconda mitos 2.1.9 installs only runmitos.py (no runmitos): MitoM finds it and runs it (user env, 2026-11-08)."""
+    b = tmp_path / "bin"
+    b.mkdir()
+    (b / "runmitos.py").write_text("#!/bin/sh\n")
+    (b / "runmitos.py").chmod(0o755)
+    assert mito_env.mitos_bin(str(b)) == str(b)
+    assert me.mitos2_command(Path("in.fa"), Path("res"), 5, str(b), "/refs")[0] == str(b / "runmitos.py")
