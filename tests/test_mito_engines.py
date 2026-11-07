@@ -107,7 +107,10 @@ def test_mitos_args_passed_to_runmitos_and_checked():
     the command; the options MitoM sets itself are refused, before any run."""
     assert me.mitos_extra_args("") == [] and me.mitos_extra_args(None) == []
     assert me.mitos_extra_args("--best --finovl 35 --evalue 2") == ["--best", "--finovl", "35", "--evalue", "2"]
-    for bad in ("-c 2", "--code=2", "-r refseq63m", "--refdir /x", "--linear", "-o x", "--json p.json"):
+    assert me.mitos_extra_args("--ncbicode --cutoff 0.3 --circrot 90") == ["--ncbicode", "--cutoff", "0.3", "--circrot", "90"]
+    for bad in ("-c 2", "--code=2", "-r refseq63m", "--refdir /x", "--linear", "-o x", "--json p.json",
+                "-c2", "-o/tmp", "-rrefseq63m", "-R/x", "-ix.fa", "--cod 2", "--outd x", "--refd /x", "--lin",
+                "--best -c2"):                                     # attached / abbreviated forms (Codex 2026-11-08)
         with pytest.raises(ValueError):
             me.mitos_extra_args(bad)
     cmd = me.mitos2_command(Path("/w/in.fa"), Path("/w/res"), 5, "/m/bin", "/refs", extra=["--best"])
@@ -233,3 +236,4 @@ def test_mitos2_found_as_runmitos_py(tmp_path):
     (b / "runmitos.py").chmod(0o755)
     assert mito_env.mitos_bin(str(b)) == str(b)
     assert me.mitos2_command(Path("in.fa"), Path("res"), 5, str(b), "/refs")[0] == str(b / "runmitos.py")
+    assert mito_env.find("runmitos", str(b)) == str(b / "runmitos.py")        # doctor / debug / mito_trna use find()

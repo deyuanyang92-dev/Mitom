@@ -65,6 +65,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+import gzip
 import io
 import re
 import subprocess
@@ -82,6 +83,7 @@ import mito_env  # noqa: E402
 import ncbi_validate as nv  # noqa: E402  (the feature table and the FASTA header of the NCBI submission files)
 from mito_common import GB_SUFFIXES, iter_gb_files, run_tool, write_tsv  # noqa: E402
 from mito_common import cli_guard  # noqa: E402
+from mitom_inputs import _plain_suffix, _unzipped_name  # noqa: E402
 from mito_names import AA1_TO_3, AA3, PRODUCTS, gene_name, name_key, trna_name  # noqa: E402
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CODE, PHYLUM_SYNONYMS  # noqa: E402
 
@@ -320,6 +322,10 @@ def read_text(path: Path) -> str:
     if str(path) == "-":
         return sys.stdin.read()
     raw = Path(path).read_bytes()
+    for _ in range(3):                                 # .gb.gz (Codex 2026-11-08: a folder of .gb.gz gave "no GenBank")
+        if raw[:2] != b"\x1f\x8b":
+            break
+        raw = gzip.decompress(raw)
     for enc in ("utf-8-sig", "cp1252"):
         try:
             return raw.decode(enc)
@@ -335,7 +341,8 @@ def collect(paths: List[Path]) -> Tuple[List[Tuple[Path, object]], List[str]]:
     out, problems = [], []
     suffixes = GB_SUFFIXES + EMBL_SUFFIXES
     for p in paths:
-        files = [p] if str(p) == "-" else iter_gb_files(p, suffixes)
+        files = [p] if str(p) == "-" else [f for f in iter_gb_files(p, suffixes + (".gz",))
+                                           if f.is_file() and (f == p or _plain_suffix(f) in suffixes)]
         if not files:
             problems.append(f"no GenBank / EMBL file in {p} (suffixes {', '.join(suffixes)})")
         for f in files:
@@ -665,10 +672,10 @@ def main(argv=None) -> int:
         if a.split == "record":
             groups[e.sid].append(e)
         elif a.split == "file":
-            groups[clean_id(e.file.stem)].append(e)
+            groups[clean_id(Path(_unzipped_name(e.file.name)).stem)].append(e)
         else:
             single = len(inputs) == 1 and inputs[0].is_file()
-            groups[a.name or (clean_id(inputs[0].stem) if single else "submission")].append(e)
+            groups[a.name or (clean_id(Path(_unzipped_name(inputs[0].name)).stem) if single else "submission")].append(e)
     t2a = mito_env.find("table2asn", a.table2asn) if a.validate else None
     if a.validate and not t2a:
         print("[gb2tbl] table2asn not found (mitom doctor; conda install -c bioconda table2asn): no .sqn / check",

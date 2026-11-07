@@ -135,5 +135,6 @@ finding is similar; the gain is mainly in gene ends. Check the results by hand.
 | `runmitos.py`: `No such file or directory: 'cmsearch'` | 先激活 MITOS2 环境 / activate the MITOS2 env (`conda activate mitos`) |
 | `mitom doctor`: `runmitos not found`（MITOS2 2.1.9） | 已支持 `runmitos.py` / `runmitos.py` now accepted; 或装 / or install 2.1.10 |
 | `--mitos_args "--best"`: `expected one argument` | 写成 / write `--mitos_args="--best"` |
+| `--mitos_args: -c2 is set by MitoM` | `-c -o -r -R -i --linear --json`（含 `-c2`、`--cod` 等写法）由 MitoM 设置，用 `--genetic_code` 等 / set by MitoM, use `--genetic_code` etc. |
 | `MITOS2 results: give --genetic_code` | 加 / add `--genetic_code` |
 | `genome sequence 'X' not found` | FASTA 序列名改成与 `result.bed` 一致 / rename to match `result.bed` |

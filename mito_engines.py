@@ -95,11 +95,22 @@ MITOS_OWN_OPTS = {"-i", "--input", "--fasta", "-o", "--outdir", "-c", "--code", 
                   "--json", "--linear"}
 
 
+def _own_opt(tok: str) -> bool:
+    """Is token `tok` one of MITOS_OWN_OPTS as runmitos (argparse) would read it: exact, --opt=value, a short option
+    with its value attached (-c2, -o/tmp) or an abbreviated long option (--cod, --outd)? (Codex 2026-11-08: -c2 got
+    through and overrode MitoM's genetic code.)"""
+    if tok.startswith("--"):
+        name = tok.split("=", 1)[0]
+        return len(name) > 2 and any(o.startswith("--") and o.startswith(name) for o in MITOS_OWN_OPTS)
+    return tok.startswith("-") and len(tok) >= 2 and tok[:2] in MITOS_OWN_OPTS
+
+
 def mitos_extra_args(text: Optional[str]) -> List[str]:
     """--mitos_args "<runmitos options>" as a list (e.g. "--best --finovl 35 --evalue 2"); ValueError for an option
-    MitoM sets itself (MITOS_OWN_OPTS: give --genetic_code, --refdir, the topology instead)."""
+    MitoM sets itself (MITOS_OWN_OPTS, in any form argparse accepts: give --genetic_code, --refdir, the topology
+    instead)."""
     extra = shlex.split(text or "")
-    bad = sorted({x.split("=", 1)[0] for x in extra if x.split("=", 1)[0] in MITOS_OWN_OPTS})
+    bad = sorted({x.split("=", 1)[0] for x in extra if _own_opt(x)})
     if bad:
         raise ValueError(f"--mitos_args: {', '.join(bad)} is set by MitoM (input, output, --genetic_code, reference "
                          f"data, topology); give only other runmitos options, e.g. --best --finovl 35")

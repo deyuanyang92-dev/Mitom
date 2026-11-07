@@ -154,7 +154,15 @@ def own_env_bin() -> Optional[str]:
 
 def find(name: str, explicit: Optional[str] = None, *config_keys: str) -> Optional[str]:
     """Path of program `name`: explicit dir/file (only there: a wrong explicit path is an error, never
-    silently replaced) > config bins > the running Python's conda environment > PATH > conda environments."""
+    silently replaced) > config bins > the running Python's conda environment > PATH > conda environments.
+    runmitos: also runmitos.py (bioconda mitos 2.1.9 has no runmitos), so doctor, debug and every module agree."""
+    exe = _find(name, explicit, *config_keys)
+    if not exe and name == "runmitos":
+        exe = _find("runmitos.py", explicit, *config_keys)
+    return exe
+
+
+def _find(name: str, explicit: Optional[str] = None, *config_keys: str) -> Optional[str]:
     cfg = config()
     dirs = [explicit] if explicit else \
         [cfg.get(k, "") for k in (*config_keys, "tools_bin", "intron_bin", "trna_bin", "mitos_bin")] + [own_env_bin()]
@@ -195,7 +203,7 @@ def bin_with(*names: str, explicit: Optional[str] = None) -> Optional[str]:
 
 def mitos_bin(explicit: Optional[str] = None) -> Optional[str]:
     """Folder with MITOS2's runmitos (bioconda mitos 2.1.10); older packages (2.1.9) have only runmitos.py."""
-    exe = find("runmitos", explicit, "mitos_bin") or find("runmitos.py", explicit, "mitos_bin")
+    exe = find("runmitos", explicit, "mitos_bin")
     return str(Path(exe).parent) if exe else None
 
 

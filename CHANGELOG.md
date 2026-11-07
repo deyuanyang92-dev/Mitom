@@ -15,7 +15,12 @@ installed one.
 
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:
-  runmitos not found): both names are accepted.
+  runmitos not found): both names are accepted, by every lookup (mito_env.find: doctor, debug, mito_trna).
+- `--mitos_args` let MitoM's own options through in the forms argparse accepts: attached (`-c2`, `-o/tmp`) and
+  abbreviated (`--cod 2`, `--outd x`); they overrode the genetic code / output. All forms are refused now (Codex
+  release-readiness review 2026-11-08; tests/test_review_2026_11_08.py).
+- `mitom gb2tbl` read no `.gb.gz` (a folder of them: "no GenBank / EMBL file"); now unpacked, output named without
+  `.gb`. The other commands already read them (checked one by one).
 
 ## 0.0.1 - 2026-11-07
 
