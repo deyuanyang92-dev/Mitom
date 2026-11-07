@@ -35,6 +35,8 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 2026-10-20 | ? | MITOS2 蛋白基因边界准确度 | 6 基因组（76 位点，含 NC_000931.1） | MITOS2 2.1.x | 5′ 一致 66 %，3′ 78 %，两端 51 % | 用于边界方法设计 | knowledge/experiments/mitos2_pcg/; knowledge/topics/pcg_boundary_methods.md |
 | 2026-10-28 | deyuan | **curate 对各工具结果的作用** | 24 RefSeq（三者都完成 18） | MitoM、MitoZ 3.6、MITOS2 2.1.10，各自 + `mitom import` | PCG exact：MITOS2 50.0→56.5 %，MitoZ 75.7→78.7 %，MitoM 58.7→83.0 %；rRNA ≤3 nt 24–29→62–65 %；ERROR 记录 18/18→0/18 | curate 不能补漏注基因；MITOS2 端点仍偏（48 个 >30 nt） | benchmark/results/curation_cmp_2026-10-28/README.md |
 | 2026-11-08 | cody | MITOS2 调用 / 导入 / curate 实际演示（**与上一行重复，仅单条**） | NC_000931 去注释 | MITOS2 2.1.10（`--engine mitos2 --mitos_args`）、2.1.9 单独运行 + import | PCG exact 4/13→6/13（MitoM 自身 10/13）；rRNA 0/2→2/2；ERROR 2→0；295 s +8 s vs 35 s；curate 保留 MITOS2 越过下游 tRNA 5–20 nt 的完整终止（cox1/atp8/cox3/nad6） | `--mitos_args`、runmitos.py 支持、docs/MITOS2.md（766653c） | docs/MITOS2.md |
+| 2026-11-08 | cody | 冻结评测流程冒烟测试（freeze.sh → run_frozen.sh → stats） | NC_000931，干净 worktree | mitom_native、mitom_blind（只给序列） | 两者都 10/13 蛋白基因两端一致、rRNA/tRNA 全对；脏工作区时 run_frozen 拒绝运行；manifest 记下 MitoZ 自动找到的是 3.5（FastMitoAssembler 环境） | 流程可用（benchmark/frozen/） | benchmark/frozen/PLAN.md |
+| 2026-11-08 | cody | 现有 RefSeq 能否组成独立测试集 | `/media/cody/18T_R1/NCBI/Server1/annelida_ref_curate_250320.gb`（170 条环节动物 NC_） | frozen_set.py | 169/170 记录号已在仓库出现；所有属、科见过；物种未见过 0 条 | 测试集改为 RefSeq+GenBank、物种未见过为主；属未见过另报 | benchmark/frozen/PLAN.md §2 |
 
 ## 3. tRNA
 

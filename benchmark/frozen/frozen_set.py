@@ -12,13 +12,14 @@ Conservative on purpose: an accession mentioned anywhere counts as seen.
   audit   one row per record of a GenBank pool (or a set TSV): acc_seen, species / genus / family seen, clade CM
           taxon in the lineage (the most specific; clade_cm_rank = its depth from the
           genus, 1 = genus) -> <out>.tsv and a summary on stdout
-  select  from a pool: records not seen and of a genus not seen (--level genus, default; family = stricter),
+  select  from a pool: records whose accession and species were not seen (--level species, default; genus / family
+          = stricter: in a 2025 annelid RefSeq pool 169 of 170 records and every genus were seen),
           complete-looking (CDS with cox1, >= 10 kb), at most --per_genus per genus, --per_family per family and
           --per_phylum per phylum, seeded -> accession list for make_large_set.py --accs
 
 Usage:
   python3 frozen_set.py audit  --pool Metazoa_refseq.gb[.gz] -o audit.tsv
-  python3 frozen_set.py select --pool Metazoa_refseq.gb[.gz] -o test_accs.txt [--level genus] [--per_phylum 40]
+  python3 frozen_set.py select --pool Metazoa.gb[.gz] -o test_accs.txt [--level species|genus|family] [--per_phylum 40]
                                [--per_family 2] [--per_genus 1] [--seed 20261108]
 """
 import argparse
@@ -137,7 +138,8 @@ def audit(rows: List[dict], accs: Dict[str, str], taxa, cms: Set[str]) -> List[d
 
 def select(aud: List[dict], pool: Dict[str, dict], level: str, per_phylum: int, per_family: int, per_genus: int,
            seed: int) -> List[dict]:
-    ok = [r for r in aud if not r["acc_seen"] and not r["genus_seen"] and (level == "genus" or not r["family_seen"])
+    ok = [r for r in aud if not r["acc_seen"] and not r["species_seen"]
+          and (level == "species" or not r["genus_seen"]) and (level != "family" or not r["family_seen"])
           and r["phylum"] and pool[r["accession"]]["cox1"] and pool[r["accession"]]["n_cds"] >= 10
           and int(r["length"]) >= 10000]
     random.Random(seed).shuffle(ok)
@@ -167,7 +169,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         s.add_argument("--pool", required=True, type=Path, help="GenBank pool (.gb / .gb.gz), e.g. mitom fetch output")
         s.add_argument("-o", "--out", required=True, type=Path)
         if name == "select":
-            s.add_argument("--level", choices=["genus", "family"], default="genus")
+            s.add_argument("--level", choices=["species", "genus", "family"], default="species",
+                           help="what must be unseen besides the accession: species (default), genus, family")
             s.add_argument("--per_phylum", type=int, default=40)
             s.add_argument("--per_family", type=int, default=2)
             s.add_argument("--per_genus", type=int, default=1)

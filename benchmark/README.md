@@ -17,12 +17,17 @@ python3 mito_bench_eval.py --set sets/my_set.tsv --root bench --split all --tool
 python3 bench_report.py --eval bench/eval/all --tools mitom_native,mitos2 --out report.md             # Markdown summary
 ```
 
+## Frozen evaluation (paper numbers)
+
+`frozen/PLAN.md`: frozen version, test set disjoint from all training / tuning data (`frozen/frozen_set.py`), manifest
+(`frozen/freeze.sh`), one run (`frozen/run_frozen.sh`), pre-registered metrics with family bootstrap (`frozen/frozen_stats.py`).
+
 ## Scripts
 
 | script | purpose |
 |---|---|
 | `mito_sample.py`, `make_large_set.py` | build record sets (`sets/*.tsv`, `gb/`, `bare/`) |
-| `mito_bench_run.py` | run MitoM / MitoZ / MITOS2 / MITOS1 / MitoFinder on bare records; lift results to NCBI coordinates |
+| `mito_bench_run.py` | run MitoM / MitoZ / MITOS2 / MITOS1 / MitoFinder on bare records; lift results to NCBI coordinates (`mitom_blind`: sequence only, no clade / code) |
 | `mito_bench_eval.py`, `bench_report.py` | gene-by-gene agreement with NCBI (PCG / rRNA ends, tRNAs, NCBI ERRORs); report |
 | `eval_features.py`, `eval_cds.py` | per-gene boundaries; CDS-level agreement of intron models |
 | `eval_trna.py` | tRNA methods of `mito_trna.py` against NCBI tRNAs |

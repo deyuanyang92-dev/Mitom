@@ -13,18 +13,26 @@ was trained or tuned on, metrics fixed in advance, run once.
 
 ## 2. 测试集 / Test sets
 
+**实测（2026-11-08，cody）**：本机 2025-03 的环节动物 RefSeq 池 170 条中，169 条的记录号已出现在仓库里，所有属都见过，
+物种未见过的 0 条。研究充分的类群里，现有 RefSeq 记录基本都被训练、调参或评测用过，不能再当独立测试集。
+Measured: of 170 annelid RefSeq records (2025-03 pool), 169 accessions and every genus were already seen; 0 of an
+unseen species. Existing RefSeq records of well-studied groups cannot form an independent test set.
+
 | 集 / set | 内容 / content | 何时 / when |
 |---|---|---|
-| A 独立属 / unseen genus（主 / primary） | RefSeq 动物线粒体全基因组；记录号从未出现在仓库任何训练、调参或评测文件中，**所在属也未出现过**；每属 1 条、每科 ≤2 条、每门 ≤40 条 / accession and genus never seen; ≤1 per genus, ≤2 per family, ≤40 per phylum | 现在 / now |
-| B 时间外推 / temporal | 冻结日期之后发表的记录（`mitom fetch --query '... AND ("<冻结日期>"[PDAT] : "3000"[PDAT])'`），同样做泄漏审计 / records published after the freeze date | 冻结后 ≥ 3 个月 / ≥ 3 months later |
+| A 独立记录 / unseen records（主 / primary） | 动物线粒体全基因组，**RefSeq + GenBank**（`mitom fetch` 不加 `--refseq_only`，再 `mitom dedup`）；记录号及其 GenBank 来源记录、**物种**都未出现过（`--level species`）；每属 1、每科 ≤2、每门 ≤40 条。“属 / 科也未见过”作为最严格分层另报 | 现在 / now |
+| B 时间外推 / temporal | 冻结日期之后发表的记录（`mitom fetch --query '... AND ("<冻结日期>"[PDAT] : "3000"[PDAT])'`），同样审计 / published after the freeze | 冻结后 ≥ 3 个月 / ≥ 3 months later |
+
+GenBank 记录的注释由作者提交，质量参差；按 `annotation_method`（MITOS2 / MitoZ / 其他 / 未知）分层报告，真值来自 MITOS2 的记录对 MITOS2 有利。
+集 A 若某门不足 10 条，该门只报告、不下结论。分层统计：把 set.tsv 按条件筛成子表，再 `frozen_stats.py --set 子表`。
 
 “见过”由 `frozen_set.py` 从仓库自动收集：`benchmark/`（所有集合、tRNA 训练拆分、历次结果）、`models/`（refseq89m 记录表、rRNA HMM 参考、内含子位点）、
-`knowledge/experiments/`、`tests/data/` 中出现过的任何记录号；以及这些记录的属和科。tRNA 分支模型（clade CM）覆盖的类群单独标出（`clade_cm_rank`，1 = 同属）。
+`knowledge/experiments/`、`tests/data/` 中出现过的任何记录号；以及这些记录的物种、属和科。tRNA 分支模型（clade CM）覆盖的类群单独标出（`clade_cm_rank`，1 = 同属）。
 不在 refseq89m 中，也就同时保证 MITOS2 和 MitoM 的蛋白参考库里没有被测记录自身。
 
-"Seen" is collected from the repository (any accession in benchmark/, models/, knowledge/experiments/, tests/data/, plus
-their genera and families); tRNA clade-model coverage is reported separately. Not in refseq89m means neither MITOS2's
-nor MitoM's protein references hold the record itself.
+"Seen" = any accession in benchmark/, models/, knowledge/experiments/, tests/data/, plus their species, genera and
+families; tRNA clade-model coverage is reported separately. Not in refseq89m = neither tool's protein references hold
+the record itself.
 
 ## 3. 冻结 / Freeze
 
@@ -68,11 +76,12 @@ Intervals: family-clustered bootstrap, paired differences. Strata as listed.
 ```bash
 conda activate mitotools
 # 1. 候选池 / pool (all RefSeq metazoan mitogenomes)
-mitom fetch --taxon Metazoa --refseq_only -o pool                       # -> pool/Metazoa.gb
+mitom fetch --taxon Metazoa -o pool --email <your e-mail>           # RefSeq + GenBank -> pool/Metazoa.gb
+mitom dedup -i pool/Metazoa.gb -o pool_dedup                          # one record per genome
 # 2. 泄漏审计与选集 / leak audit and selection
-python3 benchmark/frozen/frozen_set.py audit  --pool pool/Metazoa.gb -o frozen/pool_audit.tsv
-python3 benchmark/frozen/frozen_set.py select --pool pool/Metazoa.gb -o frozen/test_accs.txt      # + test_accs.audit.tsv
-python3 benchmark/make_large_set.py --pool pool/Metazoa.gb --out data --tsv frozen/set.tsv --accs frozen/test_accs.txt
+python3 benchmark/frozen/frozen_set.py audit  --pool pool_dedup/<file>.gb -o frozen/pool_audit.tsv
+python3 benchmark/frozen/frozen_set.py select --pool pool_dedup/<file>.gb -o frozen/test_accs.txt   # --level species; + .audit.tsv
+python3 benchmark/make_large_set.py --pool pool_dedup/<file>.gb --out data --tsv frozen/set.tsv --accs frozen/test_accs.txt
 # 3. 冻结 / freeze  (commit + tag first: git tag v0.1.0-frozen)
 bash benchmark/frozen/freeze.sh frozen/set.tsv benchmark/results/frozen_<date>
 git add benchmark/results/frozen_<date> && git commit -m "Frozen evaluation: set and manifest"   # = 预注册 / pre-registration
@@ -80,6 +89,8 @@ git add benchmark/results/frozen_<date> && git commit -m "Frozen evaluation: set
 bash benchmark/frozen/run_frozen.sh benchmark/results/frozen_<date> data 8 2
 # 5. 提交结果，登记 / commit the results, add the registry row
 ```
+
+MitoZ：`freeze.sh` 记下实际找到的版本（本机自动找到的是 FastMitoAssembler 环境里的 3.5，不是 3.6）；用 3.6 时把它的环境 bin 放在 PATH 最前。
 
 预计 / estimate：400 条，MITOS2 约 6 min/条，8 并行约 5 h；MitoM 约 1 min/条。建议在另一台电脑（deyuan）上运行。
 

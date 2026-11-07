@@ -13,6 +13,11 @@ installed one.
   NCBI files; `--engine mitos2` and its options, `mitom import`, every output file, Geneious -> `mitom curate`,
   accuracy, from one real run (NC_000931).
 
+- benchmark/frozen/: frozen evaluation for the paper numbers - plan (zh/en), leak audit and test-set selection
+  against everything in the repository (frozen_set.py), freeze manifest (freeze.sh), one guarded run (run_frozen.sh),
+  family-bootstrap intervals and paired differences (frozen_stats.py); benchmark tool `mitom_blind` (sequence only).
+  Measured: 169 of 170 annelid RefSeq records (2025-03 pool) were already seen, so the test set draws on GenBank too.
+
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:
   runmitos not found): both names are accepted, by every lookup (mito_env.find: doctor, debug, mito_trna).

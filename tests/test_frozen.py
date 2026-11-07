@@ -41,6 +41,8 @@ def test_audit_and_select():
     assert by["NC_3.1"]["clade_cm"] == "Fb" and by["NC_3.1"]["clade_cm_rank"] == "2"
     got = [r["accession"] for r in fs.select(aud, {r["accession"]: r for r in pool}, "genus", 40, 2, 1, 1)]
     assert sorted(got) == ["NC_3.1", "NC_4.1", "NC_6.1"]             # NC_5 no cox1; family Fb capped at 2
+    got = [r["accession"] for r in fs.select(aud, {r["accession"]: r for r in pool}, "species", 40, 2, 1, 1)]
+    assert "NC_1.1" not in got                                     # species seen
     got = [r["accession"] for r in fs.select(aud, {r["accession"]: r for r in pool}, "family", 40, 1, 1, 1)]
     assert len(got) == 1 and got[0] in ("NC_3.1", "NC_4.1")           # family level: Seenfam out, Fb capped at 1
 
