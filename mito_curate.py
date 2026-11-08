@@ -100,7 +100,8 @@ from mito_names import RRNA_ALIAS as RRNA_NAMES  # noqa: E402
 from mito_names import PRODUCT as RRNA_PRODUCT_NAMES  # noqa: E402
 from mito_common import (POLYA_NOTE, abbreviated_stop, codon_translate, ends_with_stop, iter_gb_files,  # noqa: E402
                          transl_except_term, write_gb, write_tsv)
-from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
+import mito_common  # noqa: E402
+from mito_common import InputError, cli_guard, prepare_input, require_records  # noqa: E402
 import mito_start  # noqa: E402  (P11: the start codon NCBI records choose, learned)
 import mito_tbl  # noqa: E402  (record_code: the genetic code of a record's taxonomy)
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
@@ -1297,8 +1298,8 @@ def record_code(rec) -> Optional[int]:
     return max(set(codes), key=codes.count) if codes else None
 
 
-def main(argv=None) -> int:
-    from Bio import SeqIO
+def build_parser() -> argparse.ArgumentParser:
+    """The command line (main); options() gives the same options without one."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-i", "--input", required=True)
     p.add_argument("-o", "--out", required=True)
@@ -1342,11 +1343,22 @@ def main(argv=None) -> int:
                    help="NCBI table2asn for validation before/after curation (default: found by mito_env.py)")
     p.add_argument("--no_validate", action="store_true", help="Skip the NCBI validation before/after curation")
     p.add_argument("--allow_empty", action="store_true", help=argparse.SUPPRESS)   # mitom run: a folder of 0 records
-    a = p.parse_args(argv)
+    return p
+
+
+def options(**given) -> argparse.Namespace:
+    """Options for run(): input and out are required, e.g. options(input="04.final_gb", out="05.curated")."""
+    return mito_common.options(build_parser(), **given)
+
+
+def run(a: argparse.Namespace) -> int:
+    """Curate the GenBank file / folder a.input into a.out (curation_report.tsv; table2asn before / after unless
+    a.no_validate). a: build_parser() or options(input=..., out=...). Returns the exit code."""
+    from Bio import SeqIO
     src, out = Path(prepare_input(a.input)), Path(a.out)
     a.start_model_obj = None if a.start_model == "no" else mito_start.load(None if a.start_model == "auto" else a.start_model)
     if a.start_model not in ("auto", "no") and a.start_model_obj is None:
-        p.error(f"--start_model {a.start_model}: no such model")
+        raise InputError(f"--start_model {a.start_model}: no such model")
     start_rows: List[Dict] = []
     t2a = None if a.no_validate else mito_env.find("table2asn", a.table2asn)
     if t2a:
@@ -1411,6 +1423,10 @@ def main(argv=None) -> int:
               f"remaining {st[('ERROR', 'remaining')]}, new {st[('ERROR', 'new')]} -> {out / 'validation_compare.tsv'}",
               file=sys.stderr)
     return 0
+
+
+def main(argv=None) -> int:
+    return run(build_parser().parse_args(argv))
 
 
 if __name__ == "__main__":

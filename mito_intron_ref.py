@@ -92,6 +92,7 @@ from Bio.Seq import Seq
 HERE = Path(__file__).resolve().parent
 import mito_names  # noqa: E402
 from mito_common import codon_translate, iter_gb_files, run_tool, stop_qualifiers, write_gb, write_tsv  # noqa: E402
+import mito_common  # noqa: E402
 from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
 
 DEFAULT_LIB = HERE / "models" / "intron_sites.tsv.gz"
@@ -1960,7 +1961,8 @@ def env_exclude(lib: List[RefGene], rec) -> Optional[Exclude]:
     return ex
 
 
-def main(argv=None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The command line (main); options() gives the same options without one."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build", help="intron-site library from annotated GenBank records")
@@ -1983,7 +1985,17 @@ def main(argv=None) -> int:
                    "(FASTA input; e.g. 'Eukaryota;Metazoa;Cnidaria'); a record's taxonomy is always used first")
     n.add_argument("--bin", default=None, help="folder with tblastn / blastn")
     n.add_argument("--jobs", type=int, default=1, help="GenBank files processed in parallel")
-    a = p.parse_args(argv)
+    return p
+
+
+def options(cmd: str, **given) -> argparse.Namespace:
+    """Options for run(cmd): "build" (input: list of GenBank paths) or "annotate" (input, out)."""
+    return mito_common.options(build_parser(), cmd, **given)
+
+
+def run(a: argparse.Namespace) -> int:
+    """a.cmd build: the intron-site library from annotated records; annotate: introns at known sites added to the
+    GenBank file / folder a.input -> a.out (intron_ref_report.tsv). Returns the exit code."""
     if a.cmd == "build":
         genes = build_library(a.input, a.jobs)
         cms = find_tool("cmsearch", a.bin)
@@ -2035,6 +2047,10 @@ def find_tool(name: str, bin_dir: Optional[str]) -> Optional[str]:
     except Exception:
         import shutil
         return str(Path(bin_dir) / name) if bin_dir and (Path(bin_dir) / name).exists() else shutil.which(name)
+
+
+def main(argv=None) -> int:
+    return run(build_parser().parse_args(argv))
 
 
 if __name__ == "__main__":

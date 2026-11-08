@@ -43,6 +43,14 @@ installed one.
   GenBank, add missing, curate, NCBI, compare, maps, output; one numbered step each) handing on a `RunState`;
   workflow_run itself is 10 lines. Code of each stage unchanged; the final-body choice is `final_body()` /
   `with_partial_contigs()`. run.log and the terminal lines are the same as before (checked on NC_000931).
+- In-process API of the leaf commands: `mito_curate`, `mito_intron`, `mito_intron_ref`, `mito_nuc` have
+  `build_parser()`, `options(...)` (the command-line defaults, required options checked; `mito_common.options`) and
+  `run(options)`; `main()` only parses. E.g. `mito_curate.run(mito_curate.options(input="gb/", out="cur/"))`
+  (tests/test_api.py: same output as the command). The workflow still starts them as programs (timeouts, logs,
+  Snakemake). mito_nuc's program helper `run(cmd)` is `program_output(cmd)`.
+- External programs go through `mito_common.run_tool` (logged, `mitom debug`) in mito_nuc (blastn, exonerate,
+  table2asn) and mitom_groups too. tests/test_structure.py keeps the rules: no `global`, no sys.path edits, GenBank
+  written only by write_gb, subprocess only in run_tool and the listed probes / pipes, mitom_pipeline.py = main().
 
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:

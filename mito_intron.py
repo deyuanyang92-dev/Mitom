@@ -112,6 +112,7 @@ DEFAULT_CM = HERE / "models" / "rfam_group_I_II_introns.cm"
 SPLICE_PSSM = HERE / "models" / "neutral.pssm"      # MFannot_data/models/Splice/neutral.pssm
 from mito_common import (GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_qualifiers, write_gb,  # noqa: E402
                          write_tsv)                                                                       # (CC0)
+import mito_common  # noqa: E402
 from mito_common import cli_guard, count_seq_records, prepare_input, require_records  # noqa: E402
 from mito_common import run_tool as run_program  # noqa: E402  (CC0: logged, e.g. by `mitom run --debug`)
 ADJUST_RANGE = range(-6, 7)          # mfannot:5640 %adjustement, same k at both ends
@@ -1572,7 +1573,8 @@ def find_tool(name: str, bin_dir: Optional[str]) -> Optional[str]:
     return mito_env.find(name, bin_dir)
 
 
-def main(argv=None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The command line (main); options() gives the same options without one."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-i", "--input", required=True, help="GenBank file or directory (e.g. MitoM 04.final_gb)")
     p.add_argument("-o", "--out", required=True, help="Output directory (may equal input dir to update in place)")
@@ -1599,8 +1601,17 @@ def main(argv=None) -> int:
                         "(complete or T/TA stop there); 'first' = first in-frame complete stop codon")
     p.add_argument("--exclude_own_species", action="store_true",
                    help="Ignore library proteins of the record's own species (benchmarking)")
-    a = p.parse_args(argv)
+    return p
 
+
+def options(**given) -> argparse.Namespace:
+    """Options for run(): input and out are required, e.g. options(input="gb/", out="introns/", genetic_code=4)."""
+    return mito_common.options(build_parser(), **given)
+
+
+def run(a: argparse.Namespace) -> int:
+    """Introns de novo (MFannot method) in the GenBank file / folder a.input -> a.out (intron_report.tsv). Returns the
+    exit code (1: exonerate / BLAST missing)."""
     tools = {t: find_tool(t, a.bin) for t in ("exonerate", "blastp", "makeblastdb", "cmsearch")}
     missing = [t for t in ("exonerate", "blastp", "makeblastdb") if not tools[t]]
     if missing:
@@ -1647,6 +1658,10 @@ def main(argv=None) -> int:
           f"{len(w_)} intron(s) written in {len({(r['record'], r['gene']) for r in w_})} gene(s); "
           f"{len(low)} low-confidence not written -> {out / 'intron_report.tsv'}", file=sys.stderr)
     return 0
+
+
+def main(argv=None) -> int:
+    return run(build_parser().parse_args(argv))
 
 
 if __name__ == "__main__":

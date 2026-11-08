@@ -41,9 +41,9 @@ def gold_boundaries(curated, recs, out):
             g = next((nuc.rrna_name(f) for f in r.features if nuc.rrna_name(f)), None)
             if g:
                 o.write(f">{r.id}|{g}|{r.annotations['organism'].replace(' ', '_')}\n{r.seq}\n")
-    nuc.run([nuc.tool("makeblastdb"), "-in", str(out / "q.fa"), "-dbtype", "nucl"])
+    nuc.program_output([nuc.tool("makeblastdb"), "-in", str(out / "q.fa"), "-dbtype", "nucl"])
     truth = defaultdict(set)
-    for line in nuc.run([nuc.tool("blastn"), "-query", str(out / "gold.fa"), "-db", str(out / "q.fa"), "-evalue",
+    for line in nuc.program_output([nuc.tool("blastn"), "-query", str(out / "gold.fa"), "-db", str(out / "q.fa"), "-evalue",
                          "1e-20", "-max_target_seqs", "5000", "-num_threads", "8",
                          "-outfmt", "6 qseqid sseqid pident qstart qend sstart send qlen"]).splitlines():
         q, s, pid, qs, qe, ss, se, ql = line.split("\t")

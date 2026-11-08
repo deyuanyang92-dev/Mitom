@@ -692,9 +692,9 @@ def test_blast_db_in_pieces_searches_like_one_database(tmp_path, monkeypatch):
     (tmp_path / "q.fa").write_text(f">g\n{gene}\n")
     db = nuc.blast_db(tmp_path / "in.fa", tmp_path / "pieces", 3)
     assert db == str(tmp_path / "pieces") and (tmp_path / "pieces_2.nsq").exists()
-    nuc.run([nuc.tool("makeblastdb"), "-in", str(tmp_path / "in.fa"), "-dbtype", "nucl", "-out", str(tmp_path / "one")])
+    nuc.program_output([nuc.tool("makeblastdb"), "-in", str(tmp_path / "in.fa"), "-dbtype", "nucl", "-out", str(tmp_path / "one")])
     fmt = "6 sseqid sstart send evalue bitscore"
-    hits = [sorted(nuc.run([nuc.tool("blastn"), "-query", str(tmp_path / "q.fa"), "-db", d, "-evalue", "1e-5",
+    hits = [sorted(nuc.program_output([nuc.tool("blastn"), "-query", str(tmp_path / "q.fa"), "-db", d, "-evalue", "1e-5",
                             "-outfmt", fmt]).splitlines()) for d in (db, str(tmp_path / "one"))]
     assert hits[0] == hits[1] and len(hits[0]) == 12
 
@@ -734,8 +734,8 @@ def test_tblastn_of_distinct_proteins_gives_the_lines_of_one_run(tmp_path):
     SeqIO.write([SeqRecord(Seq(backtranslate(p, 9 + i) + rand(150)), id=f"t{i}", description="")
                  for i, p in enumerate((H3, h4, H3))], str(tmp_path / "t.fa"), "fasta")
     db = str(tmp_path / "t")
-    nuc.run([nuc.tool("makeblastdb"), "-in", str(tmp_path / "t.fa"), "-dbtype", "nucl", "-out", db])
-    one = nuc.run([nuc.tool("tblastn"), "-query", str(lib.hist_faa), "-db", db, "-evalue", "1e-5", "-outfmt",
+    nuc.program_output([nuc.tool("makeblastdb"), "-in", str(tmp_path / "t.fa"), "-dbtype", "nucl", "-out", db])
+    one = nuc.program_output([nuc.tool("tblastn"), "-query", str(lib.hist_faa), "-db", db, "-evalue", "1e-5", "-outfmt",
                    "6 qseqid sseqid sstart send bitscore", "-max_target_seqs", "100000", "-seg", "no"]).splitlines()
     assert nuc._tblastn(lib, db, tmp_path, 3) == one and len(one) == 8       # H3 x3 and H4 x2 on their contigs
 
@@ -761,7 +761,7 @@ def test_cmsearch_in_pieces_gives_the_hits_of_one_run(tmp_path):
     for opts, top in ((["-E", "1e-5", "--toponly"], True), (["-E", "1e-3"], False)):
         res = nuc._cmsearch(cm, wins, tmp_path, "p", 3, opts, align=top, toponly=top)
         (tmp_path / "all.fa").write_text("".join(f">{k}\n{s}\n" for k, s in wins))
-        nuc.run([nuc.tool("cmsearch"), "--cpu", "1", "--notextw", *opts, "--tblout", str(tmp_path / "all.tbl"),
+        nuc.program_output([nuc.tool("cmsearch"), "--cpu", "1", "--notextw", *opts, "--tblout", str(tmp_path / "all.tbl"),
                  str(cm), str(tmp_path / "all.fa")])
         one = sorted(line.split()[:16] for line in open(tmp_path / "all.tbl") if not line.startswith("#"))
         assert len(res) == 3 and sorted(x[:16] for rows, *_ in res for x in rows) == one and len(one) >= 7

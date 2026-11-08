@@ -25,7 +25,7 @@ from typing import Dict, Iterable, List, Tuple
 
 from Bio import SeqIO
 
-from mito_common import safe_name
+from mito_common import run_tool, safe_name
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_CLADE, PHYLUM_CODE, PHYLUM_SYNONYMS
 from mitom_inputs import _is_fasta_file, _is_gb_file, _sniff_input_type, clean_sequence
 
@@ -363,7 +363,7 @@ def run_groups(args: argparse.Namespace, plan: Plan, argv: List[str], say=print)
         g, rows, cmd = t
         t0 = time.time()
         with (groups_dir / g / "console.txt").open("w", encoding="utf-8") as fh:
-            rc = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, env={**os.environ, "MITOM_GROUP_RUN": g}).returncode
+            rc = run_tool(cmd, stdout=fh, stderr=subprocess.STDOUT, env={**os.environ, "MITOM_GROUP_RUN": g}).returncode
         say(f"    [{g}] finished: exit {rc}, {len(rows)} record(s), {time.time() - t0:.0f} s"
             + (f"  - see {groups_dir / g / 'console.txt'}" if rc else ""))
         return g, rc

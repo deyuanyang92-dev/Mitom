@@ -66,6 +66,7 @@ from Bio.SeqFeature import BeforePosition, AfterPosition
 from Bio.SeqRecord import SeqRecord
 
 import mito_env  # noqa: E402
+import mito_common  # noqa: E402
 from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records, run_tool, write_gb  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -138,7 +139,8 @@ def tool_ok(name: str) -> bool:
     return bool(mito_env.find(name))
 
 
-def run(cmd: List[str]) -> str:
+def program_output(cmd: List[str]) -> str:
+    """stdout of a program; its failure raises RuntimeError with the end of its stderr."""
     p = run_tool(cmd)                             # [CMD] line; the program's own error text kept (Kimi 1.8, 2026-11-05)
     if p.returncode:
         raise RuntimeError(f"{Path(cmd[0]).name} failed ({p.returncode}): {p.stderr.strip()[-400:]}")
@@ -255,8 +257,8 @@ def qc_rdna(lib: Path, threads: int) -> None:
         fa = Path(td) / "ref.fa"
         with gzip.open(lib / "rdna_ref.fa.gz", "rt") as i, open(fa, "w") as o:
             shutil.copyfileobj(i, o)
-        run([tool("makeblastdb"), "-in", str(fa), "-dbtype", "nucl", "-out", str(Path(td) / "db")])
-        tsv = run([tool("blastn"), "-task", "megablast", "-word_size", "16", "-query", str(fa),
+        program_output([tool("makeblastdb"), "-in", str(fa), "-dbtype", "nucl", "-out", str(Path(td) / "db")])
+        tsv = program_output([tool("blastn"), "-task", "megablast", "-word_size", "16", "-query", str(fa),
                    "-db", str(Path(td) / "db"), "-evalue", "1e-10", "-dust", "no", "-max_target_seqs", "1000",
                    "-num_threads", str(threads), "-outfmt", "6 qseqid sseqid qstart qend sstart send bitscore qseq sseq"])
     hits: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
@@ -333,13 +335,13 @@ class Library:
         self.rdna_fa = work / "rdna_ref.fa"
         with gzip.open(lib / "rdna_ref.fa.gz", "rt") as i, open(self.rdna_fa, "w") as o:
             shutil.copyfileobj(i, o)
-        run([tool("makeblastdb"), "-in", str(self.rdna_fa), "-dbtype", "nucl", "-out", str(work / "rdna_ref")])
+        program_output([tool("makeblastdb"), "-in", str(self.rdna_fa), "-dbtype", "nucl", "-out", str(work / "rdna_ref")])
         self.rdna_db = str(work / "rdna_ref")
         self.curated_db = None
         if self.curated:
             cfa = work / "curated_ref.fa"
             SeqIO.write([r for r in SeqIO.parse(str(self.rdna_fa), "fasta") if r.id in self.curated], str(cfa), "fasta")
-            run([tool("makeblastdb"), "-in", str(cfa), "-dbtype", "nucl", "-out", str(work / "curated_ref")])
+            program_output([tool("makeblastdb"), "-in", str(cfa), "-dbtype", "nucl", "-out", str(work / "curated_ref")])
             self.curated_db = str(work / "curated_ref")
         self.hist_faa = lib / "hist_ref.faa"
         # representatives for the prefilter
@@ -369,7 +371,7 @@ def blast_db(fa: Path, db: Path, threads: int) -> str:
     size = fa.stat().st_size
     n = max(1, min(threads, size // DB_PIECE))
     if n == 1:
-        run([tool("makeblastdb"), "-in", str(fa), "-dbtype", "nucl", "-out", str(db)])
+        program_output([tool("makeblastdb"), "-in", str(fa), "-dbtype", "nucl", "-out", str(db)])
         return str(db)
     parts = [db.parent / f"{db.name}_{i}" for i in range(n)]
     with open(fa, "rb") as f:
@@ -397,11 +399,11 @@ def blast_db(fa: Path, db: Path, threads: int) -> str:
     parts = parts[:len(cuts) - 1]
 
     def mk(p: Path) -> None:
-        run([tool("makeblastdb"), "-in", f"{p}.fa", "-dbtype", "nucl", "-out", str(p)])
+        program_output([tool("makeblastdb"), "-in", f"{p}.fa", "-dbtype", "nucl", "-out", str(p)])
         Path(f"{p}.fa").unlink()
     with ThreadPoolExecutor(len(parts)) as pool:
         list(pool.map(mk, parts))
-    run([tool("blastdb_aliastool"), "-dblist", " ".join(map(str, parts)), "-dbtype", "nucl", "-out", str(db),
+    program_output([tool("blastdb_aliastool"), "-dblist", " ".join(map(str, parts)), "-dbtype", "nucl", "-out", str(db),
          "-title", db.name])
     return str(db)
 
@@ -457,7 +459,7 @@ def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path, threads
     db = blast_db(contigs, work / "contigs", threads)
     out, bounded = {}, set()
     if "rdna" in genes:
-        hits = [x.split("\t") for x in run([tool("blastn"), "-task", "megablast", "-word_size", "20", "-query",
+        hits = [x.split("\t") for x in program_output([tool("blastn"), "-task", "megablast", "-word_size", "20", "-query",
                                              str(lib.rdna_rep), "-db", db, "-evalue", "1e-20", "-dust", "yes",
                                              "-max_target_seqs", "100000", "-num_threads", str(threads), "-outfmt",
                                              "6 sseqid sstart send slen qseqid bitscore"]).splitlines()]
@@ -472,7 +474,7 @@ def prefilter(contigs: Path, lib: Library, genes: List[str], work: Path, threads
             bounded.add("rdna")
         out["rdna"] = _best_windows(win, hits, bits, MAX_RDNA_REGIONS if "rdna" in bounded else 0, "rDNA")
     if "histone" in genes:
-        hits = [x.split("\t") for x in run([tool("tblastn"), "-query", str(lib.hist_rep), "-db", db, "-evalue", "1e-10",
+        hits = [x.split("\t") for x in program_output([tool("tblastn"), "-query", str(lib.hist_rep), "-db", db, "-evalue", "1e-10",
                                              "-seg", "no", "-max_target_seqs", "100000", "-num_threads", str(threads),
                                              "-outfmt", "6 sseqid sstart send slen qseqid bitscore pident"]).splitlines()]
         win, keep = _windows(hits), set()
@@ -743,7 +745,7 @@ def _rescue_58s(loci: Dict[str, List[dict]], regions: Path, lib: Library, work: 
                 o.write(f">{k}\n{seqs[q].seq[a - 1:b]}\n")
 
     def blast(i: int) -> str:
-        return run([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(work / f"rdna_58s{i}.fa"),
+        return program_output([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(work / f"rdna_58s{i}.fa"),
                     "-db", lib.rdna_db, "-evalue", "1e-5", "-dust", "no", "-num_threads", "1",
                     "-max_target_seqs", "500",
                     "-outfmt", "6 qseqid sseqid qstart qend sstart send bitscore qseq sseq"])
@@ -806,16 +808,16 @@ def annotate_rdna(regions: Path, lib: Library, work: Path, threads: int, leave_o
         fa, tsv = work / f"rdna_q{i}.fa", work / f"rdna_blast{i}.tsv"
         SeqIO.write(chunks[i], str(fa), "fasta")
         with open(tsv, "w") as o:
-            subprocess.run([tool("blastn"), "-task", "megablast", "-word_size", "16", "-query", str(fa),
-                            "-db", lib.rdna_db,
-                            "-evalue", "1e-10", "-outfmt", fmt, "-num_threads", "1",
-                            "-max_target_seqs", str(BLAST_TARGETS),
-                            "-dust", "no"], stdout=o, check=True)
+            run_tool([tool("blastn"), "-task", "megablast", "-word_size", "16", "-query", str(fa),
+                      "-db", lib.rdna_db,
+                      "-evalue", "1e-10", "-outfmt", fmt, "-num_threads", "1",
+                      "-max_target_seqs", str(BLAST_TARGETS),
+                      "-dust", "no"], stdout=o, check=True)
             # curated references again with blastn word 11: their conserved ends must align in distant taxa too
             if lib.curated_db:
-                subprocess.run([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(fa),
-                                "-db", lib.curated_db, "-evalue", "1e-5", "-outfmt", fmt, "-num_threads", "1",
-                                "-dust", "no"], stdout=o, check=True)
+                run_tool([tool("blastn"), "-task", "blastn", "-word_size", "11", "-query", str(fa),
+                          "-db", lib.curated_db, "-evalue", "1e-5", "-outfmt", fmt, "-num_threads", "1",
+                          "-dust", "no"], stdout=o, check=True)
         hits: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
         for line in open(tsv):
             q, s, qs, qe, ss, se, bs, qa, sa = line.rstrip("\n").split("\t")
@@ -893,7 +895,7 @@ def _cmsearch(cm: Path, seqs: List[Tuple[str, str]], work: Path, tag: str, threa
         fa, tbl, sto = (work / f"cm_{tag}_{i}.{x}" for x in ("fa", "tbl", "sto"))
         with open(fa, "w") as o:
             o.writelines(f">{k}\n{s}\n" for k, s in seqs[i::n])
-        run([tool("cmsearch"), "--cpu", "1", "--notextw", "-Z", f"{(z + 0.5) / 1e6:.9f}", *opts, "--tblout", str(tbl),
+        program_output([tool("cmsearch"), "--cpu", "1", "--notextw", "-Z", f"{(z + 0.5) / 1e6:.9f}", *opts, "--tblout", str(tbl),
              *(["-A", str(sto)] if align else []), str(cm), str(fa)])
         rows = [line.split() for line in open(tbl) if not line.startswith("#")]
         return (rows, *(_read_sto(sto) if align and sto.exists() and sto.stat().st_size else ("", {}, {})))
@@ -1276,9 +1278,9 @@ def _exonerate_all(target: str, prots: List[str], model: str, td: Path) -> List[
     start, end, length, % identity) or None. One run per protein and model was 22,700 runs of ~20 ms for the 3,700 H3 loci of
     SRR2006110; 2 per locus now"""
     (td / "p.fa").write_text("".join(f">p{i}\n{p}\n" for i, p in enumerate(prots)))
-    p = subprocess.run([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
-                        "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
-                        "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"], capture_output=True, text=True)
+    p = run_tool([tool("exonerate"), "--model", model, "--showalignment", "no", "--showvulgar", "no",
+                  "--showtargetgff", "yes", "--bestn", "1", "--geneticcode", "1", "-q", str(td / "p.fa"),
+                  "-t", target, "--ryo", "SCORE %qi %s %qab %qae %ql %pi\n"])
     if p.returncode:                             # a crash is not 'no alignment' (GLM 4.2, 2026-11-05)
         logging.warning(f"exonerate failed (exit {p.returncode}) on {target}: {' '.join(p.stderr.split())[-200:]}")
     out = p.stdout
@@ -1367,7 +1369,7 @@ def _tblastn(lib: Library, db: str, work: Path, threads: int) -> List[str]:
             o.writelines(f">{ref}\n{p}\n" for p, ref in uniq[i::n])
 
     def search(i: int) -> str:
-        return run([tool("tblastn"), "-query", str(work / f"hist_q{i}.faa"), "-db", db, "-evalue", "1e-5", "-outfmt",
+        return program_output([tool("tblastn"), "-query", str(work / f"hist_q{i}.faa"), "-db", db, "-evalue", "1e-5", "-outfmt",
                     "6 qseqid sseqid sstart send bitscore", "-max_target_seqs", "100000", "-num_threads", "1",
                     "-seg", "no"])
     by_query: Dict[str, List[str]] = defaultdict(list)
@@ -1381,7 +1383,7 @@ def _tblastn(lib: Library, db: str, work: Path, threads: int) -> List[str]:
 def annotate_histones(regions: Path, lib: Library, work: Path, threads: int, leave_out: Dict[str, str],
                       seqs: Dict[str, Seq]) -> Dict[str, List[dict]]:
     db = str(work / "regions")
-    run([tool("makeblastdb"), "-in", str(regions), "-dbtype", "nucl", "-out", db])
+    program_output([tool("makeblastdb"), "-in", str(regions), "-dbtype", "nucl", "-out", db])
     hits = defaultdict(list)
     for line in _tblastn(lib, db, work, threads):
         ref, s, a, b, bs = line.split("\t")
@@ -1871,9 +1873,9 @@ def write_submission(out: Path, inp: Path, recs, org: Dict[str, str], feats: Dic
     val = d / "nuc.val"
     val.unlink(missing_ok=True)                        # never report the last run's messages
     try:
-        p = subprocess.run([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
-                            "-gaps-min", "10", "-gaps-unknown", "100",
-                            "-o", str(d / "nuc.sqn")], capture_output=True, text=True, check=False, timeout=3600)
+        p = run_tool([t2a, "-i", str(d / "nuc.fsa"), "-f", str(d / "nuc.tbl"), "-V", "vb", "-Z", "-a", "s",
+                      "-gaps-min", "10", "-gaps-unknown", "100",
+                      "-o", str(d / "nuc.sqn")], timeout=3600)
     except subprocess.TimeoutExpired:                  # (table2asn 1.28 can hang on some SeqIDs)
         logging.warning("[NUC] submission: table2asn did not finish in 1 h: not validated")
         return d
@@ -1922,7 +1924,7 @@ def _pileup(frags: List[str], wt: List[float], backbone: str, work: Path) -> Tup
     with open(work / "fr.fa", "w") as o:
         for i, f in enumerate(frags):
             o.write(f">{i}\n{f}\n")
-    out = run([tool("blastn"), "-task", "blastn", "-query", str(work / "fr.fa"), "-subject", str(work / "bb.fa"),
+    out = program_output([tool("blastn"), "-task", "blastn", "-query", str(work / "fr.fa"), "-subject", str(work / "bb.fa"),
                "-strand", "plus", "-dust", "no", "-evalue", "1e-5",
                "-outfmt", "6 qseqid qstart qend sstart send bitscore qseq sseq"])
     n = len(backbone)
@@ -1988,7 +1990,7 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
         with open(work / "pc.fa", "w") as o:
             for i, (f, _) in enumerate(pieces):
                 o.write(f">{i}\n{f}\n")
-        out = run([tool("blastn"), "-task", "blastn", "-query", str(work / "pc.fa"), "-subject", str(work / "pc.fa"),
+        out = program_output([tool("blastn"), "-task", "blastn", "-query", str(work / "pc.fa"), "-subject", str(work / "pc.fa"),
                    "-strand", "plus", "-dust", "no", "-perc_identity", "98", "-evalue", "1e-10",
                    "-outfmt", "6 qseqid sseqid qstart qend sstart send length"])
         hsps = [h for h in (tuple(map(int, line.split("\t"))) for line in out.splitlines())
@@ -2031,7 +2033,7 @@ def _assemble(frags: List[str], wt: List[float], ref: Optional[str], work: Path)
         for i, (f, _) in enumerate(pieces):
             o.write(f">{i}\n{f}\n")
     (work / "rf.fa").write_text(f">r\n{ref}\n")
-    out = run([tool("blastn"), "-task", "blastn", "-query", str(work / "pc.fa"), "-subject", str(work / "rf.fa"),
+    out = program_output([tool("blastn"), "-task", "blastn", "-query", str(work / "pc.fa"), "-subject", str(work / "rf.fa"),
                "-strand", "plus", "-dust", "no", "-evalue", "1e-5",
                "-outfmt", "6 qseqid qstart qend sstart send bitscore"])
     place: Dict[int, Tuple[int, int, float]] = {}
@@ -2249,7 +2251,8 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
     return rows
 
 
-def main(argv=None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The command line (main); options() gives the same options without one."""
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("fetch", help="download the NCBI reference records (rdna.gb, histone.gb)")
@@ -2277,7 +2280,16 @@ def main(argv=None) -> int:
     a.add_argument("--src", type=Path, help="NCBI source table (TSV: Sequence_ID, organism, isolate, specimen_voucher, "
                                             "country, ...; title = own definition line) for the submission files")
     a.add_argument("--leave_out", type=Path, help=argparse.SUPPRESS)   # benchmark: TSV sequence id -> genus to skip
-    args = ap.parse_args(argv)
+    return ap
+
+
+def options(cmd: str, **given) -> argparse.Namespace:
+    """Options for run(): cmd "fetch", "build" (gb) or "annotate" (input, out); paths as Path."""
+    return mito_common.options(build_parser(), cmd, **given)
+
+
+def run(args: argparse.Namespace) -> int:
+    """args.cmd fetch / build / annotate (the functions fetch(), build(), annotate() do the work). Returns 0."""
     handlers = [logging.StreamHandler(sys.stdout)]
     if args.cmd == "annotate":
         args.out.mkdir(parents=True, exist_ok=True)
@@ -2292,12 +2304,16 @@ def main(argv=None) -> int:
         genes = [g.strip() for g in args.genes.split(",") if g.strip()]
         bad = set(genes) - {"rdna", "histone"}
         if bad:
-            ap.error(f"--genes: unknown {', '.join(sorted(bad))}")
+            raise InputError(f"--genes: unknown {', '.join(sorted(bad))} (rdna, histone)")
         src = Path(prepare_input(args.input))
         require_records(count_seq_records(src), "sequence records", args.input)
         annotate(src, args.out, args.lib, genes, args.threads, args.leave_out, args.consensus_identity,
                  args.organism, args.src, not args.no_cm)
     return 0
+
+
+def main(argv=None) -> int:
+    return run(build_parser().parse_args(argv))
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, FeatureLocation, SeqFeature
@@ -29,6 +29,30 @@ os.umask(_UMASK)
 def old_spelling(parser, name: str, dest: str, **kw) -> None:
     """An option's old spelling: still accepted (scripts written for earlier versions keep working), not shown in -h."""
     parser.add_argument(name, dest=dest, default=argparse.SUPPRESS, help=argparse.SUPPRESS, **kw)
+
+
+def options(parser: argparse.ArgumentParser, cmd: Optional[str] = None, **given) -> argparse.Namespace:
+    """The options of a command for its run() without a command line: the parser's defaults (string defaults
+    converted by the option's type, as argparse does), `given` for the rest (option names as dest, e.g. out_root);
+    cmd = the sub-command of a parser with sub-commands. An unknown name or a missing required option raises
+    TypeError. E.g. mito_curate.run(mito_curate.options(input="gb/", out="cur/", no_validate=True))."""
+    values = {}
+    if cmd is not None:
+        sub = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction))
+        values[sub.dest] = cmd
+        parser = sub.choices[cmd]
+    acts = [a for a in parser._actions if a.dest != "help" and a.default is not argparse.SUPPRESS
+            and not isinstance(a, argparse._SubParsersAction)]
+    for act in acts:
+        d = act.default
+        values[act.dest] = act.type(d) if isinstance(d, str) and callable(act.type) else d
+    unknown = sorted(set(given) - set(values))
+    missing = [act.dest for act in acts if act.required and act.dest not in given]
+    if unknown or missing:
+        raise TypeError(f"{parser.prog}: " + "; ".join(([f"unknown option(s) {', '.join(unknown)}"] if unknown else [])
+                                                      + ([f"missing {', '.join(missing)}"] if missing else [])))
+    values.update(given)
+    return argparse.Namespace(**values)
 
 
 def safe_name(s: str) -> str:
