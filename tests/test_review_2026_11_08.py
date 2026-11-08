@@ -3,7 +3,6 @@
 Run: python3 -m pytest -q tests/test_review_2026_11_08.py
 """
 import gzip
-import shutil
 import subprocess
 import sys
 from pathlib import Path

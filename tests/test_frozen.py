@@ -4,7 +4,6 @@ Run: python3 -m pytest -q tests/test_frozen.py
 """
 import csv
 import sys
-from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent

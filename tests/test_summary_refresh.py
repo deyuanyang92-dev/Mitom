@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_output  # noqa: E402
 
 
 def test_counts_taken_from_final_files(tmp_path):
@@ -28,7 +28,7 @@ def test_counts_taken_from_final_files(tmp_path):
     r.features = [SeqFeature(FeatureLocation(i * 100, i * 100 + 90, 1), type=t, qualifiers={"gene": [f"g{i}"]})
                   for i, t in enumerate(["CDS"] * 11 + ["rRNA"] * 2 + ["tRNA"])]
     SeqIO.write(r, str(d / "NC_016117.1.gbf"), "genbank")
-    bm.refresh_summary(tmp_path, d)
+    mitom_output.refresh_summary(tmp_path, d)
     rows = [x.split("\t") for x in (tmp_path / "annotation-summary.tsv").read_text().splitlines()]
     assert rows[1] == ["NC_016117.1", "11", "1", "2", "yes", "phase2_mitoz", "metadata_transferred"]
     assert rows[2][:4] == ["OTHER", "13", "22", "2"]          # no final file: row kept as it was

@@ -8,7 +8,11 @@ from Bio import SeqIO
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mito_taxa  # noqa: E402
+import mitom_cli  # noqa: E402
+import mitom_prepare  # noqa: E402
+import mitom_steps  # noqa: E402
+import os  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -71,7 +75,7 @@ def test_mito_trna_rejects_unknown_mitos_mode(tmp_path):
 
 
 def test_extended_clade_accepted_and_needs_code(tmp_path):
-    assert "Animal" in bm.ALL_CLADES and "Cnidaria" in bm.ALL_CLADES
+    assert "Animal" in mito_taxa.ALL_CLADES and "Cnidaria" in mito_taxa.ALL_CLADES
     r = subprocess.run([sys.executable, str(HERE.parent / "mitom_pipeline.py"), "run", "-i", str(tmp_path), "-o", str(tmp_path / "o"),
                         "--clade", "Cnidaria"], capture_output=True, text=True)
     assert r.returncode != 0 and "--genetic_code" in (r.stdout + r.stderr)
@@ -81,13 +85,13 @@ def test_native_core_only_and_mitom_steps_on_by_default(capsys):
     """MitoZ removed (user 2026-10-28: only its annotation and circular map were wanted, both now MitoM's own):
     --core mitoz / hybrid are refused, --core native (old scripts) is accepted. Reorientation, round 2, metadata
     transfer, introns, curation and the genome maps are on by default; the MITOS2 rescue is off (auto)."""
-    p = bm.build_parser()
+    p = mitom_cli.build_parser()
     for core in ("mitoz", "hybrid"):
         with pytest.raises(SystemExit):
             p.parse_args(["run", "-i", "x", "-o", "y", "--core", core])
         assert "invalid choice" in capsys.readouterr().err
     a = p.parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--core", "native"])
-    assert bm.resolve_tools(a) == "" and (a.core, a.rescue, a.plot, a.curate) == ("native", "auto", "yes", "yes")
+    assert mitom_prepare.resolve_tools(a) == "" and (a.core, a.rescue, a.plot, a.curate) == ("native", "auto", "yes", "yes")
     assert (a.which_gene_first, a.if_reannotation_2, a.preserve_phase1_metadata, a.intron_fix) == ("cox1", "auto", "yes", "auto")
     assert not hasattr(a, "trna") and not hasattr(a, "circos") and not hasattr(a, "conda_env_mitoz")
 
@@ -101,7 +105,7 @@ def test_run_ends_with_curated_and_submission_files(tmp_path):
     final.mkdir()
     (final / "KY753833.gbf").write_bytes((HERE / "data" / "KY753833_mitoz.gbf").read_bytes())
     args = argparse.Namespace(curate="yes", genetic_code=5, sbt=None)
-    merged_from = bm.run_curate_and_submit(args, final, tmp_path).gb_dir
+    merged_from = mitom_steps.run_curate_and_submit(args, final, tmp_path).gb_dir
     assert merged_from == tmp_path / "05.curated"
     rec = SeqIO.read(str(merged_from / "KY753833.gbf"), "genbank")
     assert {f.qualifiers["gene"][0] for f in rec.features if f.type == "rRNA"} == {"rrnS", "rrnL"}
@@ -129,18 +133,18 @@ def test_doctor_has_required_biopython_row(capsys, monkeypatch):
 @pytest.mark.parametrize("cpus,threads,tasks", [(4, 4, 1), (32, 8, 4), (2, 2, 1), (8, 8, 1), (None, 8, 1)])
 def test_default_threads_follow_the_machine(monkeypatch, cpus, threads, tasks):
     """B22: 16 threads x 16 jobs regardless of the machine; now threads = min(8, CPUs), jobs = CPUs // threads."""
-    monkeypatch.setattr(bm.os, "cpu_count", lambda: cpus)
-    a = bm.build_parser().parse_args(["run", "-i", "x", "-o", "y"])
+    monkeypatch.setattr(os, "cpu_count", lambda: cpus)
+    a = mitom_cli.build_parser().parse_args(["run", "-i", "x", "-o", "y"])
     assert (a.threads, a.max_tasks) == (threads, tasks)
-    a = bm.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--threads", "3", "--max_tasks", "5"])
+    a = mitom_cli.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--threads", "3", "--max_tasks", "5"])
     assert (a.threads, a.max_tasks) == (3, 5)
 
 
 def test_prog_name_follows_the_launcher(monkeypatch):
     monkeypatch.delenv("MITOM_LAUNCHER", raising=False)
-    assert bm.build_parser().prog == "mitom_pipeline.py"
+    assert mitom_cli.build_parser().prog == "mitom_pipeline.py"
     monkeypatch.setenv("MITOM_LAUNCHER", "1")
-    assert bm.build_parser().prog == "mitom"
+    assert mitom_cli.build_parser().prog == "mitom"
 
 
 def test_doctor_and_preflight_check_every_program_a_step_needs(capsys, monkeypatch, tmp_path):
@@ -156,15 +160,15 @@ def test_doctor_and_preflight_check_every_program_a_step_needs(capsys, monkeypat
     assert rc == 1 and "!! cmalign" in out and "!! makeblastdb" in out
     a = argparse.Namespace(cmd="run", engine="native", intron_fix="auto", curate="yes", rrna_hmm="auto",
                            mitos_refdir=None, scheduler_backend="threads", input=str(tmp_path))
-    probs = bm.check_environment(a)
+    probs = mitom_prepare.check_environment(a)
     assert any("makeblastdb for the intron step" in p for p in probs) and any("cmalign for MitoM-ML" in p for p in probs)
     a.intron_fix = "no"
-    assert not any("makeblastdb" in p for p in bm.check_environment(a))
+    assert not any("makeblastdb" in p for p in mitom_prepare.check_environment(a))
 
 
 def test_new_option_spellings_and_hidden_old_ones():
     """One spelling per meaning (-o/--out, --jobs, --refdir, --threads); the old ones still work and are not shown."""
-    p = bm.build_parser()
+    p = mitom_cli.build_parser()
     old = p.parse_args(["run", "-i", "x", "--out_root", "o", "--max_tasks", "3", "--mitos_refdir", "r"])
     new = p.parse_args(["run", "-i", "x", "--out", "o", "--jobs", "3", "--refdir", "r"])
     assert vars(old) == vars(new) and (new.out_root, new.max_tasks, new.mitos_refdir) == ("o", 3, "r")

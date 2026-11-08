@@ -13,7 +13,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import mito_debug  # noqa: E402
-import mitom_pipeline as bm  # noqa: E402
+import mitom_commands  # noqa: E402
+import mitom_pipeline  # noqa: E402
 from mitom_log import record_event, Steps  # noqa: E402
 
 MITOM = HERE.parent / "mitom"
@@ -58,10 +59,10 @@ def test_an_error_goes_into_the_log_with_its_traceback_and_the_exit_code(tmp_pat
 
     def broken(*a, **k):
         raise ValueError("broken input")
-    monkeypatch.setattr(bm, "dedup_gb_records", broken)
+    monkeypatch.setattr(mitom_commands, "dedup_gb_records", broken)
     monkeypatch.setattr(sys, "argv", ["mitom_pipeline.py", "dedup", "-i", str(gb), "-o", str(tmp_path / "out")])
     try:
-        assert bm.main() == 1
+        assert mitom_pipeline.main() == 1
     finally:
         _drop_handlers()
     log = (tmp_path / "out" / "dedup.log").read_text()

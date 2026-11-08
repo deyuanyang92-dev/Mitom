@@ -23,7 +23,10 @@ from Bio.SeqRecord import SeqRecord
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_cli  # noqa: E402
+import mitom_pipeline  # noqa: E402
+import mitom_prepare  # noqa: E402
+import mitom_run  # noqa: E402
 import mito_common  # noqa: E402
 import mito_engines  # noqa: E402
 import mito_intron  # noqa: E402
@@ -202,22 +205,22 @@ def test_previous_results_removed_but_never_the_input(tmp_path):
 def test_lock_of_another_users_run_is_alive(tmp_path, monkeypatch):
     out = tmp_path / "o"
     out.mkdir()
-    (out / bm.LOCK_NAME).write_text("12345\n")
+    (out / mitom_prepare.LOCK_NAME).write_text("12345\n")
 
     def kill(pid, sig):
         raise PermissionError(1, "Operation not permitted")
     monkeypatch.setattr(os, "kill", kill)
-    assert "another MitoM run" in bm.lock_output(out)
+    assert "another MitoM run" in mitom_prepare.lock_output(out)
 
 
 def test_import_is_prepared_after_the_lock(tmp_path, monkeypatch):
     out = tmp_path / "o"
     out.mkdir()
-    (out / bm.LOCK_NAME).write_text(f"{os.getppid()}\n")
+    (out / mitom_prepare.LOCK_NAME).write_text(f"{os.getppid()}\n")
     called = []
-    monkeypatch.setattr(bm, "prepare_import", lambda a: called.append(1) or "")
+    monkeypatch.setattr(mitom_prepare, "prepare_import", lambda a: called.append(1) or "")
     monkeypatch.setattr(sys, "argv", ["mitom", "import", "-i", str(tmp_path), "-o", str(out)])
-    assert bm.main() == 2 and not called
+    assert mitom_pipeline.main() == 2 and not called
 
 
 # ---- groups ------------------------------------------------------------------------------------------------------
@@ -338,10 +341,10 @@ def test_install_sh_macos_asset_and_mitotools():
 def test_lock_of_a_reused_pid_is_stale(tmp_path):
     out = tmp_path / "o"
     out.mkdir()
-    (out / bm.LOCK_NAME).write_text(f"{os.getppid()} 1\n")        # a running pid, but started at another time
-    assert bm.lock_output(out) == ""
-    pid, started = (out / bm.LOCK_NAME).read_text().split()
-    assert pid == str(os.getpid()) and started == bm._process_start(os.getpid())
+    (out / mitom_prepare.LOCK_NAME).write_text(f"{os.getppid()} 1\n")        # a running pid, but started at another time
+    assert mitom_prepare.lock_output(out) == ""
+    pid, started = (out / mitom_prepare.LOCK_NAME).read_text().split()
+    assert pid == str(os.getpid()) and started == mitom_prepare._process_start(os.getpid())
 
 
 # ---- GLM 5.3 review (verified 2026-11-05) ------------------------------------------------------------------------
@@ -377,9 +380,9 @@ def test_explicit_chordata_uses_the_tunicate_code(tmp_path):
     r = _rec("T1", 400)
     r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata", "Tunicata", "Ascidiacea"]
     SeqIO.write(r, str(tmp_path / "t.gb"), "genbank")
-    args = bm.build_parser().parse_args(["run", "-i", str(tmp_path / "t.gb"), "-o", str(tmp_path / "o"),
+    args = mitom_cli.build_parser().parse_args(["run", "-i", str(tmp_path / "t.gb"), "-o", str(tmp_path / "o"),
                                          "--clade", "Chordata"])
-    bm.resolve_tools(args)
+    mitom_prepare.resolve_tools(args)
     assert args.genetic_code == 13
 
 
@@ -426,9 +429,9 @@ def test_explicit_chordata_with_two_codes_is_an_error(tmp_path):
         r.annotations["taxonomy"] = ["Eukaryota", "Metazoa", "Chordata"] + sub_
         recs.append(r)
     SeqIO.write(recs, str(tmp_path / "m.gb"), "genbank")
-    args = bm.build_parser().parse_args(["run", "-i", str(tmp_path / "m.gb"), "-o", str(tmp_path / "o"),
+    args = mitom_cli.build_parser().parse_args(["run", "-i", str(tmp_path / "m.gb"), "-o", str(tmp_path / "o"),
                                          "--clade", "Chordata"])
-    err = bm.resolve_tools(args)
+    err = mitom_prepare.resolve_tools(args)
     assert err.startswith("ERROR") and "--clade auto" in err
 
 
@@ -535,9 +538,9 @@ def test_given_input_is_protected_when_normalized(tmp_path):
     out = tmp_path / "out"
     (out / "final_annotation").mkdir(parents=True)
     (out / "README.txt").write_text("MitoM output\n")
-    args = bm.build_parser().parse_args(["run", "-i", str(out / "00.input"), "-o", str(out)])
+    args = mitom_cli.build_parser().parse_args(["run", "-i", str(out / "00.input"), "-o", str(out)])
     args.input_given = str(out / "final_annotation")
-    mitom_output.clear_previous_work(out, keep=("00.input",), protect=bm._inputs(args))
+    mitom_output.clear_previous_work(out, keep=("00.input",), protect=mitom_run._inputs(args))
     assert (out / "final_annotation").is_dir()
 
 
@@ -647,10 +650,10 @@ def test_import_protects_the_given_input(tmp_path):
     SeqIO.write(r, str(src / "S1.gb"), "genbank")
     (src / "notes.txt").write_text("aux")
     (out / "README.txt").write_text("MitoM output\n")
-    args = bm.build_parser().parse_args(["import", "-i", str(src), "-o", str(out), "--clade", "Annelida-segmented-worms",
+    args = mitom_cli.build_parser().parse_args(["import", "-i", str(src), "-o", str(out), "--clade", "Annelida-segmented-worms",
                                          "--genetic_code", "5"])
-    assert bm.prepare_import(args) == ""
-    mitom_output.clear_previous_work(out, keep=("00.input", "00.imported"), protect=bm._inputs(args))
+    assert mitom_prepare.prepare_import(args) == ""
+    mitom_output.clear_previous_work(out, keep=("00.input", "00.imported"), protect=mitom_run._inputs(args))
     assert (src / "notes.txt").exists()
 
 

@@ -21,7 +21,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import mito_engines as me  # noqa: E402
 import mito_env  # noqa: E402
+import mitom_cli  # noqa: E402
 import mitom_pipeline as mp  # noqa: E402
+import mitom_prepare  # noqa: E402
+import mitom_stage  # noqa: E402
 
 SEQ = "ACGT" * 1000                                            # 4,000 nt
 BED = ("X\t0\t64\ttrnM(cat)\t1e-12\t+\n"
@@ -87,9 +90,9 @@ def test_import_mitos2_needs_the_genetic_code_and_the_sequence(tmp_path):
 
 def test_engine_cmd_per_engine():
     def cmd(*extra):
-        a = mp.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--genetic_code", "5",
+        a = mitom_cli.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--genetic_code", "5",
                                           *extra])
-        return mp.engine_cmd(Path("s.fa"), Path("w"), "S00001", a)
+        return mitom_stage.engine_cmd(Path("s.fa"), Path("w"), "S00001", a)
     native = cmd()
     assert Path(native[3]).name == "mito_core.py" and native[4] == "annotate"
     mz = cmd("--engine", "mitoz", "--mitoz_bin", "/opt/mz/bin")
@@ -115,9 +118,9 @@ def test_mitos_args_passed_to_runmitos_and_checked():
             me.mitos_extra_args(bad)
     cmd = me.mitos2_command(Path("/w/in.fa"), Path("/w/res"), 5, "/m/bin", "/refs", extra=["--best"])
     assert cmd[-2:] == ["--noplots", "--best"]
-    a = mp.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--genetic_code", "5",
+    a = mitom_cli.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--genetic_code", "5",
                                       "--engine", "native", "--mitos_args=--best"])
-    assert "--mitos_args" in mp.resolve_tools(a)
+    assert "--mitos_args" in mitom_prepare.resolve_tools(a)
 
 
 FAKE_MITOZ = """#!/bin/sh
@@ -144,12 +147,12 @@ def test_run_mitoz_with_a_fake_program(tmp_path):
 
 def test_resolve_tools_checks_the_engine(tmp_path, monkeypatch):
     def parse(*extra):
-        return mp.build_parser().parse_args(["run", "-i", str(tmp_path), "-o", str(tmp_path / "o"), *extra])
+        return mitom_cli.build_parser().parse_args(["run", "-i", str(tmp_path), "-o", str(tmp_path / "o"), *extra])
     a = parse("--clade", "Cnidaria", "--genetic_code", "4", "--engine", "mitoz")
-    assert "MitoZ has no protein database" in mp.resolve_tools(a)
+    assert "MitoZ has no protein database" in mitom_prepare.resolve_tools(a)
     monkeypatch.setattr(mito_env, "mitos_bin", lambda explicit=None: None)
     a = parse("--clade", "Mollusca", "--engine", "mitos2")
-    assert "--engine mitos2" in mp.resolve_tools(a)
+    assert "--engine mitos2" in mitom_prepare.resolve_tools(a)
 
 
 def test_import_workflow_end_to_end(tmp_path):
@@ -170,7 +173,7 @@ def test_import_workflow_end_to_end(tmp_path):
 
 def test_old_name_batch_mitoz_still_works():
     import batch_mitoz
-    assert batch_mitoz is mp and batch_mitoz.workflow_run is mp.workflow_run
+    assert batch_mitoz is mp and batch_mitoz.main is mp.main
     r = subprocess.run([sys.executable, str(HERE.parent / "batch_mitoz.py"), "import", "-h"], capture_output=True, text=True)
     assert r.returncode == 0 and "--topology" in r.stdout
 

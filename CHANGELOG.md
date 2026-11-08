@@ -25,6 +25,12 @@ installed one.
   mitom_main.VERSION). The launcher's code moved from the `mitom` file to `mitom_main.py` (the file stays, 10 lines).
   The modules no longer edit `sys.path` (23 files): a script imports its neighbours from its own folder, as Python does;
   `python -I script.py` / PYTHONSAFEPATH are not supported for direct script runs (`mitom` clears PYTHONSAFEPATH).
+- mitom_pipeline.py (1678 lines: workflows, command line, preflight, ~200 re-exported names) split, code unchanged:
+  `mitom_cli.py` (build_parser), `mitom_prepare.py` (environment check, tools, --clade auto, import, output lock),
+  `mitom_run.py` (run / import / annotate, clade groups), `mitom_commands.py` (reorient, transfer_metadata,
+  replace_organism, dedup, gb2fasta, intron); mitom_pipeline.py keeps main() (183 lines). No re-exports: an old
+  `mitom_pipeline.<name>` still resolves with a DeprecationWarning; the tests import the defining modules (an old name
+  in a test is an error, pyproject filterwarnings).
 
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:

@@ -12,7 +12,7 @@ from Bio.SeqFeature import FeatureLocation
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_cli  # noqa: E402
 import mito_check as mc  # noqa: E402
 
 
@@ -115,7 +115,7 @@ def test_check_files_reports_and_cli(tmp_path):
 
 
 def test_run_parser_defaults():
-    p = bm.build_parser()
+    p = mitom_cli.build_parser()
     a = p.parse_args(["run", "-i", "x.gb", "-o", "o"])
     assert a.if_reannotation_2 == "auto" and not hasattr(a, "existing_annotation")
 

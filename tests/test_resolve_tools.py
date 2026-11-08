@@ -16,8 +16,11 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_cli  # noqa: E402
+import mitom_prepare  # noqa: E402
+import mitom_run  # noqa: E402
 import mitom_stage  # noqa: E402
+import mitom_steps  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -31,7 +34,7 @@ def restore_environ():
 
 
 def parse(tmp_path, *extra, inp=None):
-    return bm.build_parser().parse_args(["run", "-i", str(inp or tmp_path), "-o", str(tmp_path / "out"), *extra])
+    return mitom_cli.build_parser().parse_args(["run", "-i", str(inp or tmp_path), "-o", str(tmp_path / "out"), *extra])
 
 
 # ---- B6: phylum from an explicit clade -------------------------------------------------------------------
@@ -41,16 +44,16 @@ def parse(tmp_path, *extra, inp=None):
     ("Platyhelminthes-flatworms", "Platyhelminthes"), ("Chaetognatha-arrow-worms", "Chaetognatha")])
 def test_explicit_clade_gives_the_phylum(tmp_path, clade, phylum):
     a = parse(tmp_path, "--clade", clade, "--genetic_code", "5")
-    assert bm.resolve_tools(a) == "" and a.phylum == phylum
+    assert mitom_prepare.resolve_tools(a) == "" and a.phylum == phylum
 
 
 def test_animal_clade_leaves_phylum_unknown_and_explicit_phylum_wins(tmp_path):
     a = parse(tmp_path, "--clade", "Animal", "--genetic_code", "5")
-    assert bm.resolve_tools(a) == "" and a.phylum is None
+    assert mitom_prepare.resolve_tools(a) == "" and a.phylum is None
     a = parse(tmp_path, "--clade", "Animal", "--genetic_code", "5", "--phylum", "Ctenophora")
-    assert bm.resolve_tools(a) == "" and a.phylum == "Ctenophora"
+    assert mitom_prepare.resolve_tools(a) == "" and a.phylum == "Ctenophora"
     a = parse(tmp_path, "--clade", "Mollusca", "--phylum", "Kinorhyncha")
-    assert bm.resolve_tools(a) == "" and a.phylum == "Kinorhyncha"
+    assert mitom_prepare.resolve_tools(a) == "" and a.phylum == "Kinorhyncha"
 
 
 def test_auto_clade_gives_the_phylum(tmp_path):
@@ -60,7 +63,7 @@ def test_auto_clade_gives_the_phylum(tmp_path):
     f = tmp_path / "m.gb"
     SeqIO.write(r, str(f), "genbank")
     a = parse(tmp_path, inp=f)
-    assert bm.resolve_tools(a) == "" and (a.clade, a.phylum) == ("Mollusca", "Mollusca")
+    assert mitom_prepare.resolve_tools(a) == "" and (a.clade, a.phylum) == ("Mollusca", "Mollusca")
 
 
 # ---- B10: the decisions are shown on the console --------------------------------------------------------
@@ -70,7 +73,7 @@ def test_clade_decision_is_printed(tmp_path, capsys):
                          taxonomy=["Eukaryota", "Metazoa", "Mollusca"])
     f = tmp_path / "m.gb"
     SeqIO.write(r, str(f), "genbank")
-    bm.resolve_tools(parse(tmp_path, inp=f))
+    mitom_prepare.resolve_tools(parse(tmp_path, inp=f))
     assert "[CLADE] auto: Mollusca (1 by GenBank taxonomy) -> --clade Mollusca --genetic_code 5" in capsys.readouterr().err
 
 
@@ -91,7 +94,7 @@ def test_rrna_hmm_failure_is_logged_and_the_run_continues(tmp_path, monkeypatch,
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
     monkeypatch.setattr(mito_rrna_hmm, "search_dir", boom)
     with caplog.at_level(logging.ERROR):
-        assert not bm.run_rrna_hmm(ns(), tmp_path, tmp_path).ok
+        assert not mitom_steps.run_rrna_hmm(ns(), tmp_path, tmp_path).ok
     assert any("[RRNA_HMM] failed" in m for m in caplog.messages)
 
 
@@ -102,7 +105,7 @@ def test_rescue_failure_is_logged_and_the_run_continues(tmp_path, monkeypatch, c
         raise RuntimeError("MITOS2 exploded")
     monkeypatch.setattr(mito_rescue, "rescue_dir", boom)
     with caplog.at_level(logging.ERROR):
-        assert not bm.run_rescue(ns(), tmp_path, tmp_path).ok
+        assert not mitom_steps.run_rescue(ns(), tmp_path, tmp_path).ok
     assert any("[RESCUE] failed" in m and "MITOS2 exploded" in m for m in caplog.messages)
 
 
@@ -115,7 +118,7 @@ def test_rrna_hmm_warns_when_nothing_could_be_searched(tmp_path, monkeypatch, ca
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
     monkeypatch.setattr(mito_rrna_hmm, "search_dir", lambda *a, **k: rows)
     with caplog.at_level(logging.WARNING):
-        bm.run_rrna_hmm(ns(), tmp_path, tmp_path)
+        mitom_steps.run_rrna_hmm(ns(), tmp_path, tmp_path)
     assert any("--phylum" in m and "[RRNA_HMM]" in m for m in caplog.messages)
     assert "--phylum" in capsys.readouterr().err
     assert (tmp_path / "reports" / "rrna_hmm_report.tsv").read_text().splitlines()[1].split("\t")[:6][-1] == status
@@ -128,7 +131,7 @@ def test_rrna_hmm_no_warning_when_models_were_used(tmp_path, monkeypatch, caplog
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
     monkeypatch.setattr(mito_rrna_hmm, "search_dir", lambda *a, **k: rows)
     with caplog.at_level(logging.WARNING):
-        bm.run_rrna_hmm(ns(), tmp_path, tmp_path)
+        mitom_steps.run_rrna_hmm(ns(), tmp_path, tmp_path)
     assert not any("--phylum" in m for m in caplog.messages) and "--phylum" not in capsys.readouterr().err
 
 
@@ -138,12 +141,12 @@ def test_report_tables_carry_hint_and_coverage_columns(tmp_path, monkeypatch):
     import mito_rrna_hmm
     monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: [
         dict(file="a.gbf", record="S1", gene="ND2", location="1..9", status="added", hint="check start")])
-    bm.run_rescue(ns(), tmp_path, tmp_path)
+    mitom_steps.run_rescue(ns(), tmp_path, tmp_path)
     assert (tmp_path / "reports" / "rescue_report.tsv").read_text().splitlines() == [
         "file\trecord\tgene\tlocation\tstatus\thint", "a.gbf\tS1\tND2\t1..9\tadded\tcheck start"]
     monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: [      # an older row without "hint"
         dict(file="a.gbf", record="S1", gene="ND2", location="1..9", status="added")])
-    bm.run_rescue(ns(), tmp_path, tmp_path)
+    mitom_steps.run_rescue(ns(), tmp_path, tmp_path)
     assert (tmp_path / "reports" / "rescue_report.tsv").read_text().splitlines()[1] == "a.gbf\tS1\tND2\t1..9\tadded\t"
     monkeypatch.setattr(mito_rrna_hmm, "read_manifest", lambda lib: {"x": 1})
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
@@ -151,7 +154,7 @@ def test_report_tables_carry_hint_and_coverage_columns(tmp_path, monkeypatch):
         dict(file="a.gbf", record="S1", phylum="Mollusca", gene="s-rRNA", location="1..9", status="added",
              coverage="0.93", note="check ends"),
         dict(file="a.gbf", record="S2", phylum="Mollusca", gene="l-rRNA", location="1..9", status="added (partial 5')")])
-    bm.run_rrna_hmm(ns(), tmp_path, tmp_path)
+    mitom_steps.run_rrna_hmm(ns(), tmp_path, tmp_path)
     lines = (tmp_path / "reports" / "rrna_hmm_report.tsv").read_text().splitlines()
     assert lines[0] == "file\trecord\tphylum\tgene\tlocation\tstatus\tcoverage\tnote"
     assert lines[1].endswith("\tadded\t0.93\tcheck ends") and lines[2].endswith("\tadded (partial 5')\t\t")
@@ -166,7 +169,7 @@ def test_added_count_includes_partial_statuses(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr(mito_env, "find", lambda *a, **k: "/bin/true")
     monkeypatch.setattr(mito_rrna_hmm, "search_dir", lambda *a, **k: rows)
     with caplog.at_level(logging.INFO):
-        bm.run_rrna_hmm(ns(), tmp_path, tmp_path)
+        mitom_steps.run_rrna_hmm(ns(), tmp_path, tmp_path)
     assert any("1 rRNA(s) added" in m and "S1:s-rRNA" in m and "S2" not in m for m in caplog.messages)
 
 
@@ -175,12 +178,12 @@ def test_empty_phase2_list_starts_no_annotation_stage(tmp_path, monkeypatch):
     def boom(**k):
         raise AssertionError("run_annotation_stage must not be called for an empty list")
     monkeypatch.setattr(mitom_stage, "run_annotation_stage", boom)          # run_phase2 lives there
-    assert bm.run_phase2([], argparse.Namespace(), tmp_path, tmp_path) == {}
+    assert mitom_stage.run_phase2([], argparse.Namespace(), tmp_path, tmp_path) == {}
 
 
 # ---- B15: body_source tag ------------------------------------------------------------------------------------
 def test_body_source_tag_tells_auto_skip_from_phase2_failure():
-    assert bm.fallback_src_tag("auto", "S1", {"S2"}) == "shifted_round1"          # auto decided: round 1 is fine
-    assert bm.fallback_src_tag("auto", "S2", {"S2"}) == "phase1b_reoriented"       # re-annotation failed
-    assert bm.fallback_src_tag("yes", "S1", {"S1"}) == "phase1b_reoriented"
-    assert bm.fallback_src_tag("no", "S1", set()) == "phase1b_reoriented"
+    assert mitom_run.fallback_src_tag("auto", "S1", {"S2"}) == "shifted_round1"          # auto decided: round 1 is fine
+    assert mitom_run.fallback_src_tag("auto", "S2", {"S2"}) == "phase1b_reoriented"       # re-annotation failed
+    assert mitom_run.fallback_src_tag("yes", "S1", {"S1"}) == "phase1b_reoriented"
+    assert mitom_run.fallback_src_tag("no", "S1", set()) == "phase1b_reoriented"

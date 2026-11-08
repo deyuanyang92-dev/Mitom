@@ -74,23 +74,23 @@ def test_one_run_per_output_folder(tmp_path):
     """2026-10-31 stress test: two runs into one folder both failed with half the records. The second is refused while
     the first runs; a lock left by a killed run is taken over."""
     import os
-    import mitom_pipeline as bm
+    import mitom_prepare  # noqa: E402
     out = tmp_path / "out"
     out.mkdir()
-    (out / bm.LOCK_NAME).write_text(f"{os.getppid()}\n")          # a running process (pytest's parent)
-    assert "another MitoM run" in bm.lock_output(out)
-    (out / bm.LOCK_NAME).write_text("999999999\n")                 # no such process: stale
-    assert bm.lock_output(out) == ""
-    assert (out / bm.LOCK_NAME).read_text().split()[0] == str(os.getpid())   # (+ its start time, N8)
+    (out / mitom_prepare.LOCK_NAME).write_text(f"{os.getppid()}\n")          # a running process (pytest's parent)
+    assert "another MitoM run" in mitom_prepare.lock_output(out)
+    (out / mitom_prepare.LOCK_NAME).write_text("999999999\n")                 # no such process: stale
+    assert mitom_prepare.lock_output(out) == ""
+    assert (out / mitom_prepare.LOCK_NAME).read_text().split()[0] == str(os.getpid())   # (+ its start time, N8)
 
 
 def test_output_folder_not_writable_is_a_clean_error(tmp_path):
-    import mitom_pipeline as bm
+    import mitom_prepare  # noqa: E402
     ro = tmp_path / "ro"
     ro.mkdir()
     ro.chmod(0o555)
     try:
-        assert "cannot write into the output folder" in bm.lock_output(ro / "out")
+        assert "cannot write into the output folder" in mitom_prepare.lock_output(ro / "out")
     finally:
         ro.chmod(0o755)
 

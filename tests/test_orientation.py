@@ -12,7 +12,7 @@ from Bio.SeqFeature import FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_orient  # noqa: E402
 
 
 def rec_with(features):
@@ -24,43 +24,43 @@ def rec_with(features):
 
 
 def test_aliases():
-    assert "coii" in bm.gene_aliases("cox2") and "cytb" in bm.gene_aliases("cob")
-    assert bm.gene_aliases("COX1") == bm.gene_aliases("COI")
+    assert "coii" in mitom_orient.gene_aliases("cox2") and "cytb" in mitom_orient.gene_aliases("cob")
+    assert mitom_orient.gene_aliases("COX1") == mitom_orient.gene_aliases("COI")
 
 
 def test_orientation_genes_from_args():
     a = argparse.Namespace(which_gene_first="cox1", fallback_genes="cox2,cob")
-    assert bm.orientation_genes(a) == "cox1,cox2,cob"
-    assert bm.orientation_genes(argparse.Namespace(which_gene_first="cox1", fallback_genes="none")) == "cox1"
+    assert mitom_orient.orientation_genes(a) == "cox1,cox2,cob"
+    assert mitom_orient.orientation_genes(argparse.Namespace(which_gene_first="cox1", fallback_genes="none")) == "cox1"
 
 
 def test_fallback_when_cox1_absent():
     r = rec_with([("CDS", "COII", 300, 900, 1), ("CDS", "CYTB", 1000, 1500, 1)])
-    feat, gene = bm.find_orientation_feature(r, "cox1,cox2,cob")
+    feat, gene = mitom_orient.find_orientation_feature(r, "cox1,cox2,cob")
     assert gene == "cox2" and int(feat.location.start) == 300
 
 
 def test_split_gene_takes_five_prime_piece():
     plus = rec_with([("CDS", "cox1", 1200, 1700, 1), ("CDS", "cox1", 200, 700, 1)])   # exon 2 listed first
-    assert int(bm.find_orientation_feature(plus, "cox1")[0].location.start) == 200
+    assert int(mitom_orient.find_orientation_feature(plus, "cox1")[0].location.start) == 200
     minus = rec_with([("CDS", "cox1", 200, 700, -1), ("CDS", "cox1", 1200, 1700, -1)])
-    assert int(bm.find_orientation_feature(minus, "cox1")[0].location.end) == 1700
+    assert int(mitom_orient.find_orientation_feature(minus, "cox1")[0].location.end) == 1700
 
 
 def test_nothing_found():
-    assert bm.find_orientation_feature(rec_with([("CDS", "nad5", 10, 400, 1)]), "cox1,cox2") == (None, "")
+    assert mitom_orient.find_orientation_feature(rec_with([("CDS", "nad5", 10, 400, 1)]), "cox1,cox2") == (None, "")
 
 
 def test_reorient_uses_fallback(tmp_path):
-    bm.ORIENTATION_FALLBACK.clear()
+    mitom_orient.ORIENTATION_FALLBACK.clear()
     r = rec_with([("CDS", "cox2", 300, 900, 1), ("CDS", "nad5", 1000, 1500, 1)])
     gb_in = tmp_path / "in.gbf"
     SeqIO.write(r, str(gb_in), "genbank")
-    n_ok, n_no, _ = bm.reorient_one_gb(gb_in, tmp_path / "out.gbf", tmp_path / "no.gbf", "cox1,cox2", True)
+    n_ok, n_no, _ = mitom_orient.reorient_one_gb(gb_in, tmp_path / "out.gbf", tmp_path / "no.gbf", "cox1,cox2", True)
     assert (n_ok, n_no) == (1, 0)
     out = SeqIO.read(str(tmp_path / "out.gbf"), "genbank")
     assert str(out.seq)[:20] == str(r.seq)[300:320]               # sequence now starts at cox2
-    assert bm.ORIENTATION_FALLBACK == {"R1": "cox2"}
+    assert mitom_orient.ORIENTATION_FALLBACK == {"R1": "cox2"}
 
 
 def test_reorient_after_introns_starts_with_the_first_exon(tmp_path):
@@ -81,13 +81,13 @@ def test_reorient_after_introns_starts_with_the_first_exon(tmp_path):
     (tmp_path / "f").mkdir()
     SeqIO.write(rec, str(tmp_path / "f" / "S1.gbf"), "genbank")
     a = argparse.Namespace(which_gene_first="cox1", fallback_genes="cox2,cox3,cob,nad1")
-    assert bm.reorient_after_introns(a, tmp_path / "f") == 1
+    assert mitom_orient.reorient_after_introns(a, tmp_path / "f") == 1
     out = SeqIO.read(str(tmp_path / "f" / "S1.gbf"), "genbank")
     cox1 = next(f for f in out.features if f.type == "CDS" and f.qualifiers["gene"] == ["COX1"])
     cox2 = next(f for f in out.features if f.type == "CDS" and f.qualifiers["gene"] == ["COX2"])
     assert int(cox1.location.parts[0].start) == 0 and str(cox1.extract(out.seq)) == str(loc.extract(rec.seq))
     assert int(cox2.location.start) == 1300
-    assert bm.reorient_after_introns(a, tmp_path / "f") == 0                  # already starts with exon 1
+    assert mitom_orient.reorient_after_introns(a, tmp_path / "f") == 0                  # already starts with exon 1
 
 
 def test_rotation_keeps_partial_ends():
@@ -100,11 +100,11 @@ def test_rotation_keeps_partial_ends():
     three = FeatureLocation(1500, AfterPosition(1800), strand=1)
     r.features = [SeqFeature(five, type="CDS", qualifiers={"gene": ["COX1"]}),
                   SeqFeature(three, type="CDS", qualifiers={"gene": ["COX1"]})]
-    out = bm.rotate_record(r, 600)
+    out = mitom_orient.rotate_record(r, 600)
     a, b = (next(f for f in out.features if int(f.location.parts[0].start) == x) for x in (1500, 900))
     assert isinstance(a.location.parts[0].start, BeforePosition) and int(a.location.parts[-1].end) == 100
     assert isinstance(b.location.end, AfterPosition) and int(b.location.end) == 1200
-    cut = bm.rotate_record(r, 1600)                                            # the 3'-partial piece spans the origin
+    cut = mitom_orient.rotate_record(r, 1600)                                            # the 3'-partial piece spans the origin
     c = next(f for f in cut.features if int(f.location.parts[0].start) == 1900)
     assert isinstance(c.location.parts[-1].end, AfterPosition) and int(c.location.parts[-1].end) == 200
 
@@ -119,7 +119,7 @@ def test_reverse_complement_keeps_and_swaps_partial_ends():
     three = FeatureLocation(1500, AfterPosition(L), strand=-1)                   # 5'-partial on the minus strand
     joined = CompoundLocation([FeatureLocation(BeforePosition(300), 400, 1), FeatureLocation(500, AfterPosition(700), 1)])
     r.features = [SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"]}) for loc in (five, three, joined)]
-    rc = bm.reverse_complement_record(r)
+    rc = mitom_orient.reverse_complement_record(r)
     a, b, c = (f.location for f in rc.features)
     assert (int(a.start), int(a.end), a.strand) == (L - 200, L, -1) and isinstance(a.end, AfterPosition)
     assert (int(b.start), int(b.end), b.strand) == (0, L - 1500, 1) and isinstance(b.start, BeforePosition)
@@ -127,7 +127,7 @@ def test_reverse_complement_keeps_and_swaps_partial_ends():
     # 3'-partial exon (its 3' end now the low end <) last (2026-10-31: the parts were reversed)
     assert isinstance(c.parts[0].end, AfterPosition) and isinstance(c.parts[-1].start, BeforePosition)
     assert int(c.parts[0].start) > int(c.parts[-1].start)
-    back = bm.reverse_complement_record(rc)
+    back = mitom_orient.reverse_complement_record(rc)
     assert [str(f.location) for f in back.features] == [str(f.location) for f in r.features]
 
 
@@ -171,11 +171,11 @@ def test_rotation_and_reverse_complement_move_transl_except_and_anticodon():
         assert trip.lower() == anti and all(int(t.location.start) < n <= int(t.location.end) for n in nums)
 
     check(r)
-    rot = bm.rotate_record(r, 200)                                     # cox1 first
+    rot = mitom_orient.rotate_record(r, 200)                                     # cox1 first
     check(rot)
-    check(bm.rotate_record(r, 1032))                                   # the anticodon is cut by the new origin
-    check(bm.reverse_complement_record(rot))
-    check(bm.rotate_record(bm.reverse_complement_record(r), 1500))
+    check(mitom_orient.rotate_record(r, 1032))                                   # the anticodon is cut by the new origin
+    check(mitom_orient.reverse_complement_record(rot))
+    check(mitom_orient.rotate_record(mitom_orient.reverse_complement_record(r), 1500))
 
 
 def test_rotation_and_reverse_complement_keep_every_feature_sequence():

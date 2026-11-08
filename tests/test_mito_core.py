@@ -447,12 +447,12 @@ def test_rrna_method_cm_uses_only_the_mitos2_covariance_models(tmp_path, monkeyp
 
 def test_pipeline_passes_rrna_method_to_the_core(tmp_path):
     import argparse
-    import mitom_pipeline as bm
+    import mitom_stage  # noqa: E402
     a = argparse.Namespace(genetic_code=5, threads=2, mitos_refdir=None, mitos_bin=None, phylum=None, rrna_hmm_lib=None,
                            rrna_method="cm")
-    cmd = bm.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", a)
+    cmd = mitom_stage.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", a)
     assert cmd[cmd.index("--rrna_method") + 1] == "cm"
-    cmd = bm.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", {"genetic_code": 5, "threads": 2, "rrna_method": "hmm"})
+    cmd = mitom_stage.native_core_cmd(tmp_path / "x.fa", tmp_path, "S00001", {"genetic_code": 5, "threads": 2, "rrna_method": "hmm"})
     assert cmd[cmd.index("--rrna_method") + 1] == "hmm"
 
 

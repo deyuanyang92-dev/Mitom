@@ -41,18 +41,6 @@ py-modules = [
     "mito_fetch",
     "mito_intron",
     "mito_intron_ref",
-    "mitom_groups",
-    "mitom_inputs",
-    "mitom_log",
-    "mitom_main",
-    "mitom_metadata",
-    "mitom_orient",
-    "mitom_output",
-    "mitom_pipeline",
-    "mitom_snakemake",
-    "mitom_stage",
-    "mitom_steps",
-    "mitom_topology",
     "mito_names",
     "mito_ncr",
     "mito_nuc",
@@ -63,6 +51,22 @@ py-modules = [
     "mito_taxa",
     "mito_tbl",
     "mito_trna",
+    "mitom_cli",
+    "mitom_commands",
+    "mitom_groups",
+    "mitom_inputs",
+    "mitom_log",
+    "mitom_main",
+    "mitom_metadata",
+    "mitom_orient",
+    "mitom_output",
+    "mitom_pipeline",
+    "mitom_prepare",
+    "mitom_run",
+    "mitom_snakemake",
+    "mitom_stage",
+    "mitom_steps",
+    "mitom_topology",
     "ncbi_validate",
     "trna_ml",
 ]
@@ -73,3 +77,5 @@ version = { attr = "mitom_main.VERSION" }
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+# a test that still uses an old mitom_pipeline.<name> fails (import from the module that defines it)
+filterwarnings = ["error:mitom_pipeline\\.:DeprecationWarning"]

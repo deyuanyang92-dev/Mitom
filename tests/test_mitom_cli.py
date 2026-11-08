@@ -107,3 +107,16 @@ def test_doctor_without_biopython_still_runs_and_flags_it(venv_without_bio):
     env = dict(os.environ, YZZ_MITO_NO_SCAN="1")
     p = run("doctor", py=venv_without_bio, env=env)
     assert p.returncode == 1 and "!! Biopython" in p.stdout
+
+
+def test_old_mitom_pipeline_names_still_work_with_a_warning():
+    """Old scripts: mitom_pipeline.<name> of a moved name (2026-11-08 split) still resolves, with a DeprecationWarning."""
+    import warnings
+    import mitom_pipeline
+    import mitom_prepare
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        assert mitom_pipeline.resolve_tools is mitom_prepare.resolve_tools
+    assert any("import it from mitom_prepare" in str(x.message) for x in w)
+    with pytest.raises(AttributeError):
+        mitom_pipeline.no_such_name

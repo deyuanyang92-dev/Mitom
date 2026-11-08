@@ -14,7 +14,7 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_orient  # noqa: E402
 
 rnd = random.Random(3)
 NAMES = ["COX1", "COX2", "ATP8", "ATP6", "COX3", "ND3", "ND5", "ND4", "ND4L", "ND6", "CYTB", "ND1", "ND2",
@@ -55,23 +55,23 @@ def write_pair(tmp_path, r1, rotate=True):
     p1, p2 = tmp_path / "r1.gbf", tmp_path / "reor.gbf"
     SeqIO.write(r1, str(p1), "genbank")
     cox1 = next(f for f in r1.features if f.type == "CDS" and f.qualifiers["gene"] == ["COX1"])
-    SeqIO.write(bm.rotate_record(r1, int(cox1.location.start)) if rotate else r1, str(p2), "genbank")
+    SeqIO.write(mitom_orient.rotate_record(r1, int(cox1.location.start)) if rotate else r1, str(p2), "genbank")
     return p1, p2
 
 
 def test_clean_rotation_needs_no_reannotation(tmp_path):
-    assert bm.reorient_check(*write_pair(tmp_path, genome())) == []
+    assert mitom_orient.reorient_check(*write_pair(tmp_path, genome())) == []
 
 
 def test_gene_at_original_end_needs_reannotation(tmp_path):
     """A TRUNCATED gene touching the ends of the round-1 sequence may be cut there; after rotation it lies
     inside. (A complete gene at the ends is no reason: B5 review.)"""
-    probs = bm.reorient_check(*write_pair(tmp_path, genome(tail_gene=True)))
+    probs = mitom_orient.reorient_check(*write_pair(tmp_path, genome(tail_gene=True)))
     assert any("end of the round-1 sequence" in p and "trnF" in p for p in probs)
 
 
 def edge_probs(tmp_path, r, code=5):
-    return [x for x in bm.reorient_check(*write_pair(tmp_path, r), code=code) if "end of the round-1 sequence" in x]
+    return [x for x in mitom_orient.reorient_check(*write_pair(tmp_path, r), code=code) if "end of the round-1 sequence" in x]
 
 
 def test_complete_trna_at_position_one_does_not_trigger(tmp_path):
@@ -81,7 +81,7 @@ def test_complete_trna_at_position_one_does_not_trigger(tmp_path):
     with_edge_feature(r, "tRNA", "trnF", 0, 68)                       # record starts with a complete tRNA
     with_edge_feature(r, "tRNA", "trnP", L - 69, L - 1, strand=-1)    # and ends with one
     assert edge_probs(tmp_path, r) == []
-    assert bm.reorient_check(*write_pair(tmp_path, r)) == []
+    assert mitom_orient.reorient_check(*write_pair(tmp_path, r)) == []
 
 
 def test_truncated_trna_at_position_one_triggers(tmp_path):
@@ -167,24 +167,24 @@ def test_short_rrna_at_the_edge_triggers_and_full_length_does_not(tmp_path):
 def test_absent_atp8_or_atp6_is_not_a_reason(tmp_path):
     """B4: atp8 / atp6 are absent from whole phyla (nematodes, flatworms, many bivalves, anthozoans)."""
     for gone in ("ATP8", "ATP6"):
-        probs = bm.reorient_check(*write_pair(tmp_path, genome(names=[n for n in NAMES if n != gone])))
+        probs = mitom_orient.reorient_check(*write_pair(tmp_path, genome(names=[n for n in NAMES if n != gone])))
         assert probs == [], (gone, probs)
 
 
 def test_standard_gene_list_lacks_atp8_and_atp6():
-    assert "ATP8" not in bm.STANDARD_GENES and "ATP6" not in bm.STANDARD_GENES
-    assert {"COX1", "COX2", "COX3", "CYTB", "ND1", "s-rRNA", "l-rRNA"} <= set(bm.STANDARD_GENES)
+    assert "ATP8" not in mitom_orient.STANDARD_GENES and "ATP6" not in mitom_orient.STANDARD_GENES
+    assert {"COX1", "COX2", "COX3", "CYTB", "ND1", "s-rRNA", "l-rRNA"} <= set(mitom_orient.STANDARD_GENES)
 
 
 def test_gene_at_end_without_rotation_is_fine(tmp_path):
     """Nothing moved (record already starts at cox1): round 2 would see the same sequence."""
     r = genome(offset=0)
     r.features.append(SeqFeature(FeatureLocation(len(r) - 70, len(r) - 2, 1), type="tRNA", qualifiers={"gene": ["trnF"]}))
-    assert bm.reorient_check(*write_pair(tmp_path, r)) == []
+    assert mitom_orient.reorient_check(*write_pair(tmp_path, r)) == []
 
 
 def test_missing_standard_genes_need_reannotation(tmp_path):
-    probs = bm.reorient_check(*write_pair(tmp_path, genome(names=NAMES[:12] + NAMES[13:])))
+    probs = mitom_orient.reorient_check(*write_pair(tmp_path, genome(names=NAMES[:12] + NAMES[13:])))
     assert any("ND2" in p and "missing" in p for p in probs)
 
 
@@ -196,7 +196,7 @@ def test_changed_gene_sequence_after_rotation_is_caught(tmp_path):
     r.features.append(SeqFeature(FeatureLocation(int(nd4.location.start) + 3, int(nd4.location.end) + 3, 1),
                                  type="CDS", qualifiers={"gene": ["ND4"]}))
     SeqIO.write(r, str(p2), "genbank")
-    assert any("ND4" in p and "differs" in p for p in bm.reorient_check(p1, p2))
+    assert any("ND4" in p and "differs" in p for p in mitom_orient.reorient_check(p1, p2))
 
 
 def test_gene_across_new_origin_is_caught(tmp_path):
@@ -206,7 +206,7 @@ def test_gene_across_new_origin_is_caught(tmp_path):
     r.features.append(SeqFeature(FeatureLocation(L - 30, L, 1) + FeatureLocation(0, 40, 1), type="tRNA",
                                  qualifiers={"gene": ["trnX"]}))
     SeqIO.write(r, str(p2), "genbank")
-    assert any("origin" in p for p in bm.reorient_check(p1, p2))
+    assert any("origin" in p for p in mitom_orient.reorient_check(p1, p2))
 
 
 def test_stop_codon_just_behind_a_stop_less_cds_at_the_edge_counts_as_complete(tmp_path):
@@ -246,11 +246,11 @@ def test_join_across_the_origin_is_an_interior_feature():
     loc = FeatureLocation(L - 200, L, 1) + FeatureLocation(0, 100, 1)
     f = SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"]})
     assert str(f.extract(seq)) == body
-    assert bm.edge_gene_truncated(f, seq, L, 5) is False
+    assert mitom_orient.edge_gene_truncated(f, seq, L, 5) is False
     cut = SeqFeature(FeatureLocation(L - 200, L, 1) + FeatureLocation(0, 96, 1), type="CDS", qualifiers={"gene": ["COX1"]})
-    assert bm.edge_gene_truncated(cut, seq, L, 5) is True                                 # 296 nt: not a codon multiple
+    assert mitom_orient.edge_gene_truncated(cut, seq, L, 5) is True                                 # 296 nt: not a codon multiple
     t = SeqFeature(FeatureLocation(L - 30, L, 1) + FeatureLocation(0, 40, 1), type="tRNA", qualifiers={"gene": ["trnX"]})
-    assert bm.edge_gene_truncated(t, seq, L, 5) is False                                  # 70 nt tRNA
+    assert mitom_orient.edge_gene_truncated(t, seq, L, 5) is False                                  # 70 nt tRNA
 
 
 def test_linear_record_is_not_reannotated_for_cut_ends_or_missing_genes(tmp_path):
@@ -264,10 +264,10 @@ def test_linear_record_is_not_reannotated_for_cut_ends_or_missing_genes(tmp_path
     rc = r.reverse_complement(id=r.id, name=r.name, description=r.description, annotations=True, features=True)
     rc.annotations["topology"] = "linear"
     SeqIO.write(rc, str(p2), "genbank")
-    assert bm.reorient_check(p1, p2) == []
+    assert mitom_orient.reorient_check(p1, p2) == []
     r.annotations["topology"] = "circular"                    # the same record, circular: both checks fire
     SeqIO.write(r, str(p1), "genbank")
     rc.annotations["topology"] = "circular"
     SeqIO.write(rc, str(p2), "genbank")
-    probs = bm.reorient_check(p1, p2)
+    probs = mitom_orient.reorient_check(p1, p2)
     assert any("look cut" in x for x in probs) and any("missing" in x for x in probs)

@@ -17,8 +17,15 @@ from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_cli  # noqa: E402
+import mitom_inputs  # noqa: E402
+import mitom_log  # noqa: E402
+import mitom_orient  # noqa: E402
+import mitom_output  # noqa: E402
+import mitom_prepare  # noqa: E402
+import mitom_run  # noqa: E402
 import mitom_stage  # noqa: E402
+import mitom_steps  # noqa: E402
 import mito_env  # noqa: E402
 
 
@@ -31,7 +38,7 @@ def restore_environ():
 
 
 def parse(tmp_path, *extra, inp=None):
-    return bm.build_parser().parse_args(["run", "-i", str(inp or tmp_path), "-o", str(tmp_path / "out"), *extra])
+    return mitom_cli.build_parser().parse_args(["run", "-i", str(inp or tmp_path), "-o", str(tmp_path / "out"), *extra])
 
 
 # ---- shift_location: a join across the old origin becomes one interval ---------------------------------------
@@ -41,16 +48,16 @@ def test_origin_join_shifted_past_the_cut_is_one_interval(strand):
     15000..15860 (1-based; 0-based [14999, 15860)), both strands."""
     parts = [FeatureLocation(15999, 16560, strand), FeatureLocation(0, 300, strand)]
     loc = CompoundLocation(parts[::-1] if strand == -1 else parts)          # Biopython: parts in transcript order
-    new = bm.shift_location(loc, 1000, 16560)
+    new = mitom_orient.shift_location(loc, 1000, 16560)
     assert isinstance(new, FeatureLocation) and not isinstance(new, CompoundLocation)
     assert (int(new.start), int(new.end), new.strand) == (14999, 15860, strand)
 
 
 def test_true_exons_stay_separate_and_outer_fuzzy_ends_are_kept():
     loc = CompoundLocation([FeatureLocation(100, 200, 1), FeatureLocation(300, 400, 1)])
-    new = bm.shift_location(loc, 50, 16560)
+    new = mitom_orient.shift_location(loc, 50, 16560)
     assert len(new.parts) == 2 and [(int(p.start), int(p.end)) for p in new.parts] == [(50, 150), (250, 350)]
-    merged = bm.merge_abutting_parts([FeatureLocation(BeforePosition(10), 20, 1),
+    merged = mitom_orient.merge_abutting_parts([FeatureLocation(BeforePosition(10), 20, 1),
                                       FeatureLocation(20, AfterPosition(30), 1)])
     assert isinstance(merged.start, BeforePosition) and isinstance(merged.end, AfterPosition)
     assert (int(merged.start), int(merged.end)) == (10, 30)
@@ -64,7 +71,7 @@ def test_rotated_record_keeps_the_origin_gene_sequence():
         parts = [FeatureLocation(15999, L, strand), FeatureLocation(0, 300, strand)]
         r.features.append(SeqFeature(CompoundLocation(parts[::-1] if strand == -1 else parts), type="CDS",
                                      qualifiers={"gene": ["nad5" if strand == -1 else "cox1"]}))
-    rot = bm.rotate_record(r, 1000)
+    rot = mitom_orient.rotate_record(r, 1000)
     for old, new in zip(r.features, rot.features):
         assert not isinstance(new.location, CompoundLocation)
         assert str(old.extract(r.seq)) == str(new.extract(rot.seq))
@@ -82,9 +89,9 @@ def test_core_failure_is_warned_on_the_root_logger(tmp_path, monkeypatch, caplog
     a = parse(tmp_path, "--clade", "Mollusca", "--genetic_code", "5")
     fa = tmp_path / "S00001.fasta"
     fa.write_text(">S00001 topology=circular\nACGT\n")
-    si = bm.SampleInfo("sampleA", "sampleA", "S00001", "circular", fa, fa)
+    si = mitom_inputs.SampleInfo("sampleA", "sampleA", "S00001", "circular", fa, fa)
     with caplog.at_level(logging.WARNING, logger=""):
-        iid, ok, *_ = bm.annotate_one(si, fa, tmp_path / "out", "01.anno_round1", a)
+        iid, ok, *_ = mitom_stage.annotate_one(si, fa, tmp_path / "out", "01.anno_round1", a)
     assert not ok
     msgs = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
     assert any(m.startswith("[RECORD sampleA] annotation failed (round-1 annotation, exit 3): boom: no refseq89m")
@@ -99,8 +106,8 @@ def test_run_returns_nonzero_when_every_record_failed(tmp_path, monkeypatch):
     inp.write_text(">rec1 topology=circular\n" + "ACGT" * 4000 + "\n")
     a = parse(tmp_path, "--clade", "Mollusca", "--genetic_code", "5", "--rescue", "no", "--rrna_hmm", "no",
               "--intron_fix", "no", "--curate", "no", inp=inp)
-    assert bm.resolve_tools(a) == ""
-    assert bm.workflow_run(a) != 0
+    assert mitom_prepare.resolve_tools(a) == ""
+    assert mitom_run.workflow_run(a) != 0
     log = (tmp_path / "out" / "run.log").read_text()
     assert "[RECORD rec1] annotation failed (round-1 annotation, exit 3)" in log and "[FAIL] every record failed" in log
     assert "[STEP 2/11 annotate] start: Round-1 annotation" in log and "[STEP 11/11 output] done " in log
@@ -112,7 +119,7 @@ def test_native_core_does_not_complain_about_optional_mitos2(tmp_path, monkeypat
     monkeypatch.setattr(mito_env, "mitos_bin", lambda explicit=None: None)
     monkeypatch.setattr(mito_env, "mitos_refdir", lambda explicit=None: None)
     a = parse(tmp_path, "--clade", "Mollusca", "--genetic_code", "5")
-    assert bm.resolve_tools(a) == ""
+    assert mitom_prepare.resolve_tools(a) == ""
     err = capsys.readouterr().err
     assert "MitoZ" not in err and "MITOS2 not found" not in err
 
@@ -129,29 +136,29 @@ def record(topology, cox1_at, L=3000):
 def test_linear_record_is_not_rotated_and_summary_says_so(tmp_path, caplog):
     src = tmp_path / "A.gbf"
     SeqIO.write(record("linear", 1000), str(src), "genbank")
-    bm._LINEAR_SKIP_SEEN.clear()
+    mitom_orient._LINEAR_SKIP_SEEN.clear()
     with caplog.at_level(logging.INFO):
-        pcg, trna, rrna, mode, ok = bm.finalize_genbank_output(
+        pcg, trna, rrna, mode, ok = mitom_output.finalize_genbank_output(
             sample_name="A", body_src_gb=src, metadata_src_gb=None, dest_gb=tmp_path / "out" / "A.gbf",
             which_gene_first="cox1", force_forward=True, preserve_metadata=False)
-        bm.finalize_genbank_output(                                             # the run's second reorientation
+        mitom_output.finalize_genbank_output(                                             # the run's second reorientation
             sample_name="A", body_src_gb=src, metadata_src_gb=None, dest_gb=tmp_path / "out" / "A2.gbf",
             which_gene_first="cox1", force_forward=True, preserve_metadata=False)
     assert ok is False
-    si = bm.SampleInfo("A", "A", "S00001", "linear", src, src)
-    assert bm.orientation_text(ok, si) == "no (linear, not rotated)"
-    assert bm.orientation_text(False, bm.SampleInfo("A", "A", "S00001", "circular", src, src)) == "no"
+    si = mitom_inputs.SampleInfo("A", "A", "S00001", "linear", src, src)
+    assert mitom_orient.orientation_text(ok, si) == "no (linear, not rotated)"
+    assert mitom_orient.orientation_text(False, mitom_inputs.SampleInfo("A", "A", "S00001", "circular", src, src)) == "no"
     skips = [r for r in caplog.records if "[LINEAR_REORIENT_SKIP]" in r.getMessage()]
     assert len(skips) == 2 and [r.levelno for r in skips] == [logging.WARNING, logging.INFO]
     # a circular record is rotated: cox1 first
     SeqIO.write(record("circular", 1000), str(src), "genbank")
-    *_, ok = bm.finalize_genbank_output(
+    *_, ok = mitom_output.finalize_genbank_output(
         sample_name="A", body_src_gb=src, metadata_src_gb=None, dest_gb=tmp_path / "out" / "A3.gbf",
         which_gene_first="cox1", force_forward=True, preserve_metadata=False)
     assert ok is True
     # a linear record that already starts with cox1
     SeqIO.write(record("linear", 0), str(src), "genbank")
-    *_, ok = bm.finalize_genbank_output(
+    *_, ok = mitom_output.finalize_genbank_output(
         sample_name="A", body_src_gb=src, metadata_src_gb=None, dest_gb=tmp_path / "out" / "A4.gbf",
         which_gene_first="cox1", force_forward=True, preserve_metadata=False)
     assert ok is True
@@ -161,7 +168,7 @@ def test_linear_record_is_not_rotated_and_summary_says_so(tmp_path, caplog):
 def test_run_log_is_not_appended_across_runs(tmp_path):
     log = tmp_path / "run.log"
     for _ in range(2):
-        bm.setup_root_logger(log, console_level=logging.WARNING, mode="w")
+        mitom_log.setup_root_logger(log, console_level=logging.WARNING, mode="w")
         logging.info("[PARAMS] x")
         logging.getLogger().handlers[0].flush()
     assert log.read_text().count("[PARAMS]") == 1
@@ -169,7 +176,7 @@ def test_run_log_is_not_appended_across_runs(tmp_path):
     logging.getLogger("matplotlib.font_manager").warning("findfont: Font family not found")   # a warning still is
     logging.getLogger().handlers[0].flush()
     assert "Glyph IDs" not in log.read_text() and "findfont" in log.read_text()
-    bm.setup_root_logger(tmp_path / "pipeline.log")
+    mitom_log.setup_root_logger(tmp_path / "pipeline.log")
     for h in logging.getLogger().handlers:
         logging.getLogger().removeHandler(h)
 
@@ -182,8 +189,8 @@ def test_transl_table_of_the_input_differing_from_the_code_is_warned(tmp_path, c
     r.features = [SeqFeature(FeatureLocation(0, 300, 1), type="CDS", qualifiers={"gene": ["COX1"], "transl_table": ["5"]})]
     SeqIO.write(r, str(orig / "NC_1.1.gb"), "genbank")
     with caplog.at_level(logging.WARNING):
-        assert bm.check_transl_tables(orig, 2) == ["NC_1.1"]
-        assert bm.check_transl_tables(orig, 5) == []
+        assert mitom_inputs.check_transl_tables(orig, 2) == ["NC_1.1"]
+        assert mitom_inputs.check_transl_tables(orig, 5) == []
     assert any("[CODE] NC_1.1: record transl_table=5 differs from --genetic_code 2" in rec.getMessage()
                for rec in caplog.records)
 
@@ -199,7 +206,7 @@ def test_short_records_are_linear_unlabelled_long_ones_circular_first(tmp_path, 
     short = tmp_path / "short.fa"
     short.write_text(">g2\n" + "ACGT" * 500 + "\n")
     with caplog.at_level(logging.WARNING):
-        samples, _ = bm.split_or_sanitize_fastas([fa, one, short], tmp_path / "split", True, 16)
+        samples, _ = mitom_inputs.split_or_sanitize_fastas([fa, one, short], tmp_path / "split", True, 16)
     topo = {si.sample_name: si.topology for si in samples}
     assert topo == {"c1": "circular", "c2": "linear", "c3": "circular", "g1": "circular", "g2": "linear"}
     src = {si.sample_name: si.topology_source for si in samples}
@@ -221,29 +228,28 @@ def test_rescue_auto_skipped_for_native_core(tmp_path, monkeypatch):
     """--rescue auto does not run MITOS2: under the native core it cost 5-7 min and ~1 GB per record lacking a gene
     (mostly atp8 of taxa without atp8) for 2 genes in 24 records."""
     import argparse
-    import mitom_pipeline as bm
     import mito_rescue
     called = []
     monkeypatch.setattr(mito_rescue, "rescue_dir", lambda *a, **k: called.append(1) or [])
     a = argparse.Namespace(rescue="auto", core="native", mitos_bin="x", mitos_refdir="y", genetic_code=5, max_tasks=1)
-    bm.run_rescue(a, tmp_path, tmp_path)
+    mitom_steps.run_rescue(a, tmp_path, tmp_path)
     assert not called
     a.rescue = "yes"
-    bm.run_rescue(a, tmp_path, tmp_path)
+    mitom_steps.run_rescue(a, tmp_path, tmp_path)
     assert called
 
 
 def test_exit_codes_failure_1_usage_2(tmp_path, monkeypatch):
     """MitoM's exit codes: 0 done, 1 failure (a program or the reference data missing, every record failed),
     2 usage (wrong command line or input)."""
-    assert bm.error_exit_code("ERROR: --engine mitoz: MitoZ not found (install: mamba ...)") == 1
-    assert bm.error_exit_code("ERROR: --clade 'Cnidarians' is not a supported clade.") == 2
+    assert mitom_prepare.error_exit_code("ERROR: --engine mitoz: MitoZ not found (install: mamba ...)") == 1
+    assert mitom_prepare.error_exit_code("ERROR: --clade 'Cnidarians' is not a supported clade.") == 2
     monkeypatch.setattr(mitom_stage, "MITO_CORE", fake_core(tmp_path, 3))
     monkeypatch.setenv("YZZ_MITO_NO_SCAN", "1")
     inp = tmp_path / "in.fa"
     inp.write_text(">rec1 topology=circular\n" + "ACGT" * 4000 + "\n")
-    a = bm.build_parser().parse_args(["annotate", "-i", str(inp), "-o", str(tmp_path / "out"), "--clade", "Mollusca",
+    a = mitom_cli.build_parser().parse_args(["annotate", "-i", str(inp), "-o", str(tmp_path / "out"), "--clade", "Mollusca",
                                       "--genetic_code", "5", "--rescue", "no", "--rrna_hmm", "no", "--intron_fix", "no",
                                       "--curate", "no", "--plot", "no", "--scheduler_backend", "threads"])
-    assert bm.resolve_tools(a) == ""
-    assert bm.workflow_annotate(a) == 1                       # every record failed: annotate fails as run does
+    assert mitom_prepare.resolve_tools(a) == ""
+    assert mitom_run.workflow_annotate(a) == 1                       # every record failed: annotate fails as run does

@@ -12,7 +12,7 @@ from Bio.Seq import Seq
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import mitom_pipeline as bm  # noqa: E402
+import mitom_inputs  # noqa: E402
 
 DATA = HERE / "data"
 
@@ -28,8 +28,8 @@ def insdc_copy(refseq, acc: str, comment: str = ""):
 
 def test_refseq_source_parsed():
     rec = SeqIO.read(str(DATA / "NC_000933.gb"), "genbank")
-    assert bm.is_refseq_acc("NC_000933") and not bm.is_refseq_acc("AF000023")
-    assert bm.refseq_source_accessions(rec) == ["AF000023"]      # "derived from AF000023"
+    assert mitom_inputs.is_refseq_acc("NC_000933") and not mitom_inputs.is_refseq_acc("AF000023")
+    assert mitom_inputs.refseq_source_accessions(rec) == ["AF000023"]      # "derived from AF000023"
 
 
 def test_refseq_kept_source_dropped_both_orders(tmp_path):
@@ -40,7 +40,7 @@ def test_refseq_kept_source_dropped_both_orders(tmp_path):
     for order in ([src, nc, other], [nc, other, src]):
         f = tmp_path / "in.gb"
         SeqIO.write(order, str(f), "genbank")
-        kept, _, stats = bm.dedup_gb_records([f], dedup_report_path=tmp_path / "rep.tsv")
+        kept, _, stats = mitom_inputs.dedup_gb_records([f], dedup_report_path=tmp_path / "rep.tsv")
         ids = sorted(m.acc_versioned for m in kept)
         assert ids == ["NC_000933.1", "ZZ999999.1"], ids
         assert stats["dup_refseq"] == 1
@@ -57,7 +57,7 @@ def test_identical_sequence_prefers_refseq_without_comment(tmp_path):
     src = insdc_copy(nc, "AB123456")
     f = tmp_path / "in.gb"
     SeqIO.write([src, nc], str(f), "genbank")
-    kept, _, stats = bm.dedup_gb_records([f])
+    kept, _, stats = mitom_inputs.dedup_gb_records([f])
     assert [m.acc_versioned for m in kept] == ["NC_000933.1"]
     assert stats["dup_seq"] == 1
 
@@ -90,7 +90,7 @@ def test_fasta_dedup_versions_identical_sequences_and_local_names(tmp_path):
     a, b, c = "ACGT" * 50, "TTGCA" * 40, "GGCCA" * 40
     f1 = _fa(tmp_path / "x.fasta", [("MK123456.1 old", a), ("NODE_1 assembly x", b), ("sample_7", c)])
     f2 = _fa(tmp_path / "y.fa", [("MK123456.2 new", a + "A"), ("NODE_1 assembly y", c), ("OR555555.1 copy", b)])
-    kept, _, stats = bm.dedup_gb_records([f1, f2], dedup_report_path=tmp_path / "rep.tsv")
+    kept, _, stats = mitom_inputs.dedup_gb_records([f1, f2], dedup_report_path=tmp_path / "rep.tsv")
     ids = sorted(m.acc_versioned for m in kept)
     # MK123456.1 -> .2; NODE_1 of x = OR555555.1 (first kept); sample_7 = NODE_1 of y (first kept); the two NODE_1
     # differ and are not merged on their name
@@ -134,7 +134,7 @@ def test_gb2fasta_headers_split_and_mitom_run_topology(tmp_path):
     assert [r.id for r in recs] == ["NC_000933.1", "XX000001.1"]
     assert recs[0].description.endswith("topology=circular") and recs[1].description.endswith("topology=linear")
     assert str(recs[0].seq) == str(nc.seq)
-    assert bm.infer_topology_from_description(recs[0].description) == "circular"
+    assert mitom_inputs.infer_topology_from_description(recs[0].description) == "circular"
     assert (tmp_path / "out" / "mitoz.fasta").exists()
     assert _mitom("gb2fasta", "-i", src / "two.gb", "-o", tmp_path / "split", "--split") == 0
     assert sorted(p.name for p in (tmp_path / "split").iterdir()) == ["NC_000933.1.fasta", "XX000001.1.fasta"]
