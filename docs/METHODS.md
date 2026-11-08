@@ -44,7 +44,7 @@ Curation and introns run as separate processes, so a crash affects only that ste
 
 **评测**（2026-10-31，均为本机数据，未新下载）：
 
-| 测试 | 记录 | 遗传密码正确 | 门 正确 / 不确定 / 错误 |
+| 测试 / test | 记录 / records | 遗传密码正确 / genetic code correct | 门 正确 / 不确定 / 错误 / phylum correct / uncertain / wrong |
 |---|---|---|---|
 | RefSeq 分层抽样（每门 ≤ 15 条 + 各门少数密码 ≤ 3 条，29 门），去掉同科参考 | 238 | 93.3 % | 63.0 / 32.4 / 4.6 % |
 | 同上，8 kb / 5 kb / 3 kb 随机片段 | 238 × 3 | 91.6 / 85.3 / 74.4 % | 58.4 / 50.0 / 37.8 % 正确 |
@@ -66,7 +66,7 @@ Curation and introns run as separate processes, so a crash affects only that ste
 
 对注释好的 GenBank（MitoM 核心、MitoZ、MITOS 等的输出）单独运行，按 Fourdrilis et al. 2018 的软体动物（腹足类）注释准则修正 PCG 与 12S/16S，准则引自 Ghiselli et al. 2021, *Phil. Trans. R. Soc. B* 376:20200159（doi:10.1098/rstb.2020.0159，第 3 节）：
 
-| 规则 | 准则 | 做法 |
+| 规则 / rule | 准则 / criterion | 做法 / method |
 |---|---|---|
 | P1 | (i) 起始密码子取离上游基因最近且不重叠者 | 起点与上游 tRNA/rRNA 或同框 PCG 重叠 → 后移到第一个起始密码子，但只在 15 nt 内有起始密码子时才移动，否则保留重叠（173 条多类群真值：≤15 nt 的移动对 31 错 12，更远的移动对 14 错 28）；起点放在一个完整同链 tRNA 的上游（基因前三分之一包住整个 tRNA，如蚌类 nad1 包住 trnL2）→ 移到该 tRNA 之后第一个同框起始密码子；首密码子非起始密码子时才向上游找；`--aggressive_start_genes` 列出的基因总是按准则找最上游——默认为空，`mitom run` 只在环节动物 clade 传 `ND5,ND4L`（环节动物 benchmark 7/7 正确；其他类群 173 条里错 52 对 17）；`--aggressive_start` 对所有基因如此 |
 | P11 | (i) 的补充：起始密码子的选择 | P1 之后，在 P1 的起点前后 30 个密码子内、读码框连续的所有起始密码子中，取 NCBI 记录会选的那个：梯度提升树（`mito_start.py`，模型 `models/start_model/start_model.json`，纯 JSON 树，不用 pickle）根据密码子、与上游特征的距离及其类型和链、核心工具的比对（N 端缺多少残基、覆盖度）、基因、门打分。训练：1,683 条留一基准记录的候选（`benchmark/train_start_model.py`）。按科交叉验证：起点与 NCBI 完全一致 89.1 → 90.7 %（节肢 77.8 → 82.3 %，刺胞 79.8 → 83.2 %，软体 79.5 → 81.3 %，环节 91.5 → 92.9 %，脊索 97.3 → 97.9 %）；`--start_model no` 关闭 |
@@ -94,7 +94,7 @@ mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds 
 
 **验证**（31 条鳞沙蚕类真实 MitoZ 注释，/mnt/n/DLC_mt_2023_1016/Mitoz_annotate，对照 NCBI 原记录；坐标换算到 NCBI 序列）：
 
-| | MitoZ 原始 | 校正后 |
+| | MitoZ 原始 / MitoZ raw | 校正后 / curated |
 |---|---|---|
 | PCG 5′ / 3′ 与 NCBI 相同（284 个） | 253 / 211 | **265 / 254** |
 | 12S 5′ / 3′（22 个） | 5 / 2 | **17 / 15** |
@@ -123,7 +123,7 @@ NCBI ERROR 都是 0；结果不同的 20 条中，12 条是 nad2 紧接 cox1 时
 **两端核对**（`--topology auto`，默认）：先按标签注释（GenBank LOCUS 行；FASTA `topology=`；没有标签时：两端重叠的组装结果去掉重复后为环状，表头写 circular / complete genome 为环状、partial genome 为线状，其余 ≥ 10 kb 的序列（一个文件一条或多条都一样）先按环状注释，再由两端和基因组成决定——没有基因跨两端也没有基因被截断时，蛋白基因 ≥ 12 个且两个 rRNA 齐全为环状，否则为线状；< 10 kb 为线状）。
 注释核心对两端的每个蛋白基因（跨原点的，或离序列端点比它缺的残基所需的长度还近的）把序列首尾相接，用该基因的参考蛋白（注释时用的那条）跨接点再比对一次（exonerate）：
 
-| 判定 | 条件 | 含义 |
+| 判定 / call | 条件 / condition | 含义 / meaning |
 |---|---|---|
 | joined | 参考蛋白跨接点比对，两侧各 ≥ 30 nt；并且两侧各自单独也能比对上、到达接点、残基首尾相接（相差 ≤ 10），或两侧各 ≥ 90 nt、读码框不断、两侧单独的比对不互相矛盾 | 两端是连着的：环状 |
 | cut | 比对停在接点 60 nt 内，那一侧缺 ≥ 30 个残基，读码框一直开放到接点 | 基因被端点截断：部分序列，线状 |
@@ -141,7 +141,7 @@ MitoZ / MITOS2 / `mitom import` 的注释没有核心的比对证据，按标签
 
 **合成检验**（20 条标为 circular 的完整基因组，各门类，2026-10-30）：
 
-| 检验 | `--topology auto` | `--topology label` |
+| 检验 / test | `--topology auto` | `--topology label` |
 |---|---|---|
 | 从一个蛋白基因中间切开、标为 linear（组装从基因中间开始） | 20/20 判为环状 | — |
 | ↳ 蛋白基因两端与 NCBI 完全一致 | 78.9 %（与正确标签的原记录相同） | 72.9 % |
@@ -199,7 +199,7 @@ mitom trna -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen,aragorn,t
 
 **原生核心的 tRNA 与 MITOS2 对比（2026-10-27）**：MitoM-ML（MITOS2 tRNA 模型 + 220 个分支协方差模型，ARWEN/ARAGORN 作证据，学习的判别器与端点）＋ MiTFi 二次确认（p < 0.9 的调用须 MiTFi 也调用；同家族较弱的第二个调用须 p ≥ 0.9）＋ 它没调用的 tRNA 家族由 MiTFi 补 ＋ 脊椎动物取 MiTFi 端点。MiTFi 按 MITOS2 的方式运行（E 值按记录长度计算、tRNA 重叠上限 50 nt，与 MITOS2 自己的 MiTFi 输出逐行一致）；唯一不同：快速搜索未找到的 tRNA 模型的灵敏补搜，MITOS2 用 cmsearch `--max` 搜整条序列（每条几分钟），MitoM 用 `--nohmm --F6 3e-4` 只搜蛋白基因 / rRNA 内部以外的区段（基因两端各 100 nt 仍搜）：542 条需补搜的基准记录 CPU 11.9 → 1.0 小时，同骨海绵 NC_014885.1 297 → 18 s（2 线程），召回率和端点不变，只去掉 14 个落在基因 / rRNA 内的弱 MiTFi 调用（NCBI 均无）。所用记录都没有参与训练（无脊椎动物：所在科未参与训练且不在 refseq89m；脊椎动物：模型从未见过；环节动物：只在 GenBank、不在 RefSeq 的记录）；规则在调参的一半上按事先定的标准选定（精确率比 MITOS2 高 ≥ 0.1 个百分点，再取召回最高），另一半只用来检验。召回率 / 精确率 / 两端与 NCBI 完全一致：
 
-| 记录 | MitoM | MITOS2 |
+| 记录 / records | MitoM | MITOS2 |
 |---|---|---|
 | 无脊椎动物 1,043 条 | 98.55 / 99.04 / 86.48 % | 96.59 / 98.79 / 84.63 % |
 | 其中从未用来调参的一半 565 条 | 98.75 / 99.06 / 88.70 % | 96.95 / 98.82 / 87.20 % |
@@ -217,7 +217,7 @@ Exceptions by phylum (1,043 invertebrate records) are only in the table. On the 
 
 **完整流程与 MITOS2 的对比（2026-10-27，v30：上述全部规则 + NCBI 提交规则，裸序列输入，与 NCBI 注释逐基因比较；两者都完成的记录）**。蛋白基因（PCG）与 rRNA 为两端与 NCBI 完全一致的比例，tRNA 为召回率 / 精确率 / 两端完全一致：
 
-| 记录 | PCG MitoM / MITOS2 | rRNA MitoM / MITOS2 | tRNA MitoM | tRNA MITOS2 | NCBI ERROR（MitoM） |
+| 记录 / records | PCG MitoM / MITOS2 | rRNA MitoM / MITOS2 | tRNA MitoM | tRNA MITOS2 | NCBI ERROR（MitoM） |
 |---|---|---|---|---|---|
 | 多类群 RefSeq 1,050 条（24 个门） | 84.0 / 59.4 % | 48.9 / 16.9 % | 96.84 / 97.90 / 84.26 % | 95.76 / 97.44 / 83.07 % | 0 条 |
 | 环节动物 669 条 | 81.2 / 51.4 % | 32.9 / 12.7 % | 99.12 / 99.13 / 83.45 % | 97.68 / 99.02 / 81.61 % | 0 条 |
@@ -251,7 +251,7 @@ NCBI 的内含子边界写法因课题组而异（同一位点不同记录可差
 
 真实 `mitom run`（裸序列）对金标准：
 
-| 口径 | 完全一致 | ≤6 nt | >6 nt | 漏检 | 76 条无内含子记录的假阳性 | NCBI ERROR |
+| 口径 / setting | 完全一致 / exact | ≤6 nt | >6 nt | 漏检 / missed | 76 条无内含子记录的假阳性 / false positives in 76 intron-free records | NCBI ERROR |
 |---|---|---|---|---|---|---|
 | 默认（完整位点库），194 条 | **309 / 309** | 0 | 0 | 0 | 0 | 0 |
 | 留一（本记录不进核心参考和位点库，相当于新物种），270 条 | **299 / 309** | 4 | 0 | 6 | 0 | 0 |
@@ -278,7 +278,7 @@ NCBI 的内含子边界写法因课题组而异（同一位点不同记录可差
 
 **验证**（`benchmark/`，2026-10-09）：NCBI RefSeq 中全部带 intron 标注的动物线粒体基因组 85 条（刺胞 82、海绵 2、扁盘 1；真值 138 个 intron = 126 个 intron 特征 + 12 个由 CDS join 推出但缺 intron 特征的），阴性对照环节动物 20 条（含围沙蚕属 4 条）。输入模拟 MitoZ 输出（去掉 intron、拆分基因只留外显子 1）。
 
-| | 完全一致 | ≤6 nt | >6 nt | 漏检 | 多报 | 阴性假阳性 |
+| | 完全一致 / exact | ≤6 nt | >6 nt | 漏检 / missed | 多报 / extra | 阴性假阳性 / false positives in negatives |
 |---|---|---|---|---|---|---|
 | 真 MFannot（Docker nbeck/mfannot） | 65 | 13 | 7 | 53 | 0 | 0 |
 | mito_intron.py | **97** | 23 | 14 | **4** | 1 | **0** |
@@ -317,7 +317,7 @@ MFannot 找到的 85 个 intron 中 83 个与本脚本坐标完全相同；MFann
 - **借鉴 MitoFinder**：`--ref_gb` 近缘参考；外显子总长 ≤ 3×蛋白长+33。
 - **其他工具实测/调研**：MITOS2（mamba，refseq89m）在 Metridium 上把 cox1/nad5 注成 -a/-b 片段、外显子边界偏差最多 174 nt、无 intron 特征；在臭海蛹 cox1 上只注出第二外显子。MitoFinder `--allow-intron` 仅按 BLASTX 相似性合并、不搜边界（其 README）。MitoZ、MITOS2、GeSeq、PGA、CPGAVAS2 等均无 intron 模型；目前只有 MFannot/RNAweasel 建模 intron（调研见 benchmark 记录）。
 
-| 验证 | 结果 |
+| 验证 / test | 结果 / result |
 |---|---|
 | 刺胞/海绵/扁盘 85 条（138 intron，模拟 MitoZ 输入） | 完全一致 98 / ≤6 nt 23 / >6 nt 6 / 漏检 11（同 v5）；高可信 126、中 3、低 4（v5：105 / 22 / 6）；本脚本写入特征 table2asn ERROR 0 |
 | 环节动物 741 条（**裸序列**，去掉全部注释，不用 MitoZ） | NCBI→本脚本：27 个 intron 中完全一致 6 / ≤6 nt 6 / >6 nt 4 / 漏检 11（4 个 intron 伸到片段末端无第二外显子、3 个 *Decemunciger* ND4 与 4 个 *Chaetopterus* 约 300 nt 未定型，MFannot 均未检出）；本脚本→NCBI：写入 21 个，**0 个与 NCBI 矛盾**（8 intron 特征、8 CDS join、5 个在 NCBI 无注释记录中且与 MFannot 一致），全部高可信 |
@@ -355,7 +355,7 @@ mitom nuc build --gb nuc_refs/rdna.gb nuc_refs/histone.gb my_refs.gb -o my_lib
 mitom nuc annotate -i scaffolds.fasta -o nuc_out --lib my_lib
 ```
 
-| 输出 | 内容 |
+| 输出 / output | 内容 / contents |
 |---|---|
 | `nuc_features.tsv` | 每个特征一行：contig、长度、SPAdes 覆盖度、基因、起止、链、5'/3' 是否不完整、最佳参考及物种、一致度、边界依据（aligned 比对得到 / projected 无比对外推）、`aligned_nt`（参考基因内比对到该特征的 nt，越少越要人工核对）；`copy_ratio`（contig 覆盖度 / 单拷贝覆盖度，后者取 SPAdes contig ≥ 1 kb 的长度加权中位数）；组蛋白另有 `class` / `class_evidence`：`replication-dependent`（串联基因簇拷贝，系统发育常用的 H3/H4：H3 第 31/87/89/90 位 = A S V M，或 copy_ratio ≥ 5）、`replacement`（替换变体：H3.3 = S A I G，或含内含子）、`single-copy`（copy_ratio < 2，如 H2A.X）、空 = 证据不足；序列证据优先于覆盖度 |
 | `nuc_annotation.gb` | 有特征的 contig 的 GenBank（rRNA / misc_RNA / CDS，不完整端为 `<` `>`，CDS 带 translation、transl_table 1） |

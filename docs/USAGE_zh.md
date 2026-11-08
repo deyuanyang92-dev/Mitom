@@ -104,7 +104,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 | 标为环状的水母类、水螅类（Medusozoa）和钙质海绵：它们的线粒体基因组是线状的，且没有基因跨两端 | 当线状（第一轮就按线状注释） |
 | 其他 | 按标签 |
 
-被改判的记录用新的拓扑重新注释一遍；多数记录不改判，核对本身每条约 1 秒（93 条 NCBI 记录总用时 164.2 分钟，只按标签 164.6 分钟）；每条记录的标签、来源、最终拓扑和原因写在 `reports/topology_decision.tsv`。`--topology label` 只按标签；`--topology circular` / `linear` 把全部记录设为环状 / 线状。
+被改判的记录用新的拓扑重新注释一遍；多数记录不改判，核对几乎不增加用时（实测见 [METHODS.md](METHODS.md)「环状还是线状」）；每条记录的标签、来源、最终拓扑和原因写在 `reports/topology_decision.tsv`。`--topology label` 只按标签；`--topology circular` / `linear` 把全部记录设为环状 / 线状。
 
 环状记录会旋转到以 cox1 起始（见第 4 节）；线状记录从不旋转，以免在假的“原点”处把真基因切断。
 
@@ -329,7 +329,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 ### `mitom curate`：修整基因边界和名称
 
 - **做什么**：按 NCBI 规范修整蛋白基因的起止密码子、rRNA 端点、基因重叠和基因名。`run` 的第 7 步就是它。
-  - 起始密码子：先按准则取离上游基因最近、不重叠的（P1），再由一个从 NCBI 记录学习的模型在前后 30 个密码子内挑 NCBI 记录会选的那个（P11；按科交叉验证，起点与 NCBI 完全一致 89.1 → 90.7 %）；`--start_model no` 关闭。
+  - 起始密码子：先按准则取离上游基因最近、不重叠的（P1），再由一个从 NCBI 记录学习的模型在前后 30 个密码子内挑 NCBI 记录会选的那个（P11；按科交叉验证的结果见 [METHODS.md](METHODS.md)「注释后校正」表）；`--start_model no` 关闭。
   - 终止密码子：紧接下游 tRNA 时写成不完整终止 T / TA（NCBI 写法）；环节动物紧接下一个蛋白基因时也这样写（与原点处一致）；脊椎动物（`run` 对 Chordata 自动加 `--abbreviated_overlap`）只在 tRNA 前这样写，紧接下一个蛋白基因时保留完整终止（如 atp6 的 TAA 与 cox3 的 ATG 共用一个 A）。
   - 全部规则、依据和验证见 [METHODS.md](METHODS.md) 的“注释后校正”一节。
 - **常用参数**：`--genetic_code`；`--rrna_bounds trim|fill`（rRNA 端点只切掉与邻居的重叠 / 再补到两侧基因）；`--start_model no`；`--no_validate`（不做校正前后的 table2asn 对比）。全部参数见 [OPTIONS.md](OPTIONS.md#mitom-curate)。
@@ -934,7 +934,7 @@ Outputs and matching:
 | `--topology` | `run`, `annotate` | 环状 / 线状：`auto`（默认）= 按标签（GenBank LOCUS 行；FASTA 表头 `topology=`；没有时：两端重叠 → 环状并去掉重复，表头写 circular / complete genome → 环状、partial genome → 线状，其余 ≥ 10 kb 的看两端和基因组成——蛋白基因 ≥ 12 个且两个 rRNA 齐全为环状，否则线状；< 10 kb 线状），再核对序列两端：有基因从末尾接到开头（中间隔着内含子的也算）→ 环状；标为环状但两端有基因被截断 → 线状；标为环状的水母类、水螅类和钙质海绵（线状线粒体基因组）且没有基因跨两端 → 线状；改判的记录重注，结果见 `reports/topology_decision.tsv`。`label` = 只按标签；`circular` / `linear` = 全部设为环状 / 线状 | Circular or linear: `auto` (default) = the label, checked at the sequence ends (gene across the ends, also with an intron between -> circular; gene cut at an end of a circular-labelled record -> linear; Medusozoa / Calcarea labelled circular without a gene across the ends -> linear; changed records annotated again, `reports/topology_decision.tsv`); `label`; `circular` / `linear` for every record |
 | `--fasta`, `--topology` | `import` | MITOS2 结果对应的基因组 FASTA（按 result.bed 里的序列名匹配；默认在结果目录或其上一级找）；拓扑：`auto`（默认：MITOS2 取 result.gff，GenBank 取 LOCUS 行，MitoZ 输出按环状）/ `circular` / `linear` | Genome FASTA of MITOS2 results; topology of imported records |
 | `--rescue` | `run`, `annotate` | 从 MITOS2 补回核心漏注的蛋白基因/rRNA（需另装 MITOS2）：`auto`（默认）/ `no` = 不运行（核心自己重试其他位点）；`yes` = 对缺基因的记录运行 | Rescue genes the core missed from MITOS2 (optional install): `auto` (default) / `no` = not run; `yes` = run for records missing a gene |
-| `--rrna_method` | `run`, `annotate` | 注释核心的 12S/16S 搜索：`hmm`（默认，更快）= MitoM 按门 profile HMM，无模型或无命中时用 MITOS2 协方差模型；`cm` = 只用 MITOS2 协方差模型（refseq89m）。两者准确度相同（2026-10-28，450 条留一法记录完整流程：找回 98.5% / 98.5%，两端一致 47.4% / 47.6%）；hmm 每个基因几秒、约 0.1 GB，cm 约 10 秒、约 0.5 GB | 12S/16S search of the core: `hmm` (default, faster) = per-phylum profile HMMs, MITOS2 covariance models where there is no model or hit; `cm` = MITOS2 covariance models only. Same accuracy (450 leave-out records: found 98.5 / 98.5 %, both ends exact 47.4 / 47.6 %) |
+| `--rrna_method` | `run`, `annotate` | 注释核心的 12S/16S 搜索：`hmm`（默认，更快）= MitoM 按门 profile HMM，无模型或无命中时用 MITOS2 协方差模型；`cm` = 只用 MITOS2 协方差模型（refseq89m）。两者准确度相同（2026-10-28，450 条留一法记录，数字见 `mitom run -h` 或 [OPTIONS.md](OPTIONS.md)）；hmm 每个基因几秒、约 0.1 GB，cm 约 10 秒、约 0.5 GB | 12S/16S search of the core: `hmm` (default, faster) = per-phylum profile HMMs, MITOS2 covariance models where there is no model or hit; `cm` = MITOS2 covariance models only. Same accuracy (450 leave-out records; numbers in `mitom run -h` / [OPTIONS.md](OPTIONS.md)) |
 | `--rrna_hmm`, `--rrna_hmm_lib`, `--phylum` | `run`, `annotate` | 仍缺的 12S/16S 用按门 HMM 补搜：`auto`（默认）/ `yes` / `no`；库默认 `models/rrna_hmm`；`--phylum` 默认取 `--clade auto` 判出的门、显式 `--clade` 对应的门（`--clade Animal` 时不确定，FASTA 输入请自己给 `--phylum`），都没有时才用记录自己的分类信息；没有可用模型的记录会在日志和屏幕上提示 | Per-phylum rRNA HMM fallback for rRNAs still missing: `auto` (default) / `yes` / `no`; `--phylum` defaults to the phylum found by `--clade auto` or that of an explicit `--clade` (unknown for `--clade Animal`: give it for FASTA input), then to the record's own taxonomy; records without a model are reported on screen and in the log |
 | `--intron_fix` | `run`, `annotate` | 内含子：从头识别（MFannot 方法，`mito_intron.py`）+ 近缘位点迁移（`mito_intron_ref.py`，位点库 `models/intron_sites.*`）：`auto`（默认，找到 exonerate 即运行）/ `yes` / `no` | Introns: de novo (MFannot method) + site transfer from annotated relatives: `auto` (default) / `yes` / `no` |
 | `--curate`, `--sbt` | `run`, `annotate` | 端点校正 + NCBI 命名 + 提交文件（默认 `yes`）；`--sbt` 为 NCBI 提交者模板 | Curation + NCBI names + submission files (default `yes`); `--sbt` submitter template |

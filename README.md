@@ -121,7 +121,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 输出目录（`out/README.txt` 逐项说明）：
 
-| 文件 / 目录 | 内容 |
+| 文件 / 目录 / file / folder | 内容 / contents |
 |---|---|
 | `final_annotation/<登录号>.gb` | MitoM 最终注释，每条一个文件（已定向、校正、NCBI 命名） |
 | `final_annotation_all.gb` | 同上，合并成一个文件 |
@@ -135,7 +135,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 **4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；每个命令的用法和示例见 [使用手册第 6 节](docs/USAGE_zh.md#6-每个命令的用法)，怎么选命令见 [第 5 节](docs/USAGE_zh.md#5-怎么选命令)）
 
-| 命令 | 作用 |
+| 命令 / command | 作用 / purpose |
 |---|---|
 | `mitom run` | 完整流程，最常用：从序列到最终注释、NCBI 提交文件和基因组图 |
 | `mitom import` | 已有 MitoZ / MITOS2 结果或已注释的 GenBank：不重新注释，只做后面的整理（统一起点、修整、NCBI 文件、作图） |
@@ -180,7 +180,7 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 
 **MitoM**（命令名 `mitom`；M = Merge / Metazoa）是一条动物线粒体基因组注释流程。流程本身（下表"MitoM 自有步骤"）是作者多年研究中逐步优化形成的；基因识别由 MitoM 自己的注释核心 `mito_core.py` 完成，各环节用什么方法以 benchmark 结果为依据（`benchmark/`）。MitoZ、MITOS2 不随 MitoM 安装：装了它们时可以用 `--engine mitoz|mitos2` 让它们注释，或用 `mitom import` 读入它们已有的结果，之后的 MitoM 步骤相同；MITOS2 还可用于漏注救回（`--rescue yes`）。核心用到的 MITOS2 参考数据 refseq89m 由 `mitom setup` 下载（install.sh 会运行）。
 
-| 环节 | 来源 |
+| 环节 / part | 来源 / origin |
 |---|---|
 | NCBI 下载（`mito_fetch.py`，按类群 / 检索式）、GenBank 输入去重（保留 RefSeq）、注释审核报告（`mito_check.py`）、内部短 ID、批量与并行 | MitoM 自有步骤 |
 | 方向调整（cox1 起始、统一正链，cox1 缺失时依次用 cox2/cox3/cob/nad1） | MitoM 自有步骤 |

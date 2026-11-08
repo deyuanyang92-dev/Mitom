@@ -113,14 +113,15 @@ next tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6
 | MITOS2 + MitoM 整理 / curation | 6/13 | 2/2 | 22/22 | 0 | +8 s |
 | MitoM 自身注释 / own annotation | 10/13 | 2/2 | 22/22 | 0 | 35 s |
 
-24 条 RefSeq（8 门，MITOS2 2.1.10）中三者都完成的 18 条，整理前后 / 18 of 24 RefSeq records (8 phyla), before and after curation
+24 条 RefSeq（8 门，MITOS2 2.1.10）中三者都完成的 18 条：整理前后的端点、tRNA、NCBI ERROR 见 [README 的校正前后表](../README.md)；这里只列 README 表里没有的一项。
+18 of 24 RefSeq records (8 phyla): ends, tRNAs and NCBI ERROR before and after curation are in the README's raw-vs-curated table; only the column it lacks is here
 （[benchmark/results/curation_cmp_2026-10-28](../benchmark/results/curation_cmp_2026-10-28/README.md)）:
 
-| | 蛋白基因两端一致 / PCG exact | rRNA ≤ 3 nt | tRNA 找到 / found | 有 NCBI ERROR 的记录 / records with ERROR | 端点偏 > 30 nt / ends > 30 nt off |
-|---|---|---|---|---|---|
-| MITOS2 | 50.0 % | 23.5 % | 95.9 % | 18 / 18 | 56 |
-| MITOS2 + MitoM 整理 / curation | 56.5 % | 64.7 % | 95.9 % | 0 / 18 | 48 |
-| MitoM 自身注释 / own annotation | 83.0 % | 61.8 % | 99.5 % | 0 / 18 | 10 |
+| | 端点偏 > 30 nt 的基因 / genes with an end > 30 nt off |
+|---|---|
+| MITOS2 | 56 |
+| MITOS2 + MitoM 整理 / curation | 48 |
+| MitoM 自身注释 / own annotation | 10 |
 
 整理让结果全部通过 NCBI 检查，并改 rRNA 端点。它补不回 MITOS2 漏掉的基因，蛋白基因端点仍会偏。多类群开发期基准（不是冻结评测）的数字在 [METHODS.md](METHODS.md) 的「完整流程与 MITOS2 的对比」表里，这里不抄。
 Curation makes every record pass the NCBI check and moves rRNA ends. It does not add genes MITOS2 missed, and many protein ends stay off. The metazoan development-benchmark numbers (not the frozen evaluation) are in the "full run vs MITOS2" table in [METHODS.md](METHODS.md), not copied here.
