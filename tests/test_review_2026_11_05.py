@@ -251,7 +251,7 @@ def test_failed_group_is_not_merged(tmp_path):
 # ---- annotation steps --------------------------------------------------------------------------------------------
 def test_intron_exonerate_gets_a_table_for_codes_it_lacks(tmp_path, monkeypatch):
     seen = []
-    monkeypatch.setattr(mito_intron, "run_tool", lambda cmd, *a, **k: seen.append(cmd) or "")
+    monkeypatch.setattr(mito_intron, "try_program", lambda cmd, *a, **k: seen.append(cmd) or "")
     try:
         mito_intron.run_exonerate("exonerate", tmp_path / "p.faa", tmp_path / "g.fna", 33, 5000)
     except Exception:

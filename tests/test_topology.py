@@ -156,7 +156,7 @@ def test_alignment_across_needs_both_halves_or_a_long_open_span(monkeypatch):
     n = len(genome)
     whole = fake_exonerate(GENE)
 
-    def one_half(exonerate, window, prots, code, tmp, log):        # the 3' half too divergent to align alone
+    def one_half(exonerate, window, prots, code, tmp, log, model=None):        # the 3' half too divergent to align alone
         hit = whole(exonerate, window, prots, code, tmp, log)
         return hit if hit and hit[1] < 200 else None
     monkeypatch.setattr(mc, "exonerate_best", one_half)
@@ -166,7 +166,7 @@ def test_alignment_across_needs_both_halves_or_a_long_open_span(monkeypatch):
     short = GENE[870:] + FILLER + GENE[:600]                          # 30 nt across: halves needed, the 3' one is missing
     n = len(short)
 
-    def short_half(exonerate, window, prots, code, tmp, log):
+    def short_half(exonerate, window, prots, code, tmp, log, model=None):
         i, k = window.find(GENE[:600] + GENE[870:]), 630
         if i >= 0:
             return "ref1", 0, 210, i, i + k, 630.0

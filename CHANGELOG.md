@@ -31,6 +31,14 @@ installed one.
   replace_organism, dedup, gb2fasta, intron); mitom_pipeline.py keeps main() (183 lines). No re-exports: an old
   `mitom_pipeline.<name>` still resolves with a DeprecationWarning; the tests import the defining modules (an old name
   in a test is an error, pyproject filterwarnings).
+- No module globals that carry one run's state: `mitom_context.RunContext` (made by main(), passed to the run
+  workflows) holds the --clade auto plan (was mitom_groups.LAST_PLAN), the GenBank dedup counts (mitom_inputs.
+  LAST_DEDUP_STATS) and the re-orientation notes (`mitom_orient.OrientNotes`: fallback start genes, linear records
+  reported; were ORIENTATION_FALLBACK, _LINEAR_SKIP_SEEN); the annotation progress bar is passed to annotate_one
+  (mitom_stage._STAGE_PROGRESS). In the leaf scripts the values set from the command line are passed down instead of
+  rewriting module globals: mito_trna circular length (CIRC_L -> circ_len), mito_core --exclude_ref and
+  --exonerate_model (tools["exclude_refs"], tools["exonerate_model"]), mito_intron --timeout. mito_intron's
+  failure-tolerant program call is named `try_program` (was a second `run_tool`, the name of mito_common's).
 
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:

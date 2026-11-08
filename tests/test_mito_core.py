@@ -492,3 +492,18 @@ def test_trna_step_lives_in_mito_trna(monkeypatch):
     assert names({"mitfi": ("jar", "codes")}, True) == ["trnA", "trnD"]
     assert names({}, True) == ["trnA", "trnC"]
     assert names({"mitfi": ("jar", "codes")}, False) == ["trnD"]
+
+
+def test_blastx_gene_leaves_out_excluded_references(monkeypatch, tmp_path):
+    """--exclude_ref / $MITOM_EXCLUDE_REF reach blastx_gene as a parameter (tools["exclude_refs"]), no module global."""
+    import subprocess
+    import mito_core
+    line = "q\t{}:cox1-a\t90\t500\t1\t1500\t1\t500\t0\t400\t510\n"
+    out = line.format("NC_000001") + line.format("NC_000002")
+    monkeypatch.setattr(mito_core, "run", lambda cmd, log, **kw: subprocess.CompletedProcess(cmd, 0, out, ""))
+    hits = mito_core.blastx_gene("blastx", tmp_path / "g.fa", tmp_path / "db", 5, "cox1", 1, None)
+    assert [h.ref for h in hits] == ["NC_000001:cox1-a", "NC_000002:cox1-a"]
+    hits = mito_core.blastx_gene("blastx", tmp_path / "g.fa", tmp_path / "db", 5, "cox1", 1, None,
+                                 exclude=frozenset({"NC_000002"}))
+    assert [h.ref for h in hits] == ["NC_000001:cox1-a"]
+    assert not hasattr(mito_core, "EXCLUDE_REFS")

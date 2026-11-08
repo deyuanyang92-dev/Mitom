@@ -253,15 +253,15 @@ def from_input(rec) -> List[Pred]:
 
 
 # ── grouping and selection ──────────────────────────────────────────────────
-CIRC_L = 0                                            # length of the current (circular) record
+# circ_len: length of the record when it is circular, 0 when linear (origin-spanning calls then compare shifted)
 
 
-def overlap(p: "Pred", q: "Pred") -> int:
+def overlap(p: "Pred", q: "Pred", circ_len: int = 0) -> int:
     """Overlap on a circular sequence: origin-spanning predictions use extended coordinates (end > L),
-    so compare also with one of them shifted by -L."""
+    so compare also with one of them shifted by -L (circ_len = L; 0 = linear)."""
     best = min(p.end, q.end) - max(p.start, q.start) + 1
-    if CIRC_L:
-        for dp, dq in ((-CIRC_L, 0), (0, -CIRC_L)):
+    if circ_len:
+        for dp, dq in ((-circ_len, 0), (0, -circ_len)):
             best = max(best, min(p.end + dp, q.end + dq) - max(p.start + dp, q.start + dq) + 1)
     return best
 
@@ -272,7 +272,7 @@ def inside_linear(preds: List[Pred], L: int) -> List[Pred]:
     return [p for p in preds if 1 <= p.start <= p.end <= L]
 
 
-def group(preds: List[Pred]) -> List[List[Pred]]:
+def group(preds: List[Pred], circ_len: int = 0) -> List[List[Pred]]:
     groups: List[List[Pred]] = []
     for p in sorted(preds, key=lambda x: (x.start, x.end)):
         for g in groups:
@@ -281,9 +281,9 @@ def group(preds: List[Pred]) -> List[List[Pred]]:
             # (Cursor F4, 2026-11-06)
             # same strand, aa and anticodon as every member: a call without anticodon must not chain trnL1 and
             # trnL2 (Bugbot on PR #3, 2026-11-06)
-            if all(p.strand == q.strand and p.aa == q.aa and overlap(p, q) > 0
+            if all(p.strand == q.strand and p.aa == q.aa and overlap(p, q, circ_len) > 0
                    and (not p.anticodon or not q.anticodon or p.anticodon == q.anticodon) for q in g) \
-                    and any(overlap(p, q) >= 0.5 * min(p.length, q.length) for q in g):
+                    and any(overlap(p, q, circ_len) >= 0.5 * min(p.length, q.length) for q in g):
                 g.append(p)
                 break
         else:
@@ -294,7 +294,7 @@ def group(preds: List[Pred]) -> List[List[Pred]]:
     return groups
 
 
-def conflicts(groups: List[List[Pred]]) -> Dict[int, List[int]]:
+def conflicts(groups: List[List[Pred]], circ_len: int = 0) -> Dict[int, List[int]]:
     """Groups overlapping another group on the same strand with a different aa/anticodon."""
     out: Dict[int, List[int]] = {}
     for i, g in enumerate(groups):
@@ -302,7 +302,7 @@ def conflicts(groups: List[List[Pred]]) -> Dict[int, List[int]]:
             if i == j or g[0].strand != h[0].strand:
                 continue
             # any members, not only the first: groups have several (Bugbot on PR #3, 2026-11-06)
-            if any(overlap(p, q) >= 0.5 * min(p.length, q.length) for p in g for q in h):
+            if any(overlap(p, q, circ_len) >= 0.5 * min(p.length, q.length) for p in g for q in h):
                 out.setdefault(i + 1, []).append(j + 1)
     return out
 
@@ -821,12 +821,11 @@ def main(argv=None) -> int:
                                "coords_by_source": "", "conflict": "", "selected": f"{sel_tool} failed; input kept"})
                 continue
             L = len(rec.seq)
-            global CIRC_L
             topo = rec.annotations.get("topology") or (topology_from_header(rec.description) if fmt == "fasta" else "circular")
-            CIRC_L = L if topo == "circular" else 0     # FASTA topology=linear honoured (Kimi 2.3, 2026-11-05)
-            preds = unwrap(preds, L) if CIRC_L else inside_linear(preds, L)
-            groups = group(preds)
-            conf = conflicts(groups)
+            circ_len = L if topo == "circular" else 0   # FASTA topology=linear honoured (Kimi 2.3, 2026-11-05)
+            preds = unwrap(preds, L) if circ_len else inside_linear(preds, L)
+            groups = group(preds, circ_len)
+            conf = conflicts(groups, circ_len)
             sources_run = sorted({x for x in ("MITOS2" if "mitos2" in want else "", "ARWEN" if "arwen" in want else "",
                                               "MitoM-ML" if "mitom" in want else "",
                                               "ARAGORN" if "aragorn" in want else "",

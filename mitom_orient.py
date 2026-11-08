@@ -7,8 +7,9 @@ from __future__ import annotations
 import argparse
 import logging
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -45,8 +46,11 @@ normalize_gene_key = name_key
 _GENE_ALIAS_GROUPS = ORIENTATION_ALIAS_GROUPS
 
 
-# Records oriented by a fallback gene because the first gene was absent: {record id: gene}
-ORIENTATION_FALLBACK: Dict[str, str] = {}
+@dataclass
+class OrientNotes:
+    """What re-orientation noticed during one run (RunContext.orient; a call without one gets a fresh one)."""
+    fallback: Dict[str, str] = field(default_factory=dict)   # record id -> the fallback gene it starts at (first absent)
+    linear_reported: Set[int] = field(default_factory=set)   # sequences already reported by [LINEAR_REORIENT_SKIP]
 
 
 def orientation_genes(args: argparse.Namespace) -> str:
@@ -88,18 +92,18 @@ def feature_gene_names(feature: "SeqFeature") -> List[str]:
     return names
 
 
-_LINEAR_SKIP_SEEN: set = set()      # sequences already reported by [LINEAR_REORIENT_SKIP] (run: step 3, then the final write)
-
-
-def rotate_record(record: "SeqRecord", start_pos: int) -> "SeqRecord":
+def rotate_record(record: "SeqRecord", start_pos: int, notes: Optional[OrientNotes] = None) -> "SeqRecord":
+    """The record started at start_pos (circular); a linear one is left unchanged, with a warning the first time a run
+    (notes) meets its sequence (run: step 3, then the final write)."""
+    notes = notes if notes is not None else OrientNotes()
     seq_len = len(record.seq)
     topology = record.annotations.get("topology", "circular")
     if str(topology).lower() == "linear" and start_pos != 0:
         key = hash(str(record.seq))
-        (logging.info if key in _LINEAR_SKIP_SEEN else logging.warning)(
+        (logging.info if key in notes.linear_reported else logging.warning)(
             f"[LINEAR_REORIENT_SKIP] record={record.id}: target start={start_pos}; "
             "linear topology cannot be circularly rotated, sequence left unchanged.")
-        _LINEAR_SKIP_SEEN.add(key)
+        notes.linear_reported.add(key)
         return SeqRecord(                     # moving a linear contig's tail before its head would corrupt it
             record.seq,
             id=record.id, name=record.name, description=record.description,
@@ -269,8 +273,9 @@ def reorient_check(round1_gb: Path, reor_gb: Path, code: int = 5) -> List[str]:
 
 def reorient_one_gb(
     gb_in: Path, gb_out: Path, gb_no_gene: Path,
-    which_gene_first: str, force_forward: bool,
+    which_gene_first: str, force_forward: bool, notes: Optional[OrientNotes] = None,
 ) -> Tuple[int, int, List[str]]:
+    notes = notes if notes is not None else OrientNotes()
     recs = list(SeqIO.parse(str(gb_in), "genbank"))
     if not recs:
         raise ValueError(f"No GenBank records: {gb_in}")
@@ -286,7 +291,7 @@ def reorient_one_gb(
                 continue
             first = which_gene_first.split(",")[0].strip()
             if used != first:
-                ORIENTATION_FALLBACK[rec.id] = used
+                notes.fallback[rec.id] = used
                 logging.info(f"[REORIENT_FALLBACK] record={rec.id}: '{first}' not found, "
                              f"sequence starts at '{used}'")
             work_rec = rec
@@ -297,7 +302,7 @@ def reorient_one_gb(
                     no_gene.append(rec)
                     no_gene_ids.append(rec.id)
                     continue
-            ok.append(rotate_record(work_rec, feature_start_pos(feat)))
+            ok.append(rotate_record(work_rec, feature_start_pos(feat), notes))
         except Exception as exc:
             logging.warning(f"[REORIENT_REC_FAIL] record={rec.id}: {exc}")
             no_gene.append(rec)
@@ -329,10 +334,10 @@ def orientation_text(orient_ok: bool, si: "SampleInfo") -> str:
     return "yes" if orient_ok else "no (linear, not rotated)" if si.topology == "linear" else "no"
 
 
-def write_orientation_fallback(out_root: Path, samples: List["SampleInfo"]) -> None:
+def write_orientation_fallback(out_root: Path, samples: List["SampleInfo"], notes: OrientNotes) -> None:
     """oriented_by_fallback.txt: samples whose first gene was absent and that start at a fallback gene."""
     names = {si.internal_id: si.sample_name for si in samples}
-    rows = sorted({f"{names.get(k.split('.')[0], k)}\t{g}" for k, g in ORIENTATION_FALLBACK.items()})
+    rows = sorted({f"{names.get(k.split('.')[0], k)}\t{g}" for k, g in notes.fallback.items()})
     write_nonempty_table(reports_dir(out_root) / "oriented_by_fallback.txt", "sample_name\tstart_gene", rows)
 
 
@@ -381,7 +386,7 @@ def add_exon_gap_introns(rec: "SeqRecord") -> int:
     return len(added)
 
 
-def reorient_after_introns(args: argparse.Namespace, final_dir: Path) -> int:
+def reorient_after_introns(args: argparse.Namespace, final_dir: Path, notes: Optional[OrientNotes] = None) -> int:
     """The intron step can turn the orientation gene into exons across the origin: MitoM rotated the record to the
     core's piece of cox1, and when that piece is exon 2, exon 1 and the intron lie at the record's end (annelid cox1
     group II introns). Rotate such circular records again so the gene's 5'-most exon starts the sequence. Returns the
@@ -395,7 +400,7 @@ def reorient_after_introns(args: argparse.Namespace, final_dir: Path) -> int:
                 continue
             pos = feature_start_pos(feat)
             if pos:
-                recs[i], changed = rotate_record(rec, pos), True
+                recs[i], changed = rotate_record(rec, pos, notes), True
                 n += 1
                 add_exon_gap_introns(recs[i])
                 logging.info(f"[REORIENT_INTRON] {rec.id}: {feat.qualifiers.get('gene', ['?'])[0]} starts at {pos + 1} "

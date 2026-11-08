@@ -52,15 +52,16 @@ def test_nothing_found():
 
 
 def test_reorient_uses_fallback(tmp_path):
-    mitom_orient.ORIENTATION_FALLBACK.clear()
+    notes = mitom_orient.OrientNotes()
     r = rec_with([("CDS", "cox2", 300, 900, 1), ("CDS", "nad5", 1000, 1500, 1)])
     gb_in = tmp_path / "in.gbf"
     SeqIO.write(r, str(gb_in), "genbank")
-    n_ok, n_no, _ = mitom_orient.reorient_one_gb(gb_in, tmp_path / "out.gbf", tmp_path / "no.gbf", "cox1,cox2", True)
+    n_ok, n_no, _ = mitom_orient.reorient_one_gb(gb_in, tmp_path / "out.gbf", tmp_path / "no.gbf", "cox1,cox2", True,
+                                                 notes)
     assert (n_ok, n_no) == (1, 0)
     out = SeqIO.read(str(tmp_path / "out.gbf"), "genbank")
     assert str(out.seq)[:20] == str(r.seq)[300:320]               # sequence now starts at cox2
-    assert mitom_orient.ORIENTATION_FALLBACK == {"R1": "cox2"}
+    assert notes.fallback == {"R1": "cox2"}
 
 
 def test_reorient_after_introns_starts_with_the_first_exon(tmp_path):

@@ -502,7 +502,10 @@ def convert_gb_to_fasta_for_annotation(
     out_dir: Path,
     dedup_report_path: Optional[Path] = None,
     orig_dir: Optional[Path] = None,
+    stats_out: Optional[Dict] = None,
 ) -> Tuple[List[Path], Dict[str, Path]]:
+    """GenBank records deduplicated -> one FASTA each (+ the records unchanged in orig_dir); stats_out (RunContext.
+    dedup_stats) gets the counts of records read and dropped."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
     kept_records, metadata_only_acc_to_gb, stats = dedup_gb_records(
@@ -555,12 +558,10 @@ def convert_gb_to_fasta_for_annotation(
                 write_gb([meta.record], orig_dir / f"{safe_name(meta.acc_versioned)}.gb")   # (Kimi 1.5)
             except Exception as exc:               # noqa: BLE001  (a record Biopython cannot write back: compared later as missing)
                 logging.warning(f"[ORIGINAL_GB] {meta.acc_versioned}: not written to {orig_dir.name}/: {exc!r}")
-    LAST_DEDUP_STATS.clear()
-    LAST_DEDUP_STATS.update(stats)
+    if stats_out is not None:
+        stats_out.clear()
+        stats_out.update(stats)
     return fasta_paths, acc_to_orig_gb
-
-
-LAST_DEDUP_STATS: Dict = {}        # stats of the last convert_gb_to_fasta_for_annotation (run: step 1 line)
 
 
 def iter_inputs(
@@ -568,6 +569,7 @@ def iter_inputs(
     gb_to_fasta_dir: Optional[Path] = None,
     orig_dir: Optional[Path] = None,
     dedup_report: Optional[Path] = None,
+    stats_out: Optional[Dict] = None,
 ) -> Tuple[List[Path], str, Dict[str, Path]]:
     itype = _sniff_input_type(in_path)
     logging.info(f"[INPUT] Detected input type: {itype}  ({in_path})")
@@ -596,7 +598,7 @@ def iter_inputs(
             raise RuntimeError("gb_to_fasta_dir required when input is GenBank")
         dedup_report = dedup_report or gb_to_fasta_dir / "dedup_report.tsv"
         fasta_paths, acc_to_orig_gb = convert_gb_to_fasta_for_annotation(
-            gb_files, gb_to_fasta_dir, dedup_report_path=dedup_report, orig_dir=orig_dir)
+            gb_files, gb_to_fasta_dir, dedup_report_path=dedup_report, orig_dir=orig_dir, stats_out=stats_out)
         if not fasta_paths:
             raise InputError(f"no usable GenBank record in {in_path} (empty, cut off, without sequence, or unreadable: see the warnings)")
         logging.info(

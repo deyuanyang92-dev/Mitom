@@ -42,11 +42,7 @@ def test_mitos_bed_keeps_numbered_copies():
 
 def test_origin_spanning_groups_with_unwrapped_copy():
     """MITOS2 1..72 and ARWEN 16138..16211 (= 16138,1..73) are the same tRNA on a circular genome."""
-    mt.CIRC_L = 16138
-    try:
-        g = mt.group([mt.Pred("MITOS2", 1, 72, 1, "M", "cat"), mt.Pred("ARWEN", 16138, 16211, 1, "M", "cat")])
-    finally:
-        mt.CIRC_L = 0
+    g = mt.group([mt.Pred("MITOS2", 1, 72, 1, "M", "cat"), mt.Pred("ARWEN", 16138, 16211, 1, "M", "cat")], 16138)
     assert len(g) == 1 and mt.families(g[0]) == ["ARWEN/ARAGORN (heuristic)", "MITOS2 (covariance models, metazoan mt tRNAs)"]
 
 

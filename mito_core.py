@@ -47,7 +47,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import AbstractSet, Dict, List, Optional, Tuple
 
 from Bio.Data import CodonTable
 from Bio.Seq import Seq
@@ -103,7 +103,8 @@ NO_START_DOWN = {"echinodermata": {"nad4l"}}   # phylum -> genes left 5'-partial
                            # no start codon (NCBI marks it 5'-partial; 5 of 5 echinoderm records, 2 of them were moved
                            # 27 nt downstream; for all genes of all phyla the fallback is right more often)
 START_EXPECTED_MIN = 2     # residues missing from the alignment from which the start is sought at the expected position
-EXONERATE_MODEL = "protein2dna"   # protein2dna:bestfit = whole reference protein aligned (set by --exonerate_model)
+EXONERATE_MODEL = "protein2dna"   # default of --exonerate_model (tools["exonerate_model"]); protein2dna:bestfit = whole
+                                  # reference protein aligned
 EXONERATE_CODES = {1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23}   # built into exonerate 2.4.0; others
                            # (24, 33: Hemichordata) are passed as the 64-letter table ("No built in genetic code ... [24]")
 ORIGIN_EXT = 3000          # circular records are searched as seq + seq[:ORIGIN_EXT]: a gene across the origin is
@@ -114,8 +115,8 @@ PARALOG_MIN_OVERLAP = 60   # a CDS overlapping a better-scoring CDS of another g
                            # absent; MitoZ genomic_cluster.pl / MITOS2 _nonoverlapping_greedy drop these too)
 BAD_REFS = {"NC_008151:cob_0-a--1-18769-16822"}   # refseq89m cob.fas entry that is a cox1 protein (87.8 % identity
                            # to cox1, no cob hit): gave a false CYTB inside COX1 (stress test 2026-10-22)
-EXCLUDE_REFS: set = set()  # accessions whose own proteins are not used (--exclude_ref / $MITOM_EXCLUDE_REF; benchmark
-                           # leave-out: refseq89m holds the proteins of 8,012 RefSeq records)
+# accessions whose own proteins are not used: tools["exclude_refs"] (--exclude_ref / $MITOM_EXCLUDE_REF; benchmark
+# leave-out: refseq89m holds the proteins of 8,012 RefSeq records)
 
 
 @dataclass
@@ -147,7 +148,7 @@ def run(cmd: List[str], log: logging.Logger, **kw) -> subprocess.CompletedProces
 
 # ── protein genes ────────────────────────────────────────────────────────────
 def blastx_gene(blastx: str, genome_fa: Path, db: Path, code: int, gene: str, threads: int, log,
-                sensitive: bool = False) -> List[Hit]:
+                sensitive: bool = False, exclude: AbstractSet[str] = frozenset()) -> List[Hit]:
     """blastx of the genome against one gene's protein set. Default: standard settings (1-2 s per gene); sensitive:
     word size 2, BLOSUM45, no composition statistics (3-4 s per gene), run only for genes the default pass misses."""
     extra = ["-seg", "no", "-comp_based_stats", "0", "-word_size", "2", "-matrix", "BLOSUM45"] if sensitive else ["-seg", "no"]
@@ -159,7 +160,7 @@ def blastx_gene(blastx: str, genome_fa: Path, db: Path, code: int, gene: str, th
         c = line.split("\t")
         qs, qe = int(c[4]), int(c[5])
         strand = 1 if qs <= qe else -1
-        if float(c[9]) >= BLAST_MIN_BITS and c[1] not in BAD_REFS and c[1].split(":")[0] not in EXCLUDE_REFS:
+        if float(c[9]) >= BLAST_MIN_BITS and c[1] not in BAD_REFS and c[1].split(":")[0] not in exclude:
             hits.append(Hit(gene, c[1], min(qs, qe) - 1, max(qs, qe), strand, float(c[9]), int(c[6]), int(c[7]), int(c[10])))
     return hits
 
@@ -203,7 +204,8 @@ def exonerate_code(code: int) -> str:
 def exonerate_best(exonerate: str, window: str, prots: Dict[str, str], code: int, tmp: Path, log,
                    model: Optional[str] = None) -> Optional[Tuple[str, int, int, int, int, float]]:
     """Best alignment of the reference proteins on the window (plus strand) with the EXONERATE_MODEL (or `model`,
-    e.g. protein2genome for a gene split by an intron): (ref, qab, qae, tab, tae, score); 0-based half-open."""
+    e.g. protein2genome for a gene split by an intron; tools["exonerate_model"]): (ref, qab, qae, tab, tae, score);
+    0-based half-open."""
     model = model or EXONERATE_MODEL
     (tmp / "w.fa").write_text(f">w\n{window}\n")
     best = None
@@ -339,14 +341,15 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
     # one blastx process at a time with all threads: as fast as 2 x 2 threads (13 genes ~15 s), one ~80-MB process
     # instead of two (peak memory)
     bt = max(1, threads)
+    excl = tools.get("exclude_refs", frozenset())          # benchmark leave-out (--exclude_ref)
     with ThreadPoolExecutor(1) as ex:
         all_hits = dict(zip(PCG, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
-                                                                 code, g, bt, log), PCG)))
+                                                                 code, g, bt, log, exclude=excl), PCG)))
         missing = [g for g in PCG if not all_hits[g]]
         if missing:
             log.info(f"[core] sensitive blastx for {len(missing)} gene(s) without a hit: " + " ".join(missing))
             all_hits.update(zip(missing, ex.map(lambda g: blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{g}.fas",
-                                                                        code, g, bt, log, sensitive=True), missing)))
+                                                                        code, g, bt, log, sensitive=True, exclude=excl), missing)))
     def place(gene: str, locus: List[Hit], mask: frozenset = frozenset()) -> Optional[Feature]:
         """The gene at one blastx locus; mask = genome positions (of genes already placed) hidden from exonerate."""
         strand = locus[0].strand
@@ -373,7 +376,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             if not batch or placed is not None and not placed[-1]:
                 break
             prots = reference_proteins(refdir / "featureProt" / f"{gene}.fas", batch)
-            best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
+            best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log, tools.get("exonerate_model"))
             if best is None:
                 continue
             ref, qab, qae, tab, tae, score = best
@@ -423,7 +426,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
             # sensitive search brings the gene's other references (50 hits)
             log.info(f"[core] {gene}: sensitive blastx (weak hits, not placed)")
             hits = [h for h in blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{gene}.fas", code, gene,
-                                           2 if threads >= 2 else 1, log, sensitive=True) if h.start < n]
+                                           2 if threads >= 2 else 1, log, sensitive=True, exclude=excl) if h.start < n]
             if hits:
                 all_loci[gene] = loci(hits)
                 f = place(gene, all_loci[gene][0])
@@ -441,7 +444,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
         if not off:                                        # the sensitive search, as for a gene without any hit
             log.info(f"[core] {gene}: sensitive blastx for loci off the other genes")
             off = [h for h in blastx_gene(tools["blastx"], genome_fa, refdir / "featureProt" / f"{gene}.fas", code, gene,
-                                          1, log, sensitive=True) if h.start < n
+                                          1, log, sensitive=True, exclude=excl) if h.start < n
                    and len({i % n for i in range(h.start, h.end)} & taken) <= 0.5 * (h.end - h.start)]
         for locus in loci(off)[:MAX_LOCI]:
             f = place(gene, locus, frozenset(taken))
@@ -537,7 +540,7 @@ def side_pieces(window: str, j: int, prots: Dict[str, str], code: int, tools: di
     (qab, qae, tab, tae) on the whole window; a side without an alignment is left out."""
     out = []
     for lo, hi in ((0, j), (j, len(window))):
-        b = exonerate_best(tools["exonerate"], window[lo:hi], prots, code, tmp, log)
+        b = exonerate_best(tools["exonerate"], window[lo:hi], prots, code, tmp, log, tools.get("exonerate_model"))
         if b is not None:
             out.append((b[1], b[2], b[3] + lo, b[4] + lo))
     return out
@@ -548,7 +551,7 @@ FAR_COVER, FAR_SCORE = 0.5, 0.5   # the part a spliced alignment adds across the
 
 
 def far_part_aligns(exonerate: str, wide: str, wj: int, prot: str, spliced: Tuple[int, int], near: Tuple[int, int],
-                    near_score: float, code: int, tmp: Path, log) -> bool:
+                    near_score: float, code: int, tmp: Path, log, model: Optional[str] = None) -> bool:
     """The residues a spliced alignment (spliced: reference residues sab, sae) adds to the gene's part at the junction
     (near: qab, qae, protein2dna score near_score) align by themselves on the far side of the junction (the window's
     part before wj for missing 5' residues, after it for 3' ones): >= FAR_COVER of them, at >= FAR_SCORE of the near
@@ -558,7 +561,7 @@ def far_part_aligns(exonerate: str, wide: str, wj: int, prot: str, spliced: Tupl
     for a, b, region in ((spliced[0], near[0], wide[:wj]), (near[1], spliced[1], wide[wj:])):
         if b - a < END_CUT:                                   # nothing (or little) added on this side
             continue
-        hit = exonerate_best(exonerate, region, {"far": prot[a:b]}, code, tmp, log)
+        hit = exonerate_best(exonerate, region, {"far": prot[a:b]}, code, tmp, log, model)
         if hit is None:
             return False
         aligned = hit[2] - hit[1]
@@ -605,7 +608,7 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
         rest = max(0, n - (e - s))                         # the circle outside the gene
         flank = min(3 * reflen + WINDOW, rest // 2)
         window, j = window_of(flank, flank)
-        best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log)
+        best = exonerate_best(tools["exonerate"], window, prots, code, tmp, log, tools.get("exonerate_model"))
         if best is None:
             continue
         ref, qab, qae, tab, tae, _ = best
@@ -625,7 +628,7 @@ def end_evidence(genome: str, feats: List[Feature], refdir: Path, code: int, too
                 _, sab, sae, stab, stae, _ = spl
                 if stab < wj - END_FLANK and stae > wj + END_FLANK and (qab - sab) + (sae - qae) >= END_CUT \
                         and far_part_aligns(tools["exonerate"], wide, wj, prots[ref], (sab, sae), (qab, qae), score,
-                                            code, tmp, log):
+                                            code, tmp, log, tools.get("exonerate_model")):
                     return sab, sae, wj - stab, stae - wj
             return None
         before, after = j - tab, tae - j
@@ -713,7 +716,6 @@ def genbank_record(genome: str, feats: List[Feature], code: int, prefix: str, to
 
 def annotate(args) -> int:
     """Every sequence of the FASTA (contigs of one sample: one GenBank file with one record each)."""
-    global EXCLUDE_REFS
     log = logging.getLogger("core")
     t0 = time.time()
     fa = Path(args.input).resolve()
@@ -750,9 +752,11 @@ def annotate(args) -> int:
         except (SystemExit, OSError) as e:
             log.warning(f"[core] MiTFi not found ({e}): tRNA families MitoM-ML does not call are not searched again")
     code = int(args.genetic_code)
-    EXCLUDE_REFS = {x.split(".")[0] for x in re.split(r"[,\s]+", args.exclude_ref or os.environ.get("MITOM_EXCLUDE_REF", "")) if x}
-    if EXCLUDE_REFS:
-        log.info(f"[core] reference proteins of {', '.join(sorted(EXCLUDE_REFS))} not used")
+    tools["exclude_refs"] = frozenset(x.split(".")[0] for x in re.split(r"[,\s]+", args.exclude_ref
+                                                                    or os.environ.get("MITOM_EXCLUDE_REF", "")) if x)
+    tools["exonerate_model"] = args.exonerate_model
+    if tools["exclude_refs"]:
+        log.info(f"[core] reference proteins of {', '.join(sorted(tools['exclude_refs']))} not used")
     recs, rows, ends, n_all = [], [], [], {"CDS": 0, "rRNA": 0, "tRNA": 0}
     for k, rec in enumerate(seqs):
         genome = str(rec.seq).upper()
@@ -794,7 +798,6 @@ def annotate(args) -> int:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    global EXONERATE_MODEL
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("annotate", help="annotate one mitogenome FASTA")
@@ -826,7 +829,6 @@ def main(argv: Optional[List[str]] = None) -> int:
                    "(benchmark leave-out; default $MITOM_EXCLUDE_REF)")
     a.add_argument("--log", default=None)
     args = p.parse_args(argv)
-    EXONERATE_MODEL = args.exonerate_model
     logging.basicConfig(level=logging.DEBUG if debug_mode() else logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
                         handlers=[logging.StreamHandler(sys.stderr)] + ([logging.FileHandler(args.log)] if args.log else []))
     return annotate(args)

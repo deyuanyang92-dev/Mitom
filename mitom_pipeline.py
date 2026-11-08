@@ -58,6 +58,7 @@ except ImportError:                       # `mitom` checks this before it starts
 import mito_common  # noqa: E402
 import mitom_cli  # noqa: E402
 import mitom_commands  # noqa: E402
+import mitom_context  # noqa: E402
 import mitom_inputs  # noqa: E402
 import mitom_log  # noqa: E402
 import mitom_prepare  # noqa: E402
@@ -65,6 +66,7 @@ import mitom_run  # noqa: E402
 
 
 def main() -> int:
+    ctx = mitom_context.RunContext()                    # what the steps of this run share (no module globals)
     parser = mitom_cli.build_parser()
     args, extra = parser.parse_known_args()
     if args.cmd == "intron":
@@ -101,7 +103,7 @@ def main() -> int:
             args.input = str(new_input)
             for n in notes:
                 print(f"    [INPUT] {n} ({Path(args.out_root) / mitom_inputs.NORMALIZED_DIR})", file=sys.stderr)
-        err = mitom_prepare.resolve_tools(args)
+        err = mitom_prepare.resolve_tools(args, ctx)
         if err:
             print(err, file=sys.stderr)
             if out_new:
@@ -119,17 +121,17 @@ def main() -> int:
         return 2
 
     dispatch = {
-        "annotate":          mitom_run.workflow_annotate,
+        "annotate":          lambda a: mitom_run.workflow_annotate(a, ctx),
         "reorient":          mitom_commands.workflow_reorient,
-        "run":               mitom_run.workflow_run,
-        "import":            mitom_run.workflow_run,
+        "run":               lambda a: mitom_run.workflow_run(a, ctx),
+        "import":            lambda a: mitom_run.workflow_run(a, ctx),
         "transfer_metadata": mitom_commands.workflow_transfer_metadata,
         "replace_organism":  mitom_commands.workflow_replace_organism,
         "dedup":             mitom_commands.workflow_dedup,
         "gb2fasta":          mitom_commands.workflow_gb2fasta,
         "intron":            mitom_commands.workflow_intron,
     }
-    fn = mitom_run.workflow_groups if getattr(args, "clade_groups", 0) else dispatch.get(args.cmd)
+    fn = (lambda a: mitom_run.workflow_groups(a, ctx)) if getattr(args, "clade_groups", 0) else dispatch.get(args.cmd)
     if fn is None:
         print(f"Unknown command: {args.cmd}", file=sys.stderr)
         return 2

@@ -11,11 +11,11 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import mitom_groups
+from mitom_context import RunContext
 from mito_common import reports_dir, write_nonempty_list, write_table
-from mitom_inputs import LAST_DEDUP_STATS, check_transl_tables, iter_inputs, split_or_sanitize_fastas
+from mitom_inputs import check_transl_tables, iter_inputs, split_or_sanitize_fastas
 from mitom_log import Steps, duration, record_event, say, setup_root_logger
 from mitom_orient import (
-    ORIENTATION_FALLBACK,
     gb_to_internal_fasta,
     orientation_genes,
     orientation_text,
@@ -66,7 +66,8 @@ def _log_removed(out_root: Path, removed: List[str]) -> None:
         logging.info(f"[CLEAN] removed the previous run's files from {out_root}: {', '.join(removed)}")
 
 
-def workflow_annotate(args: argparse.Namespace) -> int:
+def workflow_annotate(args: argparse.Namespace, ctx: Optional[RunContext] = None) -> int:
+    ctx = ctx if ctx is not None else RunContext()
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     removed = clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=_inputs(args))
@@ -82,7 +83,8 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     gb_conv_dir = out_root / "00.gb_converted_fasta"
 
     in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
-                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv")
+                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv",
+                                                       stats_out=ctx.dedup_stats)
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
@@ -120,6 +122,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
                 force_forward=args.force_forward,
                 preserve_metadata=(args.preserve_phase1_metadata == "yes")
                     if hasattr(args, "preserve_phase1_metadata") else False,
+                orient_notes=ctx.orient,
             )
             summary_rows.append(f"{si.sample_name}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{mode}")
         except Exception as exc:
@@ -137,7 +140,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
     run_rescue(args, final_dir, out_root)
     run_rrna_hmm(args, final_dir, out_root)
     run_intron_fix(args, final_dir, out_root)
-    reorient_after_introns(args, final_dir)
+    reorient_after_introns(args, final_dir, ctx.orient)
     merge_dir = run_curate_and_submit(args, final_dir, out_root).gb_dir
     refresh_summary(out_root, merge_dir)
     all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
@@ -150,7 +153,7 @@ def workflow_annotate(args: argparse.Namespace) -> int:
         json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     summary.log()
     logging.warning(KNOWN_LIMITATION)
-    write_orientation_fallback(out_root, samples)
+    write_orientation_fallback(out_root, samples, ctx.orient)
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
     if samples and len(summary.annotation_failed) == len(samples):
@@ -169,7 +172,8 @@ def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
     return "shifted_round1" if mode == "auto" and iid not in reannotated_ids else "phase1b_reoriented"
 
 
-def workflow_run(args: argparse.Namespace) -> int:
+def workflow_run(args: argparse.Namespace, ctx: Optional[RunContext] = None) -> int:
+    ctx = ctx if ctx is not None else RunContext()
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     removed = clear_previous_work(out_root, keep=("00.input", "00.imported"),   # made by this run (input copies, `import`)
@@ -202,7 +206,8 @@ def workflow_run(args: argparse.Namespace) -> int:
     steps.start("input", "Read input and remove duplicate records")
     in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
                                                        orig_dir=out_root / "original_annotation",
-                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv")
+                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv",
+                                                       stats_out=ctx.dedup_stats)
     logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
     samples, id_map = split_or_sanitize_fastas(
         in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
@@ -211,7 +216,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     total = len(samples)
     logging.info(f"[ID_MAP] {id_map}  (total: {total})")
     if input_type == "converted_from_gb":
-        st = LAST_DEDUP_STATS
+        st = ctx.dedup_stats
         steps.info(f"GenBank records read: {st.get('total_in', '?')}")
         dropped = [(st.get(k, 0), why) for k, why in (
             ("dup_refseq", "GenBank record that a RefSeq NC_ record was made from (NC_ kept)"),
@@ -230,8 +235,8 @@ def workflow_run(args: argparse.Namespace) -> int:
         logging.error(msg)                               # (on the console too)
         return 2
 
-    if mitom_groups.LAST_PLAN is not None:              # --clade auto: the phylum and code of every record and why
-        mitom_groups.write_decision(mitom_groups.LAST_PLAN, reports_dir(out_root) / "clade_decision.tsv")
+    if ctx.plan is not None:                            # --clade auto: the phylum and code of every record and why
+        mitom_groups.write_decision(ctx.plan, reports_dir(out_root) / "clade_decision.tsv")
     summary = RunSummary()
     check_transl_tables(out_root / "original_annotation", int(args.genetic_code))
 
@@ -270,7 +275,7 @@ def workflow_run(args: argparse.Namespace) -> int:
         gb_no_gene = reor_dir / f"{si.internal_id}.no_{args.which_gene_first}.gbf"
         try:
             n_ok, n_no, no_gene_ids = reorient_one_gb(
-                best_gb, gb_reor, gb_no_gene, orientation_genes(args), args.force_forward)
+                best_gb, gb_reor, gb_no_gene, orientation_genes(args), args.force_forward, ctx.orient)
             if n_ok == 0 and n_no > 0:
                 record_event(si.sample_name, f"no orientation gene ({args.which_gene_first}, {args.fallback_genes}) "
                              f"in its {n_no} sequence(s): kept as annotated, no round 2 ({si.internal_id})")
@@ -293,7 +298,7 @@ def workflow_run(args: argparse.Namespace) -> int:
             no_gene_iids.add(si.internal_id)
 
     fallback_used = sum(1 for si in samples if si.internal_id in reor_ok_ids
-                        and any(k.startswith(si.internal_id) for k in ORIENTATION_FALLBACK))
+                        and any(k.startswith(si.internal_id) for k in ctx.orient.fallback))
     steps.done(f"{len(reor_ok_ids)} re-oriented"
                + (f" ({fallback_used} by a fallback gene)" if fallback_used else "")
                + (f", {len(no_gene_iids)} without any orientation gene (kept as annotated)" if no_gene_iids else ""))
@@ -401,6 +406,7 @@ def workflow_run(args: argparse.Namespace) -> int:
                 preserve_metadata=(args.preserve_phase1_metadata == "yes"),
                 smart_metadata=(args.smart_metadata == "yes"),
                 auto_accept=(args.auto_accept_metadata == "yes"),
+                orient_notes=ctx.orient,
             )
             summary_rows.append(
                 f"{sample}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{src_tag}\t{meta_mode}")
@@ -454,7 +460,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     steps.start("add_missing", "Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
     for name, step in (("rescue", run_rescue), ("rrna_hmm", run_rrna_hmm), ("introns", run_intron_fix)):
         steps.info(steps.part(name, step, args, final_dir, out_root).summary)
-    n_rot = reorient_after_introns(args, final_dir)
+    n_rot = reorient_after_introns(args, final_dir, ctx.orient)
     if n_rot:
         steps.info(f"re-oriented to the first exon : {n_rot} record(s) whose {args.which_gene_first} gained an exon upstream")
     steps.done()
@@ -485,7 +491,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     logging.info(f"[METADATA_MODE] preserve={args.preserve_phase1_metadata}")
     summary.log()
     logging.info(KNOWN_LIMITATION)
-    write_orientation_fallback(out_root, samples)
+    write_orientation_fallback(out_root, samples, ctx.orient)
     if args.keep_intermediate == "no":
         cleanup_intermediates(out_root, samples, summary.all_problem_samples())
 
@@ -516,7 +522,7 @@ def workflow_run(args: argparse.Namespace) -> int:
     return 0
 
 
-def workflow_groups(args: argparse.Namespace) -> int:
+def workflow_groups(args: argparse.Namespace, ctx: RunContext) -> int:
     """--clade auto with several phyla / genetic codes: `mitom run` per group, merged (mitom_groups.run_groups)."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
@@ -524,4 +530,4 @@ def workflow_groups(args: argparse.Namespace) -> int:
                       debug=getattr(args, "debug", False))
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
-    return mitom_groups.run_groups(args, mitom_groups.LAST_PLAN, sys.argv[1:], say=say)
+    return mitom_groups.run_groups(args, ctx.plan, sys.argv[1:], say=say)

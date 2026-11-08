@@ -53,6 +53,7 @@ py-modules = [
     "mito_trna",
     "mitom_cli",
     "mitom_commands",
+    "mitom_context",
     "mitom_groups",
     "mitom_inputs",
     "mitom_log",

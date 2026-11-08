@@ -189,24 +189,25 @@ class Model:
         return self.exons[0][0], self.exons[-1][1]
 
 
-TIMEOUT = 900                          # seconds per external program call (--timeout)
+TIMEOUT = 900                          # seconds per external program call: default of --timeout (passed down)
 
 
 _FAILED: set = set()                   # programs already reported as failed (one warning each)
 
 
-def run_tool(cmd: List[str], what: str) -> str:
-    """Run an external program; on timeout or failure return '' and warn, so one hard
-    sequence cannot stall or kill a batch."""
+def try_program(cmd: List[str], what: str, timeout: int = TIMEOUT) -> str:
+    """Run an external program and return its stdout; on timeout or failure return '' and warn (once per program), so
+    one hard sequence cannot stall or kill a batch: the step then finds no intron there (mito_common.run_tool: the
+    programs whose failure stops the step)."""
     try:
-        p = run_program(cmd, timeout=TIMEOUT)
+        p = run_program(cmd, timeout=timeout)
         if p.returncode != 0 and what not in _FAILED:     # (2026-10-31 review: failures were silent: no introns)
             _FAILED.add(what)
             print(f"[mito_intron] WARNING: {what} failed (exit {p.returncode}): "
                   f"{(p.stderr or '').strip()[-200:]} - its results are missing", file=sys.stderr)
         return "" if p.returncode else p.stdout          # a failed program's partial output is not parsed (Kimi 1.13)
     except subprocess.TimeoutExpired:
-        print(f"[mito_intron] {what} timed out after {TIMEOUT}s - skipped", file=sys.stderr)
+        print(f"[mito_intron] {what} timed out after {timeout}s - skipped", file=sys.stderr)
     except OSError as exc:
         print(f"[mito_intron] {what} failed: {exc}", file=sys.stderr)
     return ""
@@ -328,15 +329,16 @@ def find_orfs(seq: str, gencode: int, min_aa: int = MIN_ORF_AA) -> List[Tuple[Or
 
 
 def prescreen(seq: str, lib: Dict[str, LibProt], lib_db: Path, gencode: int, tools: Dict[str, Optional[str]],
-              tmp: Path, exclude_species: str = "", threads: int = 1) -> Dict[str, dict]:
+              tmp: Path, exclude_species: str = "", threads: int = 1, timeout: int = TIMEOUT) -> Dict[str, dict]:
     """Candidate intron-containing genes: {gene: {'prot': lib id, 'strand': 1|-1|2}}."""
     orfs = find_orfs(seq, gencode)
     if not orfs:
         return {}
     q = tmp / "orfs.faa"
     q.write_text("".join(f">O{i}\n{p}\n" for i, (_, p) in enumerate(orfs)))
-    res = run_tool([str(tools["blastp"]), "-query", str(q), "-db", str(lib_db), "-matrix", "BLOSUM62",
-                    "-outfmt", "6 qseqid sseqid evalue pident qstart qend", "-num_threads", str(threads)], "blastp")
+    res = try_program([str(tools["blastp"]), "-query", str(q), "-db", str(lib_db), "-matrix", "BLOSUM62",
+                       "-outfmt", "6 qseqid sseqid evalue pident qstart qend", "-num_threads", str(threads)], "blastp",
+                      timeout)
     hits: Dict[str, Dict[str, List[Tuple[float, float, int, int]]]] = defaultdict(dict)
     for line in res.splitlines():
         qid, sid, ev_s, pid_s, qs, qe = line.split("\t")
@@ -385,7 +387,8 @@ class Report:
     exons: List[Tuple[int, int]]
 
 
-def run_exonerate(exe: str, prot_faa: Path, genome_fna: Path, gencode: int, maxintron: int) -> List[Report]:
+def run_exonerate(exe: str, prot_faa: Path, genome_fna: Path, gencode: int, maxintron: int,
+                  timeout: int = TIMEOUT) -> List[Report]:
     from mito_core import exonerate_code       # codes exonerate 2.4 lacks (24, 33): the 64-letter table (D2, 2026-11-05)
     cmd = [exe, "--model", "protein2genome", "--showalignment", "no", "--showvulgar", "no",
            "--showtargetgff", "yes", "--minintron", str(MIN_INTRON), "--maxintron", str(maxintron),
@@ -393,7 +396,7 @@ def run_exonerate(exe: str, prot_faa: Path, genome_fna: Path, gencode: int, maxi
            *(["--splice3", str(SPLICE_PSSM), "--splice5", str(SPLICE_PSSM)] if SPLICE_PSSM.exists() else []),
            # %tS = target strand (%g, the splice-derived gene orientation, is "." without introns)
            "--ryo", ">>RYO\t%qab\t%qae\t%tab\t%tae\t%s\t%tS\n", str(prot_faa), str(genome_fna)]
-    out = run_tool(cmd, "exonerate")
+    out = try_program(cmd, "exonerate", timeout)
     reps: List[Report] = []
     exons: List[Tuple[int, int]] = []
     for line in out.splitlines():
@@ -579,8 +582,8 @@ def subtype_cms() -> List[Path]:
     return sorted(SUBTYPE_CM_DIR.glob("*.cm")) if (SUBTYPE_CM_DIR / ".complete").is_file() else []
 
 
-def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: float, tmp: Path
-                 ) -> Dict[str, Tuple[str, float, str]]:
+def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: float, tmp: Path,
+                 timeout: int = TIMEOUT) -> Dict[str, Tuple[str, float, str]]:
     """Best covariance-model hit per intron: (group 'I'/'II', E-value, model name).
     Models: Rfam Intron_gpI (RF00028), Intron_gpII (RF00029, domains V-VI), the seven group II
     D1-D4 models (RF01998, RF01999, RF02001, RF02003-RF02005, RF02012), and the group I subtype
@@ -599,8 +602,8 @@ def intron_types(cmsearch: str, cms: List[Path], seqs: Dict[str, str], evalue: f
         # --mxsize 128 MB: a long group I subtype model hit took 266 MB (NC_027103.1 nad5 intron); same models and
         # E-values within 10 % at 128 (whole run: 293 -> 183 MB fast pass, 977 -> 237 MB full pass); 64 loses hits
         # --cpu 0 (no worker threads, each holds its own DP matrices): same hits and time, 187 -> 165 MB on NC_027103.1
-        run_tool([cmsearch, "--noali", "--toponly", *(["--rfam"] if fast else []), "--cpu", "0", "--mxsize", "128",
-                  "--tblout", str(tbl), str(cm), str(fna)], "cmsearch")
+        try_program([cmsearch, "--noali", "--toponly", *(["--rfam"] if fast else []), "--cpu", "0", "--mxsize", "128",
+                     "--tblout", str(tbl), str(cm), str(fna)], "cmsearch", timeout)
         for line in tbl.read_text().splitlines() if tbl.exists() else []:
             if line.startswith("#"):
                 continue
@@ -1152,7 +1155,7 @@ def realign_masked(rec, seq: str, prot_id: str, gene: str, groups: List[List[Rep
     fna = tmp / "masked.fna"
     fna.write_text(">g\n" + "".join(masked) + "\n")
     longest = max(m.exons[i + 1][0] - m.exons[i][1] for i in range(len(m.exons) - 1))
-    reps = run_exonerate(str(tools["exonerate"]), pf, fna, a.genetic_code, max(a.maxintron, longest + 200))
+    reps = run_exonerate(str(tools["exonerate"]), pf, fna, a.genetic_code, max(a.maxintron, longest + 200), getattr(a, "timeout", TIMEOUT))
     for g in group_reports(reps, qlen)[:3]:
         alt, _ = build_model(prot_id, gene, g, qlen)
         if alt is not None and alt.strand == m.strand and not conflicting_genes(rec, gene, alt.strand, alt.exons) \
@@ -1389,7 +1392,7 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
     core = core_references(rec, a.refdir)
     lib = {**lib, **{f"C:{r['id']}": LibProt(r["id"], g, r["seq"]) for g, r in core.items()}}
     if cands is None:
-        cands = prescreen(seq, lib, lib_db, a.genetic_code, tools, tmp, own, a.threads)
+        cands = prescreen(seq, lib, lib_db, a.genetic_code, tools, tmp, own, a.threads, getattr(a, "timeout", TIMEOUT))
         # a gene the core annotated only in part is a candidate as well, its reference protein the Exonerate query
         # (the pre-screen's MFannot protein stays the query of its own candidates: a core reference can be a flawed
         # RefSeq protein, NC_008827.1 cox1 with WRWA inserted at the intron, which moved 6 coral junctions by 12 nt)
@@ -1403,7 +1406,7 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
         prot = lib[c["prot"]].seq
         pf = tmp / "prot.faa"
         pf.write_text(f">{c['prot']}\n{prot}\n")
-        groups = group_reports(run_exonerate(str(tools["exonerate"]), pf, fna, a.genetic_code, a.maxintron), len(prot),
+        groups = group_reports(run_exonerate(str(tools["exonerate"]), pf, fna, a.genetic_code, a.maxintron, getattr(a, "timeout", TIMEOUT)), len(prot),
                                L, circular)
         m, why = build_model(c["prot"], gene, groups[0], len(prot), circular) if groups else (None, "")
         if why == ACROSS_ORIGIN:
@@ -1439,7 +1442,7 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
         use = seq if m.strand == 1 else rc_seq
         tx = to_transcript(m, L)
         raw.update({f"m{k}i{j}": use[tx[j][1]:tx[j + 1][0] - 1] for j in range(len(tx) - 1)})
-    typed = intron_types(tools["cmsearch"], a.cm_files, raw, a.evalue, tmp) if tools["cmsearch"] and raw else {}
+    typed = intron_types(tools["cmsearch"], a.cm_files, raw, a.evalue, tmp, getattr(a, "timeout", TIMEOUT)) if tools["cmsearch"] and raw else {}
     for k, m in enumerate(models):
         use = seq if m.strand == 1 else rc_seq
         tx = to_transcript(m, L)
@@ -1621,8 +1624,6 @@ def main(argv=None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     rows: List[dict] = []
-    global TIMEOUT
-    TIMEOUT = a.timeout
     with tempfile.TemporaryDirectory() as td:
         lib_faa = Path(td) / "lib.faa"
         lib_faa.write_text("".join(f">{k}\n{v.seq}\n" for k, v in lib.items()))

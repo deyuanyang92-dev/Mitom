@@ -20,7 +20,7 @@ from mitom_log import record_event
 from mitom_inputs import SampleInfo
 from mitom_metadata import (_sync_organism_qualifier, build_organism_index, gb_file_has_meaningful_metadata,
                             replace_organism_in_gb_file, transfer_gb_metadata_file)
-from mitom_orient import reorient_one_gb, starts_with_gene
+from mitom_orient import OrientNotes, reorient_one_gb, starts_with_gene
 
 
 @dataclass
@@ -163,6 +163,7 @@ def finalize_genbank_output(
     preserve_metadata: bool,
     smart_metadata:    bool = False,
     auto_accept:       bool = False,
+    orient_notes:      Optional[OrientNotes] = None,
 ) -> Tuple[int, int, int, str, bool]:
     """Produce the final, publication-grade GenBank file for one sample.
 
@@ -200,7 +201,7 @@ def finalize_genbank_output(
         no_gene_gb = td / "no_gene.gbf"
         try:
             n_ok, n_no, _ = reorient_one_gb(
-                id_gb, reor_gb, no_gene_gb, which_gene_first, force_forward)
+                id_gb, reor_gb, no_gene_gb, which_gene_first, force_forward, orient_notes)
             if n_ok > 0 and reor_gb.exists():
                 orientation_ok = True
                 if n_no > 0 and no_gene_gb.exists():

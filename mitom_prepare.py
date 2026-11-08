@@ -10,9 +10,10 @@ import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import mitom_groups
+from mitom_context import RunContext
 from mito_common import command_line, write_gb
 from mito_taxa import ALL_CLADES, BASE_CLADES, CLADE_CODES, CLADE_PHYLUM, EXTRA_CLADES
 from mitom_inputs import auto_clade
@@ -162,8 +163,9 @@ def announce(msg: str) -> None:
     print(msg, file=sys.stderr)
 
 
-def resolve_tools(args: argparse.Namespace) -> str:
-    """Fill unset tool locations from mito_env (config file, PATH, conda environments) and check the clade.
+def resolve_tools(args: argparse.Namespace, ctx: Optional[RunContext] = None) -> str:
+    """Fill unset tool locations from mito_env (config file, PATH, conda environments) and check the clade; the
+    --clade auto plan goes to ctx.plan (the run writes reports/clade_decision.tsv from it).
     Returns an error message, '' when fine."""
     import mito_env
     if args.clade == "auto" and args.cmd == "import":      # results of other programs: one clade for the run
@@ -182,7 +184,8 @@ def resolve_tools(args: argparse.Namespace) -> str:
         plan = mitom_groups.decide(args)
         if plan.error:
             return f"ERROR: {plan.error}"
-        mitom_groups.LAST_PLAN = plan
+        if ctx is not None:
+            ctx.plan = plan
         if plan.warnings:                                # one box: the first ones, all in clade_decision.tsv
             shown = plan.warnings[:5] + ([f"... {len(plan.warnings) - 5} more: reports/clade_decision.tsv (column note)"]
                                          if len(plan.warnings) > 5 else [])

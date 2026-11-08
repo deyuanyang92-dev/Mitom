@@ -23,7 +23,6 @@ from mitom_log import Progress, close_sample_logger, get_sample_logger, record_e
 from mitom_snakemake import AnnotTask, run_snakemake_for_annotation_tasks, snakemake_available
 
 
-_STAGE_PROGRESS: Optional[Progress] = None          # set by run_annotation_stage; updated per finished sample
 STAGE_LABEL = {"01.anno_round1": "round-1 annotation", "02.anno_topology": "round-1 annotation, topology changed",
                "03.anno_round2_reoriented": "round-2 annotation"}
 
@@ -146,6 +145,7 @@ def write_input_annotation(si: SampleInfo, dest: Path) -> str:
 def annotate_one(
     si: SampleInfo, fasta_file: Path, out_root: Path, phase_dirname: str,
     args: argparse.Namespace, total: int = 0, done_counter: Optional[List] = None,
+    progress: Optional[Progress] = None,
 ) -> Tuple[str, bool, Path, Optional[Path]]:
     """Annotate one sample (engine_cmd, or the input record for `mitom import`): (internal_id, ok, workdir, the
     <workdir>/<internal_id>.gbf the engine wrote or None)."""
@@ -179,8 +179,8 @@ def annotate_one(
             done_counter[0] += 1
             done_n = done_counter[0]
         logging.info(f"[PROGRESS] {done_n}/{total} '{si.sample_name}' done (rc={rc}, {dt:.0f}s)")
-        if _STAGE_PROGRESS is not None:
-            _STAGE_PROGRESS.update(done_n)
+        if progress is not None:
+            progress.update(done_n)
 
     if rc != 0:
         err_tail = tail_text(stderr_path.read_text(encoding="utf-8", errors="ignore") if stderr_path.exists() else "")
@@ -224,8 +224,7 @@ def run_annotation_stage(
                   and len(samples) > int(getattr(args, "max_tasks", 1) or 1) else "threads"
     fit_threads(args, backend, len(samples))
     logging.info(f"[ANNOT_STAGE] phase={phase_dirname}  backend={backend}  n={len(samples)}")
-    global _STAGE_PROGRESS
-    _STAGE_PROGRESS = Progress(STAGE_LABEL.get(phase_dirname, phase_dirname), len(samples))
+    progress = Progress(STAGE_LABEL.get(phase_dirname, phase_dirname), len(samples))
 
     if backend == "snakemake":
         tasks: List[AnnotTask] = []
@@ -237,7 +236,7 @@ def run_annotation_stage(
                 cmd=engine_cmd(Path(fasta_selector(si)).resolve(), (out_root / phase_dirname / si.internal_id).resolve(),
                                si.internal_id, args, sample_lineage(si))))
         return run_snakemake_for_annotation_tasks(
-            tasks=tasks, out_root=out_root, phase_name=phase_dirname, args=args, progress=_STAGE_PROGRESS)
+            tasks=tasks, out_root=out_root, phase_name=phase_dirname, args=args, progress=progress)
 
     results: Dict[str, Dict] = {}
     total = len(samples)
@@ -245,7 +244,7 @@ def run_annotation_stage(
 
     def _task(si: SampleInfo) -> Tuple:
         return annotate_one(si, fasta_selector(si), out_root, phase_dirname, args,
-                            total=total, done_counter=done_counter)
+                            total=total, done_counter=done_counter, progress=progress)
 
     with cf.ThreadPoolExecutor(max_workers=int(args.max_tasks)) as ex:
         futs = {ex.submit(_task, si): si for si in samples}

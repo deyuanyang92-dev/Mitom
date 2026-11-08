@@ -136,14 +136,14 @@ def record(topology, cox1_at, L=3000):
 def test_linear_record_is_not_rotated_and_summary_says_so(tmp_path, caplog):
     src = tmp_path / "A.gbf"
     SeqIO.write(record("linear", 1000), str(src), "genbank")
-    mitom_orient._LINEAR_SKIP_SEEN.clear()
+    notes = mitom_orient.OrientNotes()                                                     # one run
     with caplog.at_level(logging.INFO):
         pcg, trna, rrna, mode, ok = mitom_output.finalize_genbank_output(
             sample_name="A", body_src_gb=src, metadata_src_gb=None, dest_gb=tmp_path / "out" / "A.gbf",
-            which_gene_first="cox1", force_forward=True, preserve_metadata=False)
+            which_gene_first="cox1", force_forward=True, preserve_metadata=False, orient_notes=notes)
         mitom_output.finalize_genbank_output(                                             # the run's second reorientation
             sample_name="A", body_src_gb=src, metadata_src_gb=None, dest_gb=tmp_path / "out" / "A2.gbf",
-            which_gene_first="cox1", force_forward=True, preserve_metadata=False)
+            which_gene_first="cox1", force_forward=True, preserve_metadata=False, orient_notes=notes)
     assert ok is False
     si = mitom_inputs.SampleInfo("A", "A", "S00001", "linear", src, src)
     assert mitom_orient.orientation_text(ok, si) == "no (linear, not rotated)"

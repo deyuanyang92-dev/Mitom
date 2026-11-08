@@ -21,7 +21,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 from Bio import SeqIO
 
@@ -66,9 +66,6 @@ class Plan:
         for r in self.rows:
             out.setdefault((r.clade, r.code, r.phylum), []).append(r)
         return dict(sorted(out.items(), key=lambda kv: -len(kv[1])))
-
-
-LAST_PLAN: Optional[Plan] = None      # the plan of this run (workflow_run writes reports/clade_decision.tsv)
 
 
 def group_label(key: Tuple[str, int, str]) -> str:
