@@ -58,7 +58,7 @@ TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_nati
 # 8,012 RefSeq records, MITOS2 uses the same set): the leave-out accuracy a new genome can expect
 MITOFINDER: Dict[str, str] = {}          # {"script": ..., "py2": ...} from the command line
 REF_POOL: List[dict] = []                # --ref_pool records: {acc, organism, lineage, record}
-# MitoM extended clades (mitom_pipeline.EXTRA_CLADES) for phyla MitoZ lacks; any other phylum -> all-animal database
+# MitoM extended clades (mito_taxa.EXTRA_CLADES) for phyla MitoZ lacks; any other phylum -> all-animal database
 EXTRA_CLADE = {"Cnidaria": "Cnidaria", "Platyhelminthes": "Platyhelminthes-flatworms",
                "Chaetognatha": "Chaetognatha-arrow-worms"}
 

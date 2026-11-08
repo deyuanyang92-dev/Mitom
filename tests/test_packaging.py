@@ -78,9 +78,16 @@ def test_check_and_compare_run_from_the_install(prefix, tmp_path):
     assert rows and {r[-1] for r in rows} <= {"same", "same_place"}         # same_place: Leu / Ser without anticodon
 
 
-def test_pyproject_lists_every_module():
-    """pyproject.toml py-modules = the top-level modules (a new module is installed by pip install -e . too)."""
-    import re
-    text = (REPO / "pyproject.toml").read_text()
-    listed = set(re.findall(r'^    "(\w+)",$', text.split("py-modules = [", 1)[1].split("]", 1)[0], re.M))
-    assert listed == {p.stem for p in REPO.glob("*.py")}
+def test_every_module_is_installed(tmp_path):
+    """setup.py installs every top-level module (no hand-kept list): build a wheel and compare."""
+    import subprocess
+    import sys
+    import zipfile
+    import pytest
+    r = subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation", "-q", "-w",
+                        str(tmp_path), str(REPO)], capture_output=True, text=True)
+    if r.returncode:
+        pytest.skip(f"wheel build not possible here: {r.stderr[-200:]}")
+    whl = next(tmp_path.glob("mitom-*.whl"))
+    names = {Path(n).stem for n in zipfile.ZipFile(whl).namelist() if n.endswith(".py") and "/" not in n}
+    assert names == {p.stem for p in REPO.glob("*.py")} - {"setup"}

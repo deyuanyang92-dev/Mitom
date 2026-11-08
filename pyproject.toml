@@ -27,56 +27,8 @@ mitom = "mitom_main:main"
 Homepage = "https://github.com/deyuanyang92-dev/Mitom"
 
 [tool.setuptools]
-# the modules stay at the top level: every script runs as `python3 <script>.py` and is started that way by the workflow
-py-modules = [
-    "batch_mitoz",
-    "mito_check",
-    "mito_classify",
-    "mito_common",
-    "mito_compare",
-    "mito_core",
-    "mito_curate",
-    "mito_debug",
-    "mito_engines",
-    "mito_env",
-    "mito_fetch",
-    "mito_intron",
-    "mito_intron_ref",
-    "mito_intron_rules",
-    "mito_intron_sites",
-    "mito_names",
-    "mito_ncr",
-    "mito_nuc",
-    "mito_nuc_histone",
-    "mito_nuc_lib",
-    "mito_nuc_rdna",
-    "mito_plot",
-    "mito_rescue",
-    "mito_rrna_hmm",
-    "mito_start",
-    "mito_taxa",
-    "mito_tbl",
-    "mito_trna",
-    "mitom_cli",
-    "mitom_commands",
-    "mitom_context",
-    "mitom_groups",
-    "mitom_inputs",
-    "mitom_log",
-    "mitom_main",
-    "mitom_metadata",
-    "mitom_orient",
-    "mitom_output",
-    "mitom_pipeline",
-    "mitom_prepare",
-    "mitom_run",
-    "mitom_snakemake",
-    "mitom_stage",
-    "mitom_steps",
-    "mitom_topology",
-    "ncbi_validate",
-    "trna_ml",
-]
+# the modules stay at the top level: every script runs as `python3 <script>.py` and is started that way by the
+# workflow; setup.py lists them (every *.py file here), so a new module needs no entry
 
 [tool.setuptools.dynamic]
 version = { attr = "mitom_main.VERSION" }
@@ -84,5 +36,3 @@ version = { attr = "mitom_main.VERSION" }
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-# a test that still uses an old mitom_pipeline.<name> fails (import from the module that defines it)
-filterwarnings = ["error:mitom_pipeline\\.:DeprecationWarning"]

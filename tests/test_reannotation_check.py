@@ -1,5 +1,5 @@
 """--if_reannotation_2 auto: re-annotate after reorientation only when the round-1 annotation may be wrong
-(user 2026-10-21: always re-annotating wastes resources). mitom_pipeline.reorient_check().
+(user 2026-10-21: always re-annotating wastes resources). mitom_orient.reorient_check().
 
 Run: python3 -m pytest -q tests/test_reannotation_check.py
 """

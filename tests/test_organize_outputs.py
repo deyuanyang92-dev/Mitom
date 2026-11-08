@@ -1,4 +1,4 @@
-"""mitom_pipeline.organize_outputs: the final layout of `run`, the user's own files and a second run into the same folder."""
+"""mitom_output.organize_outputs: the final layout of `run`, the user's own files and a second run into the same folder."""
 import sys
 from pathlib import Path
 

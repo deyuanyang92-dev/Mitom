@@ -1,4 +1,4 @@
-"""mitom_pipeline.run_curate: the options passed to mito_curate.py depend on the clade."""
+"""mitom_steps.run_curate: the options passed to mito_curate.py depend on the clade."""
 import argparse
 import subprocess
 import sys

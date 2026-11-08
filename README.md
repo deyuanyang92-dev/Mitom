@@ -85,20 +85,21 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 **3. 运行过程与结果 / What you see and what you get**
 
-**`mitom run` 做了什么 / What `mitom run` does**（终端按这些步骤显示进度）
+**`mitom run` 的 11 步 / The 11 steps of `mitom run`**（与终端的 `[Step k/11]` 一致；每步的细节和报告文件见 [使用手册第 4 节](docs/USAGE_zh.md#4-mitom-run-的流程)）
 
-1. **读入并去重**：同一个基因组在 NCBI 里常有两条记录——作者提交的原始记录（如 `MK123456`）和 NCBI 照它复制出来的参考记录（RefSeq，编号以 `NC_` 开头），序列一样；同一个登录号也可能有新旧两个版本。MitoM 每个基因组只注释一次：优先留 `NC_` 记录、留新版本、完全相同的序列只留一条。去掉了哪些、为什么，写在 `reports/dedup_report.tsv`。
-2. **注释**：找出 13 个蛋白基因、2 个 rRNA、22 个 tRNA。不管原记录有没有注释、注释得好不好，都按同一方法重新注释。环状还是线状先按标签（GenBank 的 LOCUS 行、FASTA 表头的 `topology=`；没有标签时 ≥ 10 kb 的每条序列都从序列本身判断，一个文件多条也一样：两端重叠的组装结果去掉重复后按环状，表头写 circular / complete genome 的按环状、partial genome 的按线状，其余看两端和基因组成——蛋白基因 ≥ 12 个且两个 rRNA 齐全按环状，否则按线状），再核对序列两端：有基因从末尾接到开头的按环状，标为环状却有基因在端点被截断的按线状，水母类、水螅类和钙质海绵（线状线粒体基因组）按线状；改判的记录重注一遍，原因写在 `reports/topology_decision.tsv`（`--topology label` 只按标签）。
-3. **统一起点**：环状基因组转到同一条链，并从 cox1 开始（没有 cox1 时依次用 cox2、cox3、cob、nad1）。
-4. **需要时再注释一次**：转动起点后，原来跨在序列首尾两端的基因会被接起来，这类记录（以及转动后有基因受影响、或缺了标准基因的记录）再注释一遍；其余记录不用重做。每条记录的判断写在 `reports/reannotation_decision.tsv`。
-5. **写回原记录信息**：GenBank 输入时，把原记录的物种、文献、标本等信息复制到新注释里。
-6. **补漏**：仍缺的 12S / 16S rRNA 再补搜一次；加上内含子；装了 MITOS2 并加 `--rescue yes` 时还会用它补回漏掉的基因。
-7. **修整**：按 NCBI 规范修整基因的起止位置和基因名（每一处修改都记在 `reports/curation_report.tsv`）。
-8. **NCBI 检查**：用 NCBI 的 table2asn 检查每条记录，生成可提交的文件（`ncbi_submission/`）。
-9. **对比原注释**：GenBank 输入时，逐个基因比较原注释和新注释（`original_vs_mitom.tsv`）。
-10. **作图**：每条记录一张环状基因组图（`plots/`），默认借鉴 mitoPlotR 的环道样式（示例见 [docs/images](docs/images/)）；`--plot_style mitom` 用原来的样式。内含子画斜线并标注长度，非编码区画浅灰并标注 NCR 编号和长度。
-11. **非编码区**（`--ncr yes`，默认）：≥ `--ncr_min_len`（默认 100）nt、没有任何注释覆盖的区段写成 misc_feature `non-coding region NCR<k>, <长度> bp`，GenBank、NCBI 提交文件和圈图里都能看到（未命名的控制区、可能含未知基因的序列）；`--ncr no` 不写。
-12. **整理输出**：结果整理到固定的目录结构里（见下面的输出表）。
+| 步 / step | 终端显示 / terminal | 做什么 |
+|---|---|---|
+| 1 | Read input and remove duplicate records | 读入；同一个基因组只留一条（优先 `NC_`、新版本） |
+| 2 | Round-1 annotation | 13 个蛋白基因、2 个 rRNA、22 个 tRNA；核对环状 / 线状 |
+| 3 | Re-orient | 环状记录转到正链，从 cox1 开始 |
+| 4 | Check the annotation after re-orientation (round 2) | 转动后受影响的记录再注释一次 |
+| 5 | Write the annotation; copy the original GenBank header back | 写 GenBank，写回物种、文献、标本信息 |
+| 6 | Add what the core missed | 补 12S / 16S、内含子；`--rescue yes` 时用 MITOS2 补基因 |
+| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名；标出非编码区（NCR，`--ncr no` 不标） |
+| 8 | NCBI check (table2asn) and submission files | 生成 `ncbi_submission/` |
+| 9 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） |
+| 10 | Genome maps | 每条一张圈图（`plots/`） |
+| 11 | Organise the output | 整理成下面的目录结构 |
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `run.log`：
 

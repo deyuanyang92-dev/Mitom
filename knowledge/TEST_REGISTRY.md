@@ -107,6 +107,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 2026-11-08 | cody | MITOS2 环境 | 本机 env `mitos2`（2.1.9）、新装 `mitos`（2.1.10） | runmitos | 2.1.9 只有 runmitos.py；不激活环境直接运行缺 cmsearch | 两种名字都认（766653c） | docs/MITOS2.md §6 |
 | 2026-11-08 | cody | 审查复现：`--mitos_args` 粘连 / 缩写选项；2.1.9 发现；各子命令读 `.gb.gz` 目录 | 合成参数；本机 mitos2（2.1.9）环境；只含 NC_000931.gb.gz 的目录 × 11 个子命令 | MitoM 766653c→本次 | `-c2`、`--cod 2` 能绕过（已拒）；doctor 找不到 runmitos.py（已修）；只有 gb2tbl 不认 .gb.gz（已修），其余 10 个正常 | Mitom_review/FIX_STATUS_2026-11-08.md | tests/test_review_2026_11_08.py |
 | 2026-11-08 | cody | 结构重构 1–6 步前后输出是否相同 | scripts/golden.py 6 例（NC_000931 GenBank、NC_006902 内含子、NC_001636+NC_008164 两门、NC_010217 纯 FASTA、KY753833 MitoZ import、OW387151 curate）；NC_000931 run.log；3 条 rDNA contig `nuc annotate` | MitoM 9fffd02→bf80dd9，mitotools 环境 | 每步后 6 例文本输出逐字相同；run.log / 终端仅耗时不同；nuc 输出相同；pytest 796→807 通过 | 重构不改结果；以后改结构先跑 `scripts/golden.py`（refactor/structure） | CHANGELOG.md Unreleased；tests/data/golden/ |
+| 2026-11-08 | cody | 第二次拆分（mito_curate → 4 个规则模块，mito_intron_ref → junction / models；删除旧名转发；setup.py）前后输出是否相同 | scripts/golden.py 6 例（同上一行） | MitoM f606ccf→本提交，mitotools 环境 | 6 例文本输出逐字相同；pytest 813 通过；wheel 含全部模块；pip install -e . 可用 | 拆分不改结果 | CHANGELOG.md Unreleased |
 
 ## 9. 核标记 / mitom nuc
 

@@ -1,4 +1,4 @@
-"""mitom_pipeline.resolve_tools / optional post-steps / final-step helpers (review B findings 6, 7, 10, 11, 15).
+"""mitom_prepare.resolve_tools / optional post-steps / final-step helpers (review B findings 6, 7, 10, 11, 15).
 
 Run: python3 -m pytest -q tests/test_resolve_tools.py
 """

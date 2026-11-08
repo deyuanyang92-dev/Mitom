@@ -39,4 +39,4 @@ def test_programs_started_by_run_tool():
 def test_mitom_pipeline_is_only_the_entry_point():
     tree = MODULES["mitom_pipeline.py"]
     defs = re.findall(r"^def (\w+)", tree, re.M)
-    assert defs == ["main", "__getattr__"] and len(tree.splitlines()) < 250
+    assert defs == ["main"] and len(tree.splitlines()) < 250

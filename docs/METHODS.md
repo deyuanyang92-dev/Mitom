@@ -20,8 +20,8 @@ What `mitom run` does step by step: [README](../README.md) section 3. This secti
 | `mitom_commands.py` | 其他子命令（reorient、dedup、intron …）/ the other subcommands |
 | `mitom_context.py` | 一次运行的共享状态 `RunContext` / per-run state |
 | `mito_core.py`、`mito_trna.py` | 注释核心、tRNA / annotation core, tRNAs |
-| `mito_curate.py` | 注释后校正 / post-annotation curation |
-| `mito_intron*.py` | 内含子（从头、规则、位点库）/ introns |
+| `mito_curate*.py` | 注释后校正：`_pcg` 蛋白基因、`_origin` 跨起点、`_rna` rRNA / tRNA / 命名、`_base` 常量 / post-annotation curation by rule family |
+| `mito_intron*.py` | 内含子：从头（`mito_intron`、`_rules`）、位点迁移（`_ref`、`_junction`、`_models`、`_sites`）/ introns |
 | `mito_nuc*.py` | 核 rDNA、组蛋白 / nuclear rDNA, histones |
 
 校正和内含子以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`），出错时只影响这一步；`tests/test_step_argv.py` 检查流水线给它们的参数。旧名 `batch_mitoz.py` 仍可用。

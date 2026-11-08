@@ -19,6 +19,12 @@ installed one.
   Measured: 169 of 170 annelid RefSeq records (2025-03 pool) were already seen, so the test set draws on GenBank too.
 
 ### Changed (structure; outputs unchanged - scripts/golden.py)
+- mito_curate.py (1433 lines) split by rule family, code moved verbatim: `mito_curate_base.py` (limits, notes, span
+  helpers), `mito_curate_pcg.py` (P1-P11, D1, /translation), `mito_curate_origin.py` (O1 / O2), `mito_curate_rna.py`
+  (R1, T1, C1, N1); `Curator` (479 lines with the CLI) combines them. mito_intron_ref.py (1655 -> 712 lines):
+  `mito_intron_junction.py` (query genome, junction calling) and `mito_intron_models.py` (gene models).
+- `setup.py` installs every top-level *.py (no hand-kept py-modules list); the packaging test builds a wheel and
+  compares. README step list = the 11 terminal steps (details stay in USAGE_zh.md section 4).
 - `tests/test_step_argv.py`: the arguments the pipeline passes to mito_curate.py / mito_intron.py / mito_intron_ref.py
   are parsed with those scripts' own parsers (they stay separate processes: a crash affects one step only).
   Docs: METHODS.md opens with the code layout (`mitom` -> mitom_main -> mitom_run.RUN_STAGES) instead of the stale
@@ -34,8 +40,7 @@ installed one.
   `mitom_cli.py` (build_parser), `mitom_prepare.py` (environment check, tools, --clade auto, import, output lock),
   `mitom_run.py` (run / import / annotate, clade groups), `mitom_commands.py` (reorient, transfer_metadata,
   replace_organism, dedup, gb2fasta, intron); mitom_pipeline.py keeps main() (183 lines). No re-exports: an old
-  `mitom_pipeline.<name>` still resolves with a DeprecationWarning; the tests import the defining modules (an old name
-  in a test is an error, pyproject filterwarnings).
+  `mitom_pipeline.<name>` no longer resolves (no script used it): import from the defining module.
 - No module globals that carry one run's state: `mitom_context.RunContext` (made by main(), passed to the run
   workflows) holds the --clade auto plan (was mitom_groups.LAST_PLAN), the GenBank dedup counts (mitom_inputs.
   LAST_DEDUP_STATS) and the re-orientation notes (`mitom_orient.OrientNotes`: fallback start genes, linear records

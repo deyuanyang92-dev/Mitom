@@ -1,4 +1,4 @@
-"""--clade auto: clade, genetic code and phylum from the GenBank input (mitom_pipeline.auto_clade).
+"""--clade auto: clade, genetic code and phylum from the GenBank input (mitom_inputs.auto_clade).
 
 Run: python3 -m pytest -q tests/test_auto_clade.py
 """

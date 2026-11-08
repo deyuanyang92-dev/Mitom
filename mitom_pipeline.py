@@ -31,8 +31,7 @@ This file is the entry point (main: checks before the run, then the workflow of 
   mitom_steps.py     rescue, rRNA HMM fallback, introns, curation, NCBI submission files, genome maps
   mitom_log.py       run log, numbered steps and progress on the terminal
   mito_taxa.py       clades, phyla, genetic codes; mito_common.py: shared helpers
-Import names from the module that defines them; mitom_pipeline.<old name> still works for old scripts (with a
-DeprecationWarning, __getattr__ below).
+Import names from the module that defines them (mitom_pipeline has only main()).
 
 Biopython: Cock et al. (2009) Bioinformatics doi:10.1093/bioinformatics/btp163
 Snakemake: Mölder et al. (2021) F1000Res doi:10.12688/f1000research.29032.2
@@ -162,23 +161,6 @@ def main() -> int:
         raise
     logging.info(f"[DONE] exit={rc} {mitom_log.duration(time.time() - t0)}")
     return rc
-
-
-# old scripts: mitom_pipeline.<name> of a name that moved to a part (until 2026-11-08 every name was re-exported)
-_PARTS = ("mitom_run", "mitom_commands", "mitom_prepare", "mitom_cli", "mitom_inputs", "mitom_orient", "mitom_output",
-          "mitom_steps", "mitom_stage", "mitom_metadata", "mitom_log", "mitom_snakemake", "mitom_topology",
-          "mito_common", "mito_taxa")
-
-
-def __getattr__(name: str):
-    import importlib
-    import warnings
-    for part in _PARTS:
-        mod = importlib.import_module(part)
-        if hasattr(mod, name):
-            warnings.warn(f"mitom_pipeline.{name} is {part}.{name}: import it from {part}", DeprecationWarning, 2)
-            return getattr(mod, name)
-    raise AttributeError(f"module 'mitom_pipeline' has no attribute {name!r}")
 
 
 if __name__ == "__main__":

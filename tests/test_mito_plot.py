@@ -208,7 +208,7 @@ def test_cli_reads_every_genbank_file_below_the_folder(tmp_path):
     assert [p.name for p in (tmp_path / "out").iterdir()] == ["TEST1.1.png"]
 
 
-# ── mitom_pipeline.run_plots: the genome-map step of `run` / `annotate` ─────────
+# ── mitom_steps.run_plots: the genome-map step of `run` / `annotate` ─────────
 def final_dir(tmp_path):
     d = tmp_path / "final"
     d.mkdir()
