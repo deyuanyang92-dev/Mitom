@@ -117,7 +117,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 - **一次输入含多个门 / 多个遗传密码**：`mitom run` 按（门，遗传密码）分组，每组用自己的类群和密码注释（同时运行，`--jobs` 按记录数分给各组），结果合并到同一个输出目录，和单组运行的结构一样。`import`、`annotate` 仍需一个门。
 - 每条记录的判断、依据（分类信息 / blastx）、支持度、密码子核验、最近参考：`reports/clade_decision.tsv`。
 
-评测（2026-10-31，本机 RefSeq 按门分层抽样 238 条、29 个门，去掉同科参考后判断）：遗传密码 93.3% 正确（8 kb 片段 91.6%，3 kb 片段 74.4%，10% 随机替换 89.1%）；门判对 63%，32% 因没有近亲判为不确定（`Animal`），4.6% 判错（都是参考库里只有 1–2 个科的小门，如有爪动物判成节肢动物）。详见 docs/METHODS.md。显式给 `--clade` / `--genetic_code` 时不做自动判断。
+评测数字在 [METHODS.md](METHODS.md) 的 `--clade auto` 表（2026-10-31）；判错的都是参考库里只有 1–2 个科的小门。显式给 `--clade` 或 `--genetic_code` 时不做自动判断。
 
 | `--clade` | 默认遗传密码 | 说明 |
 |---|---|---|
@@ -530,11 +530,7 @@ mitom debug out
 
 ## 10. 精度（摘要）
 
-详见 [METHODS.md](METHODS.md) 和 `benchmark/results/`。
-
-- 1,050 条多类群 RefSeq 记录：蛋白基因两端与 NCBI 完全一致的比例在全部 24 个门都高于 MITOS2；NCBI table2asn ERROR 为 0（2,497 条基准记录）。
-- 内含子：193 条 NCBI 带内含子记录逐个核实后的 309 个内含子，`mitom run` 默认 309/309 完全一致，被测记录不进参考库时 299/309；76 条无内含子记录 0 假阳性。
-- tRNA：在未参与训练的类群上，MitoM-ML 的召回率高于 MITOS2，精确率持平或更高（唯一例外：184 条从未调参的纯 GenBank 环节动物，98.70% 对 98.71%）。
+详见 [METHODS.md](METHODS.md) 和 README 首页的表。测出来的比例、条数和用时只写在那些表里，这里不重复。
 - 核 rDNA / 组蛋白：见 `mito_nuc.py` 开头的说明和 `benchmark/nuc_*.py`。
 
 ---

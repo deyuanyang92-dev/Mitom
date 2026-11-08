@@ -23,7 +23,7 @@ genomes, orients them, curates gene ends and names to NCBI rules, and writes NCB
 
 ## 快速上手 / Quick start
 
-**1. 安装（一条命令）/ Install (one command)** — Linux 或 Windows WSL2；macOS 见 `install.sh` 开头说明，或用 Docker：
+**1. 安装（一条命令）/ Install (one command)**：Linux 或 Windows WSL2；macOS 见 `install.sh` 开头说明，或用 Docker：
 
 ```bash
 git clone https://github.com/deyuanyang92-dev/Mitom.git MitoM && cd MitoM
@@ -200,24 +200,93 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 
 `mito_core.py` = MitoM 自己的核心（blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m，起始密码子按 MitoZ 的规则取比对上游最近的一个（比对缺少较多残基时取最接近预期位置的）；rRNA 用按门的 profile HMM（`--rrna_method cm` 改用 MITOS2 的协方差模型）；tRNA 用 MitoM-ML（MITOS2 tRNA 模型 + 220 个分支的协方差模型，ARWEN/ARAGORN 作证据，梯度提升判别器与端点模型；它未调用的家族用 MiTFi 补，脊椎动物取 MiTFi 端点；无 scikit-learn 时整个改用 MiTFi）），只需一个 conda 环境，每条记录约 1–2 分钟。
 
-**最新对比（2026-10-22）/ Latest comparison**：MitoM、MitoZ、MITOS2、MitoFinder（8 个门 × 3 条 RefSeq 记录）和 MITOS1（8 条），裸序列输入，与 NCBI 注释逐基因比较并用 table2asn 校验（`docs/benchmark_six_tools_2026-10-22.md`，数据 `benchmark/results/six_tools_2026-10-22/`）。在四个工具都完成的 17 条记录上，MitoM 与 MitoZ、MITOS2、MitoFinder 的对比：
-- 蛋白基因两端完全一致：MitoM 84.9%；MitoZ 78.4%、MITOS2 50.9%、MitoFinder 59.2%。
-- rRNA 两端在 3 nt 内：MitoM 59.4%；MitoZ 28.1%、MITOS2 25.0%、MitoFinder 28.1%。
-- tRNA 找回：MitoM 96.8%；MitoZ 92.5%、MITOS2 96.0%、MitoFinder 96.5%。
-- NCBI ERROR：MitoM 0；MitoZ 12、MITOS2 17、MitoFinder 17。
+**最新对比（2026-10-22）/ Latest comparison**：MitoM、MitoZ、MITOS2、MitoFinder 各 24 条（8 个门 × 3 条 RefSeq），MITOS1 8 条；裸序列输入，与 NCBI 注释逐基因比较，并用 table2asn 校验。数字只在下表。细节：`docs/benchmark_six_tools_2026-10-22.md`，数据 `benchmark/results/six_tools_2026-10-22/`。
+24 RefSeq records (8 phyla × 3) for MitoM, MitoZ, MITOS2 and MitoFinder, 8 for MITOS1; bare sequences, compared gene by gene with the NCBI annotation and checked with table2asn. The numbers are only in the tables below. Details: `docs/benchmark_six_tools_2026-10-22.md`.
 
-在全部 24 条上，每条用时中位数：MitoM 70 s；MitoZ 249 s、MITOS2 385 s、MitoFinder 204 s、MITOS1 约 41 min。峰值内存中位数：MitoM 182 MB；MitoZ 492 MB、MITOS2 953 MB、MitoFinder 238 MB、MITOS1 775 MB；最大值 MitoM 270 MB，MitoZ 719 MB、MITOS2 1929 MB、MitoFinder 283 MB。
+四个工具都完成的 17 条 / the 17 records all four tools finished:
 
-排除记录自身参考蛋白（leave-out）时，MitoM 的蛋白基因两端一致率为 82.6%。按门分，MitoM 在 8 个门中都不低于 MitoZ（棘皮 94.9% 对 92.3%）。MITOS1 在 8 条中有 4 条自身崩溃，成功的 4 条上蛋白基因没有一个两端完全一致。
+| 指标 / metric | MitoM | MitoZ | MITOS2 | MitoFinder |
+|---|---|---|---|---|
+| 蛋白基因两端完全一致 / PCG both ends exact | 84.9% | 78.4% | 50.9% | 59.2% |
+| rRNA 两端在 3 nt 内 / rRNA within 3 nt | 59.4% | 28.1% | 25.0% | 28.1% |
+| tRNA 找回 / tRNA found | 96.8% | 92.5% | 96.0% | 96.5% |
+| NCBI ERROR 条数 / NCBI ERROR count | 0 | 12 | 17 | 17 |
 
-On 17 records all four tools finished, protein genes with both ends as RefSeq: MitoM 84.9 %, MitoZ 78.4 %, MITOS2 50.9 %, MitoFinder 59.2 %. NCBI errors: 0 / 12 / 17 / 17. Median time per record: 70 / 249 / 385 / 204 s. Peak memory, median: 182 / 492 / 953 / 238 MB; maximum: 270 / 719 / 1929 / 283 MB.
+全部 24 条（MITOS1 8 条）的用时和内存 / time and memory, all 24 records (MITOS1: 8):
 
-**Benchmark（多类群，2026-10）/ Metazoa benchmark**：8 个门 × 3 条 RefSeq 线粒体基因组（环节、节肢、脊索、刺胞、棘皮、软体、线虫、扁形），裸序列输入，与 NCBI 注释逐基因比较，并用 table2asn 检查能否直接提交（`docs/benchmark_metazoa_2026-10.md`，数据 `benchmark/results/metazoa_mini_2026-10/`）。四个工具都完成的 17 条：蛋白基因两端完全一致 MitoM 82%、MitoZ 78%、MITOS2 51%、MitoFinder 59%；rRNA 两端一致 38% / 25% / 16% / 9%；tRNA 找回 98% / 93% / 96% / 97%；记录无明显错误 10/17、1/17、0/17、0/17；0 个 NCBI ERROR 的记录 MitoM 17/24，MitoZ 4/18，MITOS2 与 MitoFinder 0。每条用时中位数 175 s / 249 s / 385 s / 204 s；峰值内存 0.7 / 0.5 / 1.0 / 0.24 GB（MitoM 的内存来自其内部的 MITOS2 tRNA 搜索）。MitoZ 不支持刺胞和扁形动物（无 clade）；MitoFinder 需要用户提供近缘参考基因组，2 条因无近缘参考失败。安装、功能、便捷性的对比见同一文档。 **原生核心（2026-10-22，默认 `--core native`，不再调用 MitoZ）在同一 24 条上**：蛋白基因两端一致 247/306（MitoZ 路线 240，MitoZ 174/230；17 条共同记录 82.6% / 82.1% / 78.4%），rRNA 3 nt 内 50%（48% / 27%），tRNA 3 nt 内 81%（81% / 79%），每条用时中位 109 s（175 / 249），峰值内存 0.32 GB（0.73 / 0.49），NCBI ERROR 记录 1（2 / 13）；只需一个 conda 环境。表见 `benchmark/results/metazoa_mini_2026-10/report_native.md`。 在 30 个门 173 条 RefSeq 记录上：蛋白基因两端一致 79.0%（MitoZ 路线 66.7%），30 个门中 25 个提升，NCBI ERROR 记录 11 vs 113，每条用时中位 146 s vs 325 s（`benchmark/results/metazoa_173_2026-10/`）。
-On 17 records all four tools finished (8 phyla), protein genes with both ends exactly as RefSeq: MitoM 82 %, MitoZ 78 %, MITOS2 51 %, MitoFinder 59 %; records with zero NCBI table2asn errors: MitoM 17 of 24, MitoZ 4 of 18, MITOS2 and MitoFinder none. Details, installation and feature comparison: `docs/benchmark_metazoa_2026-10.md`.
+| 工具 / tool | 每条用时中位数 / median time | 峰值内存中位数 / median peak RAM | 峰值内存最大 / max peak RAM |
+|---|---|---|---|
+| MitoM | 70 s | 182 MB | 270 MB |
+| MitoZ | 249 s | 492 MB | 719 MB |
+| MITOS2 | 385 s | 953 MB | 1929 MB |
+| MitoFinder | 204 s | 238 MB | 283 MB |
+| MITOS1 | 约 41 min | 775 MB | |
 
-**原始结果与经 MitoM 校正后的比较（2026-10-28）/ Raw and curated**：24 条 NC 记录（8 门 × 3），MitoZ 支持的 18 条上：蛋白基因两端一致 MitoM 83.0%、MitoZ 原始 75.7% → 经 MitoM 校正 78.7%、MITOS2 原始 50.0% → 56.5%；rRNA 3 nt 内 MitoM 61.8%、MitoZ 26.5% → 61.8%、MITOS2 23.5% → 64.7%；tRNA 找回 MitoM 99.5%、MitoZ 92.9%、MITOS2 95.9%（校正不改变）；校正后三者都 0 条 NCBI ERROR（原始 MitoZ 13/18、MITOS2 18/18）。MitoM 不校正时蛋白基因两端一致只有 58.7%（核心把终止子等交给校正规则）。详见 `benchmark/results/curation_cmp_2026-10-28/`。
+留一与失败 / leave-out and failures:
 
-**Benchmark（环节动物，2026-10）/ Annelida benchmark**：40 条 RefSeq 环节动物线粒体基因组，裸序列输入，与 NCBI 注释比较（`docs/benchmark_annelida_2026-10.md`，数据 `benchmark/results/annelida_2026-10/`）。蛋白基因两端完全一致：MitoM 80%、MitoZ 63%、MITOS2 54%、MitoFinder 48%；有明显错误（缺基因、内部终止、重复、边界差 >30 nt）的记录：MitoM 16/40、MitoZ 36/40、MITOS2 39/40、MitoFinder 34/39；每条用时中位数 MitoM 100 s、MitoZ 244 s、MITOS2 353 s、MitoFinder 206 s。
+| 项目 / item | 结果 / result |
+|---|---|
+| 去掉该记录自己的参考蛋白后，MitoM 蛋白基因两端一致 / MitoM PCG both ends, reference of that record left out | 82.6% |
+| MitoM 不低于 MitoZ 的门 / phyla where MitoM ≥ MitoZ | 8 / 8 |
+| 其中最接近的：棘皮动物 MitoM 对 MitoZ / closest: Echinodermata, MitoM vs MitoZ | 94.9% vs 92.3% |
+| MITOS1 自身崩溃 / MITOS1 crashed | 4 / 8 |
+| MITOS1 成功的记录上蛋白基因两端完全一致 / PCG both ends exact on MITOS1 successes | 0 |
+
+**Benchmark（多类群，2026-10）/ Metazoa benchmark**：8 个门（环节、节肢、脊索、刺胞、棘皮、软体、线虫、扁形）× 3 条 RefSeq，裸序列，与 NCBI 注释逐基因比较，table2asn 检查能否直接提交。数字只在下表。安装、功能、便捷性的对比：`docs/benchmark_metazoa_2026-10.md`，数据 `benchmark/results/metazoa_mini_2026-10/`。MitoZ 没有刺胞和扁形的 clade（所以只有 18 条）。MitoFinder 要用户给近缘参考，2 条因没有近缘参考失败。MitoM 的内存来自其内部的 MITOS2 tRNA 搜索。
+8 phyla × 3 RefSeq records, bare sequences, compared with the NCBI annotation; table2asn shows whether a record can be submitted. Numbers are only in the tables. Write-up: `docs/benchmark_metazoa_2026-10.md`. MitoZ has no clade for cnidarians or flatworms (hence 18 records). MitoFinder needs a close reference genome; 2 records failed without one. MitoM's memory comes from its internal MITOS2 tRNA search.
+
+四个工具都完成的 17 条（最后三行：全部记录）/ the 17 records all four tools finished (last three rows: all records):
+
+| 指标 / metric | MitoM | MitoZ | MITOS2 | MitoFinder |
+|---|---|---|---|---|
+| 蛋白基因两端完全一致 / PCG both ends exact | 82% | 78% | 51% | 59% |
+| rRNA 两端一致 / rRNA both ends exact | 38% | 25% | 16% | 9% |
+| tRNA 找回 / tRNA found | 98% | 93% | 96% | 97% |
+| 无明显错误的记录 / records without a clear error | 10/17 | 1/17 | 0/17 | 0/17 |
+| 0 个 NCBI ERROR 的记录 / records with 0 NCBI ERROR | 17/24 | 4/18 | 0 | 0 |
+| 每条用时中位数 / median time | 175 s | 249 s | 385 s | 204 s |
+| 峰值内存 / peak RAM | 0.7 GB | 0.5 GB | 1.0 GB | 0.24 GB |
+
+原生核心（2026-10-22 起为默认，不再调用 MitoZ），同一 24 条 / native core (the default since 2026-10-22, MitoZ not called), same 24 records. 表 / report：`benchmark/results/metazoa_mini_2026-10/report_native.md`。
+
+| 指标 / metric | 原生核心 / native | MitoZ 路线 / MitoZ route | MitoZ |
+|---|---|---|---|
+| 蛋白基因两端一致 / PCG both ends exact | 247/306 | 240 | 174/230 |
+| 17 条共同记录 / 17 shared records | 82.6% | 82.1% | 78.4% |
+| rRNA 3 nt 内 / rRNA within 3 nt | 50% | 48% | 27% |
+| tRNA 3 nt 内 / tRNA within 3 nt | 81% | 81% | 79% |
+| 每条用时中位 / median time | 109 s | 175 s | 249 s |
+| 峰值内存 / peak RAM | 0.32 GB | 0.73 GB | 0.49 GB |
+| NCBI ERROR 记录 / records with an NCBI ERROR | 1 | 2 | 13 |
+
+30 个门的 RefSeq（`benchmark/results/metazoa_173_2026-10/`）/ RefSeq across 30 phyla:
+
+| 指标 / metric | 原生核心 / native | MitoZ 路线 / MitoZ route |
+|---|---|---|
+| 蛋白基因两端一致 / PCG both ends exact | 79.0% | 66.7% |
+| 高于另一列的门 / phyla higher than the other column | 25 / 30 | |
+| NCBI ERROR 记录 / records with an NCBI ERROR | 11 | 113 |
+| 每条用时中位 / median time | 146 s | 325 s |
+
+**原始结果与经 MitoM 校正后的比较（2026-10-28）/ Raw and curated**：24 条 NC 记录（8 门 × 3）中 MitoZ 支持的 18 条。数字只在下表；箭头左边是校正前，右边是校正后；校正不改变 tRNA。最后一行是 MitoM 关掉校正时的结果（核心把终止子等交给校正规则）。详见 `benchmark/results/curation_cmp_2026-10-28/`。
+The 18 of 24 NC records (8 phyla × 3) MitoZ supports. Numbers are only in the table; the arrow is before → after curation; curation does not change tRNAs. The last row is MitoM with curation off (the core leaves stops to the curation rules). Details: `benchmark/results/curation_cmp_2026-10-28/`.
+
+| 指标 / metric | MitoM | MitoZ 校正前 → 后 / MitoZ before → after | MITOS2 校正前 → 后 / MITOS2 before → after |
+|---|---|---|---|
+| 蛋白基因两端一致 / PCG both ends exact | 83.0% | 75.7% → 78.7% | 50.0% → 56.5% |
+| rRNA 3 nt 内 / rRNA within 3 nt | 61.8% | 26.5% → 61.8% | 23.5% → 64.7% |
+| tRNA 找回 / tRNA found | 99.5% | 92.9% | 95.9% |
+| NCBI ERROR 记录 / records with an NCBI ERROR | 0 | 13/18 → 0 | 18/18 → 0 |
+| MitoM 不校正 / MitoM, no curation | 58.7% | | |
+
+**Benchmark（环节动物，2026-10）/ Annelida benchmark**：40 条 RefSeq 环节动物，裸序列，与 NCBI 注释比较。明显错误 = 缺基因、内部终止、重复或边界差 > 30 nt。数字只在下表。`docs/benchmark_annelida_2026-10.md`，数据 `benchmark/results/annelida_2026-10/`。
+40 RefSeq annelids, bare sequences, compared with the NCBI annotation. A clear error = missing gene, internal stop, duplicate or an end > 30 nt off. Numbers are only in the table.
+
+| 指标 / metric | MitoM | MitoZ | MITOS2 | MitoFinder |
+|---|---|---|---|---|
+| 蛋白基因两端完全一致 / PCG both ends exact | 80% | 63% | 54% | 48% |
+| 有明显错误的记录 / records with a clear error | 16/40 | 36/40 | 39/40 | 34/39 |
+| 每条用时中位数 / median time | 100 s | 244 s | 353 s | 206 s |
 
 **MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation, genome maps) was developed by the author over years of research. Gene finding is done by MitoM's own annotation core `mito_core.py`, its methods chosen by benchmark results (`benchmark/`): blastx + exonerate protein genes, per-phylum rRNA profile HMMs, MitoM-ML tRNAs (clade covariance models with a learned caller and ends, MiTFi for the families it does not call and MiTFi ends for vertebrates); one conda environment. MitoZ and MITOS2 are not installed with MitoM: when they are installed, `--engine mitoz|mitos2` lets them annotate, or `mitom import` reads their existing results, and the MitoM steps that follow are the same; MITOS2 can also rescue missed genes (`--rescue yes`). The MITOS2 reference data refseq89m the core uses are downloaded by `mitom setup` (install.sh runs it).
 

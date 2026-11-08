@@ -30,7 +30,8 @@ mitom import -i mitos2_result/ --fasta Pdum.fasta -o out --genetic_code 5 --clad
 - `--genetic_code`：必填，与 MITOS2 的 `-c` 相同 / required, same as MITOS2 `-c`.
 - 只要转换、不修整 / conversion only: 加 / add `--curate no --plot no`.
 
-实测 8 秒 / 8 s：13 个蛋白基因、22 tRNA、2 rRNA；修整 6 处；NCBI ERROR 2 → 0。
+本例的基因数、NCBI ERROR 和用时见第 5 节的表；每处修整见 `curated/curation_report.tsv`。
+Gene counts, NCBI ERROR and time for this example: the table in section 5; every edit: `curated/curation_report.tsv`.
 
 ## 2. 由 MitoM 调用 MITOS2 / Run MITOS2 from MitoM
 
@@ -38,9 +39,12 @@ mitom import -i mitos2_result/ --fasta Pdum.fasta -o out --genetic_code 5 --clad
 mitom run -i Pdum.fasta -o out --engine mitos2 --genetic_code 5 --mitos_args="--best"
 ```
 
-MITOS2 只负责找基因，后续步骤同第 1 节。实测 261 秒。安装 / install: `mamba env create -f env/mitos.yml`（MITOS2 2.1.10）。
+MITOS2 只负责找基因，后续步骤同第 1 节。安装：`mamba env create -f env/mitos.yml`（MITOS2 2.1.10）。这次调用的用时只写在下表。
+MITOS2 finds the genes. Everything after that is section 1. Install with `mamba env create -f env/mitos.yml` (MITOS2 2.1.10). The time for this run is only in the table.
 
-MITOS2 finds the genes; everything after is as in section 1. Real run: 261 s.
+| 步骤 / step | 用时 / time |
+|---|---|
+| `mitom run --engine mitos2`（本例 / this example） | 261 s |
 
 | MITOS2 参数 / option | MitoM |
 |---|---|
@@ -95,11 +99,9 @@ mitom gb2tbl -i curated/ -o ncbi --genetic_code 5 --validate      # NCBI 提交�
 | `curated/curation_report.tsv` | 每处修改，不同意的回 Geneious 改回 / every change; revert in Geneious if you disagree |
 | `curated/validation_compare.tsv` | table2asn 修整前后 ERROR/WARNING 对比 / errors before vs after |
 
-curate 只改端点和名称，不增删基因。它保留越过下游 tRNA ≤ 20 nt 的完整终止密码子；MITOS2 常出现这种情况（本例 cox1、atp8、cox3、nad6，
-越过 5–20 nt），请在 Geneious 中核对。
-
-curate changes ends and names only; it never adds or removes genes. A complete stop codon running ≤ 20 nt into the next
-tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6: 5–20 nt); check these in Geneious.
+curate 只改端点和名称，不增删基因。伸入下游 tRNA 不超过 20 nt 的完整终止密码子保留不改；MITOS2 常这样结尾（本例 cox1、atp8、cox3、nad6），请在 Geneious 中核对。
+curate changes ends and names only; it never adds or removes genes. A complete stop codon running up to 20 nt into the
+next tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6); check these in Geneious.
 
 ## 5. 本例与 NCBI 比较 / This genome vs NCBI
 
@@ -120,9 +122,8 @@ tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6: 5�
 | MITOS2 + MitoM 整理 / curation | 56.5 % | 64.7 % | 95.9 % | 0 / 18 | 48 |
 | MitoM 自身注释 / own annotation | 83.0 % | 61.8 % | 99.5 % | 0 / 18 | 10 |
 
-整理让结果全部通过 NCBI 检查、rRNA 端点明显改善，但不能补回 MITOS2 漏的基因，蛋白基因端点仍有不少偏差。
-Curation makes every record NCBI-valid and fixes rRNA ends; it cannot add missed genes, and many MITOS2 protein ends stay off.
-1,050 条 RefSeq（24 门，2026-10-27 开发期基准，不是冻结评测）/ 1,050 records (development benchmark 2026-10-27): PCG exact MitoM 84.0 % vs MITOS2 59.4 %（[METHODS.md](METHODS.md)）。
+整理让结果全部通过 NCBI 检查，并改 rRNA 端点。它补不回 MITOS2 漏掉的基因，蛋白基因端点仍会偏。多类群开发期基准（不是冻结评测）的数字在 [METHODS.md](METHODS.md) 的「完整流程与 MITOS2 的对比」表里，这里不抄。
+Curation makes every record pass the NCBI check and moves rRNA ends. It does not add genes MITOS2 missed, and many protein ends stay off. The metazoan development-benchmark numbers (not the frozen evaluation) are in the "full run vs MITOS2" table in [METHODS.md](METHODS.md), not copied here.
 
 “一致”指与 NCBI 写法一致，不等于生物学上正确；MitoM 的规则来自 NCBI 记录。找基因的能力两者接近，差别主要在端点。请人工核对结果。
 “Exact” means as NCBI writes it, not proven biologically right; MitoM's rules were learned from NCBI records. Gene

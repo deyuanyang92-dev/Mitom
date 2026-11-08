@@ -207,7 +207,13 @@ mitom trna -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen,aragorn,t
 | 环节动物（纯 GenBank）501 条 | 99.14 / 99.08 / 83.36 % | 97.61 / 99.01 / 81.47 % |
 | 其中从未用来调参的 184 条 | 98.90 / 98.72 / 80.20 % | 97.87 / 98.71 / 79.69 % |
 
-按门（无脊椎动物 1,043 条）：节肢、软体、刺胞、线虫、扁形、棘皮、环节等各门三项都高于 MITOS2；棘头动物（4 条）召回持平 45.5%、精确率少 1 个 tRNA（87.0% vs 88.9%），动吻动物（1 条）精确率少 1 个 tRNA。
+按门统计（无脊椎动物 1,043 条）的例外只在下表；其余各门（节肢、软体、刺胞、线虫、扁形、棘皮、环节等）三项都高于 MITOS2。报告在各表注明的目录。
+Exceptions by phylum (1,043 invertebrate records) are only in the table. On the other invertebrate phyla, all three tRNA figures are higher than MITOS2. Reports are in the directories named on the tables.
+
+| 类群 / group | 与 MITOS2 的差别 / vs MITOS2 |
+|---|---|
+| 棘头动物 4 条 / Acanthocephala, 4 records | 召回持平 45.5%；精确率 87.0% vs 88.9%（少 1 个 tRNA） |
+| 动吻动物 1 条 / Kinorhyncha, 1 record | 精确率少 1 个 tRNA |
 
 **完整流程与 MITOS2 的对比（2026-10-27，v30：上述全部规则 + NCBI 提交规则，裸序列输入，与 NCBI 注释逐基因比较；两者都完成的记录）**。蛋白基因（PCG）与 rRNA 为两端与 NCBI 完全一致的比例，tRNA 为召回率 / 精确率 / 两端完全一致：
 
@@ -219,7 +225,17 @@ mitom trna -i gb_or_fasta -o out --genetic_code 5 --tools mitos2,arwen,aragorn,t
 | 脊椎动物 188 条 | 88.9 / 72.7 % | 67.6 / 37.0 % | 98.38 / 98.55 / 92.66 % | 98.31 / 98.24 / 92.61 % | 0 条 |
 | 锚定基因组 13 条 | 87.3 / 47.9 % | 57.7 / 3.8 % | 98.61 / 98.27 / 86.11 % | 96.88 / 98.24 / 82.64 % | 0 条 |
 
-PCG 两端一致按门（1,050 条）24 个门全部高于 MITOS2；PCG、rRNA 召回也全部更高。唯一不高于 MITOS2 的数字：纯 GenBank 环节动物中从未调参的 184 条，tRNA 精确率 98.70% vs 98.71%（4,000 个调用里多 1 个 NCBI 没有的；其中 43 个与 MITOS2 相同，MitoM 多找到 41 个真 tRNA）；动吻动物（1 条）多 1 个；棘头动物（4 条）召回、精确率持平。报告见 `benchmark/results/full_v30_2026-10-27/`。
+不高于 MITOS2 的项目只在下表。按门统计（1,050 条，24 个门），PCG 两端一致、PCG 召回和 rRNA 召回每个门都高于 MITOS2。报告：`benchmark/results/full_v30_2026-10-27/`。
+The figures that are not higher than MITOS2 are only in the table. By phylum (1,050 records, 24 phyla), PCG both-ends agreement, PCG recall and rRNA recall are higher than MITOS2 in every phylum. Report: `benchmark/results/full_v30_2026-10-27/`.
+
+| 项目 / item | 结果 / result |
+|---|---|
+| 纯 GenBank 环节动物、从未调参的 184 条，tRNA 精确率 / 184 untuned GenBank annelids, tRNA precision | 98.70% vs 98.71% |
+| 同上，多出来的 NCBI 没有的调用 / extra calls NCBI does not have | 1 / 4000 |
+| 其中与 MITOS2 相同的调用 / of those, same call as MITOS2 | 43 |
+| MitoM 多找到的真 tRNA / true tRNAs MitoM adds | 41 |
+| 动吻动物 1 条 / Kinorhyncha, 1 record | 多 1 个调用 |
+| 棘头动物 4 条 / Acanthocephala, 4 records | 召回、精确率持平 |
 
 ARWEN、ARAGORN、tRNAscan-SE、MiTFi 参数（半全局、重叠、E 值、只按阈值、加分支模型）、多软件投票、重训判别器与端点均测过，见 `benchmark/trna_ml/README.md`。
 

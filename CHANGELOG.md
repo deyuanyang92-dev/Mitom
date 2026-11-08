@@ -25,6 +25,7 @@ installed one.
   `mito_intron_junction.py` (query genome, junction calling) and `mito_intron_models.py` (gene models).
 - `setup.py` installs every top-level *.py (no hand-kept py-modules list); the packaging test builds a wheel and
   compares. README step list = the 11 terminal steps (details stay in USAGE_zh.md section 4).
+- Docs: a measured number is written once, in a table (bilingual headers). Chinese and English prose point at the table and do not repeat it. README benchmark blocks, MITOS2.md timings, METHODS exceptions, and the USAGE accuracy summary follow this. `mito_intron.py` and `mito_nuc.py` stay one file each.
 - `tests/test_step_argv.py`: the arguments the pipeline passes to mito_curate.py / mito_intron.py / mito_intron_ref.py
   are parsed with those scripts' own parsers (they stay separate processes: a crash affects one step only).
   Docs: METHODS.md opens with the code layout (`mitom` -> mitom_main -> mitom_run.RUN_STAGES) instead of the stale
