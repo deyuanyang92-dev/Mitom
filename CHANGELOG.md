@@ -39,6 +39,10 @@ installed one.
   rewriting module globals: mito_trna circular length (CIRC_L -> circ_len), mito_core --exclude_ref and
   --exonerate_model (tools["exclude_refs"], tools["exonerate_model"]), mito_intron --timeout. mito_intron's
   failure-tolerant program call is named `try_program` (was a second `run_tool`, the name of mito_common's).
+- `workflow_run` (350 lines) = 11 stage functions in `mitom_run.RUN_STAGES` (input, round 1, reorient, round 2, final
+  GenBank, add missing, curate, NCBI, compare, maps, output; one numbered step each) handing on a `RunState`;
+  workflow_run itself is 10 lines. Code of each stage unchanged; the final-body choice is `final_body()` /
+  `with_partial_contigs()`. run.log and the terminal lines are the same as before (checked on NC_000931).
 
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:
