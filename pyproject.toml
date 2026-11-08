@@ -11,7 +11,8 @@ dynamic = ["version"]
 description = "Annotation workflow for animal mitochondrial genomes"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
+# CC0-1.0 (LICENSE); mito_intron.py, mito_intron_rules.py, models/mfannot_proteins GPL-3.0 (MFannot); models/mitfi MIT
+license = { text = "CC0-1.0 AND GPL-3.0-only AND MIT" }
 authors = [{ name = "De-Yuan Yang" }]
 dependencies = ["biopython>=1.79", "numpy", "scikit-learn"]
 
@@ -41,9 +42,14 @@ py-modules = [
     "mito_fetch",
     "mito_intron",
     "mito_intron_ref",
+    "mito_intron_rules",
+    "mito_intron_sites",
     "mito_names",
     "mito_ncr",
     "mito_nuc",
+    "mito_nuc_histone",
+    "mito_nuc_lib",
+    "mito_nuc_rdna",
     "mito_plot",
     "mito_rescue",
     "mito_rrna_hmm",

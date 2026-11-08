@@ -414,11 +414,11 @@ def test_mini_exon_search_capped(monkeypatch):
     sys.path.insert(0, str(SCRIPT.parent))
     import mito_intron as mi
     called = []
-    monkeypatch.setattr(mi, "find_mini_exon", lambda *x: called.append(x))
-    monkeypatch.setattr(mi, "homolog_gap", lambda *x: (60.0, 1.0))
+    monkeypatch.setattr(mi.mito_intron_rules, "find_mini_exon", lambda *x: called.append(x))
+    monkeypatch.setattr(mi.mito_intron_rules, "homolog_gap", lambda *x: (60.0, 1.0))
     s = "ATG" * 4000
     mi.add_mini_exons(s, [(1, 300), (600, 900)], ["I"], ["n"], [20.0], 4, ["M" * 200])
-    monkeypatch.setattr(mi, "homolog_gap", lambda *x: (3.0, 1.0))
+    monkeypatch.setattr(mi.mito_intron_rules, "homolog_gap", lambda *x: (3.0, 1.0))
     mi.add_mini_exons(s, [(1, 300), (6000, 6300)], ["I"], ["n"], [20.0], 4, ["M" * 200])
     assert not called
     mi.add_mini_exons(s, [(1, 300), (600, 900)], ["I"], ["n"], [20.0], 4, ["M" * 200])

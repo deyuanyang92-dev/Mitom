@@ -256,7 +256,7 @@ NCBI 的内含子边界写法因课题组而异（同一位点不同记录可差
 
 ### 从头识别的方法（MFannot 移植）与早期验证（2026-10-09 / 10）/ De novo method and earlier validation
 
-`mito_intron.py` = MFannot（Beck & Lang，https://github.com/BFL-lab/Mfannot ；数据 https://github.com/BFL-lab/MFannot_data ，GPL-3.0；Lang et al. 2023, doi:10.3389/fpls.2023.1222186）intron 流程的 Python 移植，本文件按 GPL-3.0 发布：
+`mito_intron.py`（及 2026-11-08 从中拆出的边界规则 `mito_intron_rules.py`）= MFannot（Beck & Lang，https://github.com/BFL-lab/Mfannot ；数据 https://github.com/BFL-lab/MFannot_data ，GPL-3.0；Lang et al. 2023, doi:10.3389/fpls.2023.1222186）intron 流程的 Python 移植，本文件按 GPL-3.0 发布：
 
 | 步骤 | MFannot 对应 | 实现 |
 |---|---|---|

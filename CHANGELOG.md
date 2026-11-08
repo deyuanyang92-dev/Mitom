@@ -51,6 +51,14 @@ installed one.
 - External programs go through `mito_common.run_tool` (logged, `mitom debug`) in mito_nuc (blastn, exonerate,
   table2asn) and mitom_groups too. tests/test_structure.py keeps the rules: no `global`, no sys.path edits, GenBank
   written only by write_gb, subprocess only in run_tool and the listed probes / pipes, mitom_pipeline.py = main().
+- The largest files split along their sections, code unchanged, names still importable from the old module:
+  mito_nuc.py (2320 lines) -> `mito_nuc_lib.py` (settings, programs, reference records and library),
+  `mito_nuc_rdna.py`, `mito_nuc_histone.py`, mito_nuc.py (input, output, NCBI files, annotate, command line; 1046);
+  mito_intron.py (1668) -> `mito_intron_rules.py` (gene model, MFannot boundary rules; GPL-3.0 like mito_intron.py)
+  + mito_intron.py (1242); mito_intron_ref.py (2057) -> `mito_intron_sites.py` (intron-site library) +
+  mito_intron_ref.py (1655). mito_curate.py stays one file (one Curator class whose rules share its state).
+  Checked: golden outputs identical; `mitom nuc annotate` on 3 rDNA contigs identical before / after.
+  pyproject license = CC0-1.0 AND GPL-3.0-only AND MIT (was the CC0 file only).
 
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:

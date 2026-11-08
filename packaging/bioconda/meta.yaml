@@ -50,8 +50,8 @@ about:
     MitoM annotates animal mitochondrial genomes (protein genes, rRNAs, tRNAs, introns) with its own core, or runs
     MitoZ / MITOS2 when they are installed, or takes their existing results; then reorients, curates gene ends,
     writes NCBI names and submission files (table2asn) and circular genome maps. MITOS2's reference data refseq89m is
-    downloaded after installation with `mitom setup`. mito_intron.py (port of MFannot) and models/mfannot_proteins are
-    GPL-3.0; MiTFi (models/mitfi) is MIT; the rest is CC0-1.0.
+    downloaded after installation with `mitom setup`. mito_intron.py and mito_intron_rules.py (port of MFannot) and
+    models/mfannot_proteins are GPL-3.0; MiTFi (models/mitfi) is MIT; the rest is CC0-1.0.
   dev_url: https://github.com/deyuanyang92-dev/Mitom
 
 extra:
