@@ -4,6 +4,13 @@
 The paper's accuracy numbers come from this one run only: frozen version, a test set disjoint from everything MitoM
 was trained or tuned on, metrics fixed in advance, run once.
 
+**何时运行 / When**：MitoM 目前是 beta（0.0.x），还会持续优化甚至重构，**现在不运行**。到准备投稿、代码稳定时才运行一次。
+开发期间用现有基准（`benchmark/sets/`、`TEST_REGISTRY.md` 里的测试）比较改动；不要提前选测试集，也不要看候选池的结果——
+冻结时 `frozen_set.py` 会自动排除届时仓库里已出现的记录，所以越晚选越干净。重构后若 `mito_bench_run.py` 的工具接口变了，先改本目录脚本并重跑冒烟测试。
+MitoM is beta (0.0.x) and may be refactored: do not run this yet. Run it once when the code is stable for the paper. Until
+then compare changes on the existing benchmarks; do not pick the test set early (selection at freeze time excludes
+whatever has been seen by then). After a refactor, update these scripts and redo the smoke test.
+
 ## 1. 规则 / Rules
 
 1. 运行前先提交本方案、测试集和冻结清单（manifest）；提交时间就是预注册时间。/ Commit this plan, the set and the manifest before running.
@@ -82,7 +89,7 @@ mitom dedup -i pool/Metazoa.gb -o pool_dedup                          # one reco
 python3 benchmark/frozen/frozen_set.py audit  --pool pool_dedup/<file>.gb -o frozen/pool_audit.tsv
 python3 benchmark/frozen/frozen_set.py select --pool pool_dedup/<file>.gb -o frozen/test_accs.txt   # --level species; + .audit.tsv
 python3 benchmark/make_large_set.py --pool pool_dedup/<file>.gb --out data --tsv frozen/set.tsv --accs frozen/test_accs.txt
-# 3. 冻结 / freeze  (commit + tag first: git tag v0.1.0-frozen)
+# 3. 冻结 / freeze  (commit + tag first: git tag v0.0.<n>-frozen)
 bash benchmark/frozen/freeze.sh frozen/set.tsv benchmark/results/frozen_<date>
 git add benchmark/results/frozen_<date> && git commit -m "Frozen evaluation: set and manifest"   # = 预注册 / pre-registration
 # 4. 一次运行 / the one run (resumable: rerun the same command after an interruption)

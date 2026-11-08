@@ -23,7 +23,7 @@ REFDIR=$("$PY" -c "import sys; sys.path.insert(0, '$REPO'); import mito_env; pri
   echo "host	$(hostname)"
   echo "disk	$(df -P "$REPO" | awk 'NR==2{print $6}')"
   echo "commit	$(git rev-parse HEAD)"
-  echo "tag	$(git describe --tags --exact-match 2>/dev/null || echo 'none (tag the commit, e.g. v0.1.0-frozen)')"
+  echo "tag	$(git describe --tags --exact-match 2>/dev/null || echo 'none (tag the commit, e.g. v0.0.<n>-frozen)')"
   echo "set	$SET"
   echo "set_md5	$(md5sum "$SET" | cut -d' ' -f1)"
   echo "set_records	$(($(wc -l < "$SET") - 1))"
