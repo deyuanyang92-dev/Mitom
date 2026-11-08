@@ -26,7 +26,6 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mito_common import cli_guard, iter_gb_files, require_path, require_records, write_gb  # noqa: E402
 
 MIN_LEN = 100                                 # default shortest NCR (--ncr_min_len, the maps' --min_noncoding)

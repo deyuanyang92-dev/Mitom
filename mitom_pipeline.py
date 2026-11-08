@@ -57,7 +57,6 @@ except ImportError:                       # `mitom` checks this before it starts
     raise
 from Bio import SeqIO  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 # the parts of the workflow (see above); every name is re-exported, so mitom_pipeline.<name> keeps working
 from mito_common import (InputError, cli_guard, count_seq_records, unique_path, prepare_input, require_records, command_line, debug_mode, GB_SUFFIXES, gb_fasta_record, iter_gb_files, old_spelling, write_gb,  # noqa: E402,F401
                          reports_dir, run_tool,  # noqa: F401
@@ -257,8 +256,6 @@ def announce(msg: str) -> None:
 def resolve_tools(args: argparse.Namespace) -> str:
     """Fill unset tool locations from mito_env (config file, PATH, conda environments) and check the clade.
     Returns an error message, '' when fine."""
-    if str(Path(__file__).resolve().parent) not in sys.path:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
     import mito_env
     if args.clade == "auto" and args.cmd == "import":      # results of other programs: one clade for the run
         clade, code, phylum, err = auto_clade(Path(args.input), getattr(args, "genetic_code", None))

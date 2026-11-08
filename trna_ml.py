@@ -84,8 +84,6 @@ def work_dir(models: Optional[Path] = None) -> Path:
     models = Path(models) if models is not None else MODELS
     if Path(models).resolve() != MODELS.resolve():
         return Path(models)
-    if str(HERE) not in sys.path:
-        sys.path.insert(0, str(HERE))
     import mito_env
     return mito_env.data_dir() / "trna_ml"
 
@@ -528,7 +526,6 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
 
 
 def main(argv=None) -> int:
-    sys.path.insert(0, str(HERE))
     import mito_env
     from Bio import SeqIO
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)

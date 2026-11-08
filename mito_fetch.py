@@ -35,7 +35,6 @@ from typing import Callable, Dict, Iterable, List, Optional
 
 from Bio import Entrez, SeqIO
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_common import gb_fasta_record, old_spelling, write_tsv  # noqa: E402
 from mito_common import cli_guard  # noqa: E402

@@ -50,7 +50,6 @@ from matplotlib.patches import Patch
 from matplotlib.font_manager import FontProperties
 from matplotlib.textpath import TextPath, text_to_path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import command_line, iter_gb_files, old_spelling, STDERR_MARK, STDERR_TAIL, TOOL_LOG  # noqa: E402

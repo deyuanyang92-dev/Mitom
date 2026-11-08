@@ -99,7 +99,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from Bio import SeqIO
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from Bio.Align import PairwiseAligner, substitution_matrices
 from Bio.Data import CodonTable

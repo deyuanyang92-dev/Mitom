@@ -367,7 +367,7 @@ def test_ncr_command_keeps_pseudo_value_less(tmp_path):
     r = _rec(n=2000)
     r.features.append(SeqFeature(FeatureLocation(10, 400, 1), type="gene", qualifiers={"gene": ["nad1"], "pseudo": [None]}))
     SeqIO.write(r, str(tmp_path / "a.gb"), "genbank")
-    subprocess.run([sys.executable, "-I", str(ROOT / "mito_ncr.py"), "-i", str(tmp_path / "a.gb"), "-o",
+    subprocess.run([sys.executable, str(ROOT / "mito_ncr.py"), "-i", str(tmp_path / "a.gb"), "-o",
                     str(tmp_path / "b.gb")], check=True, capture_output=True)
     txt = (tmp_path / "b.gb").read_text()
     assert "/pseudo\n" in txt and '/pseudo=""' not in txt
@@ -674,11 +674,7 @@ def test_doctor_names_a_mitom_command_of_another_folder(tmp_path, monkeypatch):
 
 
 def test_launcher_skips_a_python_without_scikit_learn(tmp_path, monkeypatch):
-    import importlib.machinery
-    import importlib.util
-    loader = importlib.machinery.SourceFileLoader("mitom_launcher", str(ROOT / "mitom"))
-    launcher = importlib.util.module_from_spec(importlib.util.spec_from_loader("mitom_launcher", loader))
-    loader.exec_module(launcher)
+    import mitom_main as launcher
     bad = tmp_path / "envs" / "aaa" / "bin" / "python3"
     bad.parent.mkdir(parents=True)
     bad.write_text("#!/bin/sh\n")

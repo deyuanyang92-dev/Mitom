@@ -25,7 +25,6 @@ from typing import Dict, List, Optional
 from Bio import SeqIO
 from Bio.SeqFeature import AfterPosition, BeforePosition
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 from mito_common import iter_gb_files, run_tool, write_tsv  # noqa: E402
 from mito_common import cli_guard, prepare_input, require_records  # noqa: E402

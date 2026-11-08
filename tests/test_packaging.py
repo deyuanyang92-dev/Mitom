@@ -76,3 +76,11 @@ def test_check_and_compare_run_from_the_install(prefix, tmp_path):
     assert p.returncode == 0, p.stderr
     rows = [ln.split("\t") for ln in out.read_text().splitlines()[1:]]
     assert rows and {r[-1] for r in rows} <= {"same", "same_place"}         # same_place: Leu / Ser without anticodon
+
+
+def test_pyproject_lists_every_module():
+    """pyproject.toml py-modules = the top-level modules (a new module is installed by pip install -e . too)."""
+    import re
+    text = (REPO / "pyproject.toml").read_text()
+    listed = set(re.findall(r'^    "(\w+)",$', text.split("py-modules = [", 1)[1].split("]", 1)[0], re.M))
+    assert listed == {p.stem for p in REPO.glob("*.py")}

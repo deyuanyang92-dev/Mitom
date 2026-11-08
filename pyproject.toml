@@ -1,0 +1,75 @@
+# MitoM as a Python project: metadata, dependencies, the `mitom` command, test settings.
+# Install for development: pip install -e .   (models/ and the scripts stay in this folder; the external programs come
+# from install.sh / env/mitotools.yml). Users install with install.sh or bioconda (packaging/bioconda).
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mitom"
+dynamic = ["version"]
+description = "Annotation workflow for animal mitochondrial genomes"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [{ name = "De-Yuan Yang" }]
+dependencies = ["biopython>=1.79", "numpy", "scikit-learn"]
+
+[project.optional-dependencies]
+plot = ["matplotlib"]
+test = ["pytest", "defusedxml"]
+
+[project.scripts]
+mitom = "mitom_main:main"
+
+[project.urls]
+Homepage = "https://github.com/deyuanyang92-dev/Mitom"
+
+[tool.setuptools]
+# the modules stay at the top level: every script runs as `python3 <script>.py` and is started that way by the workflow
+py-modules = [
+    "batch_mitoz",
+    "mito_check",
+    "mito_classify",
+    "mito_common",
+    "mito_compare",
+    "mito_core",
+    "mito_curate",
+    "mito_debug",
+    "mito_engines",
+    "mito_env",
+    "mito_fetch",
+    "mito_intron",
+    "mito_intron_ref",
+    "mitom_groups",
+    "mitom_inputs",
+    "mitom_log",
+    "mitom_main",
+    "mitom_metadata",
+    "mitom_orient",
+    "mitom_output",
+    "mitom_pipeline",
+    "mitom_snakemake",
+    "mitom_stage",
+    "mitom_steps",
+    "mitom_topology",
+    "mito_names",
+    "mito_ncr",
+    "mito_nuc",
+    "mito_plot",
+    "mito_rescue",
+    "mito_rrna_hmm",
+    "mito_start",
+    "mito_taxa",
+    "mito_tbl",
+    "mito_trna",
+    "ncbi_validate",
+    "trna_ml",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "mitom_main.VERSION" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

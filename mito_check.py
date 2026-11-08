@@ -43,7 +43,6 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
 from mito_common import iter_gb_files, old_spelling, write_tsv  # noqa: E402
 from mito_common import cli_guard, prepare_input, require_records  # noqa: E402
 from mito_names import PCG, gene_name, trna_name  # noqa: E402

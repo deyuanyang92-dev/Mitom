@@ -18,6 +18,14 @@ installed one.
   family-bootstrap intervals and paired differences (frozen_stats.py); benchmark tool `mitom_blind` (sequence only).
   Measured: 169 of 170 annelid RefSeq records (2025-03 pool) were already seen, so the test set draws on GenBank too.
 
+### Changed (structure; outputs unchanged - scripts/golden.py)
+- Refactoring guard: `scripts/golden.py` runs 6 whole workflows on tests/data (GenBank, intron, two phyla, bare FASTA,
+  MitoZ import, curate) and compares every text output with tests/data/golden (`MITOM_GOLDEN=1 pytest tests/test_golden.py`).
+- `pyproject.toml`: MitoM is a Python project (`pip install -e .` gives the `mitom` command; version from
+  mitom_main.VERSION). The launcher's code moved from the `mitom` file to `mitom_main.py` (the file stays, 10 lines).
+  The modules no longer edit `sys.path` (23 files): a script imports its neighbours from its own folder, as Python does;
+  `python -I script.py` / PYTHONSAFEPATH are not supported for direct script runs (`mitom` clears PYTHONSAFEPATH).
+
 ### Fixed
 - MITOS2 installed as bioconda mitos 2.1.9 (only `runmitos.py`, no `runmitos`) was not found (`mitom doctor`:
   runmitos not found): both names are accepted, by every lookup (mito_env.find: doctor, debug, mito_trna).

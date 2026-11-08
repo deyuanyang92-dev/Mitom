@@ -93,7 +93,6 @@ from Bio.Seq import Seq
 from Bio.Data import CodonTable
 from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, ExactPosition, FeatureLocation, SeqFeature
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
 # N1: NCBI gene symbols, products and synonyms; tRNA names trnL1/L2, trnS1/S2 by anticodon (mito_names.py)
 from mito_names import AA1_TO_3, AA3, PCG_NAMES, PCG_SYN, RRNA_PRODUCT, name_key as key, trna_symbol  # noqa: E402
@@ -1351,7 +1350,6 @@ def main(argv=None) -> int:
     start_rows: List[Dict] = []
     t2a = None if a.no_validate else mito_env.find("table2asn", a.table2asn)
     if t2a:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
         import ncbi_validate as nv
     val_before: List[Dict[str, str]] = []
     val_after: List[Dict[str, str]] = []

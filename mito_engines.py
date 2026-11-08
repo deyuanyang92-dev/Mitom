@@ -32,7 +32,6 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import GB_SUFFIXES, contig_record_id, run_tool, topology_from_header, write_gb  # noqa: E402

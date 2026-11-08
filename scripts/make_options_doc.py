@@ -2,8 +2,6 @@
 """make_options_doc.py - docs/OPTIONS.md: every MitoM command with all its options, as `mitom <command> -h` prints
 them. Run it after changing a command line (python3 scripts/make_options_doc.py); tests/test_docs.py fails while an
 option is missing from docs/OPTIONS.md."""
-import importlib.machinery
-import importlib.util
 import os
 import subprocess
 import sys
@@ -22,11 +20,9 @@ DOCTOR = ("usage: mitom doctor [--write-config]\n\n"
 
 def commands():
     """{command: (script, args)} of the mitom launcher, in its order."""
-    loader = importlib.machinery.SourceFileLoader("mitom_launcher", str(ROOT / "mitom"))
-    spec = importlib.util.spec_from_loader("mitom_launcher", loader)
-    mod = importlib.util.module_from_spec(spec)
-    loader.exec_module(mod)
-    return mod.COMMANDS
+    sys.path.insert(0, str(ROOT))
+    import mitom_main
+    return mitom_main.COMMANDS
 
 
 def help_text(cmd: str) -> str:

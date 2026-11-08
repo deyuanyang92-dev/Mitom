@@ -110,8 +110,6 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
     if getattr(args, "ncr", "yes") == "no":
         return StepResult("skipped (--ncr no)")
     here = Path(__file__).resolve().parent
-    if str(here) not in sys.path:
-        sys.path.insert(0, str(here))
     from mito_ncr import add_ncr, is_ncr, MIN_LEN
     min_len = int(getattr(args, "ncr_min_len", MIN_LEN))
     n_rec = n_ncr = nt = 0
@@ -140,8 +138,6 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     <id>.fsa + <id>.tbl (BankIt), <id>.sqn + <id>.val (table2asn; --sbt adds the submitter template),
     submission_summary.tsv and validation_messages.tsv."""
     here = Path(__file__).resolve().parent
-    if str(here) not in sys.path:
-        sys.path.insert(0, str(here))
     import mito_env
     import ncbi_validate as nv
     t2a = mito_env.find("table2asn")

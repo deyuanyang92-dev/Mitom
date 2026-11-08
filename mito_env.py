@@ -458,7 +458,6 @@ def prepare_trna_ml() -> None:
     """MitoM-ML's clade models unpacked and classifiers trained now (into data_dir()), not by the first run's
     parallel jobs; without scikit-learn the core uses MiTFi and nothing is prepared."""
     try:
-        sys.path.insert(0, str(HERE))
         import trna_ml
         print(f"MitoM-ML tRNA models ready: {trna_ml.prepare()}", flush=True)
     except Exception as exc:                       # noqa: BLE001  (setup goes on; the first run tries again)

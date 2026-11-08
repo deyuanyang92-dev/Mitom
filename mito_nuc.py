@@ -65,7 +65,6 @@ from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 from Bio.SeqFeature import BeforePosition, AfterPosition
 from Bio.SeqRecord import SeqRecord
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 from mito_common import cli_guard, count_seq_records, InputError, prepare_input, require_records, run_tool, write_gb  # noqa: E402
 

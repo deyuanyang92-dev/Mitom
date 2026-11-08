@@ -30,7 +30,6 @@ import gzip
 import os
 import re
 import subprocess
-import sys
 import tempfile
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -42,8 +41,6 @@ from Bio.Data import CodonTable
 from Bio.Seq import Seq
 
 HERE = Path(__file__).resolve().parent
-if str(HERE) not in sys.path:
-    sys.path.insert(0, str(HERE))
 import mito_env  # noqa: E402
 from mito_taxa import METAZOAN_PHYLA, PHYLUM_SYNONYMS  # noqa: E402
 

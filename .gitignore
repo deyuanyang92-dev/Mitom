@@ -8,3 +8,5 @@ __pycache__/
 mito_config.json
 models/trna_ml/cache/
 models/trna_ml/clades/
+build/
+*.egg-info/

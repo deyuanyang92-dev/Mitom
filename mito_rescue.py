@@ -47,7 +47,6 @@ from Bio.Data import CodonTable
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import mito_names  # noqa: E402
 from mito_common import old_spelling, run_tool, write_gb, write_tsv  # noqa: E402

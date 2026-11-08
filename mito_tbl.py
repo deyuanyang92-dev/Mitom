@@ -78,7 +78,6 @@ from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402
 import ncbi_validate as nv  # noqa: E402  (the feature table and the FASTA header of the NCBI submission files)
 from mito_common import GB_SUFFIXES, iter_gb_files, run_tool, write_tsv  # noqa: E402

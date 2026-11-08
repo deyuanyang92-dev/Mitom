@@ -31,7 +31,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mito_env  # noqa: E402  (install hints)
 
 LOGS = ("run.log", "pipeline.log", "dedup.log", "transfer_metadata.log", "replace_organism.log")

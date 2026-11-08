@@ -55,7 +55,6 @@ from Bio.SeqFeature import AfterPosition, BeforePosition, CompoundLocation, Feat
 from Bio.SeqRecord import SeqRecord
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
 import mito_env  # noqa: E402
 import mito_rrna_hmm  # noqa: E402,F401  (the rRNA step: per-phylum profile HMMs, MITOS2's covariance models)
 # the rRNA step, moved to mito_rrna_hmm.py, stays importable from here (tests)

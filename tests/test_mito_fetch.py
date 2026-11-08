@@ -129,7 +129,7 @@ def test_main_resume_skips_present_records(tmp_path, monkeypatch):
 
 
 def test_mitom_lists_fetch():
-    text = (HERE.parent / "mitom").read_text()
+    text = (HERE.parent / "mitom_main.py").read_text()
     assert '"fetch": ("mito_fetch.py", [])' in text
 
 
