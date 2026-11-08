@@ -248,7 +248,7 @@ Development benchmarks, not the frozen evaluation of the paper; methods and more
 
 ### 六个工具（2026-10-22）/ Six tools
 
-数据 / data：8 门 × 3 条 RefSeq = 24 条（MITOS1 8 条）/ 8 phyla × 3 RefSeq = 24 records (MITOS1: 8)；`benchmark/results/six_tools_2026-10-22/`，`docs/benchmark_six_tools_2026-10-22.md`
+数据 / data：24 条 RefSeq 记录 / records（8 门 / phyla × 3；MITOS1：8）；`benchmark/results/six_tools_2026-10-22/`，`docs/benchmark_six_tools_2026-10-22.md`
 
 裸序列输入，与 NCBI 注释逐基因比较，并用 table2asn 校验。
 Bare sequences, compared gene by gene with the NCBI annotation and checked with table2asn.
@@ -284,7 +284,7 @@ Bare sequences, compared gene by gene with the NCBI annotation and checked with 
 
 ### 多类群（2026-10）/ Metazoa
 
-数据 / data：环节、节肢、脊索、刺胞、棘皮、软体、线虫、扁形 × 3 条 RefSeq = 24 条；MitoZ 18 条（无刺胞、扁形 clade）；MitoFinder 2 条无近缘参考失败 / 8 phyla × 3 RefSeq = 24 records; MitoZ 18 (no cnidarian or flatworm clade); MitoFinder: 2 failed without a close reference；`benchmark/results/metazoa_mini_2026-10/`，`docs/benchmark_metazoa_2026-10.md`（含安装、功能、便捷性对比 / with installation and features）
+数据 / data：24 条 RefSeq 记录 / records（环节 Annelida、节肢 Arthropoda、脊索 Chordata、刺胞 Cnidaria、棘皮 Echinodermata、软体 Mollusca、线虫 Nematoda、扁形 Platyhelminthes × 3）；MitoZ：18（无刺胞、扁形 clade / no clade）；MitoFinder：2 条失败，无近缘参考 / failed, no close reference；`benchmark/results/metazoa_mini_2026-10/`，`docs/benchmark_metazoa_2026-10.md`（含安装、功能、便捷性对比 / with installation and features）
 
 裸序列，与 NCBI 注释逐基因比较，table2asn 检查能否直接提交。MitoM 的内存来自其内部的 MITOS2 tRNA 搜索。
 Bare sequences, compared with the NCBI annotation; table2asn shows whether a record can be submitted. MitoM's memory comes from its internal MITOS2 tRNA search.
@@ -324,7 +324,7 @@ Bare sequences, compared with the NCBI annotation; table2asn shows whether a rec
 
 ### 校正前后（2026-10-28）/ Raw and curated
 
-数据 / data：上面 24 条 NC 记录中 MitoZ 支持的 18 条 / the 18 of the 24 NC records above that MitoZ supports；`benchmark/results/curation_cmp_2026-10-28/`
+数据 / data：上面记录中 MitoZ 支持的 18 条 / records above that MitoZ supports；`benchmark/results/curation_cmp_2026-10-28/`
 
 箭头左边是校正前，右边是校正后；校正不改变 tRNA。最后一行是 MitoM 关掉校正时的结果（核心把终止子等交给校正规则）。
 The arrow is before → after curation; curation does not change tRNAs. The last row is MitoM with curation off (the core leaves stops to the curation rules).
