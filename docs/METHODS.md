@@ -2,39 +2,30 @@
 
 MitoM 各模块的方法、设计依据和历次评测（2026-10）。使用方法见 [USAGE_zh.md](USAGE_zh.md)，评测数据在 `../benchmark/results/`。
 
-## 脚本定位 / What The Script Does
+## 程序结构 / Code layout
 
-`mitom_pipeline.py` 是 MitoM 流程的主程序（命令 `mitom run` / `import` / `annotate` …；旧名 `batch_mitoz.py` 仍可用）：批量线粒体注释（MitoM 核心 `mito_core.py`，或 `--engine mitoz|mitos2`）及作者设计的方向调整、元数据迁回、内含子、端点校正、NCBI 提交文件、基因组圈图等步骤。
+`mitom run` 做哪些步骤见 [README](../README.md) 第 3 节；本节只说代码在哪里。
+What `mitom run` does step by step: [README](../README.md) section 3. This section says where the code is.
 
-`mitom_pipeline.py` is the main program of the MitoM workflow (`mitom run` / `import` / `annotate` ...; the old name `batch_mitoz.py` still works): batch mitochondrial annotation (MitoM's core `mito_core.py`, or `--engine mitoz|mitos2`) plus the author's own steps - reorientation, metadata transfer, introns, curation, NCBI submission files, genome maps and more.
+命令 `mitom` → `mitom_main.py`（检查环境，启动子命令）→ `mitom_pipeline.main`（只分发命令）→ `mitom_run.RUN_STAGES`（`run` / `import` 的 11 步）。
+`mitom` → `mitom_main.py` (environment check, starts the subcommand) → `mitom_pipeline.main` (dispatch only) → `mitom_run.RUN_STAGES` (the 11 steps of `run` / `import`).
 
-它主要完成：
+| 文件 / file | 内容 / contents |
+|---|---|
+| `mitom_cli.py` | 命令行参数 / command-line options |
+| `mitom_prepare.py` | 环境检查、工具路径、`--clade auto`、输出目录锁 / environment, tools, clade plan, output lock |
+| `mitom_run.py` | `run` / `import` 的 11 步，共享 `RunState` / the 11 stages |
+| `mitom_steps.py` | 校正、内含子、NCR、NCBI 文件等步骤 / curation, introns, NCR, submission steps |
+| `mitom_groups.py` | 多个门或遗传密码时分组运行 / one run per phylum / genetic code group |
+| `mitom_commands.py` | 其他子命令（reorient、dedup、intron …）/ the other subcommands |
+| `mitom_context.py` | 一次运行的共享状态 `RunContext` / per-run state |
+| `mito_core.py`、`mito_trna.py` | 注释核心、tRNA / annotation core, tRNAs |
+| `mito_curate.py` | 注释后校正 / post-annotation curation |
+| `mito_intron*.py` | 内含子（从头、规则、位点库）/ introns |
+| `mito_nuc*.py` | 核 rDNA、组蛋白 / nuclear rDNA, histones |
 
-- 识别 FASTA 或 GenBank 输入。
-- 把 GenBank 输入去重并转换为内部 FASTA。
-- 为每条记录生成短内部 ID，例如 `S00001`，避免注释核心或 GenBank LOCUS 名称过长。
-- 批量调用注释引擎：MitoM 核心 `mito_core.py`（默认），或 MitoZ / MITOS2（`--engine`）；`mitom import` 直接用已有的注释结果。
-- 按目标基因重定向序列，默认 `cox1`。
-- 可选对重定向后的序列做第二轮注释。
-- 把原始 GenBank header metadata 转移回最终结果。
-- 修复核心输出中 `FEATURES source` 的 `/organism=`。
-- 输出最终 `.gbf`、统计表、日志、失败列表和合并文件。
-- 把 ≥ 100 nt、没有任何注释覆盖的区段写成非编码区（NCR）misc_feature（`mito_ncr.py`，见下文）。
-- 每条记录画基因组圈图（默认借鉴 mitoPlotR 的环道样式：基因、GC 含量，给 reads 时加测序深度；内含子画斜线并标长度，非编码区画浅灰）。
-
-It can:
-
-- Detect FASTA or GenBank input.
-- Deduplicate GenBank records and convert them to internal FASTA.
-- Generate short internal IDs such as `S00001`.
-- Run the annotation engine in batch: MitoM's core `mito_core.py` (default), or MitoZ / MITOS2 (`--engine`); `mitom import` takes existing results instead.
-- Reorient records by a target gene, defaulting to `cox1`.
-- Optionally run a second annotation pass after reorientation.
-- Restore original GenBank header metadata.
-- Restore `/organism=` inside `FEATURES source`.
-- Write final `.gbf` files, summary tables, logs, failure lists, and merged GenBank archives.
-- Write stretches of >= 100 nt no feature covers as non-coding region (NCR) misc_features (`mito_ncr.py`, below).
-- Draw a circular genome map per record (by default in the lane layout of mitoPlotR: genes, GC content, read depth when reads are given; introns hatched with their length, non-coding regions shaded).
+校正和内含子以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`），出错时只影响这一步；`tests/test_step_argv.py` 检查流水线给它们的参数。旧名 `batch_mitoz.py` 仍可用。
+Curation and introns run as separate processes, so a crash affects only that step; `tests/test_step_argv.py` checks the arguments the pipeline passes them. The old name `batch_mitoz.py` still works.
 
 
 ## 类群与遗传密码自动判断 / --clade auto (mito_classify.py, mitom_groups.py)

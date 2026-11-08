@@ -99,9 +99,9 @@ curate 只改端点和名称，不增删基因。它保留越过下游 tRNA ≤ 
 越过 5–20 nt），请在 Geneious 中核对。
 
 curate changes ends and names only; it never adds or removes genes. A complete stop codon running ≤ 20 nt into the next
-tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6: 5–20 nt) — check these in Geneious.
+tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6: 5–20 nt); check these in Geneious.
 
-## 5. 准确度 / Accuracy
+## 5. 本例与 NCBI 比较 / This genome vs NCBI
 
 本例与 NCBI 注释比较 / this genome vs the NCBI annotation:
 
@@ -122,7 +122,7 @@ tRNA is kept; MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6: 5�
 
 整理让结果全部通过 NCBI 检查、rRNA 端点明显改善，但不能补回 MITOS2 漏的基因，蛋白基因端点仍有不少偏差。
 Curation makes every record NCBI-valid and fixes rRNA ends; it cannot add missed genes, and many MITOS2 protein ends stay off.
-1,050 条 RefSeq（24 门）/ 1,050 records: PCG exact MitoM 84.0 % vs MITOS2 59.4 %（[METHODS.md](METHODS.md)）。
+1,050 条 RefSeq（24 门，2026-10-27 开发期基准，不是冻结评测）/ 1,050 records (development benchmark 2026-10-27): PCG exact MitoM 84.0 % vs MITOS2 59.4 %（[METHODS.md](METHODS.md)）。
 
 “一致”指与 NCBI 写法一致，不等于生物学上正确；MitoM 的规则来自 NCBI 记录。找基因的能力两者接近，差别主要在端点。请人工核对结果。
 “Exact” means as NCBI writes it, not proven biologically right; MitoM's rules were learned from NCBI records. Gene

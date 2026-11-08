@@ -13,7 +13,7 @@ MitoM (command `mitom`) annotates the 13 protein genes, 2 rRNAs, 22 tRNAs and th
 genomes, orients them, curates gene ends and names to NCBI rules, and writes NCBI submission files and genome maps;
 `mitom nuc` annotates nuclear rDNA and histone genes in whole-genome assemblies.
 
-| 精度 / Accuracy（与 NCBI 比较，评测细节见 [docs/METHODS.md](docs/METHODS.md)） | |
+| 精度 / Accuracy（开发期基准，2026-10-27 / 10-29，与 NCBI 比较；不是论文的冻结评测 [benchmark/frozen/PLAN.md](benchmark/frozen/PLAN.md)；细节见 [docs/METHODS.md](docs/METHODS.md)） / development benchmarks, not the frozen evaluation | |
 |---|---|
 | 蛋白基因两端与 NCBI 完全一致 / protein genes, both ends exact | 1,050 条多类群 RefSeq：24 个门全部高于 MITOS2 |
 | NCBI table2asn ERROR | 2,497 条基准记录：0 |

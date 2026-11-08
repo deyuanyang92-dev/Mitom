@@ -19,6 +19,11 @@ installed one.
   Measured: 169 of 170 annelid RefSeq records (2025-03 pool) were already seen, so the test set draws on GenBank too.
 
 ### Changed (structure; outputs unchanged - scripts/golden.py)
+- `tests/test_step_argv.py`: the arguments the pipeline passes to mito_curate.py / mito_intron.py / mito_intron_ref.py
+  are parsed with those scripts' own parsers (they stay separate processes: a crash affects one step only).
+  Docs: METHODS.md opens with the code layout (`mitom` -> mitom_main -> mitom_run.RUN_STAGES) instead of the stale
+  "mitom_pipeline.py is the main program" and a second copy of the step list; README / MITOS2.md accuracy numbers
+  are dated as development benchmarks (2026-10), not the frozen evaluation.
 - Refactoring guard: `scripts/golden.py` runs 6 whole workflows on tests/data (GenBank, intron, two phyla, bare FASTA,
   MitoZ import, curate) and compares every text output with tests/data/golden (`MITOM_GOLDEN=1 pytest tests/test_golden.py`).
 - `pyproject.toml`: MitoM is a Python project (`pip install -e .` gives the `mitom` command; version from

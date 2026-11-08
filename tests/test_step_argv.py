@@ -1,0 +1,38 @@
+"""The pipeline starts mito_curate.py / mito_intron.py / mito_intron_ref.py as programs (crash isolation, captured
+stderr summary lines, fork pools in the child). These tests keep the argument lists the pipeline builds in step with
+the scripts' own parsers: an option renamed or retyped in a script fails here, not in a user's run (review 2026-11-08)."""
+import argparse
+import subprocess
+
+import pytest
+
+import mito_curate
+import mito_intron
+import mito_intron_ref
+import mitom_steps
+
+
+def _script_args(cmd, script):
+    """The arguments after the script path of a [python, (-W ignore), script, ...] command."""
+    i = next(k for k, x in enumerate(cmd) if x.endswith(script))
+    return cmd[i + 1:]
+
+
+@pytest.mark.parametrize("clade", ["Annelida-segmented-worms", "Chordata", "Nematoda", "Mollusca", None])
+def test_curate_command_parses(tmp_path, monkeypatch, clade):
+    seen = []
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: seen.append(cmd) or subprocess.CompletedProcess(cmd, 0, "", ""))
+    args = argparse.Namespace(curate="yes", genetic_code=5, clade=clade, phylum=None)
+    mitom_steps.run_curate(args, tmp_path / "in", tmp_path)
+    a = mito_curate.build_parser().parse_args(_script_args(seen[0], "mito_curate.py"))
+    assert a.genetic_code == 5 and str(a.input) == str(tmp_path / "in") and str(a.out) == str(tmp_path / "05.curated")
+
+
+def test_intron_commands_parse(tmp_path):
+    gb = tmp_path / "gb"
+    denovo = mitom_steps.intron_denovo_cmd(gb, gb, 4, 2, 3, libs=["x.faa"], ref_gbs=["r.gb"], bin_dir="B")
+    a = mito_intron.build_parser().parse_args(_script_args(denovo, "mito_intron.py"))
+    assert a.genetic_code == 4 and a.threads == 2 and a.jobs == 3
+    ref = mitom_steps.intron_ref_cmd(gb, gb, 4, 3, "B", "Eukaryota;Metazoa;Cnidaria")
+    b = mito_intron_ref.build_parser().parse_args(_script_args(ref, "mito_intron_ref.py"))
+    assert b.cmd == "annotate" and b.genetic_code == 4 and b.jobs == 3 and b.lineage == "Eukaryota;Metazoa;Cnidaria"
