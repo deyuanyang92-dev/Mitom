@@ -1,0 +1,169 @@
+>Feature NC_010217
+1	716	gene
+1105	1114
+2233	3075
+			gene	COX1
+1	716	CDS
+1105	1114
+2233	3075
+			gene	COX1
+			codon_start	1
+			transl_table	4
+			product	cytochrome c oxidase subunit I
+			note	exon-intron structure from known intron sites (NC_010217.1; mito_intron_ref); 2 site(s) transferred; junction identity 1.00, 1.00; de novo model kept, 2 intron(s) re-placed at library sites, 0 de novo intron(s) at no library site
+717	1104	intron
+			gene	COX1
+			number	1
+			note	group I intron; site transferred from NC_010217.1 cox1 intron 1 (Plakinastrella cf. onkodes DVL-2011), junction identity 1.00
+1115	2232	intron
+			gene	COX1
+			number	2
+			note	group I intron, subtype IB4 (Selles Vidal et al. 2025, doi:10.1093/bioadv/vbaf020 model, E=1.1e-24); splice score 18; mini-exon 10 nt inserted (gap of ~1 aa in 100% of 10 homologs; MFannot AnnotateMiniExons idea); MFannot method; group I intron; site transferred from NC_010217.1 cox1 intron 2 (Plakinastrella cf. onkodes DVL-2011), junction identity 1.00
+3076	3276	misc_feature
+			note	non-coding region NCR1, 201 bp: no gene annotated
+3277	3348	gene
+			gene	trnQ
+3277	3348	tRNA
+			gene	trnQ
+			product	tRNA-Gln
+			note	anticodon: UUG
+3405	3475	gene
+			gene	trnW
+3405	3475	tRNA
+			gene	trnW
+			product	tRNA-Trp
+			note	anticodon: UCA
+3476	3736	misc_feature
+			note	non-coding region NCR2, 261 bp: no gene annotated
+3737	4912	gene
+			gene	CYTB
+3737	4912	CDS
+			gene	CYTB
+			product	cytochrome b
+			codon_start	1
+			transl_table	4
+4913	5018	misc_feature
+			note	non-coding region NCR3, 106 bp: no gene annotated
+5019	5777	gene
+			gene	COX2
+5019	5777	CDS
+			gene	COX2
+			product	cytochrome c oxidase subunit II
+			codon_start	1
+			transl_table	4
+5803	6003	gene
+			gene	ATP8
+5803	6003	CDS
+			gene	ATP8
+			product	ATP synthase F0 subunit 8
+			codon_start	1
+			transl_table	4
+6005	6748	gene
+			gene	ATP6
+6005	6748	CDS
+			gene	ATP6
+			product	ATP synthase F0 subunit 6
+			codon_start	1
+			transl_table	4
+6790	7575	gene
+			gene	COX3
+6790	7575	CDS
+			gene	COX3
+			product	cytochrome c oxidase subunit III
+			codon_start	1
+			transl_table	4
+7576	8890	gene
+			gene	rrnS
+7576	8890	rRNA
+			gene	rrnS
+			product	12S ribosomal RNA
+8891	8960	gene
+			gene	trnL1
+8891	8960	tRNA
+			gene	trnL1
+			product	tRNA-Leu
+			note	anticodon: UAG
+8961	11553	gene
+			gene	rrnL
+8961	11553	rRNA
+			gene	rrnL
+			product	16S ribosomal RNA
+11554	11626	gene
+			gene	trnP
+11554	11626	tRNA
+			gene	trnP
+			product	tRNA-Pro
+			note	anticodon: UGG
+11635	13110	gene
+			gene	ND4
+11635	13110	CDS
+			gene	ND4
+			product	NADH dehydrogenase subunit 4
+			codon_start	1
+			transl_table	4
+13197	13790	gene
+			gene	ND6
+13197	13790	CDS
+			gene	ND6
+			product	NADH dehydrogenase subunit 6
+			codon_start	1
+			transl_table	4
+13791	13894	misc_feature
+			note	non-coding region NCR4, 104 bp: no gene annotated
+13895	14263	gene
+			gene	ND3
+13895	14263	CDS
+			gene	ND3
+			product	NADH dehydrogenase subunit 3
+			codon_start	1
+			transl_table	4
+14316	15293	gene
+			gene	ND1
+14316	15293	CDS
+			gene	ND1
+			product	NADH dehydrogenase subunit 1
+			codon_start	1
+			transl_table	4
+15294	15625	misc_feature
+			note	non-coding region NCR5, 332 bp: no gene annotated
+15626	15946	gene
+			gene	ND4L
+15626	15946	CDS
+			gene	ND4L
+			product	NADH dehydrogenase subunit 4L
+			codon_start	1
+			transl_table	4
+15965	16016	gene
+			gene	trnY
+15965	16016	tRNA
+			gene	trnY
+			product	tRNA-Tyr
+			note	anticodon: AUA
+16094	16165	gene
+			gene	trnM
+16094	16165	tRNA
+			gene	trnM
+			product	tRNA-Met
+			note	anticodon: CAU
+16203	16273	gene
+			gene	trnM
+16203	16273	tRNA
+			gene	trnM
+			product	tRNA-Met
+			note	anticodon: CAU
+16283	17710	gene
+			gene	ND2
+16283	17710	CDS
+			gene	ND2
+			product	NADH dehydrogenase subunit 2
+			codon_start	1
+			transl_table	4
+17724	19583	gene
+			gene	ND5
+17724	19583	CDS
+			gene	ND5
+			product	NADH dehydrogenase subunit 5
+			codon_start	1
+			transl_table	4
+19584	19790	misc_feature
+			note	non-coding region NCR6, 207 bp: no gene annotated

@@ -1,0 +1,4 @@
+Warning: valid [SEQ_FEAT.MultiIntervalGene] Gene feature on non-segmented sequence should not have multiple intervals FEATURE: Gene: ND5 <10>  [(lcl|NC_008164.1:2893-3609, 5230-6360)] [lcl|NC_008164.1: raw, dna len= 16389]
+Warning: valid [SEQ_DESCR.NoTaxonID] BioSource is missing taxon ID DESCRIPTOR: BioSrc: Nematostella sp. JVK-2006 BIOSEQ-SET: nuc-prot: lcl|NC_008164.1
+Error: valid [SEQ_DESCR.NoPubFound] No publications anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|NC_008164.1
+Info: valid [GENERIC.MissingPubRequirement] No submission citation anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|NC_008164.1

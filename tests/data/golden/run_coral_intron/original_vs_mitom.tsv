@@ -1,0 +1,19 @@
+record	organism	type	gene	original_location	mitom_location	difference_nt	result
+NC_006902.1	Montipora cactus	protein	nad5	2440..15760+	2440..15760+	0	same
+NC_006902.1	Montipora cactus	protein	nad1	3481..4464+	3481..4464+	0	same
+NC_006902.1	Montipora cactus	protein	cob	4571..5728+	4571..5728+	0	same
+NC_006902.1	Montipora cactus	protein	nad2	6263..7360+	6263..7360+	0	same
+NC_006902.1	Montipora cactus	protein	nad6	7393..7986+	7393..7986+	0	same
+NC_006902.1	Montipora cactus	protein	atp6	8057..8755+	8057..8755+	0	same
+NC_006902.1	Montipora cactus	protein	nad4	8935..10410+	8935..10410+	0	same
+NC_006902.1	Montipora cactus	protein	cox3	12238..13026+	12238..13026+	0	same
+NC_006902.1	Montipora cactus	protein	cox2	13082..13825+	13082..13825+	0	same
+NC_006902.1	Montipora cactus	protein	nad4l	13861..14160+	13861..14160+	0	same
+NC_006902.1	Montipora cactus	protein	nad3	14192..14548+	14192..14548+	0	same
+NC_006902.1	Montipora cactus	protein	atp8	15892..16110+	15892..16110+	0	same
+NC_006902.1	Montipora cactus	protein	cox1	16092..17693+	16092..17693+	0	same
+NC_006902.1	Montipora cactus	intron	intron	3161..14645+	3160..14644+	1	ends_differ
+NC_006902.1	Montipora cactus	rRNA	rrnL	72..2337+	72..2439+	102	ends_differ
+NC_006902.1	Montipora cactus	rRNA	rrnS	10439..11610+	10411..11637+	28	ends_differ
+NC_006902.1	Montipora cactus	tRNA	trnM	1..71+	1..71+	0	same
+NC_006902.1	Montipora cactus	tRNA	trnW	15790..15859+	15790..15859+	0	same

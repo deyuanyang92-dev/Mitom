@@ -1,0 +1,4 @@
+record	feature	gene	strand	rule	old	new	reason
+NC_006902.1	rRNA	rrnL	+	R1	1905..4140	1868..4235	trimmed to flanking genes and filled to them
+NC_006902.1	rRNA	rrnS	+	R1	12230..13433	12207..13433	trimmed to flanking genes and filled to them
+NC_006902.1	CDS	ND5	+	P4	4236..17556	4236..17556	multi-interval CDS (intron / origin) - not curated

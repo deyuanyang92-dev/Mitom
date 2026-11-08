@@ -1,0 +1,56 @@
+record	organism	type	gene	original_location	mitom_location	difference_nt	result
+NC_001636.1	Katharina tunicata	protein	cox1	1..1548+	1..1548+	0	same
+NC_001636.1	Katharina tunicata	protein	cox2	2107..2796+	2107..2796+	0	same
+NC_001636.1	Katharina tunicata	protein	atp8	2872..3033+	2872..3033+	0	same
+NC_001636.1	Katharina tunicata	protein	atp6	3037..3729+	3037..3729+	0	same
+NC_001636.1	Katharina tunicata	protein	nad5	3821..5536-	3821..5536-	0	same
+NC_001636.1	Katharina tunicata	protein	nad4	5602..6928-	5602..6928-	0	same
+NC_001636.1	Katharina tunicata	protein	nad4l	6940..7242-	6940..7242-	0	same
+NC_001636.1	Katharina tunicata	protein	cob	7381..8520-	7381..8520-	0	same
+NC_001636.1	Katharina tunicata	protein	nad6	8513..9019-	8513..9019-	0	same
+NC_001636.1	Katharina tunicata	protein	nad1	9082..10032-	9082..10032-	0	same
+NC_001636.1	Katharina tunicata	protein	cox3	12951..13730+	12951..13730+	0	same
+NC_001636.1	Katharina tunicata	protein	nad3	14080..14442+	14080..14442+	0	same
+NC_001636.1	Katharina tunicata	protein	nad2	14514..15530+	14514..15530+	0	same
+NC_001636.1	Katharina tunicata	rRNA	rrnL	10166..11440-	10166..11440-	0	same
+NC_001636.1	Katharina tunicata	rRNA	rrnS	11506..12331-	11506..12331-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnD	1619..1682+	1619..1682+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnF	3758..3822-	3758..3822-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnH	5537..5601-	5537..5601-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnT	7247..7312+	7247..7312+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnS	7312..7378-	7312..7378-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnP	9024..9089+	9024..9089+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnL	10033..10101-	10033..10101-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnL	10101..10165-	10101..10165-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnV	11441..11505-	11441..11505-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnM	12332..12396-	12332..12396-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnC	12403..12464-	12403..12464-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnY	12464..12527-	12464..12527-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnW	12528..12592-	12528..12592-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnQ	12591..12660-	12591..12660-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnG	12662..12725-	12662..12725-	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnE	12744..12809-	12743..12810-	1	ends_differ
+NC_001636.1	Katharina tunicata	tRNA	trnK	13738..13804+	13738..13804+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnA	13801..13865+	13801..13865+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnR	13866..13933+	13866..13933+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnN	13949..14015+	13949..14015+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnI	14014..14078+	14014..14078+	0	same
+NC_001636.1	Katharina tunicata	tRNA	trnS	14447..14512+	14446..14513+	1	ends_differ
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad5	1..3436+	1..3468+	32	ends_differ
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad1	919..1902+	919..1902+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad3	1907..2263+	1907..2263+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad2	3944..5053+	3662..5053+	282	ends_differ
+NC_008164.1	Nematostella sp. JVK-2006	protein	cox2	6172..6915+	6172..6915+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad4	6922..8397+	6922..8397+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad6	8412..9011+	8412..9011+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	cob	9073..10227+	9070..10227+	3	ends_differ
+NC_008164.1	Nematostella sp. JVK-2006	protein	cox3	12485..13273+	12485..13273+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	cox1	13498..15084+	13498..15084+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	nad4l	15127..15426+	15127..15426+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	atp8	15436..15666+	15436..15666+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	protein	atp6	15678..16376+	15678..16376+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	rRNA	rrnS	5345..6037+	5054..6171+	291	ends_differ
+NC_008164.1	Nematostella sp. JVK-2006	rRNA	rrnL	11597..12198+	10341..12484+	1256	ends_differ
+NC_008164.1	Nematostella sp. JVK-2006	tRNA	trnW	3483..3552+	3483..3552+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	tRNA	trnM	10270..10340+	10270..10340+	0	same
+NC_008164.1	Nematostella sp. JVK-2006	intron	intron		718..2337+		only_mitom

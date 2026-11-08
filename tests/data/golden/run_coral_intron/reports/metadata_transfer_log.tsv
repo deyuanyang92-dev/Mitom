@@ -1,0 +1,2 @@
+sample_name	internal_id	metadata_src	body_src	dest	mode
+NC_006902.1	S00001	<REPO>/tests/data/NC_006902.gb	<OUT>/03.anno_round2_reoriented/S00001/S00001.gbf	<OUT>/04.final_gb/NC_006902.1.gbf	metadata_transferred

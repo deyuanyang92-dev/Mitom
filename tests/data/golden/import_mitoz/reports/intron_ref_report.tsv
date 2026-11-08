@@ -1,0 +1,48 @@
+record	gene	ref	ref_organism	junction	lineage_shared	state	splice	donor	acceptor	ident	ident_ex	ident_in	score	why
+KY753833	cox1	PP895296.1|cox1|1	Chaetopterus sp. a JL-2024	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_087806.1|cox1|1	Synelmis amoureuxi	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	EU293739.1|cox1|1	Nephtys sp. 'San Juan Island' YV-2008	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	LC677172.1|cox1|1	Travisia sanrikuensis	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	KT989323.1|cox1|1	Glycera fallax	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	KT989323.1|cox1|1	Glycera fallax	2	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_087808.1|cox1|1	Antonbruunia milenae	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	PP895295.1|cox1|1	Chaetopterus sp. h JL-2024	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	OR637230.1|cox1|1	Chaetopterus qiani	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	KY742027.1|cox1|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_014885.1|cox1|1	Plakina crypta	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_047217.1|cox1|1	Epiactis japonica	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_082103.1|cox1|1	Polymyces wellsi	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	2	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	3	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	4	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	2	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	2	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	3	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	4	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	5	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	6	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	2	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	3	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	LC670763.1|cox1|1	Travisia sp. GK623	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	1	0	unknown				0.000	0.000	0.000	0.0	no alignment on the downstream side of the site
+KY753833	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	2	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad1	KY742027.1|nad1|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad1	KY774370.1|nad1|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad1	KY774371.1|nad1|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad4	KY742027.1|nad4|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad4	KY774370.1|nad4|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad4	KY774371.1|nad4|1	Decemunciger sp. AB-2017	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_083272.1|nad5|1	Acropora cervicornis	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_045931.1|nad5|1	Goniopora djiboutiensis	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_027103.1|nad5|1	Rhodactis indosinensis	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_008158.1|nad5|1	Rhodactis sp. CASIZ 171755	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_027101.1|nad5|1	Amplexidiscus fenestrafer	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_008071.1|nad5|1	Discosoma sp. CASIZ 168915	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_008072.1|nad5|1	Discosoma sp. CASIZ 168916	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_027100.1|nad5|1	Discosoma nummiforme	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_080209.1|nad5|1	Umimayanthus nakama	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+KY753833	nad5	NC_056771.1|nad5|1	Exaiptasia diaphana	1	0	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site

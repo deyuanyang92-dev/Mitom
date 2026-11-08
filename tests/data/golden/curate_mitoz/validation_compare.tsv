@@ -1,0 +1,8 @@
+record	severity	code	feature	before	after	status
+OW387151	ERROR	SEQ_FEAT.InternalStop	CDS: cytochrome c oxidase subunit I	1	0	fixed
+OW387151	ERROR	SEQ_FEAT.NoStop	CDS: NADH dehydrogenase subunit 2	1	0	fixed
+OW387151	ERROR	SEQ_FEAT.NoStop	CDS: NADH dehydrogenase subunit 4	1	0	fixed
+OW387151	ERROR	SEQ_FEAT.NoStop	CDS: NADH dehydrogenase subunit 5	1	0	fixed
+OW387151	ERROR	SEQ_INST.StopInProtein	CDS: cytochrome c oxidase subunit I	1	0	fixed
+OW387151	WARNING	SEQ_FEAT.BadRRNAcomponentOverlapTRNA	tRNA: Leu	1	0	fixed
+OW387151	WARNING	SEQ_FEAT.BadRRNAcomponentOverlapTRNA	tRNA: Val	1	0	fixed

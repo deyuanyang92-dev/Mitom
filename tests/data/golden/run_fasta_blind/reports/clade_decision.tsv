@@ -1,0 +1,2 @@
+record	file	source	phylum	clade	genetic_code	code_from	support	codon_check	closest	group	note
+NC_010217	NC_010217.fasta	blastx (mito_classify)	Porifera	Porifera-sponges	4	closest reference genomes	1.0	consistent	NC_010217 Plakinastrella cf. onkodes DVL-2011	Porifera_gc4	

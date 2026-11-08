@@ -1,0 +1,102 @@
+record	gene	ref	ref_organism	junction	lineage_shared	state	splice	donor	acceptor	ident	ident_ex	ident_in	score	why
+NC_001636.1	cox1	NC_087806.1|cox1|1	Synelmis amoureuxi	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	PP895295.1|cox1|1	Chaetopterus sp. h JL-2024	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	OR637230.1|cox1|1	Chaetopterus qiani	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	PP895294.1|cox1|1	Chaetopterus sp. j JL-2024	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_028710.1|cox1|1	Chaetopterus variopedatus	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_087808.1|cox1|1	Antonbruunia milenae	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	KT989323.1|cox1|1	Glycera fallax	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	KT989323.1|cox1|1	Glycera fallax	2	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	EU293739.1|cox1|1	Nephtys sp. 'San Juan Island' YV-2008	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	LC677172.1|cox1|1	Travisia sanrikuensis	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	KY742027.1|cox1|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	2	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	LC670763.1|cox1|1	Travisia sp. GK623	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_027106.1|cox1|1	Ricordea yuma	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_047217.1|cox1|1	Epiactis japonica	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_082103.1|cox1|1	Polymyces wellsi	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	4	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	4	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	5	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	6	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	1	2	unknown				0.000	0.000	0.000	0.0	no alignment on the downstream side of the site
+NC_001636.1	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad1	KY742027.1|nad1|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad1	KY774370.1|nad1|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad1	KY774371.1|nad1|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad4	KY774370.1|nad4|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad4	KY774371.1|nad4|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad4	KY742027.1|nad4|1	Decemunciger sp. AB-2017	1	4	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_007224.1|nad5|1	Orbicella annularis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_007225.1|nad5|1	Orbicella franksi	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_007226.1|nad5|1	Orbicella faveolata	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_009797.1|nad5|1	Pocillopora damicornis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_009798.1|nad5|1	Pocillopora grandis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_077518.1|nad5|1	Homophyllia bowerbanki	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_011162.1|nad5|1	Stylophora pistillata	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_065774.1|nad5|1	Heterocyathus sulcatus	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	nad5	NC_056771.1|nad5|1	Exaiptasia diaphana	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_001636.1	rrnL	NC_041549.1|rrnL|1	Polyplacotoma mediterranea	1	2	unknown				0.000	0.000	0.000	0.0	no alignment on the downstream side of the site
+NC_008164.1	cox1	NC_047218.1|cox1|1	Haloclava producta	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_027615.1|cox1|1	Cylista ornata	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_045515.1|cox1|1	Diadumene lineata	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_027612.1|cox1|1	Halcampoides purpureus	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_000933.1|cox1|1	Metridium senile	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_027611.1|cox1|1	Antholoba achates	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_049066.1|cox1|1	Entacmaea quadricolor	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_066448.1|cox1|1	Heteractis doreensis	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_047217.1|cox1|1	Epiactis japonica	1	6	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_082103.1|cox1|1	Polymyces wellsi	1	5	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_040169.1|cox1|1	Echinophyllia aspera	1	5	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_060802.1|cox1|1	Diploastrea heliopora	1	5	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	4	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	4	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	5	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	6	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_087808.1|cox1|1	Antonbruunia milenae	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	OR637230.1|cox1|1	Chaetopterus qiani	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	KY742027.1|cox1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	LC677172.1|cox1|1	Travisia sanrikuensis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	KT989323.1|cox1|1	Glycera fallax	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	KT989323.1|cox1|1	Glycera fallax	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	LC670763.1|cox1|1	Travisia sp. GK623	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	1	2	unknown				0.000	0.000	0.000	0.0	no alignment on the downstream side of the site
+NC_008164.1	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	nad1	KY742027.1|nad1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	nad1	KY774370.1|nad1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	nad1	KY774371.1|nad1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	nad4	KY774370.1|nad4|1	Decemunciger sp. AB-2017	1	2	weak	cis	+7710	+11067	0.300	0.283	0.317	-9.0	junction identity 0.30 < 0.5: no recognisably homologous junction
+NC_008164.1	nad4	KY774371.1|nad4|1	Decemunciger sp. AB-2017	1	2	weak	cis	+7710	+11067	0.300	0.283	0.317	-9.0	junction identity 0.30 < 0.5: no recognisably homologous junction
+NC_008164.1	nad4	KY742027.1|nad4|1	Decemunciger sp. AB-2017	1	2	weak	cis	+7710	+11067	0.300	0.283	0.317	-9.0	junction identity 0.30 < 0.5: no recognisably homologous junction
+NC_008164.1	nad5	NC_008164.1|nad5|1	Nematostella sp. JVK-2006	1	1000	present	cis	+3609	+5230	1.000	1.000	1.000	136.0	
+NC_008164.1	nad5	NC_027612.1|nad5|1	Halcampoides purpureus	1	6	present	cis	+3609	+5230	0.900	0.933	0.867	124.0	
+NC_008164.1	nad5	NC_049066.1|nad5|1	Entacmaea quadricolor	1	6	present	cis	+3609	+5230	0.808	0.967	0.650	114.5	
+NC_008164.1	nad5	NC_066448.1|nad5|1	Heteractis doreensis	1	6	present	cis	+3609	+5230	0.808	0.967	0.650	114.5	
+NC_008164.1	nad5	NC_047221.1|nad5|1	Liponema brevicorne	1	6	present	cis	+3609	+5230	0.817	0.967	0.667	116.5	
+NC_008164.1	nad5	NC_022470.1|nad5|1	Bolocera tuediae	1	6	present	cis	+3609	+5230	0.817	0.967	0.667	116.5	
+NC_008164.1	nad5	NC_045515.1|nad5|1	Diadumene lineata	1	6	present	cis	+3609	+5230	0.817	0.933	0.700	118.5	
+NC_008164.1	nad5	NC_047217.1|nad5|1	Epiactis japonica	1	6	present	cis	+3609	+5230	0.825	0.967	0.683	118.5	
+NC_008164.1	nad5	NC_056771.1|nad5|1	Exaiptasia diaphana	1	6	present	cis	+3609	+5230	0.750	0.917	0.583	100.5	
+NC_008164.1	rrnL	NC_041549.1|rrnL|1	Polyplacotoma mediterranea	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_008164.1	nad5	NC_008164.1				model								high: 1 site(s) transferred; junction identity 1.00; de novo model kept, 1 intron(s) re-placed at library sites, 0 de novo intron(s) at no library site

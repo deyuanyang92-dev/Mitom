@@ -1,0 +1,125 @@
+>Feature NC_006902.1
+1	1602	gene
+			gene	COX1
+1	1602	CDS
+			gene	COX1
+			product	cytochrome c oxidase subunit I
+			codon_start	1
+			transl_table	4
+17688	17887	gene
+1	19
+			gene	ATP8
+17688	17887	CDS
+1	19
+			gene	ATP8
+			product	ATP synthase F0 subunit 8
+			codon_start	1
+			transl_table	4
+1603	1796	misc_feature
+			note	non-coding region NCR1, 194 bp: no gene annotated
+1797	1867	gene
+			gene	trnM
+1797	1867	tRNA
+			gene	trnM
+			product	tRNA-Met
+			note	anticodon: CAU
+1868	4235	gene
+			gene	rrnL
+1868	4235	rRNA
+			gene	rrnL
+			product	16S ribosomal RNA
+4236	4955	gene
+16441	17556
+			gene	ND5
+4236	4955	CDS
+16441	17556
+			gene	ND5
+			codon_start	1
+			transl_table	4
+			product	NADH dehydrogenase subunit 5
+			note	exon-intron structure from known intron sites (NC_006902.1; mito_intron_ref); 1 site(s) transferred; junction identity 1.00; de novo model kept, 1 intron(s) re-placed at library sites, 0 de novo intron(s) at no library site
+4956	16440	intron
+			gene	ND5
+			number	1
+			note	group I intron; site transferred from NC_006902.1 nad5 intron 1 (Montipora cactus), junction identity 1.00
+5277	6260	gene
+			gene	ND1
+5277	6260	CDS
+			gene	ND1
+			product	NADH dehydrogenase subunit 1
+			codon_start	1
+			transl_table	4
+6367	7524	gene
+			gene	CYTB
+6367	7524	CDS
+			gene	CYTB
+			product	cytochrome b
+			codon_start	1
+			transl_table	4
+8059	9156	gene
+			gene	ND2
+8059	9156	CDS
+			gene	ND2
+			product	NADH dehydrogenase subunit 2
+			codon_start	1
+			transl_table	4
+9189	9782	gene
+			gene	ND6
+9189	9782	CDS
+			gene	ND6
+			product	NADH dehydrogenase subunit 6
+			codon_start	1
+			transl_table	4
+9853	10551	gene
+			gene	ATP6
+9853	10551	CDS
+			gene	ATP6
+			product	ATP synthase F0 subunit 6
+			codon_start	1
+			transl_table	4
+10731	12206	gene
+			gene	ND4
+10731	12206	CDS
+			gene	ND4
+			product	NADH dehydrogenase subunit 4
+			codon_start	1
+			transl_table	4
+12207	13433	gene
+			gene	rrnS
+12207	13433	rRNA
+			gene	rrnS
+			product	12S ribosomal RNA
+14034	14822	gene
+			gene	COX3
+14034	14822	CDS
+			gene	COX3
+			product	cytochrome c oxidase subunit III
+			codon_start	1
+			transl_table	4
+14878	15621	gene
+			gene	COX2
+14878	15621	CDS
+			gene	COX2
+			product	cytochrome c oxidase subunit II
+			codon_start	1
+			transl_table	4
+15657	15956	gene
+			gene	ND4L
+15657	15956	CDS
+			gene	ND4L
+			product	NADH dehydrogenase subunit 4L
+			codon_start	1
+			transl_table	4
+15988	16344	gene
+			gene	ND3
+15988	16344	CDS
+			gene	ND3
+			product	NADH dehydrogenase subunit 3
+			codon_start	1
+			transl_table	4
+17586	17655	gene
+			gene	trnW
+17586	17655	tRNA
+			gene	trnW
+			product	tRNA-Trp
+			note	anticodon: UCA

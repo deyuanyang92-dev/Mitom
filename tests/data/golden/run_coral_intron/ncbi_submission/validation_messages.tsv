@@ -1,0 +1,2 @@
+record	severity	code	message
+NC_006902.1	WARNING	SEQ_FEAT.MultiIntervalGene	Gene feature on non-segmented sequence should not have multiple intervals FEATURE: Gene: ND5 <6>  [(lcl|NC_006902.1:4236-4955, 16441-17556)] [lcl|NC_006902.1: raw, dna len= 17887]

@@ -1,0 +1,4 @@
+Warning: valid [SEQ_FEAT.MultiIntervalGene] Gene feature on non-segmented sequence should not have multiple intervals FEATURE: Gene: ND5 <6>  [(lcl|NC_006902.1:4236-4955, 16441-17556)] [lcl|NC_006902.1: raw, dna len= 17887]
+Warning: valid [SEQ_DESCR.NoTaxonID] BioSource is missing taxon ID DESCRIPTOR: BioSrc: Montipora cactus BIOSEQ-SET: nuc-prot: lcl|NC_006902.1
+Error: valid [SEQ_DESCR.NoPubFound] No publications anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|NC_006902.1
+Info: valid [GENERIC.MissingPubRequirement] No submission citation anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|NC_006902.1

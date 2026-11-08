@@ -1,0 +1,3 @@
+record	file	source	phylum	clade	genetic_code	code_from	support	codon_check	closest	group	note
+NC_001636.1	NC_001636.gb	GenBank taxonomy	Mollusca	Mollusca	5	CDS transl_table				Mollusca_gc5	
+NC_008164.1	NC_008164.gb	GenBank taxonomy	Cnidaria	Cnidaria	4	CDS transl_table				Cnidaria_gc4	

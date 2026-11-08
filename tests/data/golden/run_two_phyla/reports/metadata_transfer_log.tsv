@@ -1,0 +1,3 @@
+sample_name	internal_id	metadata_src	body_src	dest	mode
+NC_001636.1	S00001	<OUT>/_groups/Mollusca_gc5/input/NC_001636.gb	<OUT>/_groups/Mollusca_gc5/out/01.anno_round1/S00001/reoriented/S00001.reoriented.gbf	<OUT>/_groups/Mollusca_gc5/out/04.final_gb/NC_001636.1.gbf	metadata_transferred
+NC_008164.1	S00001	<OUT>/_groups/Cnidaria_gc4/input/NC_008164.gb	<OUT>/_groups/Cnidaria_gc4/out/01.anno_round1/S00001/reoriented/S00001.reoriented.gbf	<OUT>/_groups/Cnidaria_gc4/out/04.final_gb/NC_008164.1.gbf	metadata_transferred

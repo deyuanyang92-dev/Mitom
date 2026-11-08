@@ -1,0 +1,125 @@
+>Feature NC_008164.1
+1	1587	gene
+			gene	COX1
+1	1587	CDS
+			gene	COX1
+			product	cytochrome c oxidase subunit I
+			codon_start	1
+			transl_table	4
+1630	1929	gene
+			gene	ND4L
+1630	1929	CDS
+			gene	ND4L
+			product	NADH dehydrogenase subunit 4L
+			codon_start	1
+			transl_table	4
+1939	2169	gene
+			gene	ATP8
+1939	2169	CDS
+			gene	ATP8
+			product	ATP synthase F0 subunit 8
+			codon_start	1
+			transl_table	4
+2181	2879	gene
+			gene	ATP6
+2181	2879	CDS
+			gene	ATP6
+			product	ATP synthase F0 subunit 6
+			codon_start	1
+			transl_table	4
+2893	3609	gene
+5230	6360
+			gene	ND5
+2893	3609	CDS
+5230	6360
+			gene	ND5
+			codon_start	1
+			transl_table	4
+			product	NADH dehydrogenase subunit 5
+			note	exon-intron structure from known intron sites (NC_008164.1; mito_intron_ref); 1 site(s) transferred; junction identity 1.00; de novo model kept, 1 intron(s) re-placed at library sites, 0 de novo intron(s) at no library site
+3610	5229	intron
+			gene	ND5
+			number	1
+			note	group I intron; site transferred from NC_008164.1 nad5 intron 1 (Nematostella sp. JVK-2006), junction identity 1.00
+3811	4794	gene
+			gene	ND1
+3811	4794	CDS
+			gene	ND1
+			product	NADH dehydrogenase subunit 1
+			codon_start	1
+			transl_table	4
+4799	5155	gene
+			gene	ND3
+4799	5155	CDS
+			gene	ND3
+			product	NADH dehydrogenase subunit 3
+			codon_start	1
+			transl_table	4
+6375	6444	gene
+			gene	trnW
+6375	6444	tRNA
+			gene	trnW
+			product	tRNA-Trp
+			note	anticodon: UCA
+6445	6553	misc_feature
+			note	non-coding region NCR1, 109 bp: no gene annotated
+6554	7945	gene
+			gene	ND2
+6554	7945	CDS
+			gene	ND2
+			product	NADH dehydrogenase subunit 2
+			codon_start	1
+			transl_table	4
+7946	9063	gene
+			gene	rrnS
+7946	9063	rRNA
+			gene	rrnS
+			product	12S ribosomal RNA
+9064	9807	gene
+			gene	COX2
+9064	9807	CDS
+			gene	COX2
+			product	cytochrome c oxidase subunit II
+			codon_start	1
+			transl_table	4
+9814	11289	gene
+			gene	ND4
+9814	11289	CDS
+			gene	ND4
+			product	NADH dehydrogenase subunit 4
+			codon_start	1
+			transl_table	4
+11304	11903	gene
+			gene	ND6
+11304	11903	CDS
+			gene	ND6
+			product	NADH dehydrogenase subunit 6
+			codon_start	1
+			transl_table	4
+11962	13119	gene
+			gene	CYTB
+11962	13119	CDS
+			gene	CYTB
+			product	cytochrome b
+			codon_start	1
+			transl_table	4
+13162	13232	gene
+			gene	trnM
+13162	13232	tRNA
+			gene	trnM
+			product	tRNA-Met
+			note	anticodon: CAU
+13233	15376	gene
+			gene	rrnL
+13233	15376	rRNA
+			gene	rrnL
+			product	16S ribosomal RNA
+15377	16165	gene
+			gene	COX3
+15377	16165	CDS
+			gene	COX3
+			product	cytochrome c oxidase subunit III
+			codon_start	1
+			transl_table	4
+16166	16389	misc_feature
+			note	non-coding region NCR2, 224 bp: no gene annotated

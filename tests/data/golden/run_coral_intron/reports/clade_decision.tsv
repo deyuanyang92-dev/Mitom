@@ -1,0 +1,2 @@
+record	file	source	phylum	clade	genetic_code	code_from	support	codon_check	closest	group	note
+NC_006902.1	NC_006902.gb	GenBank taxonomy	Cnidaria	Cnidaria	4	CDS transl_table				Cnidaria_gc4	

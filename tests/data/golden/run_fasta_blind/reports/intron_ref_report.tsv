@@ -1,0 +1,54 @@
+record	gene	ref	ref_organism	junction	lineage_shared	state	splice	donor	acceptor	ident	ident_ex	ident_in	score	why
+NC_010217	cox1	NC_010217.1|cox1|1	Plakinastrella cf. onkodes DVL-2011	1	1000	present	cis	+18277	+18666	1.000	1.000	1.000	133.0	
+NC_010217	cox1	NC_010217.1|cox1|1	Plakinastrella cf. onkodes DVL-2011	2	1000	present	cis	+18675	+4	1.000	1.000	1.000	126.0	
+NC_010217	cox1	NC_014885.1|cox1|1	Plakina crypta	1	3	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_045515.1|cox1|1	Diadumene lineata	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_000933.1|cox1|1	Metridium senile	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_046403.1|cox1|1	Palythoa mizigama	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_046406.1|cox1|1	Sphenopus marsupialis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_026530.1|cox1|1	Pseudosiderastrea formosa	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_080260.1|cox1|1	Palythoa caribaeorum	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_047217.1|cox1|1	Epiactis japonica	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_082103.1|cox1|1	Polymyces wellsi	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_060802.1|cox1|1	Diploastrea heliopora	1	2	weak	cis	+18284	+4	0.508	0.650	0.367	63.0	reference of another phylum (Cnidaria) with junction identity 0.51 < 0.8
+NC_010217	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	1	2	weak	cis	+18284	+4	0.408	0.483	0.333	14.0	junction identity 0.41 < 0.5: no recognisably homologous junction
+NC_010217	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	2	2	weak	cis	+18301	+12	0.375	0.567	0.183	8.5	junction identity 0.38 < 0.5: no recognisably homologous junction
+NC_010217	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_041549.1|cox1|1	Polyplacotoma mediterranea	4	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	2	2	weak	cis	+18282	+19786	0.367	0.433	0.300	14.0	junction identity 0.37 < 0.5: no recognisably homologous junction
+NC_010217	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	3	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	4	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	5	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_015309.1|cox1|1	Placozoan sp. 'Shirahama'	6	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	OR637230.1|cox1|1	Chaetopterus qiani	1	2	weak	cis	+18300	+11	0.317	0.300	0.333	24.5	junction identity 0.32 < 0.5: no recognisably homologous junction
+NC_010217	cox1	NC_087808.1|cox1|1	Antonbruunia milenae	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	KT989323.1|cox1|1	Glycera fallax	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	KT989323.1|cox1|1	Glycera fallax	2	2	weak	cis	+18274	+19781	0.317	0.300	0.333	25.0	junction identity 0.32 < 0.5: no recognisably homologous junction
+NC_010217	cox1	KY742027.1|cox1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	LC677172.1|cox1|1	Travisia sanrikuensis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	1	2	weak	cis	+18299	+10	0.325	0.267	0.383	36.5	junction identity 0.33 < 0.5: no recognisably homologous junction
+NC_010217	cox1	FJ975144.1|cox1|1	Endomyzostoma sp. MZ-2009	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_008151.3|cox1|1	Trichoplax adhaerens	3	2	weak	cis	+18286	+6	0.475	0.650	0.300	19.0	junction identity 0.47 < 0.5: no recognisably homologous junction
+NC_010217	cox1	LC670763.1|cox1|1	Travisia sp. GK623	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	1	2	unknown				0.000	0.000	0.000	0.0	no alignment on the downstream side of the site
+NC_010217	cox1	NC_008151.3|cox1|2	Trichoplax adhaerens	2	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad1	KY742027.1|nad1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad1	KY774370.1|nad1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad1	KY774371.1|nad1|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad4	KY774370.1|nad4|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad4	KY774371.1|nad4|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad4	KY742027.1|nad4|1	Decemunciger sp. AB-2017	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_045515.1|nad5|1	Diadumene lineata	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_047218.1|nad5|1	Haloclava producta	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_030274.1|nad5|1	Anthopleura anjunae	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_071915.1|nad5|1	Paracondylactis sinensis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_037177.1|nad5|1	Anemonia viridis	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_049065.1|nad5|1	Anemonia sulcata	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_047217.1|nad5|1	Epiactis japonica	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_047220.1|nad5|1	Radianthus crispa	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	nad5	NC_056771.1|nad5|1	Exaiptasia diaphana	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	rrnL	NC_041549.1|rrnL|1	Polyplacotoma mediterranea	1	2	absent				0.000	0.000	0.000	0.0	reference aligned contiguously across the site
+NC_010217	cox1	NC_010217.1				model								high: 2 site(s) transferred; junction identity 1.00, 1.00; de novo model kept, 2 intron(s) re-placed at library sites, 0 de novo intron(s) at no library site

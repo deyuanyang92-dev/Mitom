@@ -1,0 +1,5 @@
+record	feature	gene	strand	rule	old	new	reason
+KY753833	rRNA	rrnS	+	R1	9833..10652	9833..10643	trimmed to flanking genes and filled to them
+KY753833	rRNA	rrnL	+	R1	10679..12020	10708..11997	trimmed to flanking genes and filled to them
+KY753833	CDS	COX1	+	P3	1..1543	1..1556	abbreviated stop T/TA immediately before downstream tRNA
+KY753833	CDS	ND5	+	P1	6071..7712	6017..7712	start codon nearest the preceding gene without overlap

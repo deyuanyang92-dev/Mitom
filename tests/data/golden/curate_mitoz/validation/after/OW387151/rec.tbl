@@ -1,0 +1,243 @@
+>Feature OW387151
+1	65	gene
+			gene	trnF
+1	65	tRNA
+			gene	trnF
+			product	tRNA-Phe
+			note	anticodon: GAA
+72	136	gene
+			gene	trnE
+72	136	tRNA
+			gene	trnE
+			product	tRNA-Glu
+			note	anticodon: UUC
+142	207	gene
+			gene	trnP
+142	207	tRNA
+			gene	trnP
+			product	tRNA-Pro
+			note	anticodon: UGG
+211	277	gene
+			gene	trnT
+211	277	tRNA
+			gene	trnT
+			product	tRNA-Thr
+			note	anticodon: UGU
+279	575	gene
+			gene	ND4L
+279	575	CDS
+			gene	ND4L
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 4L
+569	1931	gene
+			gene	ND4
+569	1931	CDS
+			gene	ND4
+			note	TAA stop codon is completed by the addition of 3' A residues to the mRNA
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 4
+			transl_except	(pos:1931,aa:TERM)
+1932	1994	gene
+			gene	trnC
+1932	1994	tRNA
+			gene	trnC
+			product	tRNA-Cys
+			note	anticodon: GCA
+2003	2067	gene
+			gene	trnG
+2003	2067	tRNA
+			gene	trnG
+			product	tRNA-Gly
+			note	anticodon: UCC
+2068	2134	gene
+			gene	trnM
+2068	2134	tRNA
+			gene	trnM
+			product	tRNA-Met
+			note	anticodon: CAU
+2135	2949	gene
+			gene	rrnS
+2135	2949	rRNA
+			gene	rrnS
+			product	12S ribosomal RNA
+2950	3017	gene
+			gene	trnV
+2950	3017	tRNA
+			gene	trnV
+			product	tRNA-Val
+			note	anticodon: UAC
+3018	4347	gene
+			gene	rrnL
+3018	4347	rRNA
+			gene	rrnL
+			product	16S ribosomal RNA
+4348	4413	gene
+			gene	trnL1
+4348	4413	tRNA
+			gene	trnL1
+			product	tRNA-Leu
+			note	anticodon: UAG
+4419	4485	gene
+			gene	trnA
+4419	4485	tRNA
+			gene	trnA
+			product	tRNA-Ala
+			note	anticodon: UGC
+5270	5337	gene
+			gene	trnS2
+5270	5337	tRNA
+			gene	trnS2
+			product	tRNA-Ser
+			note	anticodon: UGA
+5338	6273	gene
+			gene	ND1
+5338	6273	CDS
+			gene	ND1
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 1
+6273	6341	gene
+			gene	trnI
+6273	6341	tRNA
+			gene	trnI
+			product	tRNA-Ile
+			note	anticodon: GAU
+6342	6408	gene
+			gene	trnK
+6342	6408	tRNA
+			gene	trnK
+			product	tRNA-Lys
+			note	anticodon: UUU
+6409	6762	gene
+			gene	ND3
+6409	6762	CDS
+			gene	ND3
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 3
+6765	6832	gene
+			gene	trnS1
+6765	6832	tRNA
+			gene	trnS1
+			product	tRNA-Ser
+			note	anticodon: UCU
+6833	7873	gene
+			gene	ND2
+6833	7873	CDS
+			gene	ND2
+			note	TAA stop codon is completed by the addition of 3' Aresidues to the mRNA
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 2
+7845	9389	gene
+			gene	COX1
+			pseudo
+7845	9389	CDS
+			gene	COX1
+			note	TAA stop codon is completed by the addition of 3' Aresidues to the mRNA
+			note	internal stop codon(s): not translated
+			codon_start	1
+			transl_table	5
+			product	cytochrome c oxidase subunit I
+			pseudo
+9387	9454	gene
+			gene	trnN
+9387	9454	tRNA
+			gene	trnN
+			product	tRNA-Asn
+			note	anticodon: GUU
+9455	10141	gene
+			gene	COX2
+9455	10141	CDS
+			gene	COX2
+			codon_start	1
+			transl_table	5
+			product	cytochrome c oxidase subunit II
+10141	10206	gene
+			gene	trnD
+10141	10206	tRNA
+			gene	trnD
+			product	tRNA-Asp
+			note	anticodon: GUC
+10207	10365	gene
+			gene	ATP8
+10207	10365	CDS
+			gene	ATP8
+			codon_start	1
+			transl_table	5
+			product	ATP synthase F0 subunit 8
+10365	10431	gene
+			gene	trnY
+10365	10431	tRNA
+			gene	trnY
+			product	tRNA-Tyr
+			note	anticodon: GUA
+10435	11214	gene
+			gene	COX3
+10435	11214	CDS
+			gene	COX3
+			codon_start	1
+			transl_table	5
+			product	cytochrome c oxidase subunit III
+11223	11291	gene
+			gene	trnQ
+11223	11291	tRNA
+			gene	trnQ
+			product	tRNA-Gln
+			note	anticodon: UUG
+11292	11780	gene
+			gene	ND6
+11292	11780	CDS
+			gene	ND6
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 6
+11773	12927	gene
+			gene	CYTB
+11773	12927	CDS
+			gene	CYTB
+			codon_start	1
+			transl_table	5
+			product	cytochrome b
+12911	12975	gene
+			gene	trnL2
+12911	12975	tRNA
+			gene	trnL2
+			product	tRNA-Leu
+			note	anticodon: UAA
+12976	13044	gene
+			gene	trnW
+12976	13044	tRNA
+			gene	trnW
+			product	tRNA-Trp
+			note	anticodon: UCA
+13045	13746	gene
+			gene	ATP6
+13045	13746	CDS
+			gene	ATP6
+			codon_start	1
+			transl_table	5
+			product	ATP synthase F0 subunit 6
+13745	13814	gene
+			gene	trnR
+13745	13814	tRNA
+			gene	trnR
+			product	tRNA-Arg
+			note	anticodon: UCG
+13816	13880	gene
+			gene	trnH
+13816	13880	tRNA
+			gene	trnH
+			product	tRNA-His
+			note	anticodon: GUG
+13881	15570	gene
+			gene	ND5
+13881	15570	CDS
+			gene	ND5
+			note	TAA stop codon is completed by the addition of 3' A residues to the mRNA
+			codon_start	1
+			transl_table	5
+			product	NADH dehydrogenase subunit 5
+			transl_except	(pos:15570,aa:TERM)

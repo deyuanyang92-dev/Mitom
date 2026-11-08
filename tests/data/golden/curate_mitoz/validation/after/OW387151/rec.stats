@@ -1,0 +1,18 @@
+Total messages:		3
+
+=================================================================
+1 INFO-level messages exist
+
+GENERIC.MissingPubRequirement:	1
+
+=================================================================
+1 WARNING-level messages exist
+
+SEQ_DESCR.NoTaxonID:	1
+
+=================================================================
+1 ERROR-level messages exist
+
+SEQ_DESCR.NoPubFound:	1
+
+=================================================================

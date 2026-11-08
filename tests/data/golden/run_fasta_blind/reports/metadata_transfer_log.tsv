@@ -1,0 +1,2 @@
+sample_name	internal_id	metadata_src	body_src	dest	mode
+NC_010217	S00001	NA	<OUT>/01.anno_round1/S00001/reoriented/S00001.reoriented.gbf	<OUT>/04.final_gb/NC_010217.gbf	rewritten_no_metadata

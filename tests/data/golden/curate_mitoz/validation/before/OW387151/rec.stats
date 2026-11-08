@@ -1,0 +1,22 @@
+Total messages:		10
+
+=================================================================
+1 INFO-level messages exist
+
+GENERIC.MissingPubRequirement:	1
+
+=================================================================
+3 WARNING-level messages exist
+
+SEQ_DESCR.NoTaxonID:	1
+SEQ_FEAT.BadRRNAcomponentOverlapTRNA:	2
+
+=================================================================
+6 ERROR-level messages exist
+
+SEQ_INST.StopInProtein:	1
+SEQ_DESCR.NoPubFound:	1
+SEQ_FEAT.InternalStop:	1
+SEQ_FEAT.NoStop:	3
+
+=================================================================

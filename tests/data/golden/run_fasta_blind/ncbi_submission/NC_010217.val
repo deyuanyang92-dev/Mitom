@@ -1,0 +1,5 @@
+Warning: valid [SEQ_FEAT.MultiIntervalGene] Gene feature on non-segmented sequence should not have multiple intervals FEATURE: Gene: COX1 <2>  [(lcl|NC_010217:1-716, 1105-1114, 2233-3075)] [lcl|NC_010217: raw, dna len= 19790]
+Warning: valid [SEQ_FEAT.ShortExon] Internal coding region exon is too short at position 1105-1114 FEATURE: CDS: cytochrome c oxidase subunit I <1>  [(lcl|NC_010217:1-716, 1105-1114, 2233-3075)] [lcl|NC_010217: raw, dna len= 19790] -> [lcl|NC_010217_1]
+Warning: valid [SEQ_DESCR.NoTaxonID] BioSource is missing taxon ID DESCRIPTOR: BioSrc: . BIOSEQ-SET: nuc-prot: lcl|NC_010217
+Error: valid [SEQ_DESCR.NoPubFound] No publications anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|NC_010217
+Info: valid [GENERIC.MissingPubRequirement] No submission citation anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|NC_010217

@@ -1,0 +1,2 @@
+sample_name	length	label	label_from	topology	changed	reason
+NC_010217	19790	circular	FASTA without topology=: decided from the sequence	circular	no	no topology label, no gene cut at the ends, complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 7 tRNAs)

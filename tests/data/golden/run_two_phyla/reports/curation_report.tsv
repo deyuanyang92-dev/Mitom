@@ -1,0 +1,8 @@
+record	feature	gene	strand	rule	old	new	reason
+NC_001636.1	rRNA	rrnL	-	R1	10153..11436	10166..11440	trimmed to flanking genes and filled to them
+NC_001636.1	rRNA	rrnS	-	R1	11477..12362	11506..12331	trimmed to flanking genes and filled to them
+NC_001636.1	CDS	ND4	-	P3	5603..6928	5602..6928	abbreviated stop T/TA immediately before downstream tRNA
+NC_008164.1	rRNA	rrnS	+	R1	7990..9065	7946..9063	trimmed to flanking genes and filled to them
+NC_008164.1	rRNA	rrnL	+	R1	13262..15390	13233..15376	trimmed to flanking genes and filled to them
+NC_008164.1	CDS	ND5	+	P4	2893..6360	2893..6360	multi-interval CDS (intron / origin) - not curated
+NC_008164.1	CDS	CYTB	+	P1	11965..13119	11962..13119	start codon nearest the preceding gene without overlap

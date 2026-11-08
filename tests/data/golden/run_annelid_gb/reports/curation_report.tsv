@@ -1,0 +1,9 @@
+record	feature	gene	strand	rule	old	new	reason
+NC_000931.1	rRNA	rrnS	+	R1	10826..11618	10828..11617	trimmed to flanking genes and filled to them
+NC_000931.1	rRNA	rrnL	+	R1	11669..12866	11681..12852	trimmed to flanking genes and filled to them
+NC_000931.1	CDS	COX1	+	P3	1..1533	1..1534	abbreviated stop T/TA immediately before downstream tRNA
+NC_000931.1	CDS	ATP8	+	P3	3634..3792	3634..3793	abbreviated stop T/TA immediately before downstream tRNA
+NC_000931.1	CDS	COX3	+	P3	3957..4733	3957..4734	abbreviated stop T/TA immediately before downstream tRNA
+NC_000931.1	CDS	ND6	+	P3	4807..5262	4807..5263	abbreviated stop T/TA immediately before downstream gene
+NC_000931.1	CDS	ND5	+	P3	7279..8958	7279..8959	abbreviated stop T/TA immediately before downstream tRNA
+NC_000931.1	CDS	ND1	+	P3	13105..14028	13105..14029	abbreviated stop T/TA immediately before downstream tRNA

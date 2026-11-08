@@ -1,0 +1,4 @@
+record	feature	gene	strand	rule	old	new	reason
+NC_010217	rRNA	rrnS	+	R1	7623..8890	7576..8890	trimmed to flanking genes and filled to them
+NC_010217	rRNA	rrnL	+	R1	9014..11480	8961..11553	trimmed to flanking genes and filled to them
+NC_010217	CDS	COX1	+	P4	1..3075	1..3075	multi-interval CDS (intron / origin) - not curated

@@ -1,0 +1,2 @@
+record	file	source	phylum	clade	genetic_code	code_from	support	codon_check	closest	group	note
+NC_000931.1	NC_000931.gb	GenBank taxonomy	Annelida	Annelida-segmented-worms	5	CDS transl_table				Annelida_gc5	

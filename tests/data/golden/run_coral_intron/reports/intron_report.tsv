@@ -1,0 +1,2 @@
+record	gene	strand	cds	intron	intron_start	intron_end	intron_len	confidence	written	evidence	note	homolog	homolog_coverage	exonerate_score
+NC_006902.1	ND5	+	4236..4955,16441..17556	1	4956	16440	11485	high	yes	all introns typed (Rfam), spliced CDS without internal stop	group I intron, subtype IB3 (Selles Vidal et al. 2025, doi:10.1093/bioadv/vbaf020 model, E=0.0062); splice score 14.5; MFannot method; 5'/3' end from existing CDS: end	metridium senile nad5	1.00	2367

@@ -1,0 +1,6 @@
+record	feature	gene	strand	rule	old	new	reason
+OW387151	rRNA	rrnS	+	R1	2133..2954	2135..2949	trimmed to flanking genes and filled to them
+OW387151	rRNA	rrnL	+	R1	2989..4370	3018..4347	trimmed to flanking genes and filled to them
+OW387151	CDS	ND2	+	P3	6833..7829	6833..7873	first in-frame complete stop codon
+OW387151	CDS	COX1	+	P4	7845..9389	7845..9389	24 internal stop codon(s): wrong frame, frameshift (assembly indel?) or unannotated intron - check manually
+OW387151	CDS	COX1	+	P10	7845..9389	7845..9389	CDS with internal stop codons written /pseudo (not translated)
