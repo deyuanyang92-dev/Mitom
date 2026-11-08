@@ -19,6 +19,12 @@ installed one.
   Measured: 169 of 170 annelid RefSeq records (2025-03 pool) were already seen, so the test set draws on GenBank too.
 
 ### Changed (structure; outputs unchanged - scripts/golden.py)
+- `mitom annotate` runs the stage functions of `run` (`ANNOTATE_STAGES`: input, round 1, write, add missing, curate,
+  NCBI, maps) instead of its own copy of the steps after annotation. Results identical (golden case annotate_gb);
+  new: the terminal steps, `original_annotation/`, `reports/clade_decision.tsv` and `metadata_transfer_log.tsv`,
+  `annotation-summary.tsv` column body_source; the log is run.log (was pipeline.log). Golden: 7 cases (annotate_gb added), LOCUS dates normalised.
+- README: the benchmarks have their own section (Development benchmarks) after the statement; data sizes on one
+  data line per benchmark. MITOS2.md: the 20 nt stop rule in a table.
 - mito_curate.py (1433 lines) split by rule family, code moved verbatim: `mito_curate_base.py` (limits, notes, span
   helpers), `mito_curate_pcg.py` (P1-P11, D1, /translation), `mito_curate_origin.py` (O1 / O2), `mito_curate_rna.py`
   (R1, T1, C1, N1); `Curator` (479 lines with the CLI) combines them. mito_intron_ref.py (1655 -> 712 lines):

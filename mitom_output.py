@@ -322,7 +322,7 @@ def cleanup_intermediates(out_root: Path, samples: List[SampleInfo],
                           problem_samples: List[str]) -> None:
     """Delete internal-ID intermediates once final output is written.
 
-    Kept: 04.final_gb/, all.final.gbf, reports/, pipeline.log. The core logs of problem samples are copied to
+    Kept: 04.final_gb/, all.final.gbf, reports/, run.log. The core logs of problem samples are copied to
     reports/failed_logs/ before deletion. `run` then arranges what is kept into its final layout (organize_outputs).
     """
     import mitom_log

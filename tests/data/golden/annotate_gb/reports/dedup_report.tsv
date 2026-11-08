@@ -1,0 +1,8 @@
+# GB deduplication report: one row per record with a sequence (kept / dropped); records without ORIGIN
+# and parse errors are counted in the total line only. Rules: (1) same accession -> newest version;
+# (2) RefSeq NC_ record kept, the INSDC submission it was derived from (named in its COMMENT) dropped;
+# (3) identical sequence -> one copy kept (RefSeq preferred). Different records of the same species
+# are NOT merged. related = accession kept instead (dropped) / accessions it replaced (kept).
+# total_in=1  kept=1  dropped=0  no_seq(metadata_only)=0  parse_errors=0
+accession	status	reason	related	organism	seq_len	topology	source_file
+NC_000931.1	kept			Platynereis dumerilii	15619	circular	NC_000931.gb

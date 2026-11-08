@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mito_debug.py - what happened in a MitoM run, read from its log (`mitom debug <output folder | log file>`).
 
-The run log (run.log of `mitom run` / `import`, pipeline.log of `annotate` / `reorient`, the log of `dedup`,
+The run log (run.log of `mitom run` / `import` / `annotate`, pipeline.log of `reorient`, the log of `dedup`,
 `transfer_metadata`, `replace_organism`) holds lines of a fixed form (mitom_log.py); with the output folder the
 reports are read too. The report:
   run        command, MitoM version, start, end, duration; status: finished (exit code), stopped on an error (the

@@ -37,6 +37,7 @@ CASES: Dict[str, List[str]] = {
     "run_fasta_blind": ["mitom_pipeline.py", "run", "-i", "{IN}/NC_010217.fasta", "-o", "{OUT}", *COMMON],
     "import_mitoz": ["mitom_pipeline.py", "import", "-i", "{DATA}/KY753833_mitoz.gbf", "-o", "{OUT}", "--clade",
                      "Annelida-segmented-worms", "--genetic_code", "5", *COMMON],
+    "annotate_gb": ["mitom_pipeline.py", "annotate", "-i", "{DATA}/NC_000931.gb", "-o", "{OUT}", *COMMON],
     "curate_mitoz": ["mito_curate.py", "-i", "{DATA}/OW387151_mitoz.gbf", "-o", "{OUT}"],
 }
 SKIP_SUFFIX = (".pdf", ".png", ".sqn")
@@ -54,13 +55,16 @@ def make_inputs(d: Path) -> None:
 
 def keep(rel: str) -> bool:
     top = rel.split("/")[0]
-    return not (re.match(r"\d\d\.", top) or rel.endswith(SKIP_SUFFIX) or Path(rel).name.endswith("run.log"))
+    return not (re.match(r"\d\d\.", top) or rel.endswith(SKIP_SUFFIX) or Path(rel).name.endswith(("run.log", "pipeline.log")))
+
+
+DATE = re.compile(r"\b\d\d-(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-\d{4}\b")
 
 
 def normalise(text: str, out: Path, inp: Path) -> str:
     for p, tag in ((out, "<OUT>"), (inp, "<IN>"), (REPO, "<REPO>"), (Path.home(), "<HOME>")):
         text = text.replace(str(p.resolve()), tag).replace(str(p), tag)
-    return text
+    return DATE.sub("<DATE>", text)                 # (the LOCUS date of records written today)
 
 
 def outputs(out: Path, inp: Path) -> Dict[str, str]:
@@ -87,7 +91,7 @@ def run_case(name: str, work: Path, inp: Path) -> Dict[str, str]:
 def compare(name: str, got: Dict[str, str]) -> List[str]:
     """Differences (a few lines each) between the outputs of a case and its reference."""
     ref_dir = GOLDEN / name
-    want = {p.relative_to(ref_dir).as_posix(): p.read_text() for p in sorted(ref_dir.rglob("*")) if p.is_file()}
+    want = {p.relative_to(ref_dir).as_posix(): DATE.sub("<DATE>", p.read_text()) for p in sorted(ref_dir.rglob("*")) if p.is_file()}
     msgs = [f"{name}: missing output {f}" for f in sorted(set(want) - set(got))]
     msgs += [f"{name}: new output {f}" for f in sorted(set(got) - set(want))]
     for f in sorted(set(want) & set(got)):

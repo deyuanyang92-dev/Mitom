@@ -42,7 +42,6 @@ from mitom_steps import (
     StepResult,
     run_compare,
     run_curate,
-    run_curate_and_submit,
     run_intron_fix,
     run_ncr,
     run_plots,
@@ -69,102 +68,9 @@ def _log_removed(out_root: Path, removed: List[str]) -> None:
 
 
 def workflow_annotate(args: argparse.Namespace, ctx: Optional[RunContext] = None) -> int:
-    ctx = ctx if ctx is not None else RunContext()
-    out_root = Path(args.out_root).resolve()
-    out_root.mkdir(parents=True, exist_ok=True)
-    removed = clear_previous_work(out_root, keep=("00.input", "00.imported"), protect=_inputs(args))
-    new_reports(out_root)
-    setup_root_logger(out_root / "pipeline.log", debug=getattr(args, "debug", False))
-    _log_removed(out_root, removed)
-    log_environment(args)
-    logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
-    preflight(args)
-
-    in_path     = Path(args.input).resolve()
-    split_dir   = out_root / "00.internal_fasta"
-    gb_conv_dir = out_root / "00.gb_converted_fasta"
-
-    in_files, input_type, acc_to_orig_gb = iter_inputs(in_path, gb_to_fasta_dir=gb_conv_dir,
-                                                       dedup_report=reports_dir(out_root) / "dedup_report.tsv",
-                                                       stats_out=ctx.dedup_stats)
-    logging.info(f"[INPUT_TYPE] {input_type}  ({len(in_files)} file(s))")
-    samples, id_map = split_or_sanitize_fastas(
-        in_files, split_dir, args.if_split_fasta == "yes", int(args.id_maxlen),
-        acc_to_orig_gb=acc_to_orig_gb, topology=args.topology)
-    samples = linear_lineages_first(samples, args)
-    logging.info(f"[ID_MAP] {id_map}  (total: {len(samples)})")
-    if not samples:                                      # as `mitom run` (Codex R7, 2026-11-05: annotate exited 0)
-        logging.error(f"ERROR: no sequence to annotate in {in_path} (empty, unreadable or no A/C/G/T; the warnings "
-                      f"above and {out_root / 'pipeline.log'} name the file)")
-        return 2
-
-    results = run_annotation_stage(
-        samples=samples, phase_dirname="01.anno_round1",
-        out_root=out_root, args=args,
-        fasta_selector=lambda si: si.internal_fasta)
-    samples, results = apply_topology(samples, results, args, out_root, reports_dir(out_root))
-
-    summary    = RunSummary()
-    final_dir  = out_root / "04.final_gb"
-    final_dir.mkdir(parents=True, exist_ok=True)
-    summary_rows: List[str] = []
-
-    for si in samples:
-        r       = results.get(si.internal_id, {})
-        best_gb = Path(r["best_gb"]) if r.get("best_gb") else None
-        if not r.get("ok") or not best_gb or not best_gb.exists():
-            summary.annotation_failed.append(si.sample_name)
-            continue
-        dest = final_dir / f"{si.sample_name}.gbf"
-        try:
-            pcg, trna, rrna, mode, orient_ok = finalize_genbank_output(
-                sample_name=si.sample_name, body_src_gb=best_gb,
-                metadata_src_gb=si.orig_gb_path, dest_gb=dest,
-                which_gene_first=orientation_genes(args),
-                force_forward=args.force_forward,
-                preserve_metadata=(args.preserve_phase1_metadata == "yes")
-                    if hasattr(args, "preserve_phase1_metadata") else False,
-                orient_notes=ctx.orient,
-            )
-            summary_rows.append(f"{si.sample_name}\t{pcg}\t{trna}\t{rrna}\t{orientation_text(orient_ok, si)}\t{mode}")
-        except Exception as exc:
-            record_event(si.sample_name, f"final GenBank not written: {exc}", logging.ERROR)
-            summary.final_write_failed.append(si.sample_name)
-
-    write_nonempty_list(reports_dir(out_root) / "annotation_failed.txt",
-                        summary.annotation_failed, "# annotation core non-zero exit")
-    write_nonempty_list(reports_dir(out_root) / "final_write_failed.txt",
-                        summary.final_write_failed, "# Failed during final write")
-    write_table(
-        out_root / "annotation-summary.tsv",
-        "sample_name\tPCG\ttRNA\trRNA\tcox1_orientation_ok\tmetadata_mode",
-        summary_rows)
-    run_rescue(args, final_dir, out_root)
-    run_rrna_hmm(args, final_dir, out_root)
-    run_intron_fix(args, final_dir, out_root)
-    reorient_after_introns(args, final_dir, ctx.orient)
-    merge_dir = run_curate_and_submit(args, final_dir, out_root).gb_dir
-    refresh_summary(out_root, merge_dir)
-    all_final_gbs = sorted(                      # rglob: the no_<gene>_gene/ records are merged too
-        p for p in merge_dir.rglob("*.gbf")
-        if p.is_file() and p.stat().st_size > 0)
-    if all_final_gbs:
-        merge_gb_files(all_final_gbs, out_root / "all.final.gbf")
-    logging.info(f"[PLOT] {run_plots(args, merge_dir, out_root).summary}")
-    (reports_dir(out_root) / "run_params.json").write_text(
-        json.dumps(vars(args), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    summary.log()
-    logging.warning(KNOWN_LIMITATION)
-    write_orientation_fallback(out_root, samples, ctx.orient)
-    if args.keep_intermediate == "no":
-        cleanup_intermediates(out_root, samples, summary.all_problem_samples())
-    if samples and len(summary.annotation_failed) == len(samples):
-        logging.warning(f"[FAIL] every record failed in the annotation core ({len(samples)}): see reports/failed_logs/")
-        return 1
-    if samples and not (summary_rows and all_final_gbs):  # (Codex R7, 2026-11-05: exit 0 with no final GenBank)
-        logging.warning(f"[FAIL] no final GenBank written for any of the {len(samples)} record(s): see reports/")
-        return 1
-    return 0
+    """`mitom annotate`: one round of annotation and the same steps after it as `mitom run` (ANNOTATE_STAGES: no
+    re-orientation round 2, no comparison, the work layout 04.final_gb/ ... instead of the output layout)."""
+    return run_stages(args, ctx, ANNOTATE_STAGES)
 
 
 def fallback_src_tag(mode: str, iid: str, reannotated_ids: set) -> str:
@@ -203,15 +109,20 @@ class RunState:
 def workflow_run(args: argparse.Namespace, ctx: Optional[RunContext] = None) -> int:
     """`mitom run` / `mitom import`: the stages of RUN_STAGES in order (each one numbered step on the terminal); a
     stage that returns an exit code ends the run."""
-    r = start_run(args, ctx if ctx is not None else RunContext())
-    for stage in RUN_STAGES:
+    return run_stages(args, ctx, RUN_STAGES)
+
+
+def run_stages(args: argparse.Namespace, ctx: Optional[RunContext], stages) -> int:
+    """The stages in order, one numbered step each; a stage that returns an exit code ends the run."""
+    r = start_run(args, ctx if ctx is not None else RunContext(), len(stages))
+    for stage in stages:
         rc = stage(r)
         if rc is not None:
             return rc
     return run_exit_code(r)
 
 
-def start_run(args: argparse.Namespace, ctx: RunContext) -> RunState:
+def start_run(args: argparse.Namespace, ctx: RunContext, n_steps: int = 11) -> RunState:
     """Output folder emptied of a previous run's work, run.log, [ENV] / [PARAMS] lines, the summary on the terminal."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
@@ -224,7 +135,7 @@ def start_run(args: argparse.Namespace, ctx: RunContext) -> RunState:
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
-    steps = Steps(11)
+    steps = Steps(n_steps)
     say("")
     say("MitoM - mitochondrial genome annotation")
     say(f"    input        : {Path(args.input).resolve()}")
@@ -232,7 +143,8 @@ def start_run(args: argparse.Namespace, ctx: RunContext) -> RunState:
     say(f"    clade        : {args.clade}    genetic code: {args.genetic_code}")
     say(f"    parallel     : {args.max_tasks} records at a time x {args.threads} threads")
     say(f"    annotation   : {ENGINE_LABEL[getattr(args, 'engine', 'native')]}")
-    say(f"    round 2      : {args.if_reannotation_2}  (auto = only records whose annotation is broken by the cox1 shift)")
+    if hasattr(args, "if_reannotation_2"):                # (`mitom annotate`: one round)
+        say(f"    round 2      : {args.if_reannotation_2}  (auto = only records whose annotation is broken by the cox1 shift)")
     if getattr(args, "engine", "native") == "native":
         say(f"    topology     : {args.topology}" + ("  (as labelled, checked at the sequence ends)"
                                                      if args.topology == "auto" else ""))
@@ -473,8 +385,8 @@ def stage_write_final(r: RunState) -> Optional[int]:
                 which_gene_first=orientation_genes(args),
                 force_forward=args.force_forward,
                 preserve_metadata=(args.preserve_phase1_metadata == "yes"),
-                smart_metadata=(args.smart_metadata == "yes"),
-                auto_accept=(args.auto_accept_metadata == "yes"),
+                smart_metadata=(getattr(args, "smart_metadata", "no") == "yes"),     # (not options of annotate)
+                auto_accept=(getattr(args, "auto_accept_metadata", "no") == "yes"),
                 orient_notes=ctx.orient,
             )
             summary_rows.append(
@@ -633,6 +545,9 @@ def run_exit_code(r: RunState) -> int:
 # `mitom run` / `import` in order; 11 numbered steps on the terminal (Steps(11) in start_run)
 RUN_STAGES = (stage_input, stage_round1, stage_reorient, stage_round2, stage_write_final, stage_add_missing,
               stage_curate, stage_ncbi, stage_compare, stage_maps, stage_output)
+# `mitom annotate`: one round, the steps after it as in `run`, the work layout (no comparison, no output layout)
+ANNOTATE_STAGES = (stage_input, stage_round1, stage_write_final, stage_add_missing, stage_curate, stage_ncbi,
+                   stage_maps)
 
 
 def workflow_groups(args: argparse.Namespace, ctx: RunContext) -> int:

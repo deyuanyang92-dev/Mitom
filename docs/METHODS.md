@@ -24,6 +24,12 @@ What `mitom run` does step by step: [README](../README.md) section 3. This secti
 | `mito_intron*.py` | 内含子：从头（`mito_intron`、`_rules`）、位点迁移（`_ref`、`_junction`、`_models`、`_sites`）/ introns |
 | `mito_nuc*.py` | 核 rDNA、组蛋白 / nuclear rDNA, histones |
 
+I / II 型内含子剪接位点的判定有三处，用途不同、互不调用：`mito_intron_rules.py`（从头识别，MFannot 打分的移植，GPL）、`mito_intron_junction.py` 的 `rule_score`（位点迁移时给候选接头打分）、`mito_intron_sites.py` 的 `canonical_kinds`（金标准的是 / 否判定）。改剪接规则时三处都要看；合并它们会改变结果，需先跑内含子金标准（TEST_REGISTRY 第 68 行）。
+Group I / II splice sites are judged in three places with different jobs (de novo scoring, site-transfer scoring, gold-standard yes / no); a change to the splice rules must look at all three, and merging them changes results (rerun the intron gold standard first).
+
+`mitom annotate` 用同一套阶段函数（`mitom_run.ANNOTATE_STAGES`：不做第二轮、对比和输出整理），后处理只有一份代码。
+`mitom annotate` runs the same stage functions (`ANNOTATE_STAGES`: no round 2, comparison or output layout), so the steps after annotation exist once.
+
 校正和内含子以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`），出错时只影响这一步；`tests/test_step_argv.py` 检查流水线给它们的参数。旧名 `batch_mitoz.py` 仍可用。
 Curation and introns run as separate processes, so a crash affects only that step; `tests/test_step_argv.py` checks the arguments the pipeline passes them. The old name `batch_mitoz.py` still works.
 
