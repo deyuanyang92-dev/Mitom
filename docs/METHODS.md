@@ -135,18 +135,25 @@ mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds 
 4. 先屏蔽串联重复（周期 3–150 nt、相邻拷贝 ≥ 85 % 一致）：无终止的重复单元能拼出任意长的 ORF，也能与别的重复比对上；
 5. 重叠的 ORF（其他读框、反义链）只保留第二位差异最少、第三位比例最高、证据最强的一个。
 
-`p_open` 与第 3 条的 p 用 Fisher 法合并 ≤ 1e-4、且各自 ≤ 0.05 的（`conserved`），或与已知蛋白家族同源的（`known_family`，
-MFannot 家族；atp9 用其基因名和产物），写成 CDS `/gene="orf<密码子数>"` `/product="hypothetical protein"`，note 写明证据；
-读框读进下一个基因前没有终止的，按线粒体惯例以 T / TA 不完整终止止于该基因之前，否则不写并给 WARNING（同读框时写明
-“可能是该基因起点更靠上游”）。只满足 1 的（`long_unconfirmed`）、与 13 个基因之一同源的（`standard_fragment`）也不写，
+`p_open` 与第 3 条的 p 都 ≤ 0.05（两者都是必要条件；非编码序列同时碰巧通过约 0.0025）的（`conserved`），或属已知蛋白家族的
+（`known_family`：MFannot 家族，atp9 用其基因名和产物；Pfam 家族，`models/orf_families.hmm.gz`，`hmmsearch --cut_ga` 用 Pfam
+自己审定的阈值，命名 LAGLIDADG / GIY-YIG / HNH 归巢内切酶、II 类内含子逆转录酶 / 成熟酶、B 族 DNA 聚合酶、MutS），写成 CDS
+`/gene="orf<密码子数>"`，`/product` 为 “hypothetical protein” 或家族产物，note 写明证据。读框读进下一个基因前没有终止的：
+读进 **tRNA** 时按线粒体 tRNA 间断加工止于 tRNA 之前——末端是 T / TA 时为不完整终止，否则止于最后一个完整密码子、3′ 端标为
+不完整（`>`；table2asn 只给 WARNING）。这也是 Selifanova 等 2023（*Genome Biol Evol*，PMC10721130）定 *Polydora* ORFan 的
+方式：无终止区段在 tRNA 边界切开。读进蛋白基因或 rRNA 的不写，给 WARNING（同读框时写明“可能是该基因起点更靠上游”）。只满足 1 的（`long_unconfirmed`）、与 13 个基因之一同源的（`standard_fragment`）也不写，
 在日志中给 WARNING、在 `orf_report.tsv` 列出、写进所在 NCR 的 note，不静默。`--orf all` 连 `long_unconfirmed` 也写；
-`report` 只报告；`no` 跳过。密码子使用偏好（GeneMark 式，与本记录 13 个基因比较）也测过：区分力太弱，未采用。
+`report` 只报告；`no` 跳过。测过但未采用：密码子使用偏好（GeneMark 式，与本记录 13 个基因比较）区分力太弱；RNAcode
+（Washietl 等 2011，比较基因组编码潜力，需把线粒体密码子换成标准同义密码子）与上述两项检验相比几乎没有增益。
 测试结果（含与 MITOS2、ORFfinder 式长度判定的比较）：`benchmark/results/orf_2026-11-09/README.md`。
 
 An ORF is written when homologs show that selection kept it open (substitutions since the copies split - the larger
 of one per extra base kind per position and half the MST of their differences - against the chance a substitution
-makes a stop) and differ in the codon pattern of a coding frame (most at position 3, least at 2), Fisher-combined;
-tandem repeats are masked, shadows of a stronger frame dropped, introns searched. ORFs only longer than chance,
+makes a stop) and differ in the codon pattern of a coding frame (most at position 3, least at 2), each at p <= 0.05;
+or it is a known family (MFannot; Pfam with its gathering thresholds, which names homing endonucleases, intron
+reverse transcriptases, polB and MutS). A frame running into a tRNA without a stop ends there (tRNA punctuation; T /
+TA incomplete stop, else an open 3' end), as the Polydora ORFans were defined. Tandem repeats are masked, shadows of a
+stronger frame dropped, introns searched. ORFs only longer than chance,
 pieces of the 13 genes and frames running into the next gene are WARNINGs, rows in `orf_report.tsv` and NCR notes.
 
 ## 环状还是线状 / Topology (mitom_topology.py, mito_core.py --check_ends)

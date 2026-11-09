@@ -5,6 +5,13 @@ installed one.
 
 ## Unreleased
 
+### Changed (ORFs, after a literature / GitHub survey)
+- A frame that runs into a tRNA without a stop ends before the tRNA (tRNA punctuation; open 3' end when the tail is
+  not T / TA), as Selifanova et al. 2023 define the Polydora ORFans: all three (ORFan-544 / -1060 / -427) are now
+  written in P. cf. ciliata OQ078742 and its relatives. Pfam families (models/orf_families.hmm.gz, hmmsearch
+  --cut_ga) name homing endonucleases, intron reverse transcriptases, polB and MutS. Conserved = both tests at 0.05
+  (instead of Fisher <= 1e-4). RNAcode was tested and adds almost nothing; not used. Known ORFs written 228 -> 233.
+
 ### Changed (ORFs of unknown function, after a recall test on 342 NCBI-annotated non-standard CDS)
 - Introns are searched (homing endonucleases, intron mutS); substitutions are summed over up to 20 homologs (the
   larger of one per extra base kind per position and half the MST of their differences); the frame test uses the

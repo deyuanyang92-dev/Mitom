@@ -127,14 +127,27 @@ def test_known_family_with_a_product_gets_its_gene_name(monkeypatch):
 
 
 def test_frame_running_into_a_gene_in_frame_is_named():
+    """No stop before a protein gene in the same frame: not written, the WARNING names the gene."""
     body = orf_nt(80, stop="")
     gene = orf_nt(100)
     seq = filler(300) + body + "GCT" * 30 + gene + filler(300, 7)
-    gs = 300 + len(body) + 90
-    rec = record(seq, [("tRNA", 300 + len(body), 300 + len(body) + 60, 1, "trnR"),
-                       ("CDS", gs, gs + len(gene), 1, "nad5")])
+    gs = 300 + len(body)
+    rec = record(seq, [("CDS", gs, gs + 90 + len(gene), 1, "nad5")])
     o = [o for o in m.candidates(rec, 5) if o.strand == 1 and o.start == 300][0]
     assert not o.writable and "nad5 (in frame)" in o.runs_into
+
+
+def test_frame_running_into_a_trna_ends_there_with_an_open_end():
+    """tRNA punctuation (the Polydora ORFans end at tRNAs without a stop): the ORF ends at the last whole codon
+    before the tRNA, its 3' end open."""
+    body = orf_nt(80, stop="") + "G"                              # no T / TA tail
+    seq = filler(300) + body + "GCT" * 30 + filler(300, 12)
+    ts = 300 + len(body)
+    rec = record(seq, [("tRNA", ts, ts + 66, 1, "trnR")])
+    o = [o for o in m.candidates(rec, 5) if o.strand == 1 and o.start == 300][0]
+    assert o.writable and o.trna_end == "trnR" and o.end == ts - 1
+    loc = m.location(o, len(seq))
+    assert str(loc).startswith("[300:>")
 
 
 def test_ncr_note_names_an_orf_not_written():
@@ -197,3 +210,20 @@ def test_frame_rank_prefers_the_frame_with_position_2_least_changed():
     a.best = {"d": [71, 35, 117], "pos3": 0.52, "p_joint": 1e-6}
     b.best = {"d": [35, 71, 117], "pos3": 0.52, "p_joint": 1e-9}          # stronger p, wrong pattern
     assert m.frame_rank(a) < m.frame_rank(b)
+
+
+def test_missing_hmmsearch_is_not_silent(monkeypatch, capsys):
+    o = m.Orf("R", 0, 300, 1, "Y" * 99, "TAC" * 99, "Y" * 99, "TAC" * 100, 1.0, True)
+    monkeypatch.setattr(m, "find_tool", lambda name, bin_dir=None: None)
+    m.pfam_search([o])
+    assert "hmmsearch (HMMER) not found" in capsys.readouterr().err and o.hits == []
+
+
+def test_pfam_family_names_the_product():
+    o = m.Orf("R", 0, 300, 1, "Y" * 99, "TAC" * 99, "Y" * 99, "TAC" * 100, 1.0, True)
+    o.hits = [{"name": "LAGLIDADG_1", "src": "pfam", "evalue": 1e-20, "identity": 0.0, "length": 0, "mismatches": 0}]
+    m.classify(o, 4)
+    rec = record("A" * 600)
+    m.write_orf(rec, o, 4)
+    cds = [f for f in rec.features if f.type == "CDS"][0]
+    assert o.cls == "known_family" and cds.qualifiers["product"] == ["LAGLIDADG homing endonuclease"]

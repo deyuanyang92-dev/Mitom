@@ -39,6 +39,11 @@ FEATURES             Location/Qualifiers
                      /note="group I intron; site transferred from NC_010217.1
                      cox1 intron 1 (Plakinastrella cf. onkodes DVL-2011),
                      junction identity 1.00"
+     gene            1115..2119
+                     /gene="orf334"
+                     /note="found by MitoM mito_orf: Pfam LAGLIDADG_1 (gathering
+                     threshold); Pfam LAGLIDADG_1 domain (hmmsearch, above the
+                     Pfam gathering threshold, E=4e-28)"
      intron          1115..2232
                      /gene="COX1"
                      /number=2
@@ -49,6 +54,20 @@ FEATURES             Location/Qualifiers
                      method; group I intron; site transferred from NC_010217.1
                      cox1 intron 2 (Plakinastrella cf. onkodes DVL-2011),
                      junction identity 1.00"
+     CDS             1115..2119
+                     /gene="orf334"
+                     /codon_start=1
+                     /transl_table=4
+                     /product="LAGLIDADG homing endonuclease"
+                     /note="found by MitoM mito_orf: Pfam LAGLIDADG_1 (gathering
+                     threshold); Pfam LAGLIDADG_1 domain (hmmsearch, above the
+                     Pfam gathering threshold, E=4e-28)"
+                     /translation="MRNIFGCRLISPFVGTAVSIVVQAILLWSVTIHALYSQSTGNSSC
+                     KKVFPLTYCKKSKKLTGSLETVRGNSSLSVHCPQHYKPTTDKEFGYYLAGLIEGDGSIV
+                     ISKNKAYVFICFHQKDVSTAYYIKSRLGFGSVVKQKNKKAVNLTIVRLQGLFKVVELVN
+                     GKFRTNKIESLQKLIDYINIHNTKIKALPKDTSSLLENHWLAGFLDADGYLQVRVINRV
+                     RLDRKFPYEVRLHLKVDQKTKDILESIHEGWGGYVGYRKSQDTYYYQSTGFQHALKVIS
+                     YLDRYHLSSKWLEYRQWRRVYLLVQQGSHRTEVGVEKIKKIKKIMERMRQSEH"
      misc_feature    3076..3276
                      /note="non-coding region NCR1, 201 bp: no gene annotated
                      (MitoM)"

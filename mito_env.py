@@ -57,7 +57,8 @@ TOOLS = {
     "cmalign":     ("MitoM-ML tRNAs, the default tRNA caller (trna_ml.py; without it MiTFi only)", "mitotools"),
     "blastx":      ("protein gene search (mito_core.py)", "mitotools"),
     "java":        ("MiTFi tRNA selection (mito_core.py, the default core); any Java >= 8", "mitotools"),
-    "blastp":      ("intron homolog search (mito_intron.py)", "mitotools"),
+    "blastp":      ("intron homolog search (mito_intron.py); ORF homologs (mito_orf.py)", "mitotools"),
+    "hmmsearch":   ("ORF protein families: homing endonucleases, intron RT, polB, MutS (mito_orf.py, Pfam)", "mitotools"),
     "makeblastdb": ("intron homolog library (mito_intron.py); nuclear marker references (mitom nuc)", "mitotools"),
     "table2asn":   ("NCBI validation (mito_curate.py, ncbi_validate.py)", "mitotools"),
     "nhmmer":      ("per-phylum rRNA profile HMMs (mito_core.py, mito_rrna_hmm.py)", "mitotools"),
@@ -245,9 +246,10 @@ def mitos_refdir(explicit: Optional[str] = None, ref: str = MITOS_REF) -> Option
 # conda packages of the programs (the environment of install.sh, env/mitotools.yml): the fix `mitom debug` names
 PACKAGES = {"exonerate": "exonerate", "cmsearch": "infernal", "cmalign": "infernal", "blastx": "blast", "blastp": "blast",
             "makeblastdb": "blast", "blastn": "blast", "tblastn": "blast", "table2asn": "table2asn", "nhmmer": "hmmer",
-            "hmmbuild": "hmmer", "mafft": "mafft", "aragorn": "aragorn", "tRNAscan-SE": "trnascan-se", "bwa": "bwa",
+            "hmmbuild": "hmmer", "hmmsearch": "hmmer", "mafft": "mafft", "aragorn": "aragorn", "tRNAscan-SE": "trnascan-se", "bwa": "bwa",
             "minimap2": "minimap2", "java": "openjdk=8"}
 VERSION_ARG = {"exonerate": "--version", "cmsearch": "-h", "cmalign": "-h", "nhmmer": "-h", "hmmbuild": "-h",
+               "hmmsearch": "-h",
                "java": "-version", "mafft": "--version", "aragorn": "-h", "arwen": "-h", "tRNAscan-SE": "-h", "bwa": "",
                "minimap2": "--version", "runmitos": "--version"}          # others (BLAST, table2asn): -version
 

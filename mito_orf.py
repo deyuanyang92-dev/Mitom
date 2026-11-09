@@ -27,18 +27,21 @@ real proteins are no longer. The evidence, from first principles:
    at position 3, then the stronger evidence; the rest are its shadows.
 
 Classes (orf_report.tsv):
-    conserved          Fisher's combined p of p_open and p_frame <= 1e-4, each <= 0.05
+    conserved          p_open <= 0.05 and p_frame <= 0.05 (each necessary; both by chance ~0.0025)
                                                                     -> CDS orf<codons>, "hypothetical protein"
-    known_family       homolog in a known family (models/mfannot_proteins, not the 13; atp9 gets its name)
-                                                                    -> CDS
+    known_family       homolog in a known family: models/mfannot_proteins (not the 13; atp9 gets its name) or a
+                       Pfam family above its gathering threshold (models/orf_families.hmm.gz: homing endonucleases,
+                       group II intron reverse transcriptase / maturase, polB, MutS; the product names it) -> CDS
     long_unconfirmed   E_len <= 0.01 without such evidence           -> a WARNING, NCR /note (--orf all: written)
     standard_fragment  homolog of one of the 13 protein genes        -> a WARNING (second copy, pseudogene, or a
                                                                        piece the annotation missed)
 ORFs within chance length without such homologs are not reported (chance ORFs are in every AT-rich stretch).
 Introns are open to the search (non-coding to their host gene). A written ORF runs from the first start codon of the
 unannotated stretch to its stop, or - when the frame runs on into the next gene - to the base before it with an
-incomplete stop T / TA (/transl_except); a frame that runs into a gene otherwise is a WARNING naming that gene ("in
-frame": perhaps its start lies further upstream). Records of an earlier run: their mito_orf genes are replaced.
+incomplete stop T / TA (/transl_except); a frame running into a tRNA otherwise ends at its last whole codon before
+the tRNA with an open 3' end (tRNA punctuation: the transcript is cut there; Selifanova et al. 2023 defined the
+Polydora ORFans so); a frame running into a protein gene or rRNA is a WARNING naming it ("in frame": perhaps its start
+lies further upstream). Records of an earlier run: their mito_orf genes are replaced.
 Measured: benchmark/results/orf_2026-11-09/README.md.
 
 Usage: python3 mito_orf.py -i <GenBank file or folder> -o <out folder> [--genetic_code 5] [--orf yes|all|report]
@@ -71,11 +74,20 @@ from mito_ncr import extent  # noqa: E402
 HERE = Path(__file__).resolve().parent
 LIBRARY = HERE / "models" / "orf_library.fna.gz"
 FAMILIES = HERE / "models" / "mfannot_proteins"
+PFAM = HERE / "models" / "orf_families.hmm.gz"     # Pfam (CC0) HMMs of the extra mitochondrial protein families
+PFAM_PRODUCT = {                                  # Pfam family -> product of a CDS written for it
+    "LAGLIDADG_1": "LAGLIDADG homing endonuclease", "LAGLIDADG_2": "LAGLIDADG homing endonuclease",
+    "GIY-YIG": "GIY-YIG homing endonuclease", "HNH": "HNH endonuclease",
+    "RVT_1": "group II intron reverse transcriptase/maturase", "Intron_maturas2": "group II intron reverse "
+    "transcriptase/maturase", "GIIM": "group II intron reverse transcriptase/maturase",
+    "DNA_pol_B": "DNA polymerase family B", "DNA_pol_B_2": "DNA polymerase family B",
+    "DNA_pol_B_exo1": "DNA polymerase family B",
+    "MutS_I": "MutS-like protein", "MutS_II": "MutS-like protein", "MutS_III": "MutS-like protein",
+    "MutS_V": "MutS-like protein"}
 MIN_AA = 40                 # shortest ORF considered (codons): below this a homology search has no power
 E_LEN = 0.01                # length beyond chance: expected chance ORFs this long per record
 P_OPEN = 0.01               # kept open by selection: chance that both copies stayed open (alone)
-P_JOINT = 1e-4              # kept open and coding frame: Fisher's combined p (two tests at 0.01 each)
-P_EACH = 0.05               # ... each of the two pointing the right way
+P_EACH = 0.05               # kept open and coding pattern: each must hold (both by chance in non-coding: ~0.0025)
 MAX_HOMOLOGS = 20           # homologs (best blastp E, distinct) joined in the selection tests
 E_BLAST = 1e-5              # homolog: blastp E-value
 REPEAT_ID = 0.85            # tandem repeat: copies >= 85 % identical ...
@@ -216,6 +228,7 @@ class Orf:
     written: bool = False
     shadow_of: str = ""
     runs_into: str = ""     # not writable: the features the reading frame runs on into (in frame with a CDS: named)
+    trna_end: str = ""      # ends without a stop at this tRNA (tRNA punctuation): written with an open 3' end
 
     @property
     def codons(self) -> int:
@@ -243,6 +256,13 @@ def candidates(rec: SeqRecord, code: int, min_aa: int = MIN_AA) -> List[Orf]:
     table = CodonTable.unambiguous_dna_by_id[code]
     starts = set(table.start_codons)
     F = int((~cov).sum())
+    trna_at: Dict[int, str] = {}                            # position -> tRNA name (where an ORF may end, no stop)
+    for f in rec.features:
+        if f.type == "tRNA" and f.location is not None:
+            name = f.qualifiers.get("gene", f.qualifiers.get("product", ["tRNA"]))[0]
+            for part in f.location.parts:
+                for i in range(int(part.start), int(part.end)):
+                    trna_at[i % n] = name
     out = []
     for s, e, strand, prot in orfs_stop_to_stop(seq, code, circular, min_aa):
         k = len(prot)                                       # codons before the closing stop
@@ -264,12 +284,16 @@ def candidates(rec: SeqRecord, code: int, min_aa: int = MIN_AA) -> List[Orf]:
         if first is None:
             continue
         a = 3 * first
+        trna_end = ""
         if best[1] == k:                                    # runs to its own stop codon (which may touch a gene)
             b, writable = 3 * k + 3, True
         else:                                               # runs into a gene: end before it, incomplete stop
             b = a + int(np.argmin(free[a:])) if not free[a:].all() else 3 * k
             tail = nt_all[a:b][(b - a) // 3 * 3:]
             writable = tail in ("T", "TA")
+            nxt = trna_at.get((s + b) % n if strand == 1 else (e - 1 - b) % n)
+            if not writable and nxt:                        # tRNA punctuation: the transcript is cut at the tRNA
+                b, writable, trna_end = a + (b - a) // 3 * 3, True, nxt
         L = (b - a) // 3 - (1 if b == 3 * k + 3 else 0)
         rep = tandem_mask(nt_all[: 3 * k])
         rcod = rep.reshape(k, 3).any(1)                    # codons in a tandem repeat
@@ -283,6 +307,7 @@ def candidates(rec: SeqRecord, code: int, min_aa: int = MIN_AA) -> List[Orf]:
         o = Orf(rec.id, ws, we, strand, piece, nt_all[3 * best[0]: 3 * best[1]],
                 "M" + prot[first + 1: (b - a) // 3 + first - (1 if b == 3 * k + 3 else 0)], nt_all[a:b], e_len,
                 writable and L >= min_aa)
+        o.trna_end = trna_end
         if not o.writable:
             rest = (s + b, e) if strand == 1 else (s, e - b)           # the frame beyond the ORF, to its stop
             o.runs_into = runs_into(rec, rest, strand, (s if strand == 1 else e) % 3, n)
@@ -425,8 +450,10 @@ def third_position_p(d: Sequence[int]) -> float:
 
 # ── homology ─────────────────────────────────────────────────────────────────────────────────────────────────────
 def find_tool(name: str, bin_dir: Optional[str] = None) -> Optional[str]:
-    if bin_dir and (Path(bin_dir) / name).exists():
-        return str(Path(bin_dir) / name)
+    """bin_dir, then the bin folder of this Python (the MitoM environment, also when it is not activated), then PATH."""
+    for d in (bin_dir, str(Path(sys.executable).parent)):
+        if d and (Path(d) / name).exists():
+            return str(Path(d) / name)
     return shutil.which(name)
 
 
@@ -511,6 +538,33 @@ def search(batch: List[Orf], library: Optional[Path], exclude: set, threads: int
             h.pop("hsp", None)
 
 
+def pfam_search(batch: List["Orf"], threads: int = 1, bin_dir: Optional[str] = None) -> None:
+    """hmmsearch of the ORF pieces against the Pfam families of extra mitochondrial proteins (homing endonucleases,
+    group II intron reverse transcriptase / maturase, family-B DNA polymerase, MutS) with Pfam's own curated
+    gathering thresholds (--cut_ga); a hit is a homolog of src 'pfam'."""
+    hmmsearch = find_tool("hmmsearch", bin_dir)
+    if not batch:
+        return
+    if not hmmsearch or not PFAM.exists():
+        print(f"[mito_orf] WARNING {'hmmsearch (HMMER) not found' if not hmmsearch else f'{PFAM} missing'}: ORFs "
+              "of known Pfam families (homing endonucleases, intron reverse transcriptases, polB, MutS) are not "
+              "named", file=sys.stderr)
+        return
+    with tempfile.TemporaryDirectory() as td:
+        hmm, q, tbl = Path(td) / "f.hmm", Path(td) / "q.faa", Path(td) / "t.tbl"
+        with gzip.open(PFAM, "rt") as src:
+            hmm.write_text(src.read())
+        q.write_text("".join(f">{i}\n{o.piece}\n" for i, o in enumerate(batch)))
+        run_tool([hmmsearch, "--cut_ga", "--noali", "--cpu", str(threads), "--tblout", str(tbl), str(hmm), str(q)],
+                 check=True)
+        for ln in tbl.read_text().splitlines():
+            if ln.startswith("#"):
+                continue
+            c = ln.split()
+            o, fam, ev = batch[int(c[0])], c[2], float(c[4])
+            o.hits.append({"name": fam, "src": "pfam", "evalue": ev, "identity": 0.0, "length": 0, "mismatches": 0})
+
+
 STANDARD_FAMILIES = {g.lower() for g in STANDARD}
 
 
@@ -533,19 +587,20 @@ def frame_rank(o: "Orf") -> tuple:
 def classify(o: Orf, code: int) -> None:
     """The class of an ORF from its hits (see the module notes)."""
     std = [h for h in o.hits if h["src"] == "family" and h["name"].lower() in STANDARD_FAMILIES]
-    fam = [h for h in o.hits if h["src"] == "family" and h["name"].lower() not in STANDARD_FAMILIES]
-    orf = [h for h in o.hits if h["src"] != "family"]
+    fam = [h for h in o.hits if (h["src"] == "family" and h["name"].lower() not in STANDARD_FAMILIES)
+           or h["src"] == "pfam"]
+    orf = [h for h in o.hits if h["src"] not in ("family", "pfam")]
     f = stop_share(o.piece_nt, code)
     orf = [h for h in orf if "p_pos3" in h]
     for h in orf:
         h["p_open"] = (1 - f) ** h["subs"]
         h["p_joint"] = fisher(h["p_open"], h["p_pos3"])
-        h["selected"] = h["p_joint"] <= P_JOINT and h["p_open"] <= P_EACH and h["p_pos3"] <= P_EACH
+        h["selected"] = h["p_open"] <= P_EACH and h["p_pos3"] <= P_EACH
     if std:
         o.best = min(std, key=lambda h: h["evalue"])
         o.cls, o.family = "standard_fragment", o.best["name"]
     elif fam:
-        o.best = min(fam, key=lambda h: h["evalue"])
+        o.best = min(fam, key=lambda h: (h["src"] != "pfam", h["evalue"]))
         o.cls, o.family = "known_family", o.best["name"]
     elif any(h["selected"] for h in orf):
         o.best = min((h for h in orf if h["selected"]), key=lambda h: h["p_joint"])
@@ -573,6 +628,8 @@ def _evidence(o: Orf) -> str:
                 f">= {h['subs']} substitutions among the copies: all open by chance p={o.p_open:.0e}, "
                 f"{100 * h['pos3']:.0f}% of the {h['nt_diffs']} differences of a nucleotide alignment at codon position 3 "
                 f"(p={h['p_pos3']:.0e})")
+    if o.cls == "known_family" and h.get("src") == "pfam":
+        return f"Pfam {o.family} domain (hmmsearch, above the Pfam gathering threshold, E={h['evalue']:.0e})"
     if o.cls == "known_family":
         return f"similar to {o.family} (MFannot protein family), blastp E={h['evalue']:.0e}"
     if o.cls == "standard_fragment":
@@ -587,9 +644,15 @@ def _evidence(o: Orf) -> str:
 
 # ── writing ──────────────────────────────────────────────────────────────────────────────────────────────────────
 def location(o: Orf, n: int):
-    if o.end <= n:
-        return FeatureLocation(o.start, o.end, strand=o.strand)
-    parts = [FeatureLocation(o.start, n, strand=o.strand), FeatureLocation(0, o.end - n, strand=o.strand)]
+    """The ORF's location; one that ends at a tRNA without a stop has an open 3' end (> / <)."""
+    from Bio.SeqFeature import AfterPosition, BeforePosition, ExactPosition
+    lo, hi = o.start, o.end
+    lo_pos = BeforePosition(lo) if (o.trna_end and o.strand == -1) else ExactPosition(lo)
+    if hi <= n:
+        hi_pos = AfterPosition(hi) if (o.trna_end and o.strand == 1) else ExactPosition(hi)
+        return FeatureLocation(lo_pos, hi_pos, strand=o.strand)
+    hi_pos = AfterPosition(hi - n) if (o.trna_end and o.strand == 1) else ExactPosition(hi - n)
+    parts = [FeatureLocation(lo_pos, n, strand=o.strand), FeatureLocation(0, hi_pos, strand=o.strand)]
     return CompoundLocation(parts if o.strand == 1 else parts[::-1])
 
 
@@ -601,7 +664,12 @@ def write_orf(rec: SeqRecord, o: Orf, code: int) -> None:
     what = f"ORF of unknown function ({o.cls})"
     if o.cls == "known_family" and o.family in PRODUCTS:
         name, product, what = o.family, PRODUCTS[o.family], f"{o.family} by similarity (known protein family)"
+    elif o.cls == "known_family" and o.family in PFAM_PRODUCT:
+        product, what = PFAM_PRODUCT[o.family], f"Pfam {o.family} (gathering threshold)"
     note = f"{NOTE}: {what}; {evidence(o)}"
+    if o.trna_end:
+        note += (f"; no stop codon: the reading frame runs on into {o.trna_end} (mitochondrial transcripts are cut at "
+                 f"tRNAs); 3' end at the last whole codon before it")
     quals = {"gene": [name], "codon_start": ["1"], "transl_table": [str(code)], "product": [product],
              "note": [note]}
     for k, v in stop_qualifiers(rec, loc, code).items():          # incomplete stop: /transl_except, polyA note
@@ -646,6 +714,7 @@ def annotate(recs: List[SeqRecord], default_code: int, mode: str = "yes", librar
     if not batch:
         return []
     search(batch, library, excl, threads, bin_dir, reference_orfs(refs, default_code, excl))
+    pfam_search(batch, threads, bin_dir)
     for o in batch:
         classify(o, codes[o.record])
     rank = {"standard_fragment": 0, "known_family": 1, "conserved": 2, "long_unconfirmed": 3}
