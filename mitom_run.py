@@ -26,6 +26,7 @@ from mitom_orient import (
     write_orientation_fallback,
 )
 from mitom_output import (
+    GROUPED_LAYOUT,
     OUTPUT_LAYOUT,
     RunSummary,
     cleanup_intermediates,
@@ -34,6 +35,8 @@ from mitom_output import (
     merge_gb_files,
     new_reports,
     organize_outputs,
+    regroup_outputs,
+    where,
     refresh_summary,
 )
 from mitom_prepare import log_environment, preflight
@@ -181,8 +184,9 @@ def stage_input(r: RunState) -> Optional[int]:
         for n, why in dropped:
             if n:
                 steps.info(f"removed {n}: {why}")
-        steps.info("the original annotation of every kept record is saved for comparison (original_annotation/)")
-        steps.done(f"{total} records to annotate; reasons per record: reports/dedup_report.tsv")
+        steps.info("the original annotation of every kept record is saved for comparison "
+                   f"({where(args, 'original_annotation/')})")
+        steps.done(f"{total} records to annotate; reasons per record: {where(args, 'reports/dedup_report.tsv')}")
     else:
         steps.done(f"{total} FASTA sequences to annotate")
     if total == 0:                                       # unreadable, empty or all-N input: nothing to annotate
@@ -283,7 +287,7 @@ def stage_round2(r: RunState) -> Optional[int]:
         steps.info(f"checked {n_checked}: {len(phase2_samples)} need round 2 (gene cut at the old ends, gene "
                    f"changed by the shift, gene across the new start, standard gene missing); "
                    f"{n_checked - len(phase2_samples)} keep the shifted round-1 annotation")
-        steps.info("decision and reason per record: reports/reannotation_decision.tsv")
+        steps.info(f"decision and reason per record: {where(args, 'reports/reannotation_decision.tsv')}")
     else:
         steps.info(f"--if_reannotation_2 yes: all {n_checked} re-oriented records are annotated again")
     r.results2 = run_phase2(phase2_samples, args, out_root, r.reor_fasta_dir)
@@ -521,7 +525,10 @@ def stage_output(r: RunState) -> Optional[int]:
     steps.start("output", "Organise the output")
     organize_outputs(out_root, r.merge_dir, keep=args.keep_intermediate == "yes",
                      reports_named=(f"no_{args.which_gene_first}_samples.txt",))
-    for name, what in OUTPUT_LAYOUT:
+    grouped = getattr(args, "output_layout", "grouped") == "grouped"
+    if grouped:
+        regroup_outputs(out_root)
+    for name, what in (GROUPED_LAYOUT if grouped else OUTPUT_LAYOUT):
         if (out_root / name).exists():
             steps.info(f"{name:28s} {what}")
     steps.done(f"explained in {out_root / 'README.txt'}")
@@ -534,10 +541,11 @@ def run_exit_code(r: RunState) -> int:
     """1 when every record failed in the annotation core or no final GenBank was written, else 0."""
     total = r.total
     if total and len(r.summary.annotation_failed) == total:
-        logging.warning(f"[FAIL] every record failed in the annotation core ({total}): see reports/failed_logs/")
+        logging.warning(f"[FAIL] every record failed in the annotation core ({total}): see "
+                        f"{where(r.args, 'reports/failed_logs/')}")
         return 1
     if total and not (r.summary_rows and r.all_final_gbs):  # (Codex R7, 2026-11-05: exit 0 with no final GenBank)
-        logging.warning(f"[FAIL] no final GenBank written for any of the {total} record(s): see reports/")
+        logging.warning(f"[FAIL] no final GenBank written for any of the {total} record(s): see {where(r.args, 'reports/')}")
         return 1
     return 0
 

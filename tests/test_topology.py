@@ -441,3 +441,42 @@ def test_sample_lineage_is_the_records_own_in_a_multi_record_file(tmp_path):
     lin = {acc: sample_lineage(SampleInfo(acc, acc, f"S{k}", "circular", fa, fa, gb))
            for k, acc in enumerate(("NC_008446.1", "NC_000933.1"))}
     assert lin == {"NC_008446.1": "Eukaryota;Metazoa;Cnidaria;Scyphozoa", "NC_000933.1": "Eukaryota;Metazoa;Cnidaria;Anthozoa"}
+
+
+def test_complete_genome_labelled_linear_is_circular(tmp_path):
+    """Issue #8 (OZ287881, OZ346613): a GenBank record labelled linear whose DEFINITION claims a whole mitochondrial
+    genome (DToL / ATLASea organelle assemblies) is circular when it holds the complete gene set, no gene is cut at
+    an end and its lineage has no linear mtDNA; otherwise the label stays."""
+    claim = "genome assembly, organelle: mitochondrion"
+    top, why = mt.decide("linear", [], "Metazoa;Annelida", genes=ALL, claim=claim)
+    assert top == "circular" and claim in why
+    assert mt.decide("linear", [], "Metazoa;Annelida", genes=ALL) == ("linear", "as labelled")          # no claim
+    assert mt.decide("linear", [], "Metazoa;Annelida", genes=ALL - {"rrnS"}, claim=claim)[0] == "linear"
+    cut = [{"gene": "cox1", "verdict": "cut", "residues": "100-513/513"}]
+    assert mt.decide("linear", cut, "Metazoa;Annelida", genes=ALL, claim=claim)[0] == "linear"
+    assert mt.decide("linear", [], "Metazoa;Cnidaria;Hydrozoa", genes=ALL, claim=claim)[0] == "linear"
+    for definition, want in (("Leodice harassii genome assembly, organelle: mitochondrion.", claim),
+                             ("Marphysa sp. mitochondrion, complete genome.", "complete genome"),
+                             ("Marphysa sp. mitochondrion, partial genome.", "")):
+        gb = tmp_path / "r.gb"
+        from Bio.SeqRecord import SeqRecord
+        rec = SeqRecord(Seq("ACGT" * 10), id="X1.1", name="X1", description=definition,
+                        annotations={"molecule_type": "DNA", "topology": "linear"})
+        SeqIO.write([rec], str(gb), "genbank")
+        si = SampleInfo(sample_name="X1.1", orig_token="X1.1", internal_id="S00001", topology="linear",
+                        source_fasta=gb, internal_fasta=gb, orig_gb_path=gb)
+        assert mt.complete_claim(si) == want
+
+
+def test_reverse_complement_keeps_the_source_on_the_plus_strand():
+    """Issue #8: a record turned to the strand of its orientation gene keeps source 1..L (not complement(1..L))."""
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    from mito_common import reverse_complement_record
+    rec = SeqRecord(Seq("ATGAAACCCGGGTTTTAA" * 5), id="X", annotations={"topology": "linear"})
+    rec.features = [SeqFeature(FeatureLocation(0, len(rec), strand=1), type="source"),
+                    SeqFeature(FeatureLocation(3, 12, strand=1), type="CDS")]
+    rc = reverse_complement_record(rec)
+    src, cds = rc.features
+    assert (int(src.location.start), int(src.location.end), src.location.strand) == (0, len(rec), 1)
+    assert (int(cds.location.start), int(cds.location.end), cds.location.strand) == (len(rec) - 12, len(rec) - 3, -1)

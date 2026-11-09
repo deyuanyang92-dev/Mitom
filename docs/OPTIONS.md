@@ -40,13 +40,13 @@ usage: mitom run [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_maxlen
                  [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
                  [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
                  [--intron_fix {auto,yes,no}] [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB]
-                 [--intron_ref_gb INTRON_REF_GB] [--keep_intermediate {yes,no}] [--threads THREADS]
-                 [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
-                 [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
-                 [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
-                 [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
-                 [--smk_extra FLAG] [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN]
-                 [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
+                 [--intron_ref_gb INTRON_REF_GB] [--output_layout {grouped,classic}]
+                 [--keep_intermediate {yes,no}] [--threads THREADS] [--jobs N] [--clade CLADE]
+                 [--genetic_code GENETIC_CODE] [--infq INFQ] [--fq_position {flat,sample_dir}]
+                 [--suffix_fq SUFFIX_FQ] [--scheduler_backend {auto,snakemake,threads}]
+                 [--snakemake_bin SNAKEMAKE_BIN] [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
+                 [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG] [--engine {native,mitoz,mitos2}]
+                 [--mitoz_bin MITOZ_BIN] [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
                  [--if_reannotation_2 {yes,auto,no}] [--preserve_phase1_metadata {yes,no}]
                  [--smart_metadata {yes,no}] [--auto_accept_metadata {yes,no}]
 
@@ -80,8 +80,7 @@ options:
                         calcareous sponges (linear mtDNA) without a gene across the ends; an unlabelled
                         record no gene at the ends decides is circular with >= 12 of the 13 protein genes
                         and both rRNAs, else linear; changed records are annotated again
-                        (reports/topology_decision.tsv). label: the label only. circular / linear: every
-                        record.
+                        (qc/topology_decision.tsv). label: the label only. circular / linear: every record.
   --if_reannotation_2 {yes,auto,no}
                         Phase-2 re-annotation of the reoriented sequences. auto (default): round 1 runs in
                         full and only samples that fail the check after the cox1 shift (gene at the original
@@ -115,7 +114,8 @@ Annotation:
   --ncr_min_len NCR_MIN_LEN
                         shortest non-coding region written (nt, default 100; intergenic spacers are shorter)
   --curate {yes,no}     yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and
-                        NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/
+                        NCBI submission files (.fsa/.tbl/.sqn/.val) -> submission/ (annotate:
+                        06.ncbi_submission/)
   --sbt SBT             NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template)
                         for the .sqn files
   --rescue {auto,yes,no}
@@ -153,10 +153,16 @@ Annotation:
   --intron_ref_gb INTRON_REF_GB
                         GenBank file/dir of close relatives used as extra homologs for intron models
                         (repeatable).
+  --output_layout {grouped,classic}
+                        Output folder of run / import: grouped (default) = summary.tsv, README.txt and
+                        annotation/ (GenBank, genes.fna, proteins.faa, plots/) submission/<record>/ qc/
+                        input/ logs/; classic = the layout before 2026-11-09 (final_annotation/
+                        ncbi_submission/ plots/ reports/ ...).
   --keep_intermediate {yes,no}
                         Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run:
                         moved to work/). Default no: deleted after the final output is written; core logs of
-                        problem samples are always kept (reports/failed_logs/).
+                        problem samples are always kept (logs/failed_logs/; classic layout and annotate:
+                        reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
   --jobs N              Records annotated at the same time (default: CPUs // threads = 16).
   --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
@@ -164,7 +170,7 @@ Annotation:
                         taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
                         genomes, their genetic code checked on the codons; no close relative: Animal and the
                         code of the codons). Several phyla / codes: `run` annotates each group with its own
-                        clade and code and merges the results (reports/clade_decision.tsv); `import` and
+                        clade and code and merges the results (qc/clade_decision.tsv); `import` and
                         `annotate` need one. Or give one of: Chordata, Arthropoda, Echinodermata, Annelida-
                         segmented-worms, Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-
                         sponges, Cnidaria, Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
@@ -216,9 +222,10 @@ usage: mitom import [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_max
                     [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
                     [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
                     [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_bin INTRON_BIN]
-                    [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB] [--keep_intermediate {yes,no}]
-                    [--threads THREADS] [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE]
-                    [--infq INFQ] [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
+                    [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
+                    [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
+                    [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
+                    [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
                     [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
                     [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
                     [--smk_extra FLAG] [--preserve_phase1_metadata {yes,no}] [--smart_metadata {yes,no}]
@@ -275,7 +282,8 @@ Annotation:
   --ncr_min_len NCR_MIN_LEN
                         shortest non-coding region written (nt, default 100; intergenic spacers are shorter)
   --curate {yes,no}     yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and
-                        NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/
+                        NCBI submission files (.fsa/.tbl/.sqn/.val) -> submission/ (annotate:
+                        06.ncbi_submission/)
   --sbt SBT             NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template)
                         for the .sqn files
   --rescue {auto,yes,no}
@@ -313,10 +321,16 @@ Annotation:
   --intron_ref_gb INTRON_REF_GB
                         GenBank file/dir of close relatives used as extra homologs for intron models
                         (repeatable).
+  --output_layout {grouped,classic}
+                        Output folder of run / import: grouped (default) = summary.tsv, README.txt and
+                        annotation/ (GenBank, genes.fna, proteins.faa, plots/) submission/<record>/ qc/
+                        input/ logs/; classic = the layout before 2026-11-09 (final_annotation/
+                        ncbi_submission/ plots/ reports/ ...).
   --keep_intermediate {yes,no}
                         Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run:
                         moved to work/). Default no: deleted after the final output is written; core logs of
-                        problem samples are always kept (reports/failed_logs/).
+                        problem samples are always kept (logs/failed_logs/; classic layout and annotate:
+                        reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
   --jobs N              Records annotated at the same time (default: CPUs // threads = 16).
   --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
@@ -324,7 +338,7 @@ Annotation:
                         taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
                         genomes, their genetic code checked on the codons; no close relative: Animal and the
                         code of the codons). Several phyla / codes: `run` annotates each group with its own
-                        clade and code and merges the results (reports/clade_decision.tsv); `import` and
+                        clade and code and merges the results (qc/clade_decision.tsv); `import` and
                         `annotate` need one. Or give one of: Chordata, Arthropoda, Echinodermata, Annelida-
                         segmented-worms, Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-
                         sponges, Cnidaria, Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
@@ -362,10 +376,11 @@ usage: mitom annotate [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_m
                       [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
                       [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_bin INTRON_BIN]
                       [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
-                      [--keep_intermediate {yes,no}] [--threads THREADS] [--jobs N] [--clade CLADE]
-                      [--genetic_code GENETIC_CODE] [--infq INFQ] [--fq_position {flat,sample_dir}]
-                      [--suffix_fq SUFFIX_FQ] [--scheduler_backend {auto,snakemake,threads}]
-                      [--snakemake_bin SNAKEMAKE_BIN] [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
+                      [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
+                      [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
+                      [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
+                      [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
+                      [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
                       [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG]
                       [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN] [--mitos_args MITOS_ARGS]
                       [--topology {auto,label,circular,linear}] [--preserve_phase1_metadata {yes,no}]
@@ -400,8 +415,7 @@ options:
                         calcareous sponges (linear mtDNA) without a gene across the ends; an unlabelled
                         record no gene at the ends decides is circular with >= 12 of the 13 protein genes
                         and both rRNAs, else linear; changed records are annotated again
-                        (reports/topology_decision.tsv). label: the label only. circular / linear: every
-                        record.
+                        (qc/topology_decision.tsv). label: the label only. circular / linear: every record.
   --preserve_phase1_metadata {yes,no}
 
 Annotation:
@@ -423,7 +437,8 @@ Annotation:
   --ncr_min_len NCR_MIN_LEN
                         shortest non-coding region written (nt, default 100; intergenic spacers are shorter)
   --curate {yes,no}     yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and
-                        NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/
+                        NCBI submission files (.fsa/.tbl/.sqn/.val) -> submission/ (annotate:
+                        06.ncbi_submission/)
   --sbt SBT             NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template)
                         for the .sqn files
   --rescue {auto,yes,no}
@@ -461,10 +476,16 @@ Annotation:
   --intron_ref_gb INTRON_REF_GB
                         GenBank file/dir of close relatives used as extra homologs for intron models
                         (repeatable).
+  --output_layout {grouped,classic}
+                        Output folder of run / import: grouped (default) = summary.tsv, README.txt and
+                        annotation/ (GenBank, genes.fna, proteins.faa, plots/) submission/<record>/ qc/
+                        input/ logs/; classic = the layout before 2026-11-09 (final_annotation/
+                        ncbi_submission/ plots/ reports/ ...).
   --keep_intermediate {yes,no}
                         Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run:
                         moved to work/). Default no: deleted after the final output is written; core logs of
-                        problem samples are always kept (reports/failed_logs/).
+                        problem samples are always kept (logs/failed_logs/; classic layout and annotate:
+                        reports/failed_logs/).
   --threads THREADS     Threads per annotation job (default: min(8, number of CPUs) = 8).
   --jobs N              Records annotated at the same time (default: CPUs // threads = 16).
   --clade CLADE         Taxonomic group (sets the genetic code and group rules). auto (default): per record
@@ -472,7 +493,7 @@ Annotation:
                         taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest
                         genomes, their genetic code checked on the codons; no close relative: Animal and the
                         code of the codons). Several phyla / codes: `run` annotates each group with its own
-                        clade and code and merges the results (reports/clade_decision.tsv); `import` and
+                        clade and code and merges the results (qc/clade_decision.tsv); `import` and
                         `annotate` need one. Or give one of: Chordata, Arthropoda, Echinodermata, Annelida-
                         segmented-worms, Bryozoa, Mollusca, Nematoda, Nemertea-ribbon-worms, Porifera-
                         sponges, Cnidaria, Platyhelminthes-flatworms, Chaetognatha-arrow-worms, Animal.
@@ -1397,7 +1418,7 @@ usage: mito_debug.py [-h] path
 
 mito_debug.py - what happened in a MitoM run, read from its log (`mitom debug <output folder | log file>`).
 
-The run log (run.log of `mitom run` / `import`, pipeline.log of `annotate` / `reorient`, the log of `dedup`,
+The run log (run.log of `mitom run` / `import` / `annotate`, pipeline.log of `reorient`, the log of `dedup`,
 `transfer_metadata`, `replace_organism`) holds lines of a fixed form (mitom_log.py); with the output folder the
 reports are read too. The report:
   run        command, MitoM version, start, end, duration; status: finished (exit code), stopped on an error (the

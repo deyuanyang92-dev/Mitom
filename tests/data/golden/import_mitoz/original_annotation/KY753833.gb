@@ -1,4 +1,4 @@
-LOCUS       KY753833               15677 bp    DNA     circular UNK 16-OCT-2023
+LOCUS       KY753833               15677 bp    DNA     circular UNK <DATE>
 DEFINITION  .
 ACCESSION   KY753833
 VERSION     KY753833
@@ -14,7 +14,7 @@ REFERENCE   1  (bases 1 to 15677)
 REFERENCE   2  (bases 1 to 15677)
   AUTHORS   MENG,G.
   TITLE     Direct Submission
-  JOURNAL   Submitted (16-OCT-2023) China National GeneBank, BGI-Shenzhen,
+  JOURNAL   Submitted (<DATE>) China National GeneBank, BGI-Shenzhen,
             Beishan Industrial Zone, Beishan Road, Yantian District, Shenzhen,
             Guangdong 518083, China
 FEATURES             Location/Qualifiers

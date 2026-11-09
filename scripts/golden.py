@@ -29,14 +29,17 @@ REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / "tests" / "data"
 GOLDEN = DATA / "golden"
 COMMON = ["--threads", "2"]
+CLASSIC = ["--output_layout", "classic"]          # the layout the first references were made in
 # case -> (input builder, mitom_pipeline.py / script arguments); {IN} = input path, {OUT} = output folder
 CASES: Dict[str, List[str]] = {
-    "run_annelid_gb": ["mitom_pipeline.py", "run", "-i", "{DATA}/NC_000931.gb", "-o", "{OUT}", *COMMON],
-    "run_coral_intron": ["mitom_pipeline.py", "run", "-i", "{DATA}/NC_006902.gb", "-o", "{OUT}", *COMMON],
-    "run_two_phyla": ["mitom_pipeline.py", "run", "-i", "{IN}/two", "-o", "{OUT}", *COMMON],
-    "run_fasta_blind": ["mitom_pipeline.py", "run", "-i", "{IN}/NC_010217.fasta", "-o", "{OUT}", *COMMON],
+    "run_annelid_gb": ["mitom_pipeline.py", "run", "-i", "{DATA}/NC_000931.gb", "-o", "{OUT}", *COMMON, *CLASSIC],
+    "run_coral_intron": ["mitom_pipeline.py", "run", "-i", "{DATA}/NC_006902.gb", "-o", "{OUT}", *COMMON, *CLASSIC],
+    "run_two_phyla": ["mitom_pipeline.py", "run", "-i", "{IN}/two", "-o", "{OUT}", *COMMON, *CLASSIC],
+    "run_fasta_blind": ["mitom_pipeline.py", "run", "-i", "{IN}/NC_010217.fasta", "-o", "{OUT}", *COMMON, *CLASSIC],
     "import_mitoz": ["mitom_pipeline.py", "import", "-i", "{DATA}/KY753833_mitoz.gbf", "-o", "{OUT}", "--clade",
-                     "Annelida-segmented-worms", "--genetic_code", "5", *COMMON],
+                     "Annelida-segmented-worms", "--genetic_code", "5", *COMMON, *CLASSIC],
+    # issues #7 / #8 / #9 (NCBI MZ052209.1, OZ287881.1, OZ346613.1), the default grouped layout
+    "run_issues": ["mitom_pipeline.py", "run", "-i", "{DATA}/issues", "-o", "{OUT}", *COMMON],
     "annotate_gb": ["mitom_pipeline.py", "annotate", "-i", "{DATA}/NC_000931.gb", "-o", "{OUT}", *COMMON],
     "curate_mitoz": ["mito_curate.py", "-i", "{DATA}/OW387151_mitoz.gbf", "-o", "{OUT}"],
 }

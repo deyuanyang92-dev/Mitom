@@ -81,7 +81,7 @@ MITOS2 用户 / MITOS2 users：MitoM 把 MITOS2 结果批量转成 GenBank、统
 `--clade` 可选：`Chordata Arthropoda Echinodermata Annelida-segmented-worms Bryozoa Mollusca Nematoda
 Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaetognatha-arrow-worms Animal`
 （`Animal` = 全动物蛋白库，用于其他门）。常用：`--threads 8 --jobs 4`（每个任务线程数 / 同时任务数）、
-`--sbt template.sbt`（NCBI 提交者模板）。`--threads` 默认 `min(8, CPU 数)`，`--jobs` 默认 `CPU 数 // threads`。`--clade auto`（默认）逐条判断：GenBank 记录用自己的分类信息和 CDS 的 `transl_table`；FASTA 和没有分类信息的记录用 blastx 比对 refseq89m 的 8 个保守蛋白，取最近参考基因组的门和遗传密码，再用 AGR / ATA / AAA / TGA 等密码子核验（没有近亲时按 `Animal` 和密码子判断的遗传密码）。一次输入含多个门或多个遗传密码时，`run` 按组分别注释再合并到同一个输出目录；每条记录的判断和依据见 `reports/clade_decision.tsv`。
+`--sbt template.sbt`（NCBI 提交者模板）。`--threads` 默认 `min(8, CPU 数)`，`--jobs` 默认 `CPU 数 // threads`。`--clade auto`（默认）逐条判断：GenBank 记录用自己的分类信息和 CDS 的 `transl_table`；FASTA 和没有分类信息的记录用 blastx 比对 refseq89m 的 8 个保守蛋白，取最近参考基因组的门和遗传密码，再用 AGR / ATA / AAA / TGA 等密码子核验（没有近亲时按 `Animal` 和密码子判断的遗传密码）。一次输入含多个门或多个遗传密码时，`run` 按组分别注释再合并到同一个输出目录；每条记录的判断和依据见 `qc/clade_decision.tsv`。
 
 **3. 运行过程与结果 / What you see and what you get**
 
@@ -96,18 +96,18 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | 5 | Write the annotation; copy the original GenBank header back | 写 GenBank，写回物种、文献、标本信息 |
 | 6 | Add what the core missed | 补 12S / 16S、内含子；`--rescue yes` 时用 MITOS2 补基因 |
 | 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名；标出非编码区（NCR，`--ncr no` 不标） |
-| 8 | NCBI check (table2asn) and submission files | 生成 `ncbi_submission/` |
+| 8 | NCBI check (table2asn) and submission files | 生成 `submission/` |
 | 9 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） |
-| 10 | Genome maps | 每条一张圈图（`plots/`） |
+| 10 | Genome maps | 每条一张圈图（`annotation/plots/`） |
 | 11 | Organise the output | 整理成下面的目录结构 |
 
-运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `run.log`：
+运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `logs/run.log`：
 
 ```text
 [Step 1/11] Read input and remove duplicate records
     GenBank records read: 802
     removed 166: GenBank record that a RefSeq NC_ record was made from (NC_ kept)
-    -> 636 records to annotate; reasons per record: reports/dedup_report.tsv  (5 s)
+    -> 636 records to annotate; reasons per record: qc/dedup_report.tsv  (5 s)
 [Step 2/11] Round-1 annotation (protein genes, rRNAs, tRNAs)
     round-1 annotation: 120/636 (18%), 6 min 02 s so far, about 26 min left
 ...
@@ -119,19 +119,19 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 [Step 10/11] Genome maps (circular plots)
 ```
 
-输出目录（`out/README.txt` 逐项说明）：
+输出目录（`out/README.txt` 逐项说明；`--output_layout classic` 用 2026-11-09 以前的布局）：
 
 | 文件 / 目录 / file / folder | 内容 / contents |
 |---|---|
-| `final_annotation/<登录号>.gb` | MitoM 最终注释，每条一个文件（已定向、校正、NCBI 命名） |
-| `final_annotation_all.gb` | 同上，合并成一个文件 |
-| `original_annotation/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与上面对应，便于前后对比 |
-| `original_vs_mitom.tsv` | 原注释 vs MitoM，每个基因一行：same / ends_differ / only_original / only_mitom … |
-| `summary.tsv` | 每条记录一行：基因数、cox1 起始、用了第几轮注释、是否迁回原 header、NCBI ERROR 数 |
-| `plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：每条链一个环道（正链在外、负链在内），基因按类别着色、名字沿圆弧书写，向内依次为坐标轴、GC 含量；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot_style mitom` 用原来的样式（另有 GC skew 环），`--plot no` 不画 |
-| `ncbi_submission/` | 每条的 NCBI 提交文件 `.fsa/.tbl/.sqn` 与 table2asn 结果；`submission_summary.tsv` ERROR 为 0 的可直接提交 |
-| `reports/` | 各步骤报告：`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
-| `run.log` | 全部过程与调用的命令 |
+| `summary.tsv` | 每条记录一行：基因数、cox1 起始、用了第几轮注释、是否迁回原 header、NCBI ERROR 数（先看这个） |
+| `annotation/<登录号>.gb` | MitoM 最终注释，每条一个文件（cox1 起始、正链、校正、NCBI 命名） |
+| `annotation/all_records.gb` | 同上，合并成一个文件 |
+| `annotation/genes.fna`、`proteins.faa` | 蛋白基因和 rRNA 的核苷酸序列、蛋白序列；序列名 `登录号\|基因\|物种`，可直接比对、建树 |
+| `annotation/plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：每条链一个环道（正链在外、负链在内），基因按类别着色、名字沿圆弧书写，向内依次为坐标轴、GC 含量；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot_style mitom` 用原来的样式（另有 GC skew 环），`--plot no` 不画 |
+| `submission/<登录号>/` | 每条的 NCBI 提交文件 `.fsa/.tbl/.sqn` 与 table2asn 结果 `.val`；`submission/submission_summary.tsv` ERROR 为 0 的可直接提交 |
+| `qc/` | 核对与判断：`original_vs_mitom.tsv`（原注释 vs MitoM，每个基因一行）、`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
+| `input/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与 `annotation/` 对应，便于前后对比 |
+| `logs/` | `run.log`（全部过程与调用的命令）、`run_params.json`（全部参数）、`intron_fix.log`、出错记录的日志 |
 
 **4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；每个命令的用法和示例见 [使用手册第 6 节](docs/USAGE_zh.md#6-每个命令的用法)，怎么选命令见 [第 5 节](docs/USAGE_zh.md#5-怎么选命令)）
 
@@ -168,7 +168,7 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。
 
 ```bash
 mitom doctor                         # 先查安装：版本和文件夹、Python、每个程序；有问题的行标 !!，并给出修复命令
-mitom debug out                      # 读 out/run.log：哪一步、哪条记录、哪个程序失败，错误信息，缺什么程序及安装命令，复现命令
+mitom debug out                      # 读 out/logs/run.log：哪一步、哪条记录、哪个程序失败，错误信息，缺什么程序及安装命令，复现命令
 mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序版本、配置、数据目录）、每条命令的完整输出，保留中间文件
 ```
 求助时请附上 `mitom doctor` 和 `mitom debug out` 的输出。/ When asking for help, include the output of both.

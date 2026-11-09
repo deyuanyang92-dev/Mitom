@@ -1,0 +1,4 @@
+record	protein_genes	tRNAs	rRNAs	cox1_first	annotation_used	original_header_restored	ncbi_errors
+MZ052209.1	13	22	2	yes	round 1, shifted	yes	0
+OZ287881.1	13	22	2	yes	round 1, shifted	yes	0
+OZ346613.1	13	22	2	yes	round 1, shifted	yes	0

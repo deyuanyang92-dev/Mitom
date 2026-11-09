@@ -1,0 +1,4 @@
+sample_name	length	label	label_from	topology	changed	reason
+MZ052209.1	15891	circular	GenBank LOCUS line	circular	no	as labelled
+OZ287881.1	20760	linear	GenBank LOCUS line	circular	yes	labelled linear, but the record is a 'genome assembly, organelle: mitochondrion' with the complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs) and no gene cut at the ends: a circular molecule
+OZ346613.1	22718	linear	GenBank LOCUS line	circular	yes	labelled linear, but the record is a 'genome assembly, organelle: mitochondrion' with the complete gene set (13 of 13 protein genes, rRNA rrnL, rrnS, 22 tRNAs) and no gene cut at the ends: a circular molecule

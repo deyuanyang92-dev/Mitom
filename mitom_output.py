@@ -360,6 +360,36 @@ OUTPUT_LAYOUT = [
     ("run.log", "everything the run did, with all commands"),
     ("work/", "intermediate files (only with --keep_intermediate yes)"),
 ]
+# --output_layout grouped (default since 2026-11-09, issue #9): the same files, results / checks / logs apart
+GROUPED_LAYOUT = [
+    ("summary.tsv", "one row per record: gene counts, orientation, round, NCBI errors - read this first"),
+    ("annotation/", "the result: <accession>.gb per record (cox1 first, plus strand), all_records.gb, genes.fna "
+                    "(protein genes and rRNAs), proteins.faa, plots/ (genome maps)"),
+    ("submission/", "NCBI submission files, one folder per record (<accession>/: .fsa .tbl .sqn .val); "
+                    "submission_summary.tsv, validation_messages.tsv"),
+    ("qc/", "checks and decisions: original_vs_mitom.tsv and one report per step (deduplication, curation, ...)"),
+    ("input/", "the input records unchanged (GenBank input only), same file names"),
+    ("logs/", "run.log (everything the run did, with all commands), run_params.json, intron_fix.log, failed records"),
+    ("work/", "intermediate files (only with --keep_intermediate yes)"),
+]
+GROUPED_DIRS = ("annotation", "submission", "qc", "input", "logs")
+LOG_REPORTS = ("run_params.json", "intron_fix.log", "failed_logs", "groups")   # reports/ -> logs/ (the rest: qc/)
+_GROUPED_DIR = {"ncbi_submission": "submission", "final_annotation": "annotation", "original_annotation": "input",
+                "plots": "annotation/plots", "06.ncbi_submission": "submission"}
+
+
+def where(args, rel: str) -> str:
+    """rel, a path of the classic layout (reports/curation_report.tsv), as the user finds it after the run: the
+    grouped layout moves reports to qc/ or logs/ (--output_layout; `annotate` keeps its work layout)."""
+    if getattr(args, "output_layout", "grouped") != "grouped" or getattr(args, "cmd", "run") == "annotate":
+        return rel
+    head, _, rest = rel.partition("/")
+    if head == REPORTS:
+        first = rest.split("/")[0]
+        return ("logs/" if rest and (first in LOG_REPORTS or first.endswith(".log")) else "qc/") + rest
+    return _GROUPED_DIR.get(head, head) + (f"/{rest}" if rest or rel.endswith("/") else "")
+
+
 REPORT_NOTES = {
     "dedup_report.tsv": "deduplication: one row per input record with a sequence, kept / dropped and why",
     "clade_decision.tsv": "--clade auto: phylum, clade and genetic code of every record, from its taxonomy or by blastx",
@@ -431,7 +461,7 @@ def clear_previous_work(out_root: Path, keep: tuple = ("00.input",), protect=())
     # Only when the folder holds a MitoM output (README.txt of `run`, the log of `run` / `annotate`): a user's own
     # README.txt / plots/ in -o are not ours to delete (code review, 2026-11-06)
     names = [n.rstrip("/") for n, _ in OUTPUT_LAYOUT if n not in ("run.log", "reports/", "work/")] + \
-        ["annotation-summary.tsv", "all.final.gbf", "README.txt"]
+        ["annotation-summary.tsv", "all.final.gbf", "README.txt", *GROUPED_DIRS]
     for name in names if _mitom_output(Path(out_root)) else ():
         d = Path(out_root) / name
         if name in keep or d.is_symlink() or any(_overlaps(d, x) for x in protect):
@@ -447,7 +477,8 @@ def clear_previous_work(out_root: Path, keep: tuple = ("00.input",), protect=())
 
 def _mitom_output(out_root: Path) -> bool:
     """out_root holds the output of an earlier MitoM run: its README.txt, or a run.log / pipeline.log MitoM wrote."""
-    for name, mark in (("README.txt", "MitoM output"), ("run.log", "[ENV] MitoM "), ("pipeline.log", "[ENV] MitoM ")):
+    for name, mark in (("README.txt", "MitoM output"), ("run.log", "[ENV] MitoM "), ("logs/run.log", "[ENV] MitoM "),
+                       ("pipeline.log", "[ENV] MitoM ")):
         try:
             with (out_root / name).open(encoding="utf-8", errors="replace") as fh:
                 if mark in fh.read(4096):
@@ -533,3 +564,87 @@ def organize_outputs(out_root: Path, final_gb_dir: Path, keep: bool = False, rep
               "  same / ends_differ / name_differs / strand_differs / only_original / only_mitom / same_place",
               "  locations are on the original record's sequence; difference_nt = larger shift of the two ends"]
     (out_root / "README.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_sequences(gb_files: List[Path], genes_out: Path, proteins_out: Path) -> Tuple[int, int]:
+    """genes.fna (protein genes and rRNAs, nucleotides) and proteins.faa (/translation of each CDS) of the final
+    records; names <accession>|<gene>|<organism> (spaces: _), ready for alignment and trees (issue #9).
+    Returns (genes, proteins) written."""
+    from Bio import SeqIO
+    genes: List[str] = []
+    prots: List[str] = []
+    for gb in gb_files:
+        for rec in SeqIO.parse(str(gb), "genbank"):
+            org = rec.annotations.get("organism", "") or next(
+                (f.qualifiers.get("organism", [""])[0] for f in rec.features if f.type == "source"), "")
+            org = "_".join(org.split())
+            for f in rec.features:
+                if f.type not in ("CDS", "rRNA"):
+                    continue
+                gene = f.qualifiers.get("gene", f.qualifiers.get("product", ["?"]))[0]
+                name = f"{rec.id}|{'_'.join(gene.split())}|{org}"
+                genes.append(f">{name}\n{f.extract(rec.seq)}\n")
+                tr = f.qualifiers.get("translation", [""])[0]
+                if f.type == "CDS" and tr and "pseudo" not in f.qualifiers:
+                    prots.append(f">{name}\n{tr}\n")
+    genes_out.write_text("".join(genes), encoding="utf-8")
+    proteins_out.write_text("".join(prots), encoding="utf-8")
+    return len(genes), len(prots)
+
+
+def regroup_outputs(out_root: Path) -> None:
+    """The classic layout organize_outputs / mitom_groups.merge_outputs wrote, arranged as GROUPED_LAYOUT
+    (--output_layout grouped): annotation/ (+ genes.fna, proteins.faa), submission/<record>/, qc/, input/, logs/;
+    README.txt rewritten. The open run.log is moved (same file system: the log keeps writing to it)."""
+    out_root = Path(out_root)
+    for name in GROUPED_DIRS:                                  # a previous grouped run's folders
+        d = out_root / name
+        if d.is_dir() and not d.is_symlink():
+            shutil.rmtree(d)
+    ann, sub, qc, inp, logs = (out_root / n for n in GROUPED_DIRS)
+    for d in (ann, qc, logs):
+        d.mkdir()
+    if (out_root / "final_annotation").is_dir():
+        shutil.move(str(out_root / "final_annotation"), str(ann / "_tmp"))
+        for f in sorted((ann / "_tmp").iterdir()):
+            shutil.move(str(f), str(ann / f.name))
+        (ann / "_tmp").rmdir()
+    if (out_root / "final_annotation_all.gb").is_file():
+        shutil.move(str(out_root / "final_annotation_all.gb"), str(ann / "all_records.gb"))
+    if (out_root / "plots").is_dir():
+        shutil.move(str(out_root / "plots"), str(ann / "plots"))
+    n_gene, n_prot = write_sequences(sorted(f for f in ann.glob("*.gb") if f.name != "all_records.gb"),
+                                     ann / "genes.fna", ann / "proteins.faa")
+    logging.info(f"[OUTPUT] annotation/genes.fna: {n_gene} genes, annotation/proteins.faa: {n_prot} proteins")
+    if (out_root / "ncbi_submission").is_dir():
+        shutil.move(str(out_root / "ncbi_submission"), str(sub))
+        for f in sorted(p for p in sub.iterdir() if p.is_file() and p.suffix != ".tsv"):
+            rec = f.name[:-len("".join(f.suffixes[-1:]))]       # <accession>.fsa -> <accession>/
+            (sub / rec).mkdir(exist_ok=True)
+            shutil.move(str(f), str(sub / rec / f.name))
+    if (out_root / "original_vs_mitom.tsv").is_file():
+        shutil.move(str(out_root / "original_vs_mitom.tsv"), str(qc / "original_vs_mitom.tsv"))
+    rep = out_root / REPORTS
+    if rep.is_dir():
+        for f in sorted(rep.iterdir()):
+            shutil.move(str(f), str((logs if f.name in LOG_REPORTS or f.suffix == ".log" else qc) / f.name))
+        rep.rmdir()
+    if (out_root / "original_annotation").is_dir():
+        shutil.move(str(out_root / "original_annotation"), str(inp))
+    if (out_root / "run.log").is_file():
+        shutil.move(str(out_root / "run.log"), str(logs / "run.log"))
+    for f in logs.glob("*.log"):                                # the report paths a step's log names (issue #6)
+        if f.name != "run.log":
+            f.write_text(f.read_text(encoding="utf-8", errors="replace").replace(f"{out_root / REPORTS}/", f"{qc}/"),
+                         encoding="utf-8")
+    old = (out_root / "README.txt").read_text(encoding="utf-8") if (out_root / "README.txt").is_file() else ""
+    tail = old[old.index("\nsummary.tsv columns"):] if "\nsummary.tsv columns" in old else ""
+    lines = ["MitoM output", "=" * 60, ""]
+    lines += [f"{n:14s} {w}" for n, w in GROUPED_LAYOUT if (out_root / n.rstrip("/")).exists()]
+    lines += ["", "qc/", "-" * 60]
+    notes = {"original_vs_mitom.tsv": "original vs MitoM annotation, one row per gene (GenBank input)", **REPORT_NOTES}
+    lines += [f"  {n:28s} {w}" for n, w in notes.items() if (qc / n).exists()]
+    others = sorted(f.name for f in qc.iterdir() if f.name not in notes)
+    lines += [f"  {n}" for n in others]
+    tail = tail.replace("reports/clade_decision.tsv", "qc/clade_decision.tsv").replace("reports/groups", "logs/groups")
+    (out_root / "README.txt").write_text("\n".join(lines) + "\n" + tail, encoding="utf-8")

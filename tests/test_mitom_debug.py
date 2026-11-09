@@ -197,14 +197,14 @@ def test_real_failing_run_is_explained_by_mitom_debug(tmp_path):
             "--rrna_hmm", "no", "--intron_fix", "no", "--curate", "no", "--plot", "no", "--jobs", "1", "--threads", "1"]
     run = mitom("run", "-i", "in.fa", "-o", "out", *opts, env=env, cwd=tmp_path)
     assert run.returncode == 1, run.stderr[-2000:]
-    log = (tmp_path / "out" / "run.log").read_text()
+    log = (tmp_path / "out" / "logs" / "run.log").read_text()
     assert "[ENV] command: mitom run -i in.fa -o out" in log and "[DONE] exit=1" in log
     assert "[RECORD rec1] annotation failed (round-1 annotation, exit 1): RuntimeError: blastx failed (2)" in log
     dbg = mitom("debug", "out", env=env, cwd=tmp_path)
     assert dbg.returncode == 1
     rep = dbg.stdout
     assert "status  : FAILED (exit 1): every record failed in the annotation core" in rep
-    assert "first error in reports/failed_logs/rec1.01.anno_round1.core.stderr.log: RuntimeError: blastx failed (2): " \
+    assert "first error in logs/failed_logs/rec1.01.anno_round1.core.stderr.log: RuntimeError: blastx failed (2): " \
            "BLAST Database error: No alias or index file found" in rep
     assert "mito_core.py annotate" in rep.split("Failed programs")[1]
     assert "the run in debug mode : mitom run -i in.fa -o out_debug" in rep and "--debug" in rep
@@ -212,7 +212,7 @@ def test_real_failing_run_is_explained_by_mitom_debug(tmp_path):
 
     run = mitom("run", "-i", "in.fa", "-o", "dbg", *opts, "--debug", env=env, cwd=tmp_path)
     assert run.returncode == 1
-    log = (tmp_path / "dbg" / "run.log").read_text()
+    log = (tmp_path / "dbg" / "logs" / "run.log").read_text()
     assert "[DEBUG]" in log and "[ENV] program blastx: " in log and "[ENV] package Bio " in log
     assert '"keep_intermediate": "yes"' in log and (tmp_path / "dbg" / "work" / "01.anno_round1").is_dir()
     rep = mitom("debug", "dbg", env=env, cwd=tmp_path).stdout

@@ -8,7 +8,7 @@ results are usually fixed by hand in Geneious. MitoM automates these steps for m
 
 | 步骤 / Step | MITOS2 | MitoM |
 |---|---|---|
-| GenBank 文件 / GenBank file | 无 / no | `final_annotation/*.gb`（Geneious 可直接打开 / opens in Geneious） |
+| GenBank 文件 / GenBank file | 无 / no | `annotation/*.gb`（Geneious 可直接打开 / opens in Geneious） |
 | 统一方向，cox1 开头 / plus strand, cox1 first | 无 / no | 自动 / automatic |
 | 端点与基因名按 NCBI 规范修整 / ends and names curated to NCBI rules | 无 / no | 自动，每处修改有记录 / automatic, every change logged |
 | NCBI 提交文件与检查 / NCBI files and table2asn check | 无 / no | `.tbl .fsa .sqn` |
@@ -61,15 +61,16 @@ MITOS2 finds the genes. Everything after that is section 1. Install with `mamba 
 
 | 文件 / File | 用途 / Use |
 |---|---|
-| `final_annotation/<id>.gb` | 最终结果：已定向、修整、NCBI 基因名 / final: oriented, curated, NCBI names |
-| `final_annotation_all.gb` | 同上合并为一个文件 / the same in one file |
-| `original_annotation/<id>.gb` | MITOS2 结果原样转成的 GenBank（坐标不变）/ MITOS2 result as GenBank, coordinates unchanged |
-| `original_vs_mitom.tsv` | 每个基因修整前后对比 / each gene before vs after |
+| `annotation/<id>.gb` | 最终结果：已定向、修整、NCBI 基因名 / final: oriented, curated, NCBI names |
+| `annotation/all_records.gb` | 同上合并为一个文件 / the same in one file |
+| `input/<id>.gb` | MITOS2 结果原样转成的 GenBank（坐标不变）/ MITOS2 result as GenBank, coordinates unchanged |
+| `qc/original_vs_mitom.tsv` | 每个基因修整前后对比 / each gene before vs after |
 | `summary.tsv` | 每条记录：基因数、是否 cox1 开头、NCBI ERROR 数 / per record: gene counts, cox1 first, NCBI errors |
-| `reports/curation_report.tsv` | 每处修改：规则、旧/新位置、原因 / every change: rule, old/new location, reason |
-| `ncbi_submission/` | `.fsa .tbl`（BankIt）、`.sqn`、`submission_summary.tsv`（ERROR 为 0 可提交 / 0 ERROR = ready） |
-| `plots/<id>.png/.pdf` | 环状图 / genome map |
-| `reports/`, `run.log` | 各步骤报告、全部命令 / step reports, all commands |
+| `qc/curation_report.tsv` | 每处修改：规则、旧/新位置、原因 / every change: rule, old/new location, reason |
+| `submission/<id>/` | `.fsa .tbl`（BankIt）、`.sqn`、`submission_summary.tsv`（ERROR 为 0 可提交 / 0 ERROR = ready） |
+| `annotation/plots/<id>.png/.pdf` | 环状图 / genome map |
+| `qc/`, `logs/run.log` | 各步骤报告、全部命令 / step reports, all commands |
+| `annotation/genes.fna`、`proteins.faa` | 基因、蛋白序列 / gene and protein sequences |
 
 `curation_report.tsv`（实测 / real）:
 

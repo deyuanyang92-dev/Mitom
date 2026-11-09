@@ -1,0 +1,32 @@
+record	feature	gene	strand	rule	old	new	reason
+MZ052209.1	rRNA	rrnS	+	R1	10234..11006	10236..11006	trimmed to flanking genes and filled to them
+MZ052209.1	rRNA	rrnL	+	R1	11076..12269	11064..12279	trimmed to flanking genes and filled to them
+MZ052209.1	CDS	COX1	+	P3	1..1530	1..1617	first complete stop, 22 nt into the downstream gene (no abbreviated stop before it)
+MZ052209.1	CDS	COX2	+	P3	1596..2279	1596..2280	abbreviated stop T/TA immediately before downstream tRNA
+MZ052209.1	CDS	ND6	+	P3	3451..3918	3451..3919	abbreviated stop T/TA immediately before downstream gene
+MZ052209.1	CDS	CYTB	+	P3	3920..5050	3920..5056	first in-frame complete stop codon
+MZ052209.1	CDS	ND5	+	P3	5956..7668	5956..7669	abbreviated stop T/TA immediately before downstream tRNA
+MZ052209.1	CDS	ND4	+	P3	8758..10098	8758..10107	first in-frame complete stop codon
+OZ287881.1	rRNA	rrnS	+	R1	16044..16809	16047..16810	trimmed to flanking genes and filled to them
+OZ287881.1	rRNA	rrnL	+	R1	16893..18087	16874..18089	trimmed to flanking genes and filled to them
+OZ287881.1	CDS	COX1	+	P3	1..1530	1..1552	abbreviated stop T/TA immediately before downstream tRNA
+OZ287881.1	CDS	COX2	+	P3	1617..2288	1617..2303	first in-frame complete stop codon
+OZ287881.1	CDS	ND6	+	P3	3449..3913	3449..3925	first in-frame complete stop codon
+OZ287881.1	CDS	ATP8	+	P3	3992..4147	3992..4153	first in-frame complete stop codon
+OZ287881.1	CDS	CYTB	+	P3	4159..5280	4159..5295	first in-frame complete stop codon
+OZ287881.1	CDS	ATP6	+	P3	5358..6047	5358..6056	first in-frame complete stop codon
+OZ287881.1	CDS	ND5	+	P3	12299..14014	12299..14018	abbreviated stop T/TA immediately before downstream tRNA
+OZ287881.1	CDS	ND4	+	P3	14567..15910	14567..15919	first in-frame complete stop codon
+OZ287881.1	CDS	ND3	+	P3	19342..19686	19342..19695	first in-frame complete stop codon
+OZ287881.1	CDS	ND2	+	O1	19764..20735	19764..20760	abbreviated stop T at the sequence end (no stop within 60 nt past the origin, a gene starts there)
+OZ346613.1	rRNA	rrnS	+	R1	17457..18236	17459..18238	trimmed to flanking genes and filled to them
+OZ346613.1	rRNA	rrnL	+	R1	18349..19508	18298..19507	trimmed to flanking genes and filled to them
+OZ346613.1	CDS	COX1	+	P3	1..1530	1..1596	first in-frame complete stop codon
+OZ346613.1	CDS	COX2	+	P3	1597..2268	1597..2281	abbreviated stop T/TA immediately before downstream tRNA
+OZ346613.1	CDS	ND6	+	P3	3484..3948	3484..3952	abbreviated stop T/TA immediately before downstream gene
+OZ346613.1	CDS	CYTB	+	P3	3953..5080	3953..5089	first in-frame complete stop codon
+OZ346613.1	CDS	ATP6	+	P3	5155..5841	5155..5862	first in-frame complete stop codon
+OZ346613.1	CDS	ND5	+	P3	13705..15417	13705..15421	abbreviated stop T/TA immediately before downstream tRNA
+OZ346613.1	CDS	ND4	+	P3	15977..17317	15977..17329	first in-frame complete stop codon
+OZ346613.1	CDS	ND1	+	P3	19981..20901	19981..20911	abbreviated stop T/TA immediately before downstream tRNA
+OZ346613.1	CDS	ND3	+	P3	22356..22703	22356..22709	first in-frame complete stop codon

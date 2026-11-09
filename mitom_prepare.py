@@ -3,6 +3,7 @@ the clade (--clade auto), `mitom import` results read in, one run per output fol
 from __future__ import annotations
 
 import argparse
+from mitom_output import where
 import logging
 import os
 import shutil
@@ -187,7 +188,7 @@ def resolve_tools(args: argparse.Namespace, ctx: Optional[RunContext] = None) ->
         if ctx is not None:
             ctx.plan = plan
         if plan.warnings:                                # one box: the first ones, all in clade_decision.tsv
-            shown = plan.warnings[:5] + ([f"... {len(plan.warnings) - 5} more: reports/clade_decision.tsv (column note)"]
+            shown = plan.warnings[:5] + ([f"... {len(plan.warnings) - 5} more: {where(args, 'reports/clade_decision.tsv')} (column note)"]
                                          if len(plan.warnings) > 5 else [])
             print(f"\n{'=' * 68}\n  [CLADE] WARNING ({len(plan.warnings)}):\n" + "\n".join(f"  - {w}" for w in shown)
                   + f"\n{'=' * 68}\n", file=sys.stderr)

@@ -13,7 +13,10 @@ label the sequence contradicts is changed:
   - jellyfish / hydroids and calcareous sponges (linear mitochondrial genomes, mito_taxa.linear_mtdna) labelled
     circular, no gene across the ends: linear;
   - an unlabelled record no gene at the ends decides: circular with the complete gene set (>= 12 of the 13 protein
-    genes and both rRNAs), else linear (a partial genome or a contig).
+    genes and both rRNAs), else linear (a partial genome or a contig);
+  - a GenBank record labelled linear whose DEFINITION says it is a whole mitochondrial genome ('complete genome',
+    or 'genome assembly, organelle: mitochondrion' of DToL / ATLASea / MitoHiFi organelle assemblies), with the
+    complete gene set, no gene cut at an end and not of a linear-mtDNA lineage: circular (issue #8, OZ287881).
 Before annotation (mitom_inputs): a sequence whose end repeats its start (an assembler's overlap, >= 50 nt) is circular
 and the repeat removed; header words such as GetOrganelle's '(circular)' or NCBI's 'complete genome' / 'partial
 genome' are a label.
@@ -25,7 +28,9 @@ from __future__ import annotations
 import argparse
 import csv
 import dataclasses
+from mitom_output import where
 import logging
+import re
 from pathlib import Path
 from typing import Callable, Dict, List, Tuple
 
@@ -80,11 +85,35 @@ def complete_set(genes: set) -> bool:
     return len(genes & PCG) >= MIN_PCG_COMPLETE and {"rrnS", "rrnL"} <= genes
 
 
+COMPLETE_CLAIM = re.compile(r"complete (?:mitochondrial )?genome|complete mitogenome|"
+                            r"genome assembly, organelle: mitochondrion", re.I)
+
+
+def complete_claim(si: SampleInfo) -> str:
+    """The words of a GenBank record's DEFINITION saying the sequence is a whole mitochondrial genome ('' if none)."""
+    path = getattr(si, "orig_gb_path", None)
+    if not path:
+        return ""
+    try:
+        rec = next(SeqIO.parse(str(path), "genbank"))
+    except Exception:  # noqa: BLE001  (no evidence rather than a failed run)
+        return ""
+    m = COMPLETE_CLAIM.search(rec.description or "")
+    return m.group(0) if m else ""
+
+
+def _found(genes: set) -> str:
+    from mito_names import PCG
+    rrna = sorted({"rrnS", "rrnL"} & genes)
+    return f"{len(genes & PCG)} of 13 protein genes, rRNA {', '.join(rrna) or 'none'}, {n_trna(genes)} tRNAs"
+
+
 def decide(label: str, ends: List[Dict[str, str]], lineage: str = "", unlabelled: bool = False,
-           genes: set = frozenset()) -> Tuple[str, str]:
+           genes: set = frozenset(), claim: str = "") -> Tuple[str, str]:
     """(topology, reason) of one record from its label, the core's evidence at the ends and its NCBI lineage; an
     unlabelled record (FASTA without topology=) that no gene at the ends decides is circular when it holds the
-    complete gene set (complete_set) and linear otherwise (a partial genome or a contig)."""
+    complete gene set (complete_set) and linear otherwise (a partial genome or a contig); a record labelled linear whose
+    DEFINITION claims a whole genome (claim, complete_claim) is circular with the complete gene set and no gene cut."""
     joined = next((r for r in ends if r["verdict"] in ("joined", "joined_intron")), None)
     if joined:
         how = " with an intron (aligned spliced)" if joined["verdict"] == "joined_intron" else ""
@@ -97,10 +126,11 @@ def decide(label: str, ends: List[Dict[str, str]], lineage: str = "", unlabelled
     taxon = linear_mtdna(lineage)
     if label == "circular" and taxon:
         return "linear", f"{taxon}: linear mitochondrial genome, no gene across the ends"
+    if label == "linear" and claim and not cut and not taxon and complete_set(genes):
+        return "circular", (f"labelled linear, but the record is a '{claim}' with the complete gene set "
+                            f"({_found(genes)}) and no gene cut at the ends: a circular molecule")
     if unlabelled and label == "circular":                # no label, no gene at the ends: the gene set decides
-        from mito_names import PCG
-        n_pcg, rrna = len(genes & PCG), sorted({"rrnS", "rrnL"} & genes)
-        found = f"{n_pcg} of 13 protein genes, rRNA {', '.join(rrna) or 'none'}, {n_trna(genes)} tRNAs"
+        found = _found(genes)
         if complete_set(genes):
             return "circular", f"no topology label, no gene cut at the ends, complete gene set ({found})"
         return "linear", f"no topology label, no gene across the ends, gene set incomplete ({found}): partial"
@@ -146,9 +176,10 @@ def apply_topology(samples: List[SampleInfo], results: Dict[str, Dict], args: ar
         label = si.label or si.topology
         if auto:
             unlabelled = si.topology_source.startswith(UNLABELLED)
+            claim = complete_claim(si) if label == "linear" else ""
             decided[si.internal_id] = decide(label, read_ends(Path(r["workdir"]), si.internal_id), sample_lineage(si),
-                                             unlabelled, gene_set(r["best_gb"]) if unlabelled and r.get("best_gb")
-                                             else frozenset())
+                                             unlabelled, gene_set(r["best_gb"]) if (unlabelled or claim)
+                                             and r.get("best_gb") else frozenset(), claim)
         else:
             decided[si.internal_id] = (si.topology, f"set by --topology {si.topology}" if si.topology != label
                                        else "as labelled")
@@ -180,5 +211,5 @@ def apply_topology(samples: List[SampleInfo], results: Dict[str, Dict], args: ar
     if auto:
         n_lin = sum(1 for si in samples if si.internal_id in decided and decided[si.internal_id][0] != (si.label or si.topology))
         info(f"topology: {n_lin} record(s) not as labelled ({len(new)} annotated again), the others as labelled: "
-             "reports/topology_decision.tsv")
+             f"{where(args, 'reports/topology_decision.tsv')}")
     return [new.get(si.internal_id, si) for si in samples], results

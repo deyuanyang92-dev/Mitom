@@ -1,0 +1,3 @@
+Warning: valid [SEQ_DESCR.NoTaxonID] BioSource is missing taxon ID DESCRIPTOR: BioSrc: Paucibranchia bellii BIOSEQ-SET: nuc-prot: lcl|OZ346613.1
+Error: valid [SEQ_DESCR.NoPubFound] No publications anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|OZ346613.1
+Info: valid [GENERIC.MissingPubRequirement] No submission citation anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|OZ346613.1

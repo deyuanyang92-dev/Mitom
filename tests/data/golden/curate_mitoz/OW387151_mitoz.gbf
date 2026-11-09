@@ -1,4 +1,4 @@
-LOCUS       OW387151               15577 bp    DNA     linear   UNK 17-OCT-2023
+LOCUS       OW387151               15577 bp    DNA     linear   UNK <DATE>
 DEFINITION  topology=linear.
 ACCESSION   OW387151
 VERSION     OW387151
@@ -14,7 +14,7 @@ REFERENCE   1  (bases 1 to 15577)
 REFERENCE   2  (bases 1 to 15577)
   AUTHORS   MENG,G.
   TITLE     Direct Submission
-  JOURNAL   Submitted (17-OCT-2023) China National GeneBank, BGI-Shenzhen,
+  JOURNAL   Submitted (<DATE>) China National GeneBank, BGI-Shenzhen,
             Beishan Industrial Zone, Beishan Road, Yantian District, Shenzhen,
             Guangdong 518083, China
 FEATURES             Location/Qualifiers

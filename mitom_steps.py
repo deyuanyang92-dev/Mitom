@@ -21,6 +21,7 @@ from Bio import SeqIO
 
 from mito_common import reports_dir, run_tool, write_table
 from mito_common import write_gb  # noqa: E402
+from mitom_output import where
 from mitom_log import record_event
 from mito_taxa import abbreviated_overlap, abbreviated_pcg_overlap, aggressive_start_genes, CLADE_PHYLUM, no_upstream_atg
 from mitom_inputs import find_fq_pair_for_sample, parse_suffix_fq
@@ -99,7 +100,7 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
             c = ln.split("\t")
             if len(c) > 7 and c[4] == "error":
                 record_event(c[0], f"curation failed, record left uncurated: {c[7]}")
-    return StepResult(f"{count_rows(report)} changes, each with rule and reason in reports/curation_report.tsv",
+    return StepResult(f"{count_rows(report)} changes, each with rule and reason in {where(args, 'reports/curation_report.tsv')}",
                       gb_dir=cur)
 
 
@@ -122,12 +123,12 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
                       "(misc_feature 'non-coding region NCR<k>'; --ncr no: none)")
 
 
-def _submission_line(out_root: Path) -> str:
+def _submission_line(out_root: Path, args=None) -> str:
     sub_sum = out_root / "06.ncbi_submission" / "submission_summary.tsv"
     n_rec = count_rows(sub_sum)
     n_err = count_rows(sub_sum, "ERROR", lambda v: v != "0")
     return (f"{n_rec} records checked: {n_rec - n_err} without NCBI ERROR, {n_err} with ERROR "
-            f"(ncbi_submission/validation_messages.tsv)" if n_rec else
+            f"({where(args, 'ncbi_submission/validation_messages.tsv')})" if n_rec else
             ("validation produced no records (see run.log)" if sub_sum.parent.is_dir() else
              "table2asn not found: skipped"))
 
@@ -141,7 +142,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     t2a = mito_env.find("table2asn")
     if not t2a:
         logging.info("[SUBMISSION] table2asn not found: no .sqn / validation (install.sh installs it)")
-        return StepResult(_submission_line(out_root), ok=False)
+        return StepResult(_submission_line(out_root, args), ok=False)
     sub = out_root / "06.ncbi_submission"
     sub.mkdir(parents=True, exist_ok=True)
     summary, msgs = [], []
@@ -159,7 +160,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
             unchecked += any(r["code"] in nv.NOT_VALIDATED for r in rows)   # a timeout too (Codex review, 2026-11-06)
             if n["ERROR"]:
                 record_event(rec.id, f"NCBI ERROR: {n['ERROR']} ({'; '.join(sorted({r['code'] for r in errs}))})"
-                                     " - ncbi_submission/validation_messages.tsv")
+                                     f" - {where(args, 'ncbi_submission/validation_messages.tsv')}")
             summary.append(f"{rec.id}\t{n['ERROR']}\t{n['WARNING']}\t" + "; ".join(sorted({r["code"] for r in errs})))
             msgs += [f"{r['record']}\t{r['severity']}\t{r['code']}\t{r['message']}" for r in rows]
     shutil.rmtree(sub / "_work", ignore_errors=True)
@@ -170,7 +171,7 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
                  + (" - see validation_messages.tsv" if bad else ""))
     if unchecked:
         logging.error(f"[SUBMISSION] table2asn failed on {unchecked} record(s): not validated (crashed or timed out)")
-    return StepResult(_submission_line(out_root), ok=not unchecked and bool(summary))
+    return StepResult(_submission_line(out_root, args), ok=not unchecked and bool(summary))
 
 
 def _rescue_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
@@ -288,10 +289,14 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     report = gb_dir / "intron_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_report.tsv"))
-    last = summary_line(proc.stderr, "[mito_intron]", f"failed (exit {proc.returncode}), see intron_fix.log")
+    last = summary_line(proc.stderr, "[mito_intron]", f"failed (exit {proc.returncode}), see intron_fix.log").replace(
+        str(report), str(out_root / where(args, "reports/intron_report.tsv")))
     logging.info(f"[INTRON_FIX] {last}")
     ref, ref_log, ref_ok = run_intron_ref(args, gb_dir, out_root)
-    (reports_dir(out_root) / "intron_fix.log").write_text(proc.stdout + proc.stderr + ref_log, encoding="utf-8")
+    text = proc.stdout + proc.stderr + ref_log
+    for name in ("intron_report.tsv", "intron_ref_report.tsv"):     # where the reports are now (issue #6)
+        text = text.replace(str(gb_dir / name), str(out_root / where(args, f"reports/{name}")))
+    (reports_dir(out_root) / "intron_fix.log").write_text(text, encoding="utf-8")
     return StepResult(INTRON_LABEL + last.replace("[mito_intron] ", "").split(" -> ")[0] + f"; {ref}; per intron: "
                       "intron_report.tsv, intron_ref_report.tsv", ok=proc.returncode == 0 and ref_ok)
 
@@ -307,7 +312,8 @@ def run_intron_ref(args: argparse.Namespace, final_dir: Path, out_root: Path) ->
     report = final_dir / "intron_ref_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_ref_report.tsv"))
-    last = summary_line(proc.stderr, "[mito_intron_ref]", f"failed (exit {proc.returncode}), see intron_fix.log")
+    last = summary_line(proc.stderr, "[mito_intron_ref]", f"failed (exit {proc.returncode}), see intron_fix.log").replace(
+        str(report), str(out_root / where(args, "reports/intron_ref_report.tsv")))
     if proc.returncode:
         logging.warning(f"[INTRON_REF] {last}")
         return f"site transfer failed (exit {proc.returncode}), see intron_fix.log", proc.stdout + proc.stderr, False

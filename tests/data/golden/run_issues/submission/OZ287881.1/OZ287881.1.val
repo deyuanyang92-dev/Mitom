@@ -1,0 +1,3 @@
+Warning: valid [SEQ_DESCR.NoTaxonID] BioSource is missing taxon ID DESCRIPTOR: BioSrc: Leodice harassii BIOSEQ-SET: nuc-prot: lcl|OZ287881.1
+Error: valid [SEQ_DESCR.NoPubFound] No publications anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|OZ287881.1
+Info: valid [GENERIC.MissingPubRequirement] No submission citation anywhere on this entire record. BIOSEQ-SET: nuc-prot: lcl|OZ287881.1

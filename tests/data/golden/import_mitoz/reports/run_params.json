@@ -26,6 +26,7 @@
   "intron_bin": "<HOME>/miniforge3/envs/mitotools/bin",
   "intron_lib": [],
   "intron_ref_gb": [],
+  "output_layout": "classic",
   "keep_intermediate": "no",
   "threads": 2,
   "max_tasks": 16,

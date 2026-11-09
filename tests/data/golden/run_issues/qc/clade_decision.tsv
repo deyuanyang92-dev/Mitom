@@ -1,0 +1,4 @@
+record	file	source	phylum	clade	genetic_code	code_from	support	codon_check	closest	group	note
+MZ052209.1	MZ052209.1.gb	GenBank taxonomy	Annelida	Annelida-segmented-worms	5	CDS transl_table				Annelida_gc5	
+OZ287881.1	OZ287881.1.gb	GenBank taxonomy	Annelida	Annelida-segmented-worms	5	lineage (reference genomes of the same group)				Annelida_gc5	
+OZ346613.1	OZ346613.1.gb	GenBank taxonomy	Annelida	Annelida-segmented-worms	5	lineage (reference genomes of the same group)				Annelida_gc5	

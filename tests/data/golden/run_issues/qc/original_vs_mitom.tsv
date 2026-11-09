@@ -1,0 +1,39 @@
+record	organism	type	gene	original_location	mitom_location	difference_nt	result
+MZ052209.1	Marphysa victori	protein	cox1	1..1532+	1..1617+	85	ends_differ
+MZ052209.1	Marphysa victori	protein	cox2	1596..2280+	1596..2280+	0	same
+MZ052209.1	Marphysa victori	protein	atp8	2347..2508+	2347..2508+	0	same
+MZ052209.1	Marphysa victori	protein	cox3	2572..3351+	2572..3351+	0	same
+MZ052209.1	Marphysa victori	protein	nad6	3451..3920+	3451..3919+	1	ends_differ
+MZ052209.1	Marphysa victori	protein	cob	3920..5056+	3920..5056+	0	same
+MZ052209.1	Marphysa victori	protein	atp6	5117..5815+	5117..5815+	0	same
+MZ052209.1	Marphysa victori	protein	nad5	5956..7669+	5956..7669+	0	same
+MZ052209.1	Marphysa victori	protein	nad4l	8468..8764+	8468..8764+	0	same
+MZ052209.1	Marphysa victori	protein	nad4	8758..10107+	8758..10107+	0	same
+MZ052209.1	Marphysa victori	protein	nad1	12473..13402+	12473..13402+	0	same
+MZ052209.1	Marphysa victori	protein	nad2	13602..14603+	13602..14603+	0	same
+MZ052209.1	Marphysa victori	protein	nad3	15525..15878+	15525..15878+	0	same
+MZ052209.1	Marphysa victori	rRNA	rrnS	10233..11006+	10236..11006+	3	ends_differ
+MZ052209.1	Marphysa victori	rRNA	rrnL	11064..12279+	11064..12279+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnD	2281..2346+	2281..2346+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnY	2509..2571+	2509..2571+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnQ	3357..3426+	3357..3425+	1	ends_differ
+MZ052209.1	Marphysa victori	tRNA	trnW	5054..5117+	5055..5116+	1	ends_differ
+MZ052209.1	Marphysa victori	tRNA	trnS	5827..5887+	5828..5888+	1	name_differs
+MZ052209.1	Marphysa victori	tRNA	trnH	5889..5952+	5889..5952+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnF	7669..7731+	7670..7730+	1	ends_differ
+MZ052209.1	Marphysa victori	tRNA	trnE	7756..7819+	7756..7819+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnP	8216..8279+			only_original
+MZ052209.1	Marphysa victori	tRNA	trnT	8408..8467+	8408..8467+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnC	10106..10169+	10106..10169+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnM	10171..10232+	10171..10235+	3	ends_differ
+MZ052209.1	Marphysa victori	tRNA	trnV	11007..11063+	11007..11063+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnL	12280..12343+	12280..12342+	1	same_place
+MZ052209.1	Marphysa victori	tRNA	trnA	12346..12407+	12346..12407+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnS	12408..12473+	12408..12472+	1	same_place
+MZ052209.1	Marphysa victori	tRNA	trnI	13402..13467+	13402..13466+	1	ends_differ
+MZ052209.1	Marphysa victori	tRNA	trnK	13466..13531+	13467..13530+	1	ends_differ
+MZ052209.1	Marphysa victori	tRNA	trnR	13533..13603+	13533..13599+	4	name_differs
+MZ052209.1	Marphysa victori	tRNA	trnN	14605..14669+	14605..14669+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnL	15371..15435+	15371..15434+	1	same_place
+MZ052209.1	Marphysa victori	tRNA	trnG	15434..15495+	15434..15495+	0	same
+MZ052209.1	Marphysa victori	tRNA	trnP		7832..7894+		only_mitom

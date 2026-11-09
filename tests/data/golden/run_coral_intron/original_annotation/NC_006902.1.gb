@@ -1,4 +1,4 @@
-LOCUS       NC_006902              17887 bp    DNA     circular INV 03-APR-2023
+LOCUS       NC_006902              17887 bp    DNA     circular INV <DATE>
 DEFINITION  Montipora cactus mitochondrion, complete genome.
 ACCESSION   NC_006902
 VERSION     NC_006902.1
@@ -17,18 +17,18 @@ REFERENCE   1  (bases 1 to 17887)
 REFERENCE   2  (bases 1 to 17887)
   CONSRTM   NCBI Genome Project
   TITLE     Direct Submission
-  JOURNAL   Submitted (02-APR-2005) National Center for Biotechnology
+  JOURNAL   Submitted (<DATE>) National Center for Biotechnology
             Information, NIH, Bethesda, MD 20894, USA
 REFERENCE   3  (bases 1 to 17887)
   AUTHORS   Tseng,C.-C., Wallace,C.C. and Chen,C.A.
   TITLE     Direct Submission
-  JOURNAL   Submitted (31-MAR-2005) Research Center for Biodiversity, Academia
+  JOURNAL   Submitted (<DATE>) Research Center for Biodiversity, Academia
             Sinica, 128, 2nd Sect., Academia Road, Taipei 11529, Taiwan
   REMARK    Sequence update by submitter
 REFERENCE   4  (bases 1 to 17887)
   AUTHORS   Tseng,C.-C., Wallace,C.C. and Chen,C.A.
   TITLE     Direct Submission
-  JOURNAL   Submitted (24-JAN-2005) Research Center for Biodiversity, Academia
+  JOURNAL   Submitted (<DATE>) Research Center for Biodiversity, Academia
             Sinica, 128, 2nd Sect., Academia Road, Taipei 11529, Taiwan
 COMMENT     REVIEWED REFSEQ: This record has been curated by NCBI staff. The
             reference sequence was derived from AY903296.

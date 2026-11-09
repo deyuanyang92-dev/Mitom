@@ -36,7 +36,7 @@ Curation and introns run as separate processes, so a crash affects only that ste
 
 ## 类群与遗传密码自动判断 / --clade auto (mito_classify.py, mitom_groups.py)
 
-`--clade auto`（默认）逐条记录决定门、类群和遗传密码，结果与依据写入 `reports/clade_decision.tsv`：
+`--clade auto`（默认）逐条记录决定门、类群和遗传密码，结果与依据写入 `qc/clade_decision.tsv`：
 
 1. **GenBank 记录**：分类信息里的门（或纲级同义名）；遗传密码取 CDS 的 `/transl_table`（多数票），没有 CDS 时取参考基因组中该谱系最深一级类群的遗传密码（`code_of_lineage`，例如 Tunicata → 13）。分类信息不属于 Metazoa 时报错。
 2. **FASTA / 无分类信息的记录**：blastx（`-query_gencode 5`，任何动物线粒体密码下都不会提前终止）比对 refseq89m 的 8 个保守蛋白（cox1 cox2 cox3 cob atp6 nad1 nad4 nad5，约 8,000 个基因组）。参考基因组的谱系和遗传密码来自 `models/ref_taxa.tsv.gz`（`scripts/build_ref_taxa.py` 用本机 RefSeq 生成，8,022 个中 7,672 个有谱系）。
@@ -45,7 +45,7 @@ Curation and introns run as separate processes, so a crash affects only that ste
    - 密码子核验：在这些比对中，基因组自己的 AGA AGG ATA AAA TGA TAA 处对应的参考氨基酸；每个动物线粒体密码（2 4 5 9 13 14 21 24 33）按吻合比例打分。AGR 在比对区内出现（≥ 1/1000 个密码子且多于 3 倍 TAG）时排除把 AGR 当终止的密码 2（文昌鱼 3.0/1000，脊椎动物 0–0.1/1000）；出现次数不多于 3 倍 TAG（所有密码中的终止密码子，比对区内的 TAG 即测序错误 / 移码的噪声）的密码子不计分。打分明显更好（差 ≥ 0.15）的密码取代近亲的密码，并给出警告。
    - 支持度 < 0.7（参考库里没有近亲，小门常见）：门判为不确定，类群用 `Animal`，遗传密码用密码子核验的结果。
    - 命中少于 2 个基因（< 约 4 kb 的片段）：不判断，并入输入中最常见的组。
-3. **多个门 / 遗传密码**：`mitom run` 按（类群，遗传密码，门）分组，每组以显式 `--clade --genetic_code --phylum` 运行一次完整流程（并行；`--jobs` 按记录数分给各组），结果合并到同一输出目录（`final_annotation/`、`summary.tsv`、`ncbi_submission/`、`plots/`、`reports/` 表格合并；各组参数与日志在 `reports/groups/`）。
+3. **多个门 / 遗传密码**：`mitom run` 按（类群，遗传密码，门）分组，每组以显式 `--clade --genetic_code --phylum` 运行一次完整流程（并行；`--jobs` 按记录数分给各组），结果合并到同一输出目录（`annotation/`、`summary.tsv`、`submission/`、`annotation/plots/`、`qc/` 表格合并；各组参数与日志在 `logs/groups/`）。
 4. 门未知的记录（FASTA、门不确定）缺 rRNA 时，rRNA HMM 后备步骤使用所有门的模型中得分最高的那一个门。
 
 **评测**（2026-10-31，均为本机数据，未新下载）：
@@ -137,7 +137,7 @@ NCBI ERROR 都是 0；结果不同的 20 条中，12 条是 nad2 紧接 cox1 时
 | complete | 其他：完整基因、N/C 端分化未比对上，或跨接点的比对只是偶然延伸（两侧单独比对接不上又不够长） | 不作判断，按标签 |
 
 有 joined → 环状；标为环状而有 cut → 线状；标为环状的水母类（Hydrozoa、Scyphozoa、Cubozoa、Staurozoa）和钙质海绵（线状线粒体基因组）没有 joined → 线状，
-且从第一轮就按线状注释（不必注释两次）；其余按标签。与第一轮拓扑不同的记录用新拓扑再注释一遍；每条记录写入 `reports/topology_decision.tsv`。
+且从第一轮就按线状注释（不必注释两次）；标为 linear 的 GenBank 记录，DEFINITION 写明是完整基因组（`complete genome`，或 DToL / ATLASea / MitoHiFi 细胞器组装的 `genome assembly, organelle: mitochondrion`），基因齐全（≥ 12 个蛋白基因和两个 rRNA）、两端没有 cut、不属于线状类群 → 环状（2026-11-09，issue #8：OZ287881、OZ346613 是完整环状分子，约 6 kb 非编码区被拆在两端）；其余按标签。与第一轮拓扑不同的记录用新拓扑再注释一遍；每条记录写入 `qc/topology_decision.tsv`。
 MitoZ / MITOS2 / `mitom import` 的注释没有核心的比对证据，按标签。
 
 **校准**（上述 93 条记录各按环状、线状注释一次；28 条记录两端有蛋白基因，共 72 个基因次）：真实环状记录跨两端的基因（NC_035740.1 cox1，参考蛋白在接点前 1,548 nt、后 42 nt）两次都是 joined；
@@ -249,7 +249,7 @@ ARWEN、ARAGORN、tRNAscan-SE、MiTFi 参数（半全局、重叠、E 值、只�
 
 **注释核心不注释 intron（group I / II；MitoZ 也不能）。** `run` / `annotate` 写完最终 GenBank 后分两步补上 intron，并整合进核心结果（`--intron_fix auto`：找到 exonerate+blastp 时运行；`yes` 强制，`no` 关闭；`--intron_bin <env>/bin`）：
 1. `mito_intron.py`（从头识别，MFannot 方法，见下）：同源蛋白比对 + 剪接规则定边界；
-2. `mito_intron_ref.py`（位点迁移）：内含子位点库 `models/intron_sites.*`（193 条 NCBI 带内含子记录、逐个核实后的 309 个内含子，79 KB）中近缘记录的位点映射到本序列：近缘位点重新定位从头识别的边界，补上从头识别漏掉的（小外显子、反式剪接片段、rRNA 内含子）；库中没有的位点保留从头识别结果。报告 `reports/intron_report.tsv`、`reports/intron_ref_report.tsv`。
+2. `mito_intron_ref.py`（位点迁移）：内含子位点库 `models/intron_sites.*`（193 条 NCBI 带内含子记录、逐个核实后的 309 个内含子，79 KB）中近缘记录的位点映射到本序列：近缘位点重新定位从头识别的边界，补上从头识别漏掉的（小外显子、反式剪接片段、rRNA 内含子）；库中没有的位点保留从头识别结果。报告 `qc/intron_report.tsv`、`qc/intron_ref_report.tsv`。
 
 ### 当前版本（2026-10-29）：核实的金标准 + 位点迁移 / Current version: verified gold standard + site transfer
 

@@ -1,4 +1,4 @@
-LOCUS       NC_001636              15532 bp    DNA     circular INV 03-APR-2023
+LOCUS       NC_001636              15532 bp    DNA     circular INV <DATE>
 DEFINITION  Katharina tunicata mitochondrion, complete genome.
 ACCESSION   NC_001636
 VERSION     NC_001636.1
@@ -18,12 +18,12 @@ REFERENCE   1  (bases 1 to 15532)
 REFERENCE   2  (bases 1 to 15532)
   CONSRTM   NCBI Genome Project
   TITLE     Direct Submission
-  JOURNAL   Submitted (08-SEP-1999) National Center for Biotechnology
+  JOURNAL   Submitted (<DATE>) National Center for Biotechnology
             Information, NIH, Bethesda, MD 20894, USA
 REFERENCE   3  (bases 1 to 15532)
   AUTHORS   Boore,J.L.
   TITLE     Direct Submission
-  JOURNAL   Submitted (17-MAY-1994) Jeffrey L. Boore, Cell Biology and
+  JOURNAL   Submitted (<DATE>) Jeffrey L. Boore, Cell Biology and
             Neuroanatomy, University of Minnesota, 321 Church St. SE,
             Minneapolis, MN 55455, USA
 COMMENT     REVIEWED REFSEQ: This record has been curated by NCBI staff. The
@@ -608,7 +608,7 @@ ORIGIN
     15421 gcaaagggag gtgaagaagc ggagcattgg tatctaagaa tttaatgtgg tttggcggag
     15481 ctataaattt gagggggtta ggtgttttat tgtggttaag tactttttag at
 //
-LOCUS       NC_008164              16389 bp    DNA     circular INV 03-APR-2023
+LOCUS       NC_008164              16389 bp    DNA     circular INV <DATE>
 DEFINITION  Nematostella sp. JVK-2006 mitochondrion, complete genome.
 ACCESSION   NC_008164
 VERSION     NC_008164.1
@@ -626,12 +626,12 @@ REFERENCE   1  (bases 1 to 16389)
 REFERENCE   2  (bases 1 to 16389)
   CONSRTM   NCBI Genome Project
   TITLE     Direct Submission
-  JOURNAL   Submitted (16-JUN-2006) National Center for Biotechnology
+  JOURNAL   Submitted (<DATE>) National Center for Biotechnology
             Information, NIH, Bethesda, MD 20894, USA
 REFERENCE   3  (bases 1 to 16389)
   AUTHORS   Medina,M., Collins,A.G., Takaoka,T.L., Kuehl,J.V. and Boore,J.L.
   TITLE     Direct Submission
-  JOURNAL   Submitted (18-MAY-2006) Evolutionary Genomics, Joint Genome
+  JOURNAL   Submitted (<DATE>) Evolutionary Genomics, Joint Genome
             Institute, 2800 Mitchell Dr., Walnut Creek, CA 94598, USA
 COMMENT     REVIEWED REFSEQ: This record has been curated by NCBI staff. The
             reference sequence was derived from DQ643835.

@@ -331,6 +331,9 @@ def reverse_complement_record(record: "SeqRecord") -> "SeqRecord":
     new_rec.dbxrefs     = list(getattr(record, "dbxrefs", []))
     new_features: List["SeqFeature"] = []
     for feat in record.features:
+        if feat.type == "source" and int(feat.location.start) == 0 and int(feat.location.end) == seq_len:
+            new_features.append(feat)                # the whole record: stays 1..L on the plus strand (issue #8)
+            continue
         try:
             new_loc = rc_location(feat.location, seq_len)
             new_features.append(SeqFeature(location=new_loc, type=feat.type,

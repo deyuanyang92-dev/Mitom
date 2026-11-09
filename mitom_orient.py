@@ -102,7 +102,7 @@ def rotate_record(record: "SeqRecord", start_pos: int, notes: Optional[OrientNot
         key = hash(str(record.seq))
         (logging.info if key in notes.linear_reported else logging.warning)(
             f"[LINEAR_REORIENT_SKIP] record={record.id}: target start={start_pos}; "
-            "linear topology cannot be circularly rotated, sequence left unchanged.")
+            "linear topology cannot be circularly rotated, start left unchanged.")
         notes.linear_reported.add(key)
         return SeqRecord(                     # moving a linear contig's tail before its head would corrupt it
             record.seq,
@@ -297,6 +297,9 @@ def reorient_one_gb(
             work_rec = rec
             if force_forward and feat.location.strand == -1:
                 work_rec = reverse_complement_record(rec)
+                if str(rec.annotations.get("topology", "circular")).lower() == "linear":
+                    logging.info(f"[LINEAR_REVCOMP] record={rec.id}: reverse-complemented to put {used} on the plus "
+                                 "strand; linear, so not rotated")
                 feat, _ = find_orientation_feature(work_rec, used)
                 if feat is None:
                     no_gene.append(rec)

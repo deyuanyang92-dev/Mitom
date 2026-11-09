@@ -163,12 +163,12 @@ def test_import_workflow_end_to_end(tmp_path):
                         "Annelida-segmented-worms", "--genetic_code", "5", "--plot", "no", "--rrna_hmm", "no",
                         "--intron_fix", "no", "--threads", "2"], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr[-2000:]
-    rec = SeqIO.read(str(out / "final_annotation" / "KY753833.gb"), "genbank")
+    rec = SeqIO.read(str(out / "annotation" / "KY753833.gb"), "genbank")
     first = next(f for f in rec.features if f.type == "CDS")
     assert first.qualifiers["gene"] == ["COX1"] and int(first.location.start) == 0
     assert rec.annotations["topology"] == "circular"                     # MitoZ wrote linear
     assert "round 2" not in (out / "summary.tsv").read_text()
-    assert (out / "original_vs_mitom.tsv").is_file() and not (out / "00.imported").exists()
+    assert (out / "qc" / "original_vs_mitom.tsv").is_file() and not (out / "00.imported").exists()
 
 
 def test_old_name_batch_mitoz_still_works():

@@ -1,4 +1,4 @@
-LOCUS       NC_001636              15532 bp    DNA     circular INV 03-APR-2023
+LOCUS       NC_001636              15532 bp    DNA     circular INV <DATE>
 DEFINITION  Katharina tunicata mitochondrion, complete genome.
 ACCESSION   NC_001636
 VERSION     NC_001636.1
@@ -18,12 +18,12 @@ REFERENCE   1  (bases 1 to 15532)
 REFERENCE   2  (bases 1 to 15532)
   CONSRTM   NCBI Genome Project
   TITLE     Direct Submission
-  JOURNAL   Submitted (08-SEP-1999) National Center for Biotechnology
+  JOURNAL   Submitted (<DATE>) National Center for Biotechnology
             Information, NIH, Bethesda, MD 20894, USA
 REFERENCE   3  (bases 1 to 15532)
   AUTHORS   Boore,J.L.
   TITLE     Direct Submission
-  JOURNAL   Submitted (17-MAY-1994) Jeffrey L. Boore, Cell Biology and
+  JOURNAL   Submitted (<DATE>) Jeffrey L. Boore, Cell Biology and
             Neuroanatomy, University of Minnesota, 321 Church St. SE,
             Minneapolis, MN 55455, USA
 COMMENT     REVIEWED REFSEQ: This record has been curated by NCBI staff. The

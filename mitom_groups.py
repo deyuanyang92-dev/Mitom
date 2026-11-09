@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures as cf
+from mitom_output import where
 import logging
 import os
 import re
@@ -323,8 +324,10 @@ def merge_outputs(out_root: Path, group_outs: Dict[str, Path], failed: Iterable[
                         dst = t.with_name(f"{t.stem}.{g}{t.suffix}")   # <sample>.* still finds it (NC_012920.1)
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(o / "reports" / rel, dst)
-        elif srcs:
-            t.write_text("".join(s.read_text(encoding="utf-8", errors="replace") for s in srcs), encoding="utf-8")
+        elif srcs:                                         # (logs: the paths of the merged output, issue #6)
+            t.write_text("".join(s.read_text(encoding="utf-8", errors="replace").replace(str(s.parents[len(rel.parts)]),
+                                                                                         str(out_root))
+                                 for s in srcs), encoding="utf-8")
     first = next((o / "README.txt" for o in outs if (o / "README.txt").is_file()), None)
     if first:
         txt = first.read_text(encoding="utf-8")
@@ -344,14 +347,15 @@ def run_groups(args: argparse.Namespace, plan: Plan, argv: List[str], say=print)
     total, jobs = len(plan.rows), int(args.max_tasks)
     say("")
     say(f"MitoM - {total} records of {len(groups)} groups (phylum / genetic code; --clade auto, "
-        f"reports/clade_decision.tsv):")
+        f"{where(args, 'reports/clade_decision.tsv')}):")
     tasks = []
     for key, rows in groups.items():
         clade, code, phylum = key
         g = group_label(key)
         n_jobs = max(1, min(len(rows), round(jobs * len(rows) / total)))
         cmd = [sys.executable, str(HERE / "mitom_pipeline.py"), *argv, "-i", str(inputs[g]),
-               "-o", str(groups_dir / g / "out"), "--clade", clade, "--genetic_code", str(code), "--jobs", str(n_jobs)]
+               "-o", str(groups_dir / g / "out"), "--clade", clade, "--genetic_code", str(code), "--jobs", str(n_jobs),
+               "--output_layout", "classic"]          # (merged in the classic layout, then arranged once below)
         if phylum:
             cmd += ["--phylum", phylum]
         tasks.append((g, rows, cmd))
@@ -378,7 +382,10 @@ def run_groups(args: argparse.Namespace, plan: Plan, argv: List[str], say=print)
         if lg.is_file():
             (out_root / "reports" / "groups").mkdir(parents=True, exist_ok=True)
             shutil.copy2(lg, out_root / "reports" / "groups" / f"{g}.run.log")
-        logging.info(f"[GROUP] {g}: exit {rcs[g]}; log reports/groups/{g}.run.log")
+        logging.info(f"[GROUP] {g}: exit {rcs[g]}; log {where(args, f'reports/groups/{g}.run.log')}")
+    if getattr(args, "output_layout", "grouped") == "grouped":
+        from mitom_output import regroup_outputs
+        regroup_outputs(out_root)                     # reports/groups/ -> logs/groups/
     if getattr(args, "keep_intermediate", "no") != "yes" and all(rc == 0 for rc in rcs.values()):
         shutil.rmtree(groups_dir, ignore_errors=True)
         shutil.rmtree(out_root / "00.input", ignore_errors=True)        # unpacked / converted input (mitom_inputs)

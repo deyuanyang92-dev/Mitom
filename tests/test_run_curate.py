@@ -79,7 +79,8 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
         seen.append(cmd)
         if Path(cmd[1]).name == "mito_intron.py":
             (final / "intron_report.tsv").write_text("record\n")
-            return subprocess.CompletedProcess(cmd, 0, "", "[mito_intron] 1 file(s); 2 intron(s) written -> x\n")
+            return subprocess.CompletedProcess(cmd, 0, "", "[mito_intron] 1 file(s); 2 intron(s) written -> "
+                                                            f"{final / 'intron_report.tsv'}\n")
         (final / "intron_ref_report.tsv").write_text("record\n")
         return subprocess.CompletedProcess(cmd, 0, "", "[mito_intron_ref] 1 file(s), library 297 genes + 0 own; "
                                                         "1 gene model(s) written, 0 low-confidence not written -> y\n")
@@ -95,6 +96,8 @@ def test_intron_step_runs_de_novo_then_site_transfer(tmp_path, monkeypatch):
     assert ref[ref.index("--lineage") + 1] == "Eukaryota;Metazoa;Cnidaria"
     assert (tmp_path / "reports" / "intron_report.tsv").exists() and (tmp_path / "reports" / "intron_ref_report.tsv").exists()
     assert "site transfer: 1 file(s)" in line and "1 gene model(s) written" in line
+    log = (tmp_path / "reports" / "intron_fix.log").read_text()       # issue #6: the path where the report is now
+    assert str(tmp_path / "qc" / "intron_report.tsv") in log and str(final / "intron_report.tsv") not in log   # (grouped)
     args.phylum = None
     seen.clear()
     mitom_steps.run_intron_fix(args, final, tmp_path)

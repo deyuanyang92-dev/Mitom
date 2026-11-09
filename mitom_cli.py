@@ -112,7 +112,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help="shortest non-coding region written (nt, default 100; intergenic spacers are shorter)")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",
                        help="yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and "
-                            "NCBI submission files (.fsa/.tbl/.sqn/.val) -> 06.ncbi_submission/")
+                            "NCBI submission files (.fsa/.tbl/.sqn/.val) -> submission/ (annotate: 06.ncbi_submission/)")
         g.add_argument("--sbt", default=None,
                        help="NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template) "
                             "for the .sqn files")
@@ -150,10 +150,14 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--intron_ref_gb", action="append", default=[],
                        help="GenBank file/dir of close relatives used as extra homologs for intron models "
                             "(repeatable).")
+        g.add_argument("--output_layout", choices=["grouped", "classic"], default="grouped",
+                       help="Output folder of run / import: grouped (default) = summary.tsv, README.txt and annotation/ "
+                            "(GenBank, genes.fna, proteins.faa, plots/) submission/<record>/ qc/ input/ logs/; classic = "
+                            "the layout before 2026-11-09 (final_annotation/ ncbi_submission/ plots/ reports/ ...).")
         g.add_argument("--keep_intermediate", choices=["yes", "no"], default="no",
                        help="Keep the intermediate folders (00.*, 01.*, 03.*, 04.*, 05.*, _snakemake_*; run: moved to "
                             "work/). Default no: deleted after the final output is written; core logs of problem "
-                            "samples are always kept (reports/failed_logs/).")
+                            "samples are always kept (logs/failed_logs/; classic layout and annotate: reports/failed_logs/).")
         g.add_argument("--threads",      type=positive_int_arg, default=default_threads(),
                        help="Threads per annotation job (default: min(8, number of CPUs) = %(default)s).")
         g.add_argument("--jobs", dest="max_tasks", metavar="N", type=positive_int_arg, default=default_max_tasks(),
@@ -165,7 +169,7 @@ def build_parser() -> argparse.ArgumentParser:
                             "taxonomy: blastx to the reference proteins (mito_classify.py: phylum of the closest "
                             "genomes, their genetic code checked on the codons; no close relative: Animal and the "
                             "code of the codons). Several phyla / codes: `run` annotates each group with its own "
-                            "clade and code and merges the results (reports/clade_decision.tsv); `import` and "
+                            "clade and code and merges the results (qc/clade_decision.tsv); `import` and "
                             "`annotate` need one. Or give one of: "
                             f"{', '.join(ALL_CLADES)}.")
         g.add_argument("--genetic_code", type=int, default=None,
@@ -211,7 +215,7 @@ def build_parser() -> argparse.ArgumentParser:
                              "makes it linear, and so do jellyfish / hydroids / calcareous sponges (linear mtDNA) without "
                              "a gene across the ends; an unlabelled record no gene at the ends decides is circular with "
                              ">= 12 of the 13 protein genes and both rRNAs, else linear; changed records are annotated "
-                             "again (reports/topology_decision.tsv). label: the label only. "
+                             "again (qc/topology_decision.tsv). label: the label only. "
                              "circular / linear: every record.")
 
     def add_engine(sp: argparse.ArgumentParser) -> None:

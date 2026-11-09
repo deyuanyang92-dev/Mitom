@@ -5,6 +5,26 @@ installed one.
 
 ## Unreleased
 
+### Fixed (GitHub issues, 2026-11-09; checked on NCBI MZ052209.1, OZ287881.1, OZ346613.1)
+- #6: `logs/intron_fix.log` (and run.log) named `04.final_gb/intron_report.tsv`, a folder removed after the run; the
+  paths are now where the reports end up (also in merged group runs).
+- #8: GenBank records labelled linear whose DEFINITION says they are whole genomes (`complete genome`, or the DToL /
+  ATLASea / MitoHiFi `genome assembly, organelle: mitochondrion`), with the complete gene set, no gene cut at an end
+  and not of a linear-mtDNA lineage, are now circular and rotated to cox1 (OZ287881: the 6.1 kb non-coding region
+  split over both ends is one NCR1 of 6,121 bp). A record turned to the strand of its orientation gene keeps
+  `source 1..L` (was `complement(1..L)`); the log says `[LINEAR_REVCOMP]` when a linear record is reverse-complemented.
+- #7 (3 trnP in MZ052209, reported on 8a0debe): not reproduced on the current code (one trnP at 7832..7894, 22 tRNAs);
+  MZ052209 is now a golden case (run_issues).
+
+### Changed
+- #9: output of `run` / `import` (`--output_layout grouped`, default): summary.tsv, README.txt and annotation/
+  (<record>.gb, all_records.gb, genes.fna, proteins.faa named `<accession>|<gene>|<organism>`, plots/),
+  submission/<record>/ (.fsa .tbl .sqn .val; submission_summary.tsv), qc/ (original_vs_mitom.tsv and the step
+  reports), input/ (the input records), logs/ (run.log, run_params.json, intron_fix.log, failed_logs/, groups/).
+  `--output_layout classic` keeps the layout before (final_annotation/ ncbi_submission/ plots/ reports/ run.log).
+  Messages name the new paths; `mitom debug` reads both layouts. Wrappers that read reports/intron_report.tsv: read
+  qc/intron_report.tsv, or run with `--output_layout classic`.
+
 ### Added
 - `--mitos_args` (run, annotate): further runmitos options for `--engine mitos2`, written `--mitos_args="--best --finovl 30"`;
   options MitoM sets itself (input, output, -c, -r / --refdir, --linear, --json) are refused before the run; without it

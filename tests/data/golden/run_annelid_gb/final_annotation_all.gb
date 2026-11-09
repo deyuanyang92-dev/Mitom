@@ -1,4 +1,4 @@
-LOCUS       NC_000931              15619 bp    DNA     circular INV 03-APR-2023
+LOCUS       NC_000931              15619 bp    DNA     circular INV <DATE>
 DEFINITION  Platynereis dumerilii mitochondrion, complete genome.
 ACCESSION   NC_000931
 VERSION     NC_000931.1
@@ -18,12 +18,12 @@ REFERENCE   1  (bases 1 to 15619)
 REFERENCE   2  (bases 1 to 15619)
   CONSRTM   NCBI Genome Project
   TITLE     Direct Submission
-  JOURNAL   Submitted (18-MAY-2007) National Center for Biotechnology
+  JOURNAL   Submitted (<DATE>) National Center for Biotechnology
             Information, NIH, Bethesda, MD 20894, USA
 REFERENCE   3  (bases 1 to 15619)
   AUTHORS   Boore,J.L. and Brown,W.M.
   TITLE     Direct Submission
-  JOURNAL   Submitted (19-AUG-1999) Biology, University of Michigan, 830 North
+  JOURNAL   Submitted (<DATE>) Biology, University of Michigan, 830 North
             University Avenue, Ann Arbor, MI 48109, USA
 COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
             NCBI review. The reference sequence was derived from AF178678.

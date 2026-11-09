@@ -85,7 +85,13 @@ def find_log(path: Path) -> Optional[Path]:
     """The MitoM log of an output folder (or the file itself)."""
     if path.is_file():
         return path
-    return next((path / n for n in LOGS if (path / n).is_file()), None)
+    return next((d / n for d in (path, path / "logs") for n in LOGS if (d / n).is_file()), None)
+
+
+def sub(out: Path, *names: str) -> Path:
+    """The first of names that exists in out (the grouped layout, then the classic one: --output_layout); else the
+    last."""
+    return next((out / n for n in names if (out / n).exists()), out / names[-1])
 
 
 def entries(log: Path) -> List[Tuple[str, str, str]]:
@@ -211,7 +217,8 @@ def first_error(path: Path) -> str:
 def record_logs(out: Path, name: str, text: str) -> List[Path]:
     """The logs of a record: its copies in reports/failed_logs/, the sample log named in the [RECORD] line, the logs of
     its work folder (kept with --keep_intermediate yes / --debug)."""
-    logs = sorted((out / "reports" / "failed_logs").glob(f"{name}.*")) if (out / "reports" / "failed_logs").is_dir() else []
+    failed = sub(out, "logs/failed_logs", "reports/failed_logs")
+    logs = sorted(failed.glob(f"{name}.*")) if failed.is_dir() else []
     m = re.search(r"sample log: (\S+?/(0[123]\.[\w.]+)/([^/\s]+))/sample\.log", text)   # 02.anno_topology (Kimi 4.2)
     if m:
         for d in (Path(m.group(1)), out / "work" / m.group(2) / m.group(3)):
@@ -224,8 +231,9 @@ def record_logs(out: Path, name: str, text: str) -> List[Path]:
 def record_input(out: Path, name: str, events: List[str]) -> Optional[Path]:
     """A file with just this record, to run it alone: its original GenBank record (GenBank input), else its FASTA of
     the run (kept with --keep_intermediate yes / --debug)."""
-    if (out / "original_annotation" / f"{name}.gb").is_file():
-        return out / "original_annotation" / f"{name}.gb"
+    orig = sub(out, "input", "original_annotation") / f"{name}.gb"
+    if orig.is_file():
+        return orig
     m = re.search(r"/0[123]\.[\w.]+/([^/\s]+)/sample\.log", "\n".join(events))
     for d in ((out / "00.internal_fasta", out / "work" / "00.internal_fasta") if m else ()):
         if (d / f"{m.group(1)}.fasta").is_file():
@@ -236,7 +244,7 @@ def record_input(out: Path, name: str, events: List[str]) -> Optional[Path]:
 def add_output(run: Run) -> None:
     """What the output folder adds to the log: the problem lists of reports/, the first error of each failed record's
     own log, the NCBI ERRORs of ncbi_submission/validation_messages.tsv."""
-    rep = run.out / "reports"
+    rep = sub(run.out, "qc", "reports")
     lists = dict(FAILED_LISTS)
     lists.update({p.name: "no orientation gene" for p in rep.glob("no_*_samples.txt")} if rep.is_dir() else {})
     for name, what in lists.items():
@@ -244,14 +252,14 @@ def add_output(run: Run) -> None:
         if f.is_file():
             for ln in f.read_text(encoding="utf-8", errors="replace").splitlines():
                 if ln.strip() and not ln.startswith("#") and ln.strip() not in run.records:
-                    run.records[ln.strip()] = [f"WARNING: {what} (reports/{name})"]
+                    run.records[ln.strip()] = [f"WARNING: {what} ({rep.name}/{name})"]
     for name, events in run.records.items():
         for p in record_logs(run.out, name, "\n".join(events)):
             err = first_error(p)
             if err:
                 events.append(f"first error in {p.relative_to(run.out) if run.out in p.parents else p}: {err}")
                 break
-    val = run.out / "ncbi_submission" / "validation_messages.tsv"
+    val = sub(run.out, "submission", "ncbi_submission") / "validation_messages.tsv"
     if val.is_file():
         with val.open(encoding="utf-8", errors="replace") as fh:
             for row in csv.DictReader(fh, delimiter="\t"):
@@ -349,7 +357,8 @@ def report(run: Run) -> Tuple[str, bool]:
         for prog, what in run.missing.items():
             L.append(f"  {prog} (needed by {what}): {mito_env.install_hint(prog)}")
     if run.ncbi:
-        L += ["", f"NCBI ERRORs ({len(run.ncbi)} records; ncbi_submission/validation_messages.tsv)"]
+        L += ["", f"NCBI ERRORs ({len(run.ncbi)} records; "
+                  f"{sub(run.out, 'submission', 'ncbi_submission').name}/validation_messages.tsv)"]
         L += [f"  {rec}: {text}" for rec, text in run.ncbi.items()]
     if run.warnings:
         L += ["", f"Warnings ({sum(len(v) for v in run.warnings.values())}, by kind)"]
@@ -383,15 +392,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     if log is None:
         print(f"mitom debug: no MitoM log ({', '.join(LOGS)}) in {path}", file=sys.stderr)
         return 2
-    run = parse(log, log.parent)
+    out = log.parent.parent if log.parent.name == "logs" else log.parent     # (grouped layout: out/logs/run.log)
+    run = parse(log, out)
     add_output(run)
     text, problem = report(run)
-    groups = sorted((log.parent / "reports" / "groups").glob("*.run.log"))
+    groups = sorted(sub(out, "logs/groups", "reports/groups").glob("*.run.log"))
     if groups:                       # --clade auto over several phyla: one run per group (mitom_groups.py)
         text = text.split("\nSteps", 1)[0].rstrip() + f"\n\n{len(groups)} groups (phylum / genetic code), " \
-               "one run each (reports/groups/<group>.run.log):\n"
+               f"one run each ({groups[0].parent.relative_to(out)}/<group>.run.log):\n"
         for g in groups:
-            gr = parse(g, log.parent)
+            gr = parse(g, out)
             gtext, gproblem = report(gr)
             problem = problem or gproblem
             name = g.name[:-len(".run.log")]
