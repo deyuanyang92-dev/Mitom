@@ -214,7 +214,7 @@ def select_reannotation(samples: List["SampleInfo"], results1: Dict[str, Dict], 
             chosen.append(si)
         rows.append(f"{si.sample_name}\t{'reannotate' if probs else 'shifted_round1'}\t{'; '.join(probs)}")
     write_table(reports_dir(out_root) / "reannotation_decision.tsv", "sample_name\tdecision\treasons", rows)
-    logging.info(f"[PHASE2] auto: {len(chosen)} of {len(samples)} sample(s) re-annotated, "
+    logging.info(f"[ROUND2] auto: {len(chosen)} of {len(samples)} sample(s) re-annotated, "
                  f"{len(samples) - len(chosen)} use the shifted round-1 annotation (reannotation_decision.tsv)")
     return chosen
 

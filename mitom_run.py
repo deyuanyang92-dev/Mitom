@@ -227,7 +227,7 @@ def stage_reorient(r: RunState) -> Optional[int]:
                 f"(if missing: {args.fallback_genes})")
 
     logging.info(
-        f"[PHASE1b] reorient gene='{args.which_gene_first}' force_forward={args.force_forward}")
+        f"[REORIENT] gene='{args.which_gene_first}' force_forward={args.force_forward}")
     reor_fasta_dir = r.reor_fasta_dir = out_root / "00.reoriented_fasta_internal"
     reor_fasta_dir.mkdir(parents=True, exist_ok=True)
 
@@ -479,7 +479,7 @@ def stage_ncbi(r: RunState) -> Optional[int]:
     """NCBI check (table2asn) and submission files; summary.tsv; all records in one GenBank file."""
     args, out_root, steps, merge_dir = r.args, r.out_root, r.steps, r.merge_dir
     steps.start("ncbi", "NCBI check (table2asn) and submission files")
-    submitted = run_submission(args, merge_dir, out_root) if merge_dir != r.final_dir else r.curated
+    submitted = run_submission(args, merge_dir, out_root) if r.curated.curated else r.curated   # (not curated: no files)
     steps.done(submitted.summary, submitted.ok)
     refresh_summary(out_root, merge_dir)
     r.all_final_gbs = sorted(                    # rglob: the no_<gene>_gene/ records are merged too

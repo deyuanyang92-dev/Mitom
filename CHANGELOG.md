@@ -22,6 +22,9 @@ installed one.
   does (7 steps; records rotated to `--which_gene_first` without the round-2 check). Docs: the METHODS flowchart
   (04.final_gb / annotation-summary era) is redrawn from the 11 run stages; benchmark numbers that were in two places
   (table2asn ERROR count, intron gold standard, nuclear-marker accuracy and time, P3 20 nt limit) are in one.
+- The NCBI step submits when the curation says it wrote its folder (`StepResult.curated`), not by comparing folder
+  paths. Log tags `[PHASE1b]` / `[PHASE2]` are `[REORIENT]` / `[ROUND2]`. minimap2 speed (2.7 s vs bwa 21 s) and
+  the time per record are given once (USAGE 1.5, README time table); other places point there.
 - #9: output of `run` / `import` (`--output_layout grouped`, default): summary.tsv, README.txt and annotation/
   (<record>.gb, all_records.gb, genes.fna, proteins.faa named `<accession>|<gene>|<organism>`, plots/),
   submission/<record>/ (.fsa .tbl .sqn .val; submission_summary.tsv), qc/ (original_vs_mitom.tsv and the step

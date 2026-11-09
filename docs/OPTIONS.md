@@ -1324,7 +1324,7 @@ mitom (--style mitom; the default until 2026-10-30), from the outside in:
               across the origin, a frameshift join, the exons of a gene with an intron, linked by a line).
   GC content  deviation of each window from the genome mean (WINDOW nt windows every STEP nt)
   GC skew     (G - C) / (G + C) of the same windows
-  depth       only with reads: minimap2 -x sr -c when it is installed (about 8x faster), else bwa mem; the
+  depth       only with reads: minimap2 -x sr -c when it is installed (faster, docs/USAGE_zh.md 1.5), else bwa mem; the
               reference span of every primary alignment; a circular record is mapped as sequence + its first
               ORIGIN_EXT nt and positions past the end are folded back onto the start
   centre      organism, length, topology, accession; a kb ruler runs inside the innermost ring

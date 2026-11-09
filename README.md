@@ -198,7 +198,7 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 | 用 MitoZ / MITOS2 注释（`--engine mitoz\|mitos2`）或导入它们已有的结果（`mitom import`；`mito_engines.py`） | 可选：MitoZ、MITOS2 需自己安装 |
 | 蛋白基因、rRNA、tRNA 识别 | 注释核心 `mito_core.py`（blastx + exonerate 蛋白基因，按门 rRNA profile HMM，MitoM-ML tRNA：分支协方差模型 + 学习的判别器与端点，未调用的 tRNA 家族由 MiTFi 补，脊椎动物取 MiTFi 端点） |
 
-`mito_core.py` = MitoM 自己的核心（blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m，起始密码子按 MitoZ 的规则取比对上游最近的一个（比对缺少较多残基时取最接近预期位置的）；rRNA 用按门的 profile HMM（`--rrna_method cm` 改用 MITOS2 的协方差模型）；tRNA 用 MitoM-ML（MITOS2 tRNA 模型 + 220 个分支的协方差模型，ARWEN/ARAGORN 作证据，梯度提升判别器与端点模型；它未调用的家族用 MiTFi 补，脊椎动物取 MiTFi 端点；无 scikit-learn 时整个改用 MiTFi）），只需一个 conda 环境，每条记录约 1–2 分钟。
+`mito_core.py` = MitoM 自己的核心（blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m，起始密码子按 MitoZ 的规则取比对上游最近的一个（比对缺少较多残基时取最接近预期位置的）；rRNA 用按门的 profile HMM（`--rrna_method cm` 改用 MITOS2 的协方差模型）；tRNA 用 MitoM-ML（MITOS2 tRNA 模型 + 220 个分支的协方差模型，ARWEN/ARAGORN 作证据，梯度提升判别器与端点模型；它未调用的家族用 MiTFi 补，脊椎动物取 MiTFi 端点；无 scikit-learn 时整个改用 MiTFi）），只需一个 conda 环境（每条用时见下文用时表）。
 
 **MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation, genome maps) was developed by the author over years of research. Gene finding is done by MitoM's own annotation core `mito_core.py`, its methods chosen by benchmark results (`benchmark/`): blastx + exonerate protein genes, per-phylum rRNA profile HMMs, MitoM-ML tRNAs (clade covariance models with a learned caller and ends, MiTFi for the families it does not call and MiTFi ends for vertebrates); one conda environment. MitoZ and MITOS2 are not installed with MitoM: when they are installed, `--engine mitoz|mitos2` lets them annotate, or `mitom import` reads their existing results, and the MitoM steps that follow are the same; MITOS2 can also rescue missed genes (`--rescue yes`). The MITOS2 reference data refseq89m the core uses are downloaded by `mitom setup` (install.sh runs it).
 
@@ -213,9 +213,9 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 
 **第三方软件 / Third-party tools**
 
-注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa（装有 minimap2 时自动改用它，快约 8 倍）、Python 包（Biopython、scikit-learn、matplotlib）由 `install.sh` 装入同一个 conda 环境，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`mitom setup` 下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MitoZ（GPL-3.0）、MITOS2 可选，不随本仓库分发。
+注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa（装有 minimap2 时自动改用它，更快，见使用手册 1.5）、Python 包（Biopython、scikit-learn、matplotlib）由 `install.sh` 装入同一个 conda 环境，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`mitom setup` 下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MitoZ（GPL-3.0）、MITOS2 可选，不随本仓库分发。
 
-The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, about 8x faster) and the Python packages (Biopython, scikit-learn, matplotlib) are installed into one conda environment by `install.sh`; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `mitom setup` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MitoZ (GPL-3.0) and MITOS2 are optional and not distributed here.
+The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, faster: USAGE 1.5) and the Python packages (Biopython, scikit-learn, matplotlib) are installed into one conda environment by `install.sh`; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `mitom setup` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MitoZ (GPL-3.0) and MITOS2 are optional and not distributed here.
 
 **致谢 / Acknowledgements**
 
@@ -357,7 +357,7 @@ Bare sequences, compared with the NCBI annotation. A clear error = missing gene,
 - Python 3.11 及 Biopython、numpy、scikit-learn 1.7.2（MitoM-ML tRNA 判别器按此版本训练）、matplotlib（圈图）
 - 注释核心与后续步骤：exonerate、BLAST、Infernal、HMMER、table2asn、ARAGORN、tRNAscan-SE、MAFFT + MITOS2 参考数据 refseq89m（`mitom setup`）
 - Java（MiTFi 用，任何 ≥ 8 的版本）：用电脑上已有的；没有时 install.sh 往环境里加 openjdk 8
-- 圈图测序深度：bwa；装有 minimap2 时自动改用它，快约 8 倍：`mamba install -n mitotools -c bioconda minimap2`（Linux 上环境多 0.5 GB）
+- 圈图测序深度：bwa；装有 minimap2 时自动改用它（更快，见使用手册 1.5）：`mamba install -n mitotools -c bioconda minimap2`（Linux 上环境多 0.5 GB）
 - 可选，自己安装：MITOS2 2.1.10（`--engine mitos2`、`--rescue yes`；`bash install.sh --envs "mitotools mitos"`）、MitoZ 3.6（`--engine mitoz`；`mamba create -n mitoz -c bioconda -c conda-forge mitoz=3.6`）、Snakemake（多任务调度）
 
 Everything is in one conda environment, `mitotools` (`env/mitotools.yml`): Python 3.11 with Biopython, numpy, scikit-learn 1.7.2 and matplotlib; the programs of the core and the later steps; the MITOS2 reference data via `mitom setup`. Java for MiTFi (any version >= 8): the computer's own; install.sh adds openjdk 8 to the environment only when there is none. Optional, installed by you: MITOS2 (`--engine mitos2`, `--rescue yes`), MitoZ (`--engine mitoz`), Snakemake, minimap2 (faster depth ring).

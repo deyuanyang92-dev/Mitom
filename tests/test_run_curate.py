@@ -28,7 +28,7 @@ def test_run_curate_passes_the_clade_option(tmp_path, monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake_run)
     args = argparse.Namespace(curate="yes", genetic_code=5, clade="Annelida-segmented-worms")
     out = mitom_steps.run_curate(args, tmp_path / "04.final_gb", tmp_path)
-    assert out.gb_dir == tmp_path / "05.curated" and out.ok
+    assert out.gb_dir == tmp_path / "05.curated" and out.ok and out.curated
     i = seen[0].index("--aggressive_start_genes")
     assert seen[0][i + 1] == "ND5,ND4L"
     assert "--abbreviated_pcg_overlap" in seen[0]                 # annelids: T / TA before the next protein gene

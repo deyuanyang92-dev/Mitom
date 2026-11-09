@@ -14,7 +14,7 @@ mitom (--style mitom; the default until 2026-10-30), from the outside in:
               across the origin, a frameshift join, the exons of a gene with an intron, linked by a line).
   GC content  deviation of each window from the genome mean (WINDOW nt windows every STEP nt)
   GC skew     (G - C) / (G + C) of the same windows
-  depth       only with reads: minimap2 -x sr -c when it is installed (about 8x faster), else bwa mem; the
+  depth       only with reads: minimap2 -x sr -c when it is installed (faster, docs/USAGE_zh.md 1.5), else bwa mem; the
               reference span of every primary alignment; a circular record is mapped as sequence + its first
               ORIGIN_EXT nt and positions past the end are folded back onto the start
   centre      organism, length, topology, accession; a kb ruler runs inside the innermost ring
@@ -656,7 +656,7 @@ def _circos_figure(rec: SeqRecord, depth: Optional[np.ndarray], min_noncoding: i
 
 def depth_from_reads(rec: SeqRecord, reads: Sequence, threads: int = 1) -> np.ndarray:
     """Per-position read depth of `rec` from one FASTQ file or a pair (.gz allowed), from the reference span of every
-    primary alignment: minimap2 -x sr -c when it is installed (PAF; -c for exact ends; about 8x faster), else bwa mem
+    primary alignment: minimap2 -x sr -c when it is installed (PAF; -c for exact ends; faster), else bwa mem
     (SAM, CIGAR M / D / N / = / X; bwa is in mitotools, minimap2 is not: its k8 pulls sysroot_linux-64, +0.5 GB on
     Linux). A circular record is mapped as sequence + its first ORIGIN_EXT nt and positions past its end are folded
     back onto the start, so reads across the origin count. RuntimeError when neither is found or the aligner fails."""

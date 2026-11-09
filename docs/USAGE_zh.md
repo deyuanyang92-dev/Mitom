@@ -55,7 +55,7 @@ docker run --rm -v "$PWD":/data mitom mitom run -i /data/genomes.gb -o /data/out
 |---|---|---|
 | MITOS2 2.1.10 | `--engine mitos2`（用 MITOS2 找基因）、`--rescue yes`（补回核心漏掉的基因）、`mitom trna` 的 MITOS2 结果 | `mamba env create -f env/mitos.yml`，或 `install.sh --envs "mitotools mitos"` |
 | MitoZ 3.6 | `--engine mitoz`（用 MitoZ 找基因） | 按 MitoZ 官方说明自行安装；MitoM 在 PATH 或 conda 环境里自动寻找，或 `--mitoz_bin` |
-| minimap2 | 基因组图的测序深度环（比 bwa 快约 8 倍） | `mamba install -n mitotools minimap2` |
+| minimap2 | 基因组图的测序深度环；装上后代替 bwa（1.02 M 对 reads、8 线程：2.7 s，bwa 21 s，平均深度相同） | `mamba install -n mitotools minimap2` |
 
 ---
 
@@ -613,9 +613,9 @@ By default, multi-record FASTA files are split into individual records. With `--
 
 #### FASTQ 输入 / Optional FASTQ Input
 
-FASTQ 只用于 `annotate` / `run` 的基因组圈图，注释本身不用 reads：给出 `--infq` 时，用 bwa mem（装有 minimap2 时用它，快约 8 倍）把该样本的 reads 比对到最终序列，圈图最内一圈画测序深度（`--plot no` 时不用）。脚本按最终 `sample_name` 查找双端 FASTQ。
+FASTQ 只用于 `annotate` / `run` 的基因组圈图，注释本身不用 reads：给出 `--infq` 时，用 bwa mem（装有 minimap2 时用它，更快，见 1.5 节）把该样本的 reads 比对到最终序列，圈图最内一圈画测序深度（`--plot no` 时不用）。脚本按最终 `sample_name` 查找双端 FASTQ。
 
-FASTQ files are used only for the genome maps of `annotate` / `run`; the annotation itself does not use reads. With `--infq`, the sample's reads are mapped to the final sequence with bwa mem (minimap2 when installed, about 8x faster) and the read depth is drawn as the innermost ring (not with `--plot no`). Matching is based on the final `sample_name`.
+FASTQ files are used only for the genome maps of `annotate` / `run`; the annotation itself does not use reads. With `--infq`, the sample's reads are mapped to the final sequence with bwa mem (minimap2 when installed, faster: section 1.5) and the read depth is drawn as the innermost ring (not with `--plot no`). Matching is based on the final `sample_name`.
 
 示例：
 

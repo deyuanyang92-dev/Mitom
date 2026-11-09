@@ -37,10 +37,12 @@ def summary_line(text: str, prefix: str, default: str) -> str:
 class StepResult:
     """What one step after the annotation did. summary: its line in the step summary of `run` (terminal and run.log);
     gb_dir: the folder of the GenBank files after the step (curation: 05.curated/; None = the step's input folder);
-    ok: False when the step failed or could not run although asked to (the run goes on; run.log has the reason)."""
+    ok: False when the step failed or could not run although asked to (the run goes on; run.log has the reason);
+    curated: True only when the curation wrote its folder (the records the NCBI step submits)."""
     summary: str = ""
     gb_dir: Optional[Path] = None
     ok: bool = True
+    curated: bool = False
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -67,7 +69,7 @@ def run_curate_and_submit(args: argparse.Namespace, gb_dir: Path, out_root: Path
     or when curation failed)."""
     cur = run_curate(args, gb_dir, out_root)
     logging.info(f"[NCR] {run_ncr(args, cur.gb_dir, out_root).summary}")
-    if cur.gb_dir != gb_dir:
+    if cur.curated:
         run_submission(args, cur.gb_dir, out_root)
     return cur
 
@@ -101,7 +103,7 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
             if len(c) > 7 and c[4] == "error":
                 record_event(c[0], f"curation failed, record left uncurated: {c[7]}")
     return StepResult(f"{count_rows(report)} changes, each with rule and reason in {where(args, 'reports/curation_report.tsv')}",
-                      gb_dir=cur)
+                      gb_dir=cur, curated=True)
 
 
 @optional_step("NCR")

@@ -69,7 +69,7 @@ TOOLS = {
     "blastn":      ("intron site probes (mito_intron_ref.py); rDNA 18S-28S (mitom nuc)", "mitotools"),
     "tblastn":     ("intron site anchors (mito_intron_ref.py); histones (mitom nuc)", "mitotools"),
     "bwa":         ("optional: read depth ring of the genome maps (mito_plot.py, --infq)", "mitotools"),
-    "minimap2":    ("optional: used instead of bwa for the depth ring when found (about 8x faster; on Linux "
+    "minimap2":    ("optional: used instead of bwa for the depth ring when found (faster, docs/USAGE_zh.md 1.5; on Linux "
                     "mamba install -n mitotools -c bioconda minimap2 adds 0.5 GB)", "mitotools"),
 }
 # the programs each step of `mitom run` needs: doctor checks every one, the preflight of a run the steps it will do

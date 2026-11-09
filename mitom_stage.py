@@ -268,7 +268,7 @@ def run_phase2(phase2_samples: List["SampleInfo"], args: argparse.Namespace, out
                reor_fasta_dir: Path) -> Dict[str, Dict]:
     """Round 2: annotate the reoriented sequences of `phase2_samples`. Nothing to do (every sample passed the
     --if_reannotation_2 auto check) -> no annotation stage at all: Snakemake would otherwise get an empty rule."""
-    logging.info(f"[PHASE2] re-annotation: {len(phase2_samples)} samples")
+    logging.info(f"[ROUND2] re-annotation: {len(phase2_samples)} samples")
     if not phase2_samples:
         return {}
     return run_annotation_stage(
