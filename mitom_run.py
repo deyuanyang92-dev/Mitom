@@ -542,7 +542,7 @@ def run_exit_code(r: RunState) -> int:
     return 0
 
 
-# `mitom run` / `import` in order; 11 numbered steps on the terminal (Steps(11) in start_run)
+# `mitom run` / `import` in order; one numbered step each on the terminal (run_stages: Steps(len(stages)))
 RUN_STAGES = (stage_input, stage_round1, stage_reorient, stage_round2, stage_write_final, stage_add_missing,
               stage_curate, stage_ncbi, stage_compare, stage_maps, stage_output)
 # `mitom annotate`: one round, the steps after it as in `run`, the work layout (no comparison, no output layout)
