@@ -1,0 +1,363 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+NC_013272.1		Arthropoda						5		circular	16518					Arthropoda	test	2026-11-09
+NC_088086.1		Arthropoda						5		circular	16426					Arthropoda	test	2026-11-09
+NC_086851.1		Arthropoda						5		circular	16214					Arthropoda	test	2026-11-09
+NC_085838.1		Arthropoda						5		circular	14731					Arthropoda	test	2026-11-09
+NC_085405.1		Arthropoda						5		circular	15370					Arthropoda	test	2026-11-09
+NC_085170.1		Arthropoda						5		circular	16161					Arthropoda	test	2026-11-09
+NC_084263.1		Arthropoda						5		circular	15561					Arthropoda	test	2026-11-09
+NC_082873.1		Arthropoda						5		circular	15341					Arthropoda	test	2026-11-09
+NC_082830.1		Arthropoda						5		circular	16651					Arthropoda	test	2026-11-09
+NC_082143.1		Arthropoda						5		circular	17240					Arthropoda	test	2026-11-09
+NC_080530.1		Arthropoda						5		circular	15663					Arthropoda	test	2026-11-09
+NC_079950.1		Arthropoda						5		circular	15982					Arthropoda	test	2026-11-09
+NC_073510.1		Arthropoda						5		circular	15598					Arthropoda	test	2026-11-09
+NC_065831.1		Arthropoda						5		circular	15756					Arthropoda	test	2026-11-09
+NC_063538.1		Arthropoda						5		circular	15424					Arthropoda	test	2026-11-09
+NC_065747.1		Arthropoda						5		circular	14638					Arthropoda	test	2026-11-09
+NC_072994.1		Arthropoda						5		circular	16546					Arthropoda	test	2026-11-09
+NC_062163.1		Arthropoda						5		circular	14721					Arthropoda	test	2026-11-09
+NC_064395.1		Arthropoda						5		circular	15361					Arthropoda	test	2026-11-09
+NC_065315.1		Arthropoda						5		circular	14347					Arthropoda	test	2026-11-09
+NC_066054.1		Arthropoda						5		circular	16061					Arthropoda	test	2026-11-09
+NC_062060.1		Arthropoda						5		circular	14556					Arthropoda	test	2026-11-09
+NC_069172.1		Arthropoda						5		circular	14614					Arthropoda	test	2026-11-09
+NC_072136.1		Arthropoda						5		circular	16261					Arthropoda	test	2026-11-09
+NC_071736.1		Arthropoda						5		circular	15859					Arthropoda	test	2026-11-09
+NC_070278.1		Arthropoda						5		circular	16303					Arthropoda	test	2026-11-09
+NC_069998.1		Arthropoda						5		circular	15173					Arthropoda	test	2026-11-09
+NC_069015.1		Arthropoda						5		circular	15783					Arthropoda	test	2026-11-09
+NC_068517.1		Arthropoda						5		circular	15177					Arthropoda	test	2026-11-09
+NC_067913.1		Arthropoda						5		circular	14535					Arthropoda	test	2026-11-09
+NC_067717.1		Arthropoda						5		circular	15221					Arthropoda	test	2026-11-09
+NC_062683.1		Arthropoda						5		circular	15093					Arthropoda	test	2026-11-09
+NC_060740.1		Arthropoda						5		circular	15247					Arthropoda	test	2026-11-09
+NC_060368.1		Arthropoda						5		circular	14930					Arthropoda	test	2026-11-09
+NC_058963.1		Arthropoda						5		circular	15774					Arthropoda	test	2026-11-09
+NC_057485.1		Arthropoda						5		circular	16415					Arthropoda	test	2026-11-09
+NC_056285.1		Arthropoda						5		circular	15923					Arthropoda	test	2026-11-09
+NC_053905.1		Arthropoda						5		circular	15552					Arthropoda	test	2026-11-09
+NC_053635.1		Arthropoda						5		circular	14963					Arthropoda	test	2026-11-09
+NC_051985.1		Arthropoda						5		circular	15190					Arthropoda	test	2026-11-09
+NC_050886.1		Arthropoda						5		circular	15529					Arthropoda	test	2026-11-09
+NC_049059.1		Arthropoda						5		circular	13721					Arthropoda	test	2026-11-09
+NC_046724.1		Arthropoda						5		circular	15542					Arthropoda	test	2026-11-09
+NC_046511.1		Arthropoda						5		circular	15164					Arthropoda	test	2026-11-09
+NC_045208.1		Arthropoda						5		circular	14433					Arthropoda	test	2026-11-09
+NC_044669.1		Arthropoda						5		circular	16024					Arthropoda	test	2026-11-09
+NC_042803.1		Arthropoda						5		circular	15952					Arthropoda	test	2026-11-09
+NC_041423.1		Arthropoda						5		circular	16756					Arthropoda	test	2026-11-09
+NC_039947.1		Arthropoda						5		circular	15574					Arthropoda	test	2026-11-09
+NC_039705.1		Arthropoda						5		circular	15035					Arthropoda	test	2026-11-09
+NC_038146.1		Arthropoda						5		circular	14957					Arthropoda	test	2026-11-09
+NC_037809.1		Arthropoda						5		circular	15583					Arthropoda	test	2026-11-09
+NC_037368.1		Arthropoda						5		circular	15573					Arthropoda	test	2026-11-09
+NC_036298.1		Arthropoda						5		circular	15364					Arthropoda	test	2026-11-09
+NC_035509.1		Arthropoda						5		circular	16345					Arthropoda	test	2026-11-09
+NC_034280.1		Arthropoda						5		circular	15232					Arthropoda	test	2026-11-09
+NC_034102.1		Arthropoda						5		circular	14950					Arthropoda	test	2026-11-09
+NC_033857.1		Arthropoda						5		circular	14434					Arthropoda	test	2026-11-09
+NC_030768.1		Arthropoda						5		circular	15815					Arthropoda	test	2026-11-09
+NC_030017.1		Arthropoda						5		circular	14900					Arthropoda	test	2026-11-09
+NC_002083.1		Chordata						2		circular	16499					Chordata	test	2026-11-09
+NC_088454.1		Chordata						2		circular	16682					Chordata	test	2026-11-09
+NC_086960.1		Chordata						2		circular	16841					Chordata	test	2026-11-09
+NC_085255.1		Chordata						2		circular	16639					Chordata	test	2026-11-09
+NC_083179.1		Chordata						2		circular	17277					Chordata	test	2026-11-09
+NC_083016.1		Chordata						2		circular	16624					Chordata	test	2026-11-09
+NC_082765.1		Chordata						2		circular	17059					Chordata	test	2026-11-09
+NC_082187.1		Chordata						2		circular	16613					Chordata	test	2026-11-09
+NC_077553.1		Chordata						2		circular	16636					Chordata	test	2026-11-09
+NC_064151.1		Chordata						2		circular	16647					Chordata	test	2026-11-09
+NC_063779.1		Chordata						2		circular	16445					Chordata	test	2026-11-09
+NC_066827.1		Chordata						2		circular	16626					Chordata	test	2026-11-09
+NC_066220.1		Chordata						2		circular	16812					Chordata	test	2026-11-09
+NC_066466.1		Chordata						2		circular	16971					Chordata	test	2026-11-09
+NC_069226.1		Chordata						2		circular	16577					Chordata	test	2026-11-09
+NC_070063.1		Chordata						2		circular	16804					Chordata	test	2026-11-09
+NC_068271.1		Chordata						2		circular	16653					Chordata	test	2026-11-09
+NC_062460.1		Chordata						2		circular	16465					Chordata	test	2026-11-09
+NC_058275.1		Chordata						2		circular	16646					Chordata	test	2026-11-09
+NC_057100.1		Chordata						2		circular	16624					Chordata	test	2026-11-09
+NC_056117.1		Chordata						2		circular	16606					Chordata	test	2026-11-09
+NC_053799.1		Chordata						2		circular	16254					Chordata	test	2026-11-09
+NC_052842.1		Chordata						2		circular	16685					Chordata	test	2026-11-09
+NC_051526.1		Chordata						2		circular	16881					Chordata	test	2026-11-09
+NC_050399.1		Chordata						2		circular	16600					Chordata	test	2026-11-09
+NC_048977.1		Chordata						2		circular	19297					Chordata	test	2026-11-09
+NC_046442.1		Chordata						2		circular	16560					Chordata	test	2026-11-09
+NC_045067.1		Chordata						2		circular	16587					Chordata	test	2026-11-09
+NC_044429.1		Chordata						2		circular	16459					Chordata	test	2026-11-09
+NC_042397.1		Chordata						2		circular	17641					Chordata	test	2026-11-09
+NC_040902.1		Chordata						2		circular	16784					Chordata	test	2026-11-09
+NC_039158.1		Chordata						2		circular	17432					Chordata	test	2026-11-09
+NC_037474.1		Chordata						2		circular	16510					Chordata	test	2026-11-09
+NC_036613.1		Chordata						2		circular	17743					Chordata	test	2026-11-09
+NC_035944.1		Chordata						2		circular	16600					Chordata	test	2026-11-09
+NC_035305.1		Chordata						2		circular	16533					Chordata	test	2026-11-09
+NC_034338.1		Chordata						2		circular	16504					Chordata	test	2026-11-09
+NC_033549.1		Chordata						2		circular	16537					Chordata	test	2026-11-09
+NC_031845.1		Chordata						2		circular	16799					Chordata	test	2026-11-09
+NC_031549.1		Chordata						2		circular	16602					Chordata	test	2026-11-09
+NC_030542.1		Chordata						2		circular	16567					Chordata	test	2026-11-09
+NC_029841.1		Chordata						2		circular	16524					Chordata	test	2026-11-09
+NC_029348.1		Chordata						2		circular	16618					Chordata	test	2026-11-09
+NC_028561.1		Chordata						2		circular	16598					Chordata	test	2026-11-09
+NC_028295.1		Chordata						2		circular	16534					Chordata	test	2026-11-09
+NC_027950.1		Chordata						2		circular	16502					Chordata	test	2026-11-09
+NC_027495.1		Chordata						2		circular	16594					Chordata	test	2026-11-09
+NC_026976.1		Chordata						2		circular	16560					Chordata	test	2026-11-09
+NC_026285.1		Chordata						2		circular	17636					Chordata	test	2026-11-09
+NC_025919.1		Chordata						2		circular	18722					Chordata	test	2026-11-09
+NC_018362.1		Mollusca						5		circular	16014					Mollusca	test	2026-11-09
+NC_086491.1		Mollusca						5		circular	14686					Mollusca	test	2026-11-09
+NC_084213.1		Mollusca						5		circular	15843					Mollusca	test	2026-11-09
+NC_080961.1		Mollusca						5		circular	15594					Mollusca	test	2026-11-09
+NC_082308.1		Mollusca						5		circular	16896					Mollusca	test	2026-11-09
+NC_079703.1		Mollusca						5		circular	14707					Mollusca	test	2026-11-09
+NC_063766.1		Mollusca						5		circular	16962					Mollusca	test	2026-11-09
+NC_063773.1		Mollusca						5		circular	17024					Mollusca	test	2026-11-09
+NC_063762.1		Mollusca						5		circular	18094					Mollusca	test	2026-11-09
+NC_065674.1		Mollusca						5		circular	20997					Mollusca	test	2026-11-09
+NC_065638.1		Mollusca						5		circular	14929					Mollusca	test	2026-11-09
+NC_072228.1		Mollusca						5		circular	16240					Mollusca	test	2026-11-09
+NC_069988.1		Mollusca						5		circular	15943					Mollusca	test	2026-11-09
+NC_068822.1		Mollusca						5		circular	14595					Mollusca	test	2026-11-09
+NC_068082.1		Mollusca						5		circular	15630					Mollusca	test	2026-11-09
+NC_062613.1		Mollusca						5		circular	15905					Mollusca	test	2026-11-09
+NC_059921.1		Mollusca						5		circular	15475					Mollusca	test	2026-11-09
+NC_057112.1		Mollusca						5		circular	16171					Mollusca	test	2026-11-09
+NC_052881.1		Mollusca						5		circular	15737					Mollusca	test	2026-11-09
+NC_047421.1		Mollusca						5		circular	15765					Mollusca	test	2026-11-09
+NC_046494.1		Mollusca						5		circular	15737					Mollusca	test	2026-11-09
+NC_043790.1		Mollusca						5		circular	14213					Mollusca	test	2026-11-09
+NC_041142.1		Mollusca						5		circular	16373					Mollusca	test	2026-11-09
+NC_039118.1		Mollusca						5		circular	15235					Mollusca	test	2026-11-09
+NC_037720.1		Mollusca						5		circular	16043					Mollusca	test	2026-11-09
+NC_036351.1		Mollusca						5		circular	15719					Mollusca	test	2026-11-09
+NC_035489.1		Mollusca						5		circular	14118					Mollusca	test	2026-11-09
+NC_034300.1		Mollusca						5		circular	31969					Mollusca	test	2026-11-09
+NC_031405.1		Mollusca						5		circular	15294					Mollusca	test	2026-11-09
+NC_029747.1		Mollusca						5		circular	16027					Mollusca	test	2026-11-09
+NC_028183.1		Mollusca						5		circular	15255					Mollusca	test	2026-11-09
+NC_026728.1		Mollusca						5		circular	19637					Mollusca	test	2026-11-09
+NC_024943.1		Mollusca						5		circular	16256					Mollusca	test	2026-11-09
+NC_023257.1		Mollusca						5		circular	15793					Mollusca	test	2026-11-09
+NC_018763.1		Mollusca						5		circular	22040					Mollusca	test	2026-11-09
+NC_016188.1		Mollusca						5		circular	14518					Mollusca	test	2026-11-09
+NC_015110.1		Mollusca						5		circular	15939					Mollusca	test	2026-11-09
+NC_011518.2		Mollusca						5		circular	18622					Mollusca	test	2026-11-09
+NC_012648.1		Mollusca						5		circular	18225					Mollusca	test	2026-11-09
+NC_007980.1		Mollusca						5		circular	16258					Mollusca	test	2026-11-09
+NC_028712.1		Annelida						5		circular	16204					Annelida-segmented-worms	test	2026-11-09
+NC_087824.1		Annelida						5		circular	15800					Annelida-segmented-worms	test	2026-11-09
+NC_087807.1		Annelida						5		circular	15490					Annelida-segmented-worms	test	2026-11-09
+NC_086457.1		Annelida						5		circular	15764					Annelida-segmented-worms	test	2026-11-09
+NC_082301.1		Annelida						5		circular	15446					Annelida-segmented-worms	test	2026-11-09
+NC_077651.1		Annelida						5		circular	15065					Annelida-segmented-worms	test	2026-11-09
+NC_064376.1		Annelida						5		circular	16272					Annelida-segmented-worms	test	2026-11-09
+NC_061377.1		Annelida						5		circular	17707					Annelida-segmented-worms	test	2026-11-09
+NC_064058.1		Annelida						5		circular	17403					Annelida-segmented-worms	test	2026-11-09
+NC_059817.1		Annelida						5		circular	15696					Annelida-segmented-worms	test	2026-11-09
+NC_065095.1		Annelida						5		circular	15832					Annelida-segmented-worms	test	2026-11-09
+NC_069204.1		Annelida						5		circular	15883					Annelida-segmented-worms	test	2026-11-09
+NC_072222.1		Annelida						5		circular	14888					Annelida-segmented-worms	test	2026-11-09
+NC_072217.1		Annelida						5		circular	14538					Annelida-segmented-worms	test	2026-11-09
+NC_069297.1		Annelida						5		circular	15918					Annelida-segmented-worms	test	2026-11-09
+NC_063122.1		Annelida						5		circular	15226					Annelida-segmented-worms	test	2026-11-09
+NC_060814.1		Annelida						5		circular	15783					Annelida-segmented-worms	test	2026-11-09
+NC_058588.1		Annelida						5		circular	15050					Annelida-segmented-worms	test	2026-11-09
+NC_056279.1		Annelida						5		circular	15581					Annelida-segmented-worms	test	2026-11-09
+NC_051996.1		Annelida						5		circular	17502					Annelida-segmented-worms	test	2026-11-09
+NC_050262.1		Annelida						5		circular	15103					Annelida-segmented-worms	test	2026-11-09
+NC_046733.1		Annelida						5		circular	15086					Annelida-segmented-worms	test	2026-11-09
+NC_037236.1		Annelida						5		circular	15163					Annelida-segmented-worms	test	2026-11-09
+NC_035507.1		Annelida						5		circular	15765					Annelida-segmented-worms	test	2026-11-09
+NC_032055.1		Annelida						5		circular	22058					Annelida-segmented-worms	test	2026-11-09
+NC_031402.1		Annelida						5		circular	14712					Annelida-segmented-worms	test	2026-11-09
+NC_029872.1		Annelida						5		circular	15133					Annelida-segmented-worms	test	2026-11-09
+NC_029868.1		Annelida						5		circular	15160					Annelida-segmented-worms	test	2026-11-09
+NC_029863.1		Annelida						5		circular	15160					Annelida-segmented-worms	test	2026-11-09
+NC_027854.1		Annelida						5		circular	15037					Annelida-segmented-worms	test	2026-11-09
+NC_027258.1		Annelida						5		circular	15161					Annelida-segmented-worms	test	2026-11-09
+NC_026856.1		Annelida						5		circular	15445					Annelida-segmented-worms	test	2026-11-09
+NC_026857.1		Annelida						5		circular	14779					Annelida-segmented-worms	test	2026-11-09
+NC_025292.1		Annelida						5		circular	15115					Annelida-segmented-worms	test	2026-11-09
+NC_023943.1		Annelida						5		circular	15852					Annelida-segmented-worms	test	2026-11-09
+NC_023124.1		Annelida						5		circular	15159					Annelida-segmented-worms	test	2026-11-09
+NC_012618.1		Annelida						5		circular	15494					Annelida-segmented-worms	test	2026-11-09
+NC_087803.1		Nematoda						5		circular	14210					Nematoda	test	2026-11-09
+NC_084178.1		Nematoda						5		circular	13588					Nematoda	test	2026-11-09
+NC_061210.1		Nematoda						5		circular	14411					Nematoda	test	2026-11-09
+NC_072121.1		Nematoda						5		circular	14067					Nematoda	test	2026-11-09
+NC_067627.1		Nematoda						5		circular	13719					Nematoda	test	2026-11-09
+NC_046711.1		Nematoda						5		circular	13876					Nematoda	test	2026-11-09
+NC_039926.1		Nematoda						5		circular	13924					Nematoda	test	2026-11-09
+NC_035252.1		Nematoda						5		circular	14245					Nematoda	test	2026-11-09
+NC_035244.1		Nematoda						5		circular	14212					Nematoda	test	2026-11-09
+NC_033886.1		Nematoda						5		circular	13355					Nematoda	test	2026-11-09
+NC_031647.1		Nematoda						5		circular	14019					Nematoda	test	2026-11-09
+NC_030332.1		Nematoda						5		circular	13516					Nematoda	test	2026-11-09
+NC_028621.1		Nematoda						5		circular	14105					Nematoda	test	2026-11-09
+NC_027694.1		Nematoda						5		circular	13766					Nematoda	test	2026-11-09
+NC_026023.1		Nematoda						5		circular	13915					Nematoda	test	2026-11-09
+NC_025267.1		Nematoda						5		circular	13753					Nematoda	test	2026-11-09
+NC_024037.1		Nematoda						5		circular	13823					Nematoda	test	2026-11-09
+NC_023098.1		Nematoda						5		circular	13634					Nematoda	test	2026-11-09
+NC_019571.1		Nematoda						5		circular	13913					Nematoda	test	2026-11-09
+NC_016197.1		Nematoda						5		circular	13724					Nematoda	test	2026-11-09
+NC_015245.1		Nematoda						5		circular	15954					Nematoda	test	2026-11-09
+NC_013827.1		Nematoda						5		circular	14066					Nematoda	test	2026-11-09
+NC_013065.1		Nematoda						5		circular	13497					Nematoda	test	2026-11-09
+NC_008692.1		Nematoda						5		circular	15546					Nematoda	test	2026-11-09
+NC_005305.1		Nematoda						5		circular	13814					Nematoda	test	2026-11-09
+NC_044548.1		Platyhelminthes						9		circular	17675						test	2026-11-09
+NC_085267.1		Platyhelminthes						9		circular	14648						test	2026-11-09
+NC_065766.1		Platyhelminthes						9		circular	17175						test	2026-11-09
+NC_061204.1		Platyhelminthes						9		circular	13730						test	2026-11-09
+NC_071963.1		Platyhelminthes						9		circular	14421						test	2026-11-09
+NC_067546.1		Platyhelminthes						9		circular	14210						test	2026-11-09
+NC_057207.1		Platyhelminthes						9		circular	14642						test	2026-11-09
+NC_050390.1		Platyhelminthes						9		circular	14369						test	2026-11-09
+NC_047185.1		Platyhelminthes						9		circular	13851						test	2026-11-09
+NC_044135.1		Platyhelminthes						9		circular	13760						test	2026-11-09
+NC_039532.1		Platyhelminthes						9		circular	14416						test	2026-11-09
+NC_037071.1		Platyhelminthes						9		circular	13853						test	2026-11-09
+NC_035634.1		Platyhelminthes						9		circular	14011						test	2026-11-09
+NC_032295.1		Platyhelminthes						9		circular	13887						test	2026-11-09
+NC_030528.1		Platyhelminthes						9		circular	14833						test	2026-11-09
+NC_029245.1		Platyhelminthes						9		circular	13764						test	2026-11-09
+NC_028071.1		Platyhelminthes						9		circular	13800						test	2026-11-09
+NC_027082.1		Platyhelminthes						9		circular	13796						test	2026-11-09
+NC_024589.1		Platyhelminthes						9		circular	13489						test	2026-11-09
+NC_021145.1		Platyhelminthes						9		circular	14296						test	2026-11-09
+NC_020374.1		Platyhelminthes						9		circular	13605						test	2026-11-09
+NC_014591.1		Platyhelminthes						9		circular	13554						test	2026-11-09
+NC_011122.1		Platyhelminthes						9		circular	13717						test	2026-11-09
+NC_009462.1		Platyhelminthes						9		circular	13750						test	2026-11-09
+NC_004022.1		Platyhelminthes						9		circular	13709						test	2026-11-09
+NC_084193.1		Cnidaria						4		circular	16967						test	2026-11-09
+NC_080954.1		Cnidaria						4		linear	15105						test	2026-11-09
+NC_080945.1		Cnidaria						4		linear	16077						test	2026-11-09
+NC_082284.1		Cnidaria						4		circular	18969						test	2026-11-09
+NC_073494.1		Cnidaria						4		circular	19267						test	2026-11-09
+NC_062017.1		Cnidaria						4		circular	19260						test	2026-11-09
+NC_062024.1		Cnidaria						4		circular	18947						test	2026-11-09
+NC_061998.1		Cnidaria						4		circular	18753						test	2026-11-09
+NC_062026.1		Cnidaria						4		circular	18730						test	2026-11-09
+NC_062005.1		Cnidaria						4		circular	19066						test	2026-11-09
+NC_062033.1		Cnidaria						4		circular	18717						test	2026-11-09
+NC_061283.1		Cnidaria						4		circular	19434						test	2026-11-09
+NC_048963.1		Cnidaria						4		circular	18714						test	2026-11-09
+NC_046691.1		Cnidaria						4		circular	16953						test	2026-11-09
+NC_044087.1		Cnidaria						4		circular	18715						test	2026-11-09
+NC_036022.1		Cnidaria						4		circular	18853						test	2026-11-09
+NC_035665.1		Cnidaria						4		circular	19157						test	2026-11-09
+NC_030337.1		Cnidaria						4		circular	15766						test	2026-11-09
+NC_021406.1		Cnidaria						4		circular	16189						test	2026-11-09
+NC_018380.1		Cnidaria						4		circular	18733						test	2026-11-09
+NC_085825.1		Porifera						4		circular	23941					Porifera-sponges	test	2026-11-09
+NC_065020.1		Porifera						4		circular	20504					Porifera-sponges	test	2026-11-09
+NC_040168.1		Porifera						4		circular	19571					Porifera-sponges	test	2026-11-09
+NC_031192.1		Porifera						4		circular	16227					Porifera-sponges	test	2026-11-09
+NC_027419.1		Porifera						5		circular	19042					Porifera-sponges	test	2026-11-09
+NC_022450.1		Porifera						4		circular	23435					Porifera-sponges	test	2026-11-09
+NC_018360.1		Porifera						4		circular	28614					Porifera-sponges	test	2026-11-09
+NC_016431.1		Porifera						4		circular	24850					Porifera-sponges	test	2026-11-09
+NC_014872.1		Porifera						4		circular	18402					Porifera-sponges	test	2026-11-09
+NC_014888.1		Porifera						4		circular	20262					Porifera-sponges	test	2026-11-09
+NC_014868.1		Porifera						4		circular	18551					Porifera-sponges	test	2026-11-09
+NC_014856.1		Porifera						4		circular	20440					Porifera-sponges	test	2026-11-09
+NC_010769.1		Porifera						4		circular	17427					Porifera-sponges	test	2026-11-09
+NC_010208.1		Porifera						4		circular	19282					Porifera-sponges	test	2026-11-09
+NC_010213.1		Porifera						4		circular	20360					Porifera-sponges	test	2026-11-09
+NC_010207.1		Porifera						4		circular	19112					Porifera-sponges	test	2026-11-09
+NC_010211.1		Porifera						4		circular	18990					Porifera-sponges	test	2026-11-09
+NC_006991.1		Porifera						4		circular	19565					Porifera-sponges	test	2026-11-09
+NC_083190.1		Echinodermata						9		circular	16198					Echinodermata	test	2026-11-09
+NC_082941.1		Echinodermata						9		circular	16778					Echinodermata	test	2026-11-09
+NC_065299.1		Echinodermata						9		circular	15870					Echinodermata	test	2026-11-09
+NC_061402.1		Echinodermata						9		circular	15656					Echinodermata	test	2026-11-09
+NC_069630.1		Echinodermata						9		circular	16156					Echinodermata	test	2026-11-09
+NC_062943.1		Echinodermata						9		circular	16260					Echinodermata	test	2026-11-09
+NC_057223.1		Echinodermata						9		circular	15569					Echinodermata	test	2026-11-09
+NC_054230.1		Echinodermata						9		circular	16298					Echinodermata	test	2026-11-09
+NC_052743.1		Echinodermata						9		circular	16274					Echinodermata	test	2026-11-09
+NC_050274.1		Echinodermata						9		circular	15716					Echinodermata	test	2026-11-09
+NC_045938.1		Echinodermata						9		circular	15348					Echinodermata	test	2026-11-09
+NC_042741.1		Echinodermata						9		circular	16376					Echinodermata	test	2026-11-09
+NC_040148.1		Echinodermata						9		circular	18107					Echinodermata	test	2026-11-09
+NC_034770.1		Echinodermata						9		circular	15720					Echinodermata	test	2026-11-09
+NC_033523.1		Echinodermata						9		circular	15712					Echinodermata	test	2026-11-09
+NC_026200.1		Echinodermata						9		circular	15696					Echinodermata	test	2026-11-09
+NC_023770.1		Echinodermata						9		circular	15709					Echinodermata	test	2026-11-09
+NC_013881.1		Echinodermata						9		circular	15767					Echinodermata	test	2026-11-09
+NC_009941.1		Echinodermata						9		circular	15712					Echinodermata	test	2026-11-09
+NC_006665.1		Echinodermata						9		circular	16427					Echinodermata	test	2026-11-09
+NC_010197.1		Bryozoa						5		circular	15433					Bryozoa	test	2026-11-09
+NC_085486.1		Bryozoa						5		circular	15407					Bryozoa	test	2026-11-09
+NC_038192.1		Bryozoa						5		circular	17539					Bryozoa	test	2026-11-09
+NC_018355.1		Bryozoa						5		circular	15861					Bryozoa	test	2026-11-09
+NC_018344.1		Bryozoa						5		circular	17265					Bryozoa	test	2026-11-09
+NC_016722.1		Bryozoa						5		circular	16089					Bryozoa	test	2026-11-09
+NC_015646.1		Bryozoa						5		circular	13763					Bryozoa	test	2026-11-09
+NC_011820.2		Bryozoa						5		circular	14144					Bryozoa	test	2026-11-09
+NC_008192.1		Bryozoa						5		circular	13026					Bryozoa	test	2026-11-09
+NC_085563.1		Brachiopoda						5		circular	20778						test	2026-11-09
+NC_039685.1		Brachiopoda						5		circular	14267						test	2026-11-09
+NC_036679.1		Brachiopoda						5		circular	25790						test	2026-11-09
+NC_003086.1		Brachiopoda						5		circular	14291						test	2026-11-09
+NC_002322.1		Brachiopoda						5		circular	14017						test	2026-11-09
+NC_000941.1		Brachiopoda						5		circular	15451						test	2026-11-09
+NC_061541.1		Nemertea						5		circular	16358					Nemertea-ribbon-worms	test	2026-11-09
+NC_042687.1		Nemertea						5		circular	15180					Nemertea-ribbon-worms	test	2026-11-09
+NC_026874.1		Nemertea						5		circular	15333					Nemertea-ribbon-worms	test	2026-11-09
+NC_024822.1		Nemertea						5		circular	14742					Nemertea-ribbon-worms	test	2026-11-09
+NC_023931.1		Nemertea						5		circular	14655					Nemertea-ribbon-worms	test	2026-11-09
+NC_023929.1		Nemertea						5		circular	14616					Nemertea-ribbon-worms	test	2026-11-09
+NC_018356.1		Nemertea						5		circular	15476					Nemertea-ribbon-worms	test	2026-11-09
+NC_017874.1		Nemertea						5		circular	15365					Nemertea-ribbon-worms	test	2026-11-09
+NC_014869.1		Nemertea						5		circular	15800					Nemertea-ribbon-worms	test	2026-11-09
+NC_012889.1		Nemertea						5		circular	15388					Nemertea-ribbon-worms	test	2026-11-09
+NC_013568.1		Rotifera						5		circular	15319						test	2026-11-09
+NC_010484.1		Rotifera						5		circular	12672						test	2026-11-09
+NC_010472.1		Rotifera						5		circular	11153						test	2026-11-09
+NC_031407.1		Tardigrada						5		circular	14428						test	2026-11-09
+NC_015829.1		Tardigrada						5		circular	15047						test	2026-11-09
+NC_014848.1		Tardigrada						5		circular	15169						test	2026-11-09
+NC_015890.1		Onychophora						5		circular	14493						test	2026-11-09
+NC_014273.1		Onychophora						5		circular	13673						test	2026-11-09
+NC_010961.1		Onychophora						5		circular	15347						test	2026-11-09
+NC_009082.1		Onychophora						5		circular	14411						test	2026-11-09
+NC_013814.1		Chaetognatha						5		circular	12631						test	2026-11-09
+NC_013811.1		Chaetognatha						5		circular	11121						test	2026-11-09
+NC_013810.1		Chaetognatha						5		circular	11459						test	2026-11-09
+NC_006386.1		Chaetognatha						5		circular	11905						test	2026-11-09
+NC_006083.1		Chaetognatha						5		circular	11423						test	2026-11-09
+NC_040109.1		Hemichordata						9		circular	16827						test	2026-11-09
+NC_040108.1		Hemichordata						5		circular	15416						test	2026-11-09
+NC_040107.1		Hemichordata						5		circular	17366						test	2026-11-09
+NC_013877.1		Hemichordata						9		circular	15710						test	2026-11-09
+NC_007438.1		Hemichordata						9		circular	17037						test	2026-11-09
+NC_001887.1		Hemichordata						9		circular	15708						test	2026-11-09
+NC_036763.1		Xenacoelomorpha						5		circular	15249						test	2026-11-09
+NC_034948.1		Xenacoelomorpha						5		circular	18725						test	2026-11-09
+NC_034946.1		Xenacoelomorpha						5		circular	14954						test	2026-11-09
+NC_029219.1		Xenacoelomorpha						5		circular	15279						test	2026-11-09
+NC_029218.1		Xenacoelomorpha						5		circular	15210						test	2026-11-09
+NC_014578.1		Xenacoelomorpha						5		circular	14803						test	2026-11-09
+NC_045864.1		Ctenophora						4		circular	12564						test	2026-11-09
+NC_045305.1		Ctenophora						4		circular	10487						test	2026-11-09
+NC_038065.1		Ctenophora						4		circular	13338						test	2026-11-09
+NC_016117.1		Ctenophora						4		circular	10326						test	2026-11-09
+NC_020030.1		Priapulida						5		circular	14732						test	2026-11-09
+NC_008557.1		Priapulida						5		linear	14919						test	2026-11-09
+NC_018761.1		Phoronida						5		circular	15495						test	2026-11-09
+NC_010432.1		Entoprocta						5		circular	15323						test	2026-11-09
+NC_010431.1		Entoprocta						5		circular	14862						test	2026-11-09
+NC_026985.1		Gastrotricha						5		circular	14558						test	2026-11-09
+NC_045069.1		Kinorhyncha						5		circular	14986						test	2026-11-09
+NC_031873.1		Kinorhyncha						5		circular	15304						test	2026-11-09
+NC_031872.1		Kinorhyncha						5		circular	14985						test	2026-11-09
+NC_085569.1		Nematomorpha						5		circular	14013						test	2026-11-09
+NC_044095.1		Nematomorpha						5		circular	15132						test	2026-11-09

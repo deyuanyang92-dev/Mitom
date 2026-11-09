@@ -39,14 +39,15 @@ usage: mitom run [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_maxlen
                  [--plot_style {circos,mitom}] [--ncr {yes,no}] [--ncr_min_len NCR_MIN_LEN]
                  [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
                  [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
-                 [--intron_fix {auto,yes,no}] [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB]
-                 [--intron_ref_gb INTRON_REF_GB] [--output_layout {grouped,classic}]
-                 [--keep_intermediate {yes,no}] [--threads THREADS] [--jobs N] [--clade CLADE]
-                 [--genetic_code GENETIC_CODE] [--infq INFQ] [--fq_position {flat,sample_dir}]
-                 [--suffix_fq SUFFIX_FQ] [--scheduler_backend {auto,snakemake,threads}]
-                 [--snakemake_bin SNAKEMAKE_BIN] [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
-                 [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG] [--engine {native,mitoz,mitos2}]
-                 [--mitoz_bin MITOZ_BIN] [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
+                 [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}] [--intron_bin INTRON_BIN]
+                 [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
+                 [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
+                 [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
+                 [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
+                 [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
+                 [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
+                 [--smk_extra FLAG] [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN]
+                 [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
                  [--if_reannotation_2 {yes,auto,no}] [--preserve_phase1_metadata {yes,no}]
                  [--smart_metadata {yes,no}] [--auto_accept_metadata {yes,no}]
 
@@ -143,6 +144,12 @@ Annotation:
                         boundary rules + Rfam intron type), then with mito_intron_ref.py (intron sites of
                         annotated relatives, models/intron_sites). auto = run when exonerate is found
                         (default).
+  --intron_rule {continuity,splice}
+                        When an intron of no known type (no Rfam group I / II hit) is written: continuity
+                        (default) = the gene's homologs run on across its junction (no residue missing or
+                        added) and splicing is needed (the gene does not read on in place as well); splice =
+                        it has a group I splice-site score >= 14 and the model aligns >= 80 % of its homolog
+                        (before 2026-11-09).
   --intron_bin INTRON_BIN
                         Directory containing exonerate, cmsearch, blastp, tblastn and blastn (e.g. a conda
                         env bin).
@@ -221,8 +228,8 @@ usage: mitom import [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_max
                     [--plot {yes,no}] [--plot_style {circos,mitom}] [--ncr {yes,no}]
                     [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
                     [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
-                    [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_bin INTRON_BIN]
-                    [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
+                    [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                    [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                     [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                     [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
                     [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
@@ -311,6 +318,12 @@ Annotation:
                         boundary rules + Rfam intron type), then with mito_intron_ref.py (intron sites of
                         annotated relatives, models/intron_sites). auto = run when exonerate is found
                         (default).
+  --intron_rule {continuity,splice}
+                        When an intron of no known type (no Rfam group I / II hit) is written: continuity
+                        (default) = the gene's homologs run on across its junction (no residue missing or
+                        added) and splicing is needed (the gene does not read on in place as well); splice =
+                        it has a group I splice-site score >= 14 and the model aligns >= 80 % of its homolog
+                        (before 2026-11-09).
   --intron_bin INTRON_BIN
                         Directory containing exonerate, cmsearch, blastp, tblastn and blastn (e.g. a conda
                         env bin).
@@ -374,8 +387,8 @@ usage: mitom annotate [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_m
                       [--refdir DIR] [--plot {yes,no}] [--plot_style {circos,mitom}] [--ncr {yes,no}]
                       [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
                       [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
-                      [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_bin INTRON_BIN]
-                      [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
+                      [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                      [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                       [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                       [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
                       [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
@@ -466,6 +479,12 @@ Annotation:
                         boundary rules + Rfam intron type), then with mito_intron_ref.py (intron sites of
                         annotated relatives, models/intron_sites). auto = run when exonerate is found
                         (default).
+  --intron_rule {continuity,splice}
+                        When an intron of no known type (no Rfam group I / II hit) is written: continuity
+                        (default) = the gene's homologs run on across its junction (no residue missing or
+                        added) and splicing is needed (the gene does not read on in place as well); splice =
+                        it has a group I splice-site score >= 14 and the model aligns >= 80 % of its homolog
+                        (before 2026-11-09).
   --intron_bin INTRON_BIN
                         Directory containing exonerate, cmsearch, blastp, tblastn and blastn (e.g. a conda
                         env bin).

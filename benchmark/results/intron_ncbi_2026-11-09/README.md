@@ -35,6 +35,10 @@ bit score).
 
 ## Results / 结果
 
+Rule of these runs: the one before 2026-11-09 (`--intron_rule splice`). With the rule that replaced it (continuity
+and necessity of the splice, `../intron_algo_2026-11-09/`) the bryozoan introns found rise from 12 to 31 of 50; the
+other groups are unchanged.
+
 `mitom_native_summary.tsv` (truth = NCBI intron features):
 
 | 类群 / group | NCBI 内含子 / NCBI introns | 完全一致 / exact | ≤ 6 nt | > 6 nt | 漏检 / missed | 多报 / extra |

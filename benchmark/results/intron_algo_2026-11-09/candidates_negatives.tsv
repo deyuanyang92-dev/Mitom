@@ -1,0 +1,6 @@
+accession	group	gene	intron_start	intron_end	length	label	class	type	typed	splice_score	junction_span	junction_missing_aa	junction_extra_aa	homolog_coverage	splicing_gain	confidence	evidence
+NC_013568.1	Rotifera	ND1	4661	9432	4772	false	fp	intron, type not identified	no	3.0	0.80	6.0	0.0	0.86	-5	medium	untyped intron(s) (MITOM_INTRON_WRITE_ALL: no evidence rule)
+NC_026728.1	Mollusca	COX2	5910	6287	378	false	fp	intron, type not identified	no	20.0	1.00	0.0	5.0	0.79	74	medium	untyped intron(s) (MITOM_INTRON_WRITE_ALL: no evidence rule)
+NC_063762.1	Mollusca	COX2	6258	6659	402	false	fp	intron, type not identified	no	6.5	1.00	29.0	0.0	0.59	65	medium	untyped intron(s) (MITOM_INTRON_WRITE_ALL: no evidence rule)
+NC_063762.1	Mollusca	ND3	1897	4403	2507	false	fp	intron, type not identified	no	43.5	0.90	0.0	0.0	0.85	0	medium	untyped intron(s) (MITOM_INTRON_WRITE_ALL: no evidence rule)
+NC_063766.1	Mollusca	COX2	5570	5794	225	false	fp	intron, type not identified	no	5.0	1.00	15.0	0.0	0.67	17	medium	untyped intron(s) (MITOM_INTRON_WRITE_ALL: no evidence rule)

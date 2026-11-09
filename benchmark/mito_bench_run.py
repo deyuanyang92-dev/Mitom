@@ -52,11 +52,13 @@ MITOM_GB = "raw/annotation/*.gb|raw/final_annotation/*.gb"
 MIN_REF_PCG = 12                          # a MitoFinder reference must carry (nearly) all genes with standard names
 
 TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder",
-         "mitom_nocur", "mitoz_cur", "mitos2_cur", "mitom_blind")
+         "mitom_nocur", "mitoz_cur", "mitos2_cur", "mitom_blind", "mitom_prein")
 # mitom_blind = `mitom run` on in.fa (sequence only) with no --clade / --genetic_code (--clade auto decides both, as a user
 # with a new assembly would run it; the other MitoM tools are given the NCBI record's clade and code);
 # mitom_nocur = mitom_native with --curate no; mitoz_cur / mitos2_cur = the record's MitoZ / MITOS2 output (runs/mitoz,
 # runs/mitos2 of the same root) through `mitom import` with curation only (no rRNA HMM, introns, rescue)
+# mitom_prein = mitom_lo with --intron_fix no and the intermediates kept: raw/work/04.final_gb/ is the input of the intron
+# step (to rerun mito_intron.py alone while working on it)
 # mitom_lo = mitom_native without the record's own proteins among the core's references (refseq89m holds the proteins of
 # 8,012 RefSeq records, MITOS2 uses the same set): the leave-out accuracy a new genome can expect
 MITOFINDER: Dict[str, str] = {}          # {"script": ..., "py2": ...} from the command line
@@ -96,13 +98,14 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
     if tool == "mitom_blind":                          # nothing from the NCBI record but the sequence (frozen evaluation)
         return [[sys.executable, str(PIPE / "mitom_pipeline.py"), "run", "-i", str(out / "in.fa"), "-o", str(out / "raw"),
                  "--threads", str(threads), "--jobs", "1"]]           # in.fa: '>acc' + sequence, no taxonomy / topology
-    if tool in ("mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitom_nocur"):   # annotation, MitoM steps, curation
+    if tool in ("mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitom_nocur", "mitom_prein"):   # annotation, MitoM steps, curation
         clade = row["mitoz_clade"] or EXTRA_CLADE.get(row.get("phylum", ""), "Animal")
-        return [[*(["env", f"MITOM_EXCLUDE_REF={acc}"] if tool == "mitom_lo" else []),
+        return [[*(["env", f"MITOM_EXCLUDE_REF={acc}"] if tool in ("mitom_lo", "mitom_prein") else []),
                  sys.executable, str(PIPE / "mitom_pipeline.py"), "run", "-i", str(bare), "-o", str(out / "raw"),
                  "--clade", clade, "--genetic_code", code, "--threads", str(threads), "--max_tasks", "1",
                  *(["--if_reannotation_2", "auto"] if tool == "mitom_auto" else []),
                  *(["--core", "native"] if tool in ("mitom_native", "mitom_lo") else []),
+                 *(["--intron_fix", "no", "--keep_intermediate", "yes"] if tool == "mitom_prein" else []),
                  *(["--curate", "no"] if tool == "mitom_nocur" else []),
                  # the phylum `--clade auto` reads from the taxonomy (an explicit --clade Animal has none): rRNA HMM
                  *(["--phylum", row["phylum"]] if row.get("phylum") else []),

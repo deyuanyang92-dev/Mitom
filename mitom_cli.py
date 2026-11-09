@@ -140,6 +140,12 @@ def build_parser() -> argparse.ArgumentParser:
                             "protein2genome + MFannot boundary rules + Rfam intron type), then with "
                             "mito_intron_ref.py (intron sites of annotated relatives, models/intron_sites). "
                             "auto = run when exonerate is found (default).")
+        g.add_argument("--intron_rule", choices=["continuity", "splice"], default="continuity",
+                       help="When an intron of no known type (no Rfam group I / II hit) is written: continuity "
+                            "(default) = the gene's homologs run on across its junction (no residue missing or added) "
+                            "and splicing is needed (the gene does not read on in place as well); splice = it has a "
+                            "group I splice-site score >= 14 and the model aligns >= 80 %% of its homolog (before "
+                            "2026-11-09).")
         g.add_argument("--intron_bin", default=None,
                        help="Directory containing exonerate, cmsearch, blastp, tblastn and blastn (e.g. a conda env "
                             "bin).")

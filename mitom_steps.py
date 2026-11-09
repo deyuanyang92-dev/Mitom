@@ -253,12 +253,12 @@ INTRON_LABEL = "introns                      : "
 
 
 def intron_denovo_cmd(gb_in: Path, gb_out: Path, code: int, threads: int, jobs: int, libs=(), ref_gbs=(),
-                      bin_dir: Optional[str] = None) -> List[str]:
+                      bin_dir: Optional[str] = None, untyped_rule: Optional[str] = None) -> List[str]:
     """mito_intron.py (de novo introns, MFannot method) on the GenBank files of gb_in -> gb_out (may be gb_in)."""
     return [sys.executable, str(Path(__file__).resolve().with_name("mito_intron.py")), "-i", str(gb_in), "-o", str(gb_out),
             "--genetic_code", str(int(code)), "--threads", str(int(threads)), "--jobs", str(int(jobs)),
             *[x for lib in libs for x in ("--lib", lib)], *[x for ref in ref_gbs for x in ("--ref_gb", ref)],
-            *(["--bin", bin_dir] if bin_dir else [])]
+            *(["--bin", bin_dir] if bin_dir else []), *(["--untyped_rule", untyped_rule] if untyped_rule else [])]
 
 
 def intron_ref_cmd(gb_in: Path, gb_out: Path, code: int, jobs: int, bin_dir: Optional[str] = None,
@@ -287,7 +287,7 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
                           ok=args.intron_fix != "yes")
     proc = run_tool(intron_denovo_cmd(gb_dir, gb_dir, args.genetic_code, args.threads,
                                       getattr(args, "max_tasks", 1) or 1, args.intron_lib, args.intron_ref_gb,
-                                      args.intron_bin))
+                                      args.intron_bin, getattr(args, "intron_rule", None)))
     report = gb_dir / "intron_report.tsv"
     if report.exists():
         shutil.move(str(report), str(reports_dir(out_root) / "intron_report.tsv"))

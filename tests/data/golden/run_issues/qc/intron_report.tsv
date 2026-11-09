@@ -1,1 +1,1 @@
-record	gene	strand	cds	intron	intron_start	intron_end	intron_len	confidence	written	evidence	note	homolog	homolog_coverage	exonerate_score
+record	gene	strand	cds	intron	intron_start	intron_end	intron_len	confidence	written	evidence	note	homolog	homolog_coverage	exonerate_score	junction_span	junction_missing_aa	junction_extra_aa	splice_score	splicing_gain

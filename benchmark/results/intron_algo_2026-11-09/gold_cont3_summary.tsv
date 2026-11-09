@@ -1,0 +1,11 @@
+set	group	n_truth	exact	le6	gt6	missed	recall	n_pred	fp	precision
+cont3	Annelida	24	24	0	0	0	1.000	25	1	0.960
+cont3	Cnidaria	266	263	3	0	0	1.000	266	0	1.000
+cont3	Placozoa	16	9	1	0	6	0.625	11	1	0.909
+cont3	Porifera	3	3	0	0	0	1.000	3	0	1.000
+cont3	all	309	299	4	0	6	0.981	305	2	0.993
+cont3	gold_class A	202	202	0	0	0	1.000			
+cont3	gold_class B	39	39	0	0	0	1.000			
+cont3	gold_class D-corrected	37	37	0	0	0	1.000			
+cont3	gold_class E	15	8	1	0	6	0.600			
+cont3	gold_class consensus	16	13	3	0	0	1.000			

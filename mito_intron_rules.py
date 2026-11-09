@@ -116,6 +116,79 @@ def homolog_gap(prot: str, refs: List[str], junction_aa: int, window: int = 4) -
     return float(gaps[len(gaps) // 2]), sum(g >= 1 for g in gaps) / len(gaps)
 
 
+def junction_continuity(prot: str, refs: List[str], junction_aa: int, window: int = 8) -> Tuple[float, float, float]:
+    """Is the homolog continuous across an exon junction of the spliced protein (the evidence of an intron that does
+    not depend on its type)? Per homolog, a local alignment (BLOSUM62, gap open -6): does it span the junction (an
+    aligned block on each side within `window` residues), and how many residues does the homolog have there that the
+    protein lacks (missing) and the protein has that the homolog lacks (extra)? A true intron removes only DNA: the
+    homologs span the junction with missing and extra near 0. Exons joined across a divergent or frameshifted stretch
+    lack homolog residues there (missing > 0) or the alignment stops at the junction (not spanning).
+    Returns (fraction of homologs spanning, median missing, median extra), the medians over the spanning homologs."""
+    al = _aligner(-6)
+    span, miss, extra = 0, [], []
+    for ref in refs:
+        aln = al.align(prot, ref)[0]
+        blocks = list(zip(aln.aligned[0], aln.aligned[1]))
+        if not blocks or blocks[0][0][0] > junction_aa - window or blocks[-1][0][1] < junction_aa + window:
+            continue                                               # the local alignment does not reach both sides
+        span += 1
+        m = e = 0
+        for (pa, ra), (pb, rb) in zip(blocks, blocks[1:]):
+            if pa[1] >= junction_aa - window and pb[0] <= junction_aa + window:
+                m += max(0, int(rb[0] - ra[1]) - int(pb[0] - pa[1]))
+                e += max(0, int(pb[0] - pa[1]) - int(rb[0] - ra[1]))
+        miss.append(m)
+        extra.append(e)
+    if not refs:
+        return 0.0, 0.0, 0.0
+    med = (lambda v: float(sorted(v)[len(v) // 2]) if v else float("nan"))
+    return span / len(refs), med(miss), med(extra)
+
+
+def splicing_gain(s: str, exons: List[Tuple[int, int]], j: int, gencode: int, to_ref) -> float:
+    """Is intron j needed? An intron interrupts the coding sequence, so without splicing the gene's homolog is not
+    covered in place. The unspliced alternatives, each scored against the homologs:
+      - the exon before the intron dropped, the exon after it read on upstream in its frame to the first stop codon
+        (not into the exon before that);
+      - the exon after the intron dropped, the exon before it read on downstream to the first stop codon (not into the
+        exon after that).
+    The protein is built from the model's own pieces (residues before / after the exon left out) and the read-on
+    stretch, joined by X (each piece in its own frame). Returns the median homolog score (to_ref as homolog_scorer) of
+    the spliced protein minus that of the better alternative, in BLOSUM62 points. Small: the gene reads on in place as
+    well (Kuphus NC_063762.1 nad3: a 2.5-kb 'intron' around nad4 replaced the gene's own N-terminus)."""
+    table = CodonTable.unambiguous_dna_by_id[gencode]
+    stops = set(table.stop_codons)
+
+    def med(prot: str) -> float:
+        x = to_ref(prot)
+        x = sorted(x if isinstance(x, list) else [x])
+        return x[(len(x) - 1) // 2]
+
+    prot = _translate(s, exons, gencode).rstrip("*")
+    cum = [0]
+    for x, y in exons:
+        cum.append(cum[-1] + y - x + 1)
+    aa = [c // 3 for c in cum]                       # protein position of each exon boundary
+    before, own_j1, after = prot[:aa[j]], prot[aa[j + 1]:aa[j + 2]], prot[aa[j + 2]:]
+    # exon j+1 read on upstream: the first full codon of exon j+1 in the model's frame, then codons before it
+    p = exons[j + 1][0] + (3 - cum[j + 1] % 3) % 3
+    lo = exons[j - 1][1] + 1 if j > 0 else 1
+    a = p
+    while a - 3 >= lo and s[a - 4:a - 1] not in stops:
+        a -= 3
+    up = str(Seq(s[a - 1:p - 1]).translate(table=gencode))
+    alt1 = before + "X" + up + own_j1 + after
+    # exon j read on downstream: from the last full codon of exon j in the model's frame
+    q = exons[j][1] - (cum[j + 1] % 3)                # last base of the last full codon of exon j
+    hi = exons[j + 2][0] - 1 if j + 2 < len(exons) else len(s)
+    b = q
+    while b + 3 <= hi and s[b:b + 3] not in stops:
+        b += 3
+    down = str(Seq(s[q:b]).translate(table=gencode))
+    alt2 = prot[:aa[j + 1]] + down + "X" + after
+    return med(prot) - max(med(alt1), med(alt2))
+
+
 def find_mini_exon(s: str, exons: List[Tuple[int, int]], i: int, gencode: int, refs: List[str],
                    k_max: int) -> Optional[Tuple[int, int, float]]:
     """Search intron i (transcript coords) for a short in-frame exon (1..k_max codons) whose

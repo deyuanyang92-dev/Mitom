@@ -23,6 +23,7 @@
   "rrna_method": "hmm",
   "phylum": "Mollusca",
   "intron_fix": "auto",
+  "intron_rule": "continuity",
   "intron_bin": "<HOME>/miniforge3/envs/mitotools/bin",
   "intron_lib": [],
   "intron_ref_gb": [],

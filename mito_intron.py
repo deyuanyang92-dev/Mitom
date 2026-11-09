@@ -87,6 +87,7 @@ for byte) and out_dir/intron_report.tsv.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -131,6 +132,8 @@ from mito_intron_rules import (  # noqa: E402, F401  (re-exported: aa_score, ref
     extend_to_start,
     extend_to_stop,
     homolog_scorer,
+    junction_continuity,
+    splicing_gain,
     Model,
     next_feature_start,
     overlap,
@@ -300,6 +303,33 @@ def core_references(rec, refdir: Optional[Path]) -> Dict[str, dict]:
             out[g] = {"id": m.group(1), "seq": seq, "strand": f.location.strand, "score": score,
                       "stub": a - 1 >= STUB_MIN_AA or n - b >= STUB_MIN_AA}
     return out
+
+
+def internal_stops(rec, gencode: int) -> List[Tuple[str, int, str]]:
+    """Standard protein genes whose CDS, as annotated, has an internal stop codon: (library gene name, strand,
+    translation with stops). An intron read as coding sequence shows as stops in frame (an annotation engine without
+    introns, an imported annotation); so does a frameshift. Unknown genes and pseudo CDS are skipped."""
+    canon = {p.stem.lower(): p.stem for p in DEFAULT_LIB.glob("*.faa")}
+    out = []
+    for f in rec.features:
+        g = norm_gene(f.qualifiers.get("gene", [""])[0]) if f.type == "CDS" else ""
+        if g not in PRODUCTS or "pseudo" in f.qualifiers:
+            continue
+        cs = int(f.qualifiers.get("codon_start", ["1"])[0]) - 1
+        nt = str(f.location.extract(rec.seq)).upper()[cs:]
+        prot = str(Seq(nt[: len(nt) - len(nt) % 3]).translate(table=gencode))
+        if "*" in prot.rstrip("*"):
+            out.append((canon.get(g.lower(), g), f.location.strand or 1, prot))
+    return out
+
+
+def closest_lib_protein(lib: Dict[str, "LibProt"], gene: str, prot: str, n: int = 60) -> Optional[str]:
+    """The library protein of `gene` that aligns best to prot (stops as X; first n of the gene, BLOSUM62 local)."""
+    ids = [k for k, v in lib.items() if v.gene == gene][:n]
+    if not ids:
+        return None
+    score = homolog_scorer(*[lib[k].seq for k in ids])(prot.replace("*", "X"))
+    return max(zip(score, ids))[1]
 
 
 # ── step 1: pre-screen (flip + blastp + SelectProteinForExo) ─────────────────
@@ -804,26 +834,60 @@ def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[d
 INTRON_NOTE = "intron across the origin of the record"   # CDS note of a dropped intron (see model_across_origin)
 UNTYPED_MIN_SPLICE = 14     # untyped introns: type-I splice score needed to be written (benchmark: true >=14.5, false <=12.5)
 UNTYPED_MIN_COVERAGE = 0.8  # untyped introns: share of the homolog the model must align (true 0.98, false 0.65)
+# --untyped_rule continuity: an intron removes DNA only, so the homologs of the gene run on across its junction
+JUNCTION_SPAN = 0.5         # more than half of the homologs align on both sides of the junction
+JUNCTION_MAX_AA = 1         # homolog residues missing / added at the junction (median): 1 = the codon the junction splits
+SPLICE_GAIN_MIN = 20        # BLOSUM62 points (~9 bits) splicing must add over reading on in place (random sequence: < 0)
+CONT_WINDOW = 30            # nt each end of such a junction may move to make the homologs continuous
+WRITE_ALL = bool(os.environ.get("MITOM_INTRON_WRITE_ALL"))   # benchmarks only: write every model without stop / clash
+
+
+def continuous(c: Tuple[float, float, float]) -> bool:
+    span, miss, extra = c
+    return span > JUNCTION_SPAN and miss <= JUNCTION_MAX_AA and extra <= JUNCTION_MAX_AA
+
+
+def continuity_text(c: Tuple[float, float, float]) -> str:
+    return f"{c[0]:.0%} of homologs span it, {c[1]:g} aa missing, {c[2]:g} aa added"
 
 
 def evidence(s: str, exons: List[Tuple[int, int]], kinds: List[str], splice: List[float], gencode: int,
-             partial5: bool = False) -> Tuple[str, str]:
+             partial5: bool = False, cont: Optional[List[Tuple[float, float, float]]] = None,
+             rule: str = "splice", gains: Optional[List[float]] = None) -> Tuple[str, str]:
     """Confidence of a gene model, from evidence independent of existing annotations.
     high: every intron typed by Rfam and the spliced CDS has no internal stop codon;
-    medium: untyped introns with splice score >= UNTYPED_MIN_SPLICE; low (not written):
-    internal stop codon, invalid start codon, or untyped intron with a weak splice site."""
+    medium: the untyped introns pass `rule`; low (not written): internal stop codon, invalid start codon, or an
+    untyped intron that fails `rule`.
+    rule 'splice' (before 2026-11-09): an untyped intron needs a type-I splice score >= UNTYPED_MIN_SPLICE;
+    rule 'continuity': an untyped intron needs (1) the homologs continuous across its junction (cont,
+    junction_continuity: most homologs span it, none of their residues missing and none added, JUNCTION_*) - an intron
+    removes DNA only, whatever its type (degenerate group II introns of annelids and bryozoans have no group I splice
+    sites) - and (2) to be needed (gains, splicing_gain >= SPLICE_GAIN_MIN): read on in place without splicing, the gene
+    does not cover its homolog as well."""
     table = CodonTable.unambiguous_dna_by_id[gencode]
     prot = _translate(s, exons, gencode)
     if "*" in prot.rstrip("*"):
         return "low", "internal stop codon in spliced CDS"
     if not partial5 and s[exons[0][0] - 1:exons[0][0] + 2] not in table.start_codons:
         return "low", f"no start codon ({s[exons[0][0] - 1:exons[0][0] + 2]})"
-    weak = [i + 1 for i, (k, sc) in enumerate(zip(kinds, splice)) if not k and sc < UNTYPED_MIN_SPLICE]
-    if weak:
-        return "low", f"intron {','.join(map(str, weak))} untyped with weak splice site (< {UNTYPED_MIN_SPLICE})"
     if all(kinds):
         return "high", "all introns typed (Rfam), spliced CDS without internal stop"
-    return "medium", f"untyped intron(s) with splice score >= {UNTYPED_MIN_SPLICE}, spliced CDS without internal stop"
+    if WRITE_ALL:
+        return "medium", "untyped intron(s) (MITOM_INTRON_WRITE_ALL: no evidence rule)"
+    if rule == "splice":
+        weak = [i + 1 for i, (k, sc) in enumerate(zip(kinds, splice)) if not k and sc < UNTYPED_MIN_SPLICE]
+        if weak:
+            return "low", f"intron {','.join(map(str, weak))} untyped with weak splice site (< {UNTYPED_MIN_SPLICE})"
+        return "medium", f"untyped intron(s) with splice score >= {UNTYPED_MIN_SPLICE}, spliced CDS without internal stop"
+    broken = [f"{i + 1} ({continuity_text(c)})" for i, (k, c) in enumerate(zip(kinds, cont or [])) if not k and not continuous(c)]
+    if broken:
+        return "low", f"untyped intron {', '.join(broken)}: homologs not continuous across the junction"
+    idle = [f"{i + 1} (gain {g:g})" for i, (k, g) in enumerate(zip(kinds, gains or [])) if not k and g < SPLICE_GAIN_MIN]
+    if idle:
+        return "low", (f"untyped intron {', '.join(idle)} not needed: the gene reads on in place without splicing "
+                       f"(homolog score gain of splicing < {SPLICE_GAIN_MIN})")
+    return "medium", ("untyped intron(s) placed by protein homology (homologs continuous across each junction; "
+                      "type not identified), spliced CDS without internal stop")
 
 
 # ── genes across the origin of a circular record ─────────────────────────────
@@ -951,7 +1015,7 @@ def annotate_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[s
     rows, across = process_record(rec, lib, lib_db, a, tools, tmp)
     for gene, cand, chain in across:
         rows += model_across_origin(rec, gene, cand, chain, lib, lib_db, a, tools, tmp)
-    return rows
+    return rows + stop_check_rows(rec, a.genetic_code)
 
 
 def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[str, Optional[str]],
@@ -974,6 +1038,12 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
         # RefSeq protein, NC_008827.1 cox1 with WRWA inserted at the intron, which moved 6 coral junctions by 12 nt)
         cands.update({g: {"prot": f"C:{r['id']}", "strand": r["strand"], "core_only": True}
                       for g, r in core.items() if r["stub"] and g not in cands})
+        # and a gene whose CDS has an internal stop codon (an intron read as coding sequence), its query the core's
+        # reference or the closest library protein
+        for g, strand, prot_ in internal_stops(rec, a.genetic_code):
+            pid = f"C:{core[g]['id']}" if g in core else closest_lib_protein(lib, g, prot_)
+            if pid and g not in cands:
+                cands[g] = {"prot": pid, "strand": strand, "core_only": g in core}
     rc_seq = str(Seq(seq).reverse_complement())
     rows: List[dict] = []
     models: List[Model] = []
@@ -1050,6 +1120,23 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
                 notes[j] = notes2[j] + re.sub(r"mini-exon \d+ nt", f"mini-exon {mini[1] - mini[0] + 1} nt",
                                               notes[j][notes[j].index("; mini-exon "):])
                 sscores[j] = sc2[j]
+        homs = [*near, *refs]
+        def cont_of(ex):
+            pr = _translate(use, ex, a.genetic_code)
+            return [junction_continuity(pr, homs, sum(b - a_ + 1 for a_, b in ex[:j + 1]) // 3) for j in range(len(ex) - 1)]
+        cont = cont_of(adj)
+        if getattr(a, "untyped_rule", "continuity") == "continuity":
+            # an untyped junction where the homologs are not continuous is searched for the placement that makes them
+            # continuous (both ends independently, frame kept); none -> the model stays as it is (and is not written)
+            for j, k in enumerate(kinds):
+                if k or continuous(cont[j]):
+                    continue
+                new, gain = refine_junction(use, adj, j, a.genetic_code, scorer, w5=CONT_WINDOW, w3=CONT_WINDOW)
+                if gain and continuous(cont_of(new)[j]):
+                    adj = new
+                    cont = cont_of(adj)
+                    notes[j] += "; junction moved to where the homologs are continuous"
+        need = [splicing_gain(use, adj, j, a.genetic_code, scorer) for j in range(len(adj) - 1)]
         z_start, z_end = core_ends(rec, m, adj, L)
         z_start, z_end = (None if m.open5 else z_start), (None if m.open3 else z_end)
         started, partial5 = (adj, True) if m.open5 else \
@@ -1089,12 +1176,18 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
             info.append({"start": gs, "end": ge, "note": f"{label}; {notes[j]}; MFannot method", "hint": hint})
         if ends:
             info[0]["note"] += f"; {ends}"
-        confidence, reason = evidence(use, adj, kinds, sscores, a.genetic_code, partial5)
-        if m.core_only and confidence != "low" and not all(kinds):
+        for x, (sp, mi, ex), g in zip(info, cont, need):
+            x.update(span=sp, missing=mi, extra=ex, gain=g)
+        confidence, reason = evidence(use, adj, kinds, sscores, a.genetic_code, partial5, cont,
+                                      getattr(a, "untyped_rule", "continuity"), need)
+        if m.core_only and confidence != "low" and not all(kinds) and getattr(a, "untyped_rule", "continuity") == "splice" and not WRITE_ALL:
             # exonerate against a close homolog skips divergent or frameshifted stretches with 'introns' >= 142 nt
             # (sponge NC_006894.1 nad2 / nad5): a gene the ORF pre-screen did not flag needs introns typed by Rfam
             confidence, reason = "low", "untyped intron in a gene found only from the core's partial CDS"
-        if confidence != "low" and not all(kinds) and m.qcov < UNTYPED_MIN_COVERAGE:
+        if confidence != "low" and not all(kinds) and m.qcov < UNTYPED_MIN_COVERAGE and not WRITE_ALL and \
+                getattr(a, "untyped_rule", "continuity") == "splice":
+            # (rule 'continuity' needs no coverage: a divergent homolog aligns in part; a false junction shows as
+            # discontinuity, which the coverage only stood in for)
             # Hexamermis NC_008828.1 atp6: an untyped 'intron' between parts of two gene copies, homolog 65 % aligned
             confidence, reason = "low", (f"untyped intron(s) and only {m.qcov:.0%} of the homolog aligned "
                                          f"(< {UNTYPED_MIN_COVERAGE:.0%})")
@@ -1112,8 +1205,18 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
                          "evidence": reason + (f"; {x['hint']}" if x.get("hint") else "") + (f"; {m.piece}" if m.piece else ""),
                          "note": x["note"],
                          "homolog": f"{hom.species} {hom.gene}",
-                         "homolog_coverage": f"{m.qcov:.2f}", "exonerate_score": m.score})
+                         "homolog_coverage": f"{m.qcov:.2f}", "exonerate_score": m.score,
+                         "junction_span": f"{x['span']:.2f}", "junction_missing_aa": x["missing"],
+                         "junction_extra_aa": x["extra"], "splice_score": sscores[n - 1],
+                         "splicing_gain": f"{x['gain']:g}"})
     return rows, across
+
+
+def stop_check_rows(rec, gencode: int) -> List[dict]:
+    """After the intron step: genes whose CDS still has an internal stop codon (an intron not found, or a frameshift)."""
+    return [{"record": rec.id, "gene": g, "strand": "+" if st == 1 else "-", "written": "no",
+             "note": "CDS has internal stop codon(s) after the intron step: wrong frame or location, a frameshift, "
+                     "or an intron not annotated - check this gene"} for g, st, _ in internal_stops(rec, gencode)]
 
 
 _JOB: Dict[str, Any] = {}               # shared state for process_file (set in main; inherited by fork workers)
@@ -1171,6 +1274,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--threads", type=int, default=1, help="Threads for blastp")
     p.add_argument("--jobs", type=int, default=1, help="GenBank files processed in parallel")
     p.add_argument("--timeout", type=int, default=900, help="Seconds allowed per external program call")
+    p.add_argument("--untyped_rule", choices=["continuity", "splice"], default="continuity",
+                   help="when an intron Rfam cannot type is written: continuity = the homologs of the gene are "
+                        "continuous across its junction (an intron removes DNA only); splice = it has a type-I splice "
+                        "score >= %d (before 2026-11-09)" % UNTYPED_MIN_SPLICE)
     p.add_argument("--stop_rule", choices=["homolog", "first"], default="first",
                    help="3' end when no existing CDS end is available: 'homolog' = stop where the homolog ends "
                         "(complete or T/TA stop there); 'first' = first in-frame complete stop codon")
@@ -1225,7 +1332,8 @@ def run(a: argparse.Namespace) -> int:
             for f in files:
                 rows += process_file(f)
     cols = ["record", "gene", "strand", "cds", "intron", "intron_start", "intron_end", "intron_len",
-            "confidence", "written", "evidence", "note", "homolog", "homolog_coverage", "exonerate_score"]
+            "confidence", "written", "evidence", "note", "homolog", "homolog_coverage", "exonerate_score",
+            "junction_span", "junction_missing_aa", "junction_extra_aa", "splice_score", "splicing_gain"]
     write_tsv(out / "intron_report.tsv", cols, rows)
     w_ = [r for r in rows if r.get("written") == "yes"]
     low = [r for r in rows if r.get("written") == "no"]

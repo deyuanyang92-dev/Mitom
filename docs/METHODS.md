@@ -265,8 +265,14 @@ NCBI 的内含子边界写法因课题组而异（同一位点不同记录可差
 
 留一口径下 A / B / 纠正类全部完全一致（202 / 39 / 37）；差的 10 个是 3 个金标准保留 NCBI 偏离共识写法的珊瑚 nad5 和 7 个库中别无其他记录的扁盘动物反式剪接 / rRNA 内含子。另报出 2 个 NCBI 未注释、很可能真实的内含子（KT989324.1 *Glycera* cox1；丝盘虫 rrnL）。与 NCBI 原注释直接比（311 个）：默认 218 完全一致 / 76 ≤6 nt / 15 >6 nt / 2 漏检（即 NCBI 写错、金标准删除的 2 个）。耗时：从头识别每条 10–20 s，位点迁移 2–5 s。
 
-**金标准以外的 NCBI 记录（2026-11-09）**：NCBI 中全部带 intron 特征、≥ 10 kb 的动物线粒体记录里，不在金标准（也不在位点库）中的 134 条（刺胞、苔藓虫、海绵、鸟类）用 `mitom run` 注释，与 NCBI 的内含子比较，位置不同时再比较两种拼接产物与同源蛋白的相似度。刺胞动物和海绵的内含子几乎全部注出，位置不同时多为 NCBI 写错；苔藓虫 Cupuladriidae 的短内含子（约 250 nt，没有 I/II 类特征）大多漏检，是目前的缺口。数字与逐条结果见 [benchmark/results/intron_ncbi_2026-11-09/](../benchmark/results/intron_ncbi_2026-11-09/README.md)。
-Beyond the gold standard (2026-11-09): the 134 NCBI animal mitogenomes with introns that are not in the gold standard or the site library; cnidarian and sponge introns are nearly all found (where placements differ, NCBI's is mostly wrong); the short (~250 nt, no group I / II signature) introns of cupuladriid bryozoans are mostly missed. Numbers: the benchmark README linked above.
+**金标准以外的 NCBI 记录（2026-11-09）**：NCBI 中全部带 intron 特征、≥ 10 kb 的动物线粒体记录里，不在金标准（也不在位点库）中的 134 条（刺胞、苔藓虫、海绵、鸟类）用 `mitom run` 注释，与 NCBI 的内含子比较，位置不同时再比较两种拼接产物与同源蛋白的相似度。刺胞动物和海绵的内含子几乎全部注出，位置不同时多为 NCBI 写错；苔藓虫 Cupuladriidae 的短内含子（约 250 nt，没有 I/II 类特征）旧规则下大多漏检，由此改了无类型内含子的判定（下一段）。数字与逐条结果见 [benchmark/results/intron_ncbi_2026-11-09/](../benchmark/results/intron_ncbi_2026-11-09/README.md)。
+Beyond the gold standard (2026-11-09): the 134 NCBI animal mitogenomes with introns that are not in the gold standard or the site library; cnidarian and sponge introns are nearly all found (where placements differ, NCBI's is mostly wrong); the short (~250 nt, no group I / II signature) introns of cupuladriid bryozoans were mostly missed under the old rule, which led to the next paragraph. Numbers: the benchmark README linked above.
+
+**无类型内含子的判定（2026-11-09，`--intron_rule continuity`，默认）**：Rfam 认不出 I / II 类的内含子（退化的 II 类：环节动物、苔藓虫；Jenkins et al. 2022 *Sci Rep* 12:10889 的 Cupuladriidae 内含子没有 V/VI 结构域、没有 GUGYG…AY，作者也只能按同源蛋白定位）以前要求 I 类剪接分数 ≥ 14 且模型比上同源蛋白 ≥ 80 %——这两个阈值是按数据挑的，I 类剪接规则对 II 类内含子本来就不适用。现在按与类型无关的两条原理判定：
+1. **接头连续**（`junction_continuity`）：内含子只去掉 DNA，所以多个同源蛋白在拼接后蛋白的接头处连续——过半同源蛋白跨过接头，同源蛋白缺失或多出的残基中位数 ≤ 1（接头切开的那个密码子）。把分化区或移码区当内含子剪掉时，同源蛋白在接头处缺残基。接头不连续时先在两端各 ±30 nt 内找使其连续的位置。
+2. **剪接必要**（`splicing_gain`）：内含子打断编码序列，所以不剪接时基因不能在原位覆盖同源蛋白。两种不剪接的替代（去掉上游外显子、下游外显子在原位按读框向上游读到终止；或反过来）比剪接后的蛋白少 ≥ 20 BLOSUM62 分（约 9 bit；随机序列局部比对的期望分为负）才写入。
+有 Rfam 类型的内含子不受这两条限制（结构就是证据）。`--intron_rule splice` 恢复旧规则。另外：注释的 CDS 有内部终止时也作为候选送入内含子步骤（导入的注释、其他引擎）；内含子步骤后 CDS 仍有内部终止的基因在 `intron_report.tsv` 中标出待核查。报告新增 `junction_span`、`junction_missing_aa`、`junction_extra_aa`、`splice_score`、`splicing_gain` 列。验证（金标准 270 条、金标准以外 134 条、按门分层抽取的 362 条无内含子 RefSeq 记录）见 [benchmark/results/intron_algo_2026-11-09/](../benchmark/results/intron_algo_2026-11-09/README.md)。
+Introns of no known type (2026-11-09, `--intron_rule continuity`, default): written when the gene's homologs run on across the junction (no residue missing or added) and splicing is needed (reading on in place covers the homolog worse by >= 20 BLOSUM62 points), instead of a group I splice score >= 14 and >= 80 % homolog coverage (`--intron_rule splice`). Validation: the benchmark README linked above.
 
 从头识别（`mito_intron.py`）本轮的改动：跨环状原点的基因在旋转后的副本上建模（原来按 cox1 定向时原点切进 cox1 内含子，环节动物 cox1 内含子因此漏掉一半）；外显子按蛋白顺序串联（刺胞 nad5 的反序片段不再拼成假内含子）；内含子里含有本基因外显子拷贝时拒绝（*Hexamermis* 三个相同 atp6 被拼成 3.7 kb 假内含子）；外显子在两条链上 / 相隔很远的反式剪接基因写成带 `<`/`>` 的部分 CDS；核心的部分基因用核心参考蛋白补搜（*Decemunciger* nad4）；内含子两端可独立微调（按至多 5 个同源蛋白的中位得分）；小外显子插入后两侧内含子重新定边界。`mitom_pipeline` 在内含子步骤后再次旋转，使定向基因的第一个外显子位于序列起点；旋转保留 `<`/`>` 不完整端（此前丢失，反式剪接片段因此出 table2asn ERROR）。
 
@@ -305,7 +311,7 @@ MFannot 找到的 85 个 intron 中 83 个与本脚本坐标完全相同；MFann
 
 - **NCBI 校验**：`ncbi_validate.py` 把 GenBank 转为 NCBI 提交格式（.fsa + 5 列 .tbl），用 NCBI `table2asn -V vb` 校验（`--only_ours` 只统计本脚本写入的特征）。
 - **合规**：新 CDS 带 `/product`（沿用核心，否则标准名）；T/TA 不完整终止带 `/transl_except=(pos:…,aa:TERM)` 与标准 note；3′ 端延伸到阅读框内第一个终止密码子（允许与相邻基因重叠，`--stop_rule first`，默认）。
-- **证据门槛**（不依赖 NCBI 原注释）：拼接后 CDS 有内部终止、起始密码子非法、未定型 intron 剪接分数 < 14、或与已有的另一标准线粒体蛋白基因 CDS 冲突（内含子编码 ORF 如 heg 除外）→ 不写入 GenBank，只在 `intron_report.tsv`（`confidence` / `written` / `evidence` 列）中列出。
+- **证据门槛**（不依赖 NCBI 原注释）：拼接后 CDS 有内部终止、起始密码子非法、未定型 intron 剪接分数 < 14（2026-11-09 起改为接头连续 + 剪接必要，见上文“无类型内含子的判定”）、或与已有的另一标准线粒体蛋白基因 CDS 冲突（内含子编码 ORF 如 heg 除外）→ 不写入 GenBank，只在 `intron_report.tsv`（`confidence` / `written` / `evidence` 列）中列出。
 - **小外显子**：多个同源蛋白在外显子交界处共同显示缺失时，在 intron 内搜索插入后对所有同源蛋白比对都改善的短外显子（MFannot AnnotateMiniExons 思路）。
 
 | 指标 | 刺胞/海绵/扁盘 85 条（138 intron） | 环节动物 733 条（NCBI 18 intron） |

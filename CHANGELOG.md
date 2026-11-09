@@ -5,6 +5,17 @@ installed one.
 
 ## Unreleased
 
+### Changed (introns)
+- An intron of no known type (no Rfam group I / II hit) is written when the gene's homologs run on across its
+  junction (no residue missing or added; a discontinuous junction is searched +-30 nt for a continuous placement) and
+  splicing is needed (reading on in place covers the homolog >= 20 BLOSUM62 points worse), instead of a group I splice
+  score >= 14 and >= 80 % homolog coverage (`mitom run --intron_rule splice`, `mito_intron.py --untyped_rule splice`).
+  Bryozoan introns found 12 -> 31 of 50; gold standard and 362 intron-free records unchanged
+  (benchmark/results/intron_algo_2026-11-09/).
+- A gene whose annotated CDS has an internal stop codon is an intron candidate; a CDS that still has one after the
+  intron step is listed in intron_report.tsv. intron_report.tsv gains junction_span, junction_missing_aa,
+  junction_extra_aa, splice_score, splicing_gain.
+
 ### Fixed
 - `benchmark/mito_bench_run.py` and `benchmark/eval_introns.py` read the grouped output layout (annotation/,
   qc/intron_report.tsv) as well as the classic one; they found no output after the layout change of #9.

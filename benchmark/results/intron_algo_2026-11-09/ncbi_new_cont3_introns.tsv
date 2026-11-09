@@ -1,0 +1,252 @@
+set	accession	group	organism	class	gene	strand	truth_class	truth	truth_len	truth_source	truth_note	pred	pred_len	d_start	d_end	pred_type	pred_gene	report
+cont3	AF000023.1	Cnidaria	Metridium senile	exact	cox1	+		4156..5008	853	intron_feature		4156..5008	853	0	0	group I (?)	cox1	
+cont3	AF000023.1	Cnidaria	Metridium senile	exact	nad5	+		7744..9424	1681	intron_feature		7744..9424	1681	0	0	group I (?)	nad5	
+cont3	AF338425.1	Cnidaria	Acropora tenuis	exact	nad5	+		3155..15082	11928	intron_feature	group I intron	3155..15082	11928	0	0	group I (?)	nad5	
+cont3	AP008973.1	Cnidaria	Orbicella annularis	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+cont3	AP008974.1	Cnidaria	Orbicella annularis	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+cont3	AP008975.1	Cnidaria	Orbicella franksi	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+cont3	AP008976.1	Cnidaria	Orbicella franksi	exact	nad5	+		2757..12295	9539	intron_feature	group I intron	2757..12295	9539	0	0	group I (?)	nad5	
+cont3	AP008977.1	Cnidaria	Orbicella faveolata	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+cont3	AP008978.1	Cnidaria	Orbicella faveolata	exact	nad5	+		2757..12296	9540	intron_feature	group I intron	2757..12296	9540	0	0	group I (?)	nad5	
+cont3	AY903295.1	Cnidaria	Anacropora matthai	exact	nad5	+		3155..14646	11492	intron_feature	group I intron	3155..14646	11492	0	0	group I (?)	nad5	
+cont3	AY903296.2	Cnidaria	Montipora cactus	le6	nad5	+		3161..14645	11485	intron_feature	group I intron	3160..14644	11485	-1	-1	group I (?)	nad5	
+cont3	BK068676.1	Cnidaria	Urticina crassicornis	gt6	nad5	+		744..2435	1692	intron_feature		718..2398	1681	-26	-37	group I (?)	nad5	
+cont3	BK068676.1	Cnidaria	Urticina crassicornis	le6	cox1	+		17208..18063	856	cds_join		17207..18059	853	-1	-4	group I (?)	cox1	
+cont3	BK068678.1	Cnidaria	Radianthus crispa	gt6	nad5	+		744..3570	2827	intron_feature		718..2454	1737	-26	-1116	group I (?)	nad5	
+cont3	BK068678.1	Cnidaria	Radianthus crispa	le6	cox1	+		16763..17615	853	cds_join		16759..17611	853	-4	-4	group I (?)	cox1	
+cont3	BK068680.1	Cnidaria	Stomphia didemon	gt6	nad5	+		744..2539	1796	intron_feature		718..2502	1785	-26	-37	group I (?)	nad5	
+cont3	BK068680.1	Cnidaria	Stomphia didemon	fp		+						15806..16739	934			group I (IB1)	cox1	no candidate in intron_report.tsv
+cont3	BK068681.1	Cnidaria	Stichodactyla mertensii	gt6	nad5	+		744..3514	2771	intron_feature		718..2398	1681	-26	-1116	group I (?)	nad5	
+cont3	BK068681.1	Cnidaria	Stichodactyla mertensii	gt6	cox1	+		15318..16035	718	intron_feature		15165..16030	866	-153	-5	group I (IB1)	cox1	
+cont3	BK068682.1	Cnidaria	Metridium farcimen	gt6	nad5	+		744..2435	1692	intron_feature		718..2398	1681	-26	-37	group I (?)	nad5	
+cont3	BK068682.1	Cnidaria	Metridium farcimen	gt6	cox1	+		14702..15535	834	intron_feature		14678..15530	853	-24	-5	group I (?)	cox1	
+cont3	BK069890.1	Cnidaria	Actinia mediterranea	gt6	nad5	+		718..2923	2206	intron_feature	group I	718..2887	2170	0	-36	group I (?)	nad5	
+cont3	BK069890.1	Cnidaria	Actinia mediterranea	le6	cox1	+		17579..18435	857	intron_feature	group I	17578..18431	854	-1	-4	group I (?)	cox1	
+cont3	BK069891.1	Cnidaria	Actinodendron alcyonoideum	gt6	nad5	+		718..2638	1921	intron_feature	group I	718..2602	1885	0	-36	group I (?)	nad5	
+cont3	BK069891.1	Cnidaria	Actinodendron alcyonoideum	le6	cox1	+		15874..16702	829	intron_feature	group I	15873..16698	826	-1	-4	group I (?)	cox1	
+cont3	BK069892.1	Cnidaria	Actinernus sp. WN-2022	gt6	nad5	+		718..2369	1652	intron_feature	group I	718..2333	1616	0	-36	group I (?)	nad5	
+cont3	BK069893.1	Cnidaria	Actinodendron arboreum	gt6	nad5	+		718..2636	1919	intron_feature	group I	718..2600	1883	0	-36	group I (?)	nad5	
+cont3	BK069893.1	Cnidaria	Actinodendron arboreum	le6	cox1	+		15874..16699	826	intron_feature	group I	15873..16698	826	-1	-1	group I (?)	cox1	
+cont3	BK069894.1	Cnidaria	Ragactis hyalina	gt6	nad5	+		718..2533	1816	intron_feature	group I	718..2497	1780	0	-36	group I (?)	nad5	
+cont3	BK069894.1	Cnidaria	Ragactis hyalina	le6	cox1	+		15278..16126	849	intron_feature	group I	15277..16122	846	-1	-4	group I (IB1)	cox1	
+cont3	BK069895.1	Cnidaria	Anthopleura artemisia	gt6	nad5	+		718..2467	1750	intron_feature	group I	718..2431	1714	0	-36	group I (?)	nad5	
+cont3	BK069895.1	Cnidaria	Anthopleura artemisia	le6	cox1	+		17004..17860	857	intron_feature	group I	17003..17856	854	-1	-4	group I (?)	cox1	
+cont3	BK069896.1	Cnidaria	Bunodosoma granuliferum	gt6	nad5	+		718..2677	1960	intron_feature	group I	718..2641	1924	0	-36	group I (?)	nad5	
+cont3	BK069896.1	Cnidaria	Bunodosoma granuliferum	le6	cox1	+		17523..18389	867	intron_feature	group I	17522..18385	864	-1	-4	group I (?)	cox1	
+cont3	BK069897.1	Cnidaria	Diadumene cincta	gt6	nad5	+		718..2433	1716	intron_feature	group I	718..2397	1680	0	-36	group I (?)	nad5	
+cont3	BK069897.1	Cnidaria	Diadumene cincta	le6	cox1	+		15153..16008	856	intron_feature	group I	15152..16004	853	-1	-4	group I (?)	cox1	
+cont3	BK069898.1	Cnidaria	Diadumene leucolena	gt6	nad5	+		718..2430	1713	intron_feature	group I	718..2394	1677	0	-36	group I (?)	nad5	
+cont3	BK069898.1	Cnidaria	Diadumene leucolena	le6	cox1	+		14652..15506	855	intron_feature	group I	14651..15502	852	-1	-4	group I (?)	cox1	
+cont3	BK069899.1	Cnidaria	Heteractis aurora	gt6	nad5	+		718..2490	1773	intron_feature	group I	718..2454	1737	0	-36	group I (?)	nad5	
+cont3	BK069899.1	Cnidaria	Heteractis aurora	le6	cox1	+		16701..17556	856	intron_feature	group I	16700..17552	853	-1	-4	group I (?)	cox1	
+cont3	BK069900.1	Cnidaria	Heteranthus verruculatus	gt6	nad5	+		718..2612	1895	intron_feature	group I	718..2576	1859	0	-36	group I (?)	nad5	
+cont3	BK069900.1	Cnidaria	Heteranthus verruculatus	le6	cox1	+		17447..18303	857	intron_feature	group I	17446..18299	854	-1	-4	group I (IB1)	cox1	
+cont3	BK069901.1	Cnidaria	Phymanthus loligo	gt6	nad5	+		718..2490	1773	intron_feature	group I	718..2454	1737	0	-36	group I (?)	nad5	
+cont3	BK069901.1	Cnidaria	Phymanthus loligo	le6	cox1	+		16395..17250	856	intron_feature	group I	16394..17246	853	-1	-4	group I (IB1)	cox1	
+cont3	BK069902.1	Cnidaria	Thalassianthus aster	gt6	nad5	+		718..2434	1717	intron_feature	group I	718..2398	1681	0	-36	group I (?)	nad5	
+cont3	BK069902.1	Cnidaria	Thalassianthus aster	le6	cox1	+		15166..16034	869	intron_feature	group I	15165..16030	866	-1	-4	group I (IB1)	cox1	
+cont3	BK069903.1	Cnidaria	Stichodactyla tapetum	gt6	nad5	+		718..2434	1717	intron_feature	group I	718..2398	1681	0	-36	group I (?)	nad5	
+cont3	BK069903.1	Cnidaria	Stichodactyla tapetum	le6	cox1	+		15165..16033	869	intron_feature	group I	15164..16029	866	-1	-4	group I (IB1)	cox1	
+cont3	BK071241.1	Cnidaria	Actinoscyphia sp. m1220	gt6	nad5	+		718..2434	1717	intron_feature	group I	718..2398	1681	0	-36	group I (?)	nad5	
+cont3	BK071241.1	Cnidaria	Actinoscyphia sp. m1220	le6	cox1	+		14588..15444	857	intron_feature	group I	14587..15440	854	-1	-4	group I (?)	cox1	
+cont3	BK071242.1	Cnidaria	Condylactis gigantea	gt6	nad5	+		718..2677	1960	intron_feature	group I	718..2641	1924	0	-36	group I (?)	nad5	
+cont3	BK071242.1	Cnidaria	Condylactis gigantea	le6	cox1	+		17200..18066	867	intron_feature	group I	17199..18062	864	-1	-4	group I (?)	cox1	
+cont3	BK071243.1	Cnidaria	Edwardsia elegans	gt6	nad5	+		718..2375	1658	intron_feature	group I	718..2339	1622	0	-36	group I (?)	nad5	
+cont3	DQ304771.1	Cnidaria	Chrysopathes formosa	exact	nad5	+		10733..12664	1932	intron_feature	group I intron	10733..12664	1932	0	0	group I (?)	nad5	
+cont3	DQ640647.1	Cnidaria	Rhodactis sp. CASIZ 171755	le6	cox1	+		898..2103	1206	intron_feature		897..2102	1206	-1	-1	group I (?)	cox1	
+cont3	DQ640647.1	Cnidaria	Rhodactis sp. CASIZ 171755	exact	nad5	+		13276..31276	18001	cds_join		13276..31276	18001	0	0		nad5	
+cont3	DQ640648.1	Cnidaria	Ricordea florida	le6	cox1	+		892..2088	1197	intron_feature		891..2087	1197	-1	-1	group I (?)	cox1	
+cont3	DQ640648.1	Cnidaria	Ricordea florida	exact	nad5	+		14185..33431	19247	cds_join		14185..33431	19247	0	0		nad5	
+cont3	DQ640650.1	Cnidaria	Palythoa sp. JVK-2006	exact	cox1	+		2710..4017	1308	intron_feature		2710..4017	1308	0	0	group I (?)	cox1	
+cont3	DQ643965.1	Cnidaria	Discosoma sp. CASIZ 168915	exact	nad5	+		721..19523	18803	cds_join		721..19523	18803	0	0		nad5	
+cont3	DQ643965.1	Cnidaria	Discosoma sp. CASIZ 168915	le6	cox1	+		8890..10096	1207	intron_feature		8889..10095	1207	-1	-1	group I (?)	cox1	
+cont3	DQ643966.1	Cnidaria	Discosoma sp. CASIZ 168916	exact	nad5	+		721..19527	18807	cds_join		721..19527	18807	0	0		nad5	
+cont3	DQ643966.1	Cnidaria	Discosoma sp. CASIZ 168916	le6	cox1	+		8891..10096	1206	intron_feature		8890..10095	1206	-1	-1	group I (?)	cox1	
+cont3	EF526302.1	Cnidaria	Pocillopora damicornis	exact	nad5	+		2699..13561	10863	intron_feature	group I intron	2699..13561	10863	0	0	group I (?)	nad5	
+cont3	EF526303.1	Cnidaria	Pocillopora grandis	exact	nad5	+		2700..13562	10863	intron_feature	group I intron	2700..13562	10863	0	0	group I (?)	nad5	
+cont3	EF633600.2	Cnidaria	Seriatopora hystrix	exact	nad5	+		2687..13151	10465	intron_feature	group I intron	2687..13151	10465	0	0	group I (?)	nad5	
+cont3	EF633601.2	Cnidaria	Seriatopora caliendrum	exact	nad5	+		2685..13121	10437	intron_feature	group I intron	2685..13121	10437	0	0	group I (?)	nad5	
+cont3	EU237487.1	Porifera	Plakinastrella cf. onkodes DVL-2011	le6	cox1	+		11548..11935	388	intron_feature		11547..11934	388	-1	-1	group I (IB4)	cox1	
+cont3	EU237487.1	Porifera	Plakinastrella cf. onkodes DVL-2011	exact	cox1	+		11945..13062	1118	intron_feature		11945..13062	1118	0	0		cox1	
+cont3	EU400212.1	Cnidaria	Madracis myriaster	exact	nad5	+		2720..13134	10415	intron_feature	group I intron	2720..13134	10415	0	0	group I (?)	nad5	
+cont3	EU400213.1	Cnidaria	Pocillopora damicornis	exact	nad5	+		2700..13563	10864	intron_feature	group I intron	2700..13563	10864	0	0	group I (?)	nad5	
+cont3	EU400214.1	Cnidaria	Stylophora pistillata	exact	nad5	+		2719..13301	10583	intron_feature	group I intron	2719..13301	10583	0	0	group I (?)	nad5	
+cont3	HG423143.1	Cnidaria	Metridium senile	exact	nad5	+		718..2398	1681	intron_feature		718..2398	1681	0	0	group I (?)	nad5	
+cont3	HG423143.1	Cnidaria	Metridium senile	exact	cox1	+		14573..15425	853	intron_feature		14573..15425	853	0	0	group I (?)	cox1	
+cont3	HG423144.1	Cnidaria	Urticina eques	exact	nad5	+		718..2398	1681	intron_feature		718..2398	1681	0	0	group I (?)	nad5	
+cont3	HG423144.1	Cnidaria	Urticina eques	le6	cox1	+		17186..18035	850	intron_feature		17184..18036	853	-2	1	group I (?)	cox1	
+cont3	HG423146.1	Cnidaria	Hormathia digitata	exact	nad5	+		718..2398	1681	intron_feature		718..2398	1681	0	0	group I (?)	nad5	
+cont3	HG423146.1	Cnidaria	Hormathia digitata	exact	cox1	+		15883..16735	853	intron_feature		15883..16735	853	0	0	group I (?)	cox1	
+cont3	HG423147.1	Cnidaria	Exaiptasia diaphana	exact	nad5	+		718..2447	1730	intron_feature		718..2447	1730	0	0	group I (?)	nad5	
+cont3	HG423147.1	Cnidaria	Exaiptasia diaphana	exact	cox1	+		16281..17127	847	intron_feature		16281..17127	847	0	0	group I (?)	cox1	
+cont3	HQ269356.1	Porifera	Plakina trilopha	exact	cox1	+		11838..12801	964	intron_feature		11838..12801	964	0	0	group I (?)	cox1	
+cont3	KP938440.1	Cnidaria	Corallimorphus profundus	exact	nad5	+		721..13109	12389	intron_feature		721..13109	12389	0	0	group I (?)	nad5	
+cont3	KP938440.1	Cnidaria	Corallimorphus profundus	le6	cox1	+		15701..16882	1182	cds_join		15700..16881	1182	-1	-1	group I (IB1)	cox1	
+cont3	KR051004.1	Cnidaria	Halcurias pilatus	exact	nad5	+		8074..9708	1635	intron_feature		8074..9708	1635	0	0	group I (?)	nad5	
+cont3	KR051005.1	Cnidaria	Isactinernus quadrilobatus	exact	nad5	+		7105..8709	1605	intron_feature		7105..8709	1605	0	0	group I (?)	nad5	
+cont3	KR051006.1	Cnidaria	Isosicyonis striata	exact	cox1	+		4106..4958	853	intron_feature		4106..4958	853	0	0	group I (?)	cox1	
+cont3	KR051006.1	Cnidaria	Isosicyonis striata	exact	nad5	+		7945..9639	1695	intron_feature		7945..9639	1695	0	0	group I (?)	nad5	
+cont3	KR051009.1	Cnidaria	Synhalcurias elegans	exact	nad5	+		8547..10181	1635	intron_feature		8547..10181	1635	0	0	group I (?)	nad5	
+cont3	KT001202.1	Cnidaria	Acropora aculeus	exact	nad5	+		3154..15269	12116	intron_feature	group I intron	3154..15269	12116	0	0	group I (?)	nad5	
+cont3	KU507297.1	Cnidaria	Bolocera sp. BZ-2016	exact	nad5	+		718..3114	2397	intron_feature		718..3114	2397	0	0	group I (?)	nad5	
+cont3	KU507297.1	Cnidaria	Bolocera sp. BZ-2016	exact	cox1	+		16143..16995	853	intron_feature		16143..16995	853	0	0	group I (?)	cox1	
+cont3	LN589993.1	Chordata	Goura victoria beccarii	missed	nad3	+		9778..9778	1	intron_feature								no candidate in intron_report.tsv
+cont3	LN589994.2	Chordata	Goura cristata minor	missed	nad3	+		9778..9778	1	intron_feature								no candidate in intron_report.tsv
+cont3	LN589995.1	Chordata	Goura scheepmakeri	missed	nad3	+		9777..9777	1	intron_feature								no candidate in intron_report.tsv
+cont3	MN873592.1	Cnidaria	Neozoanthus aff. uchina AP-2020	exact	cox1	+		889..2281	1393	intron_feature	group 1 intron	889..2281	1393	0	0	group I (IB4)	cox1	
+cont3	MN873592.1	Cnidaria	Neozoanthus aff. uchina AP-2020	exact	nad5	+		11630..13791	2162	intron_feature	group 1 intron	11630..13791	2162	0	0	group I (?)	nad5	
+cont3	MN873593.1	Cnidaria	Palythoa heliodiscus	exact	cox1	+		889..2184	1296	intron_feature	group 1 intron	889..2184	1296	0	0	group I (?)	cox1	
+cont3	MN873593.1	Cnidaria	Palythoa heliodiscus	exact	nad5	+		11477..13667	2191	intron_feature	group 1 intron	11477..13667	2191	0	0	group I (?)	nad5	
+cont3	MN873599.1	Cnidaria	Zoanthus cf. pulchellus AP-2020	exact	cox1	+		889..2168	1280	intron_feature	group 1 intron	889..2168	1280	0	0	group I (?)	cox1	
+cont3	MN873599.1	Cnidaria	Zoanthus cf. pulchellus AP-2020	exact	nad5	+		11333..13473	2141	intron_feature	group 1 intron	11333..13473	2141	0	0	group I (?)	nad5	
+cont3	MN873600.1	Cnidaria	Zoanthus cf. sociatus AP-2020	exact	cox1	+		889..2168	1280	intron_feature	group 1 intron	889..2168	1280	0	0	group I (?)	cox1	
+cont3	MN873600.1	Cnidaria	Zoanthus cf. sociatus AP-2020	exact	nad5	+		11333..13473	2141	intron_feature	group 1 intron	11333..13473	2141	0	0	group I (?)	nad5	
+cont3	MN873602.1	Cnidaria	Zoanthus sp. AP-2020	exact	cox1	+		889..2168	1280	intron_feature	group 1 intron	889..2168	1280	0	0	group I (?)	cox1	
+cont3	MN873602.1	Cnidaria	Zoanthus sp. AP-2020	exact	nad5	+		11333..13473	2141	intron_feature	group 1 intron	11333..13473	2141	0	0	group I (?)	nad5	
+cont3	MT318840.1	Cnidaria	Trissopathes cf. tetracrada NB-2020	exact	nad5	+		7142..9071	1930	intron_feature		7142..9071	1930	0	0	group I (?)	nad5	
+cont3	MT318841.1	Cnidaria	Antipathes cf. dichotoma NB-2020	le6	cox1	+		895..2323	1429	intron_feature		894..2322	1429	-1	-1	group I (IB4)	cox1	
+cont3	MT318841.1	Cnidaria	Antipathes cf. dichotoma NB-2020	exact	nad5	+		8758..10687	1930	intron_feature		8758..10687	1930	0	0	group I (?)	nad5	
+cont3	MT318842.1	Cnidaria	Bathypathes sp. n. 2 NB-2020	exact	nad5	+		6833..8691	1859	intron_feature		6833..8691	1859	0	0	group I (?)	nad5	
+cont3	MT318843.1	Cnidaria	Bathypathes sp. n. 3 NB-2020	exact	nad5	+		6833..8691	1859	intron_feature		6833..8691	1859	0	0	group I (?)	nad5	
+cont3	MT318844.1	Cnidaria	Bathypathes sp. 1 NB-2020	exact	nad5	+		6833..8691	1859	intron_feature		6833..8691	1859	0	0	group I (?)	nad5	
+cont3	MT318845.1	Cnidaria	Dendrobathypathes sp. n. NB-2020	exact	nad5	+		6807..8659	1853	intron_feature		6807..8659	1853	0	0	group I (?)	nad5	
+cont3	MT318846.1	Cnidaria	Leiopathes cf. glaberrima NB-2020	le6	cox1	+		895..2481	1587	intron_feature		894..2480	1587	-1	-1	group I (IB1)	cox1	
+cont3	MT318846.1	Cnidaria	Leiopathes cf. glaberrima NB-2020	exact	nad5	+		9011..11244	2234	intron_feature		9011..11244	2234	0	0	group I (?)	nad5	
+cont3	MT318847.1	Cnidaria	Leiopathes expansa	le6	cox1	+		895..2481	1587	intron_feature		894..2480	1587	-1	-1	group I (IB1)	cox1	
+cont3	MT318847.1	Cnidaria	Leiopathes expansa	exact	nad5	+		9011..11244	2234	intron_feature		9011..11244	2234	0	0	group I (?)	nad5	
+cont3	MT318848.1	Cnidaria	Leiopathes montana	le6	cox1	+		895..2481	1587	intron_feature		894..2480	1587	-1	-1	group I (IB1)	cox1	
+cont3	MT318848.1	Cnidaria	Leiopathes montana	exact	nad5	+		9011..11244	2234	intron_feature		9011..11244	2234	0	0	group I (?)	nad5	
+cont3	MT318849.1	Cnidaria	Parantipathes cf. hirondelle NB-2020	exact	nad5	+		6854..8724	1871	intron_feature		6854..8724	1871	0	0	group I (?)	nad5	
+cont3	MT318850.1	Cnidaria	Parantipathes hirondelle	exact	nad5	+		6854..8724	1871	intron_feature		6854..8724	1871	0	0	group I (?)	nad5	
+cont3	MT318851.1	Cnidaria	Parantipathes sp. NB-2020	exact	nad5	+		6854..8724	1871	intron_feature		6854..8724	1871	0	0	group I (?)	nad5	
+cont3	MT318852.1	Cnidaria	Phanopathes sp. NB-2020	le6	cox1	+		895..2322	1428	intron_feature		894..2321	1428	-1	-1	group I (IB1)	cox1	
+cont3	MT318852.1	Cnidaria	Phanopathes sp. NB-2020	exact	nad5	+		8941..10937	1997	intron_feature		8941..10937	1997	0	0	group I (?)	nad5	
+cont3	MT318853.1	Cnidaria	Sibopathes cf. macrospina NB-2020	exact	nad5	+		6854..8724	1871	intron_feature		6854..8724	1871	0	0	group I (?)	nad5	
+cont3	MT318854.1	Cnidaria	Stauropathes arctica	exact	nad5	+		6833..8691	1859	intron_feature		6833..8691	1859	0	0	group I (?)	nad5	
+cont3	MT318855.1	Cnidaria	Stauropathes cf. punctata NB-2020	exact	nad5	+		6833..8691	1859	intron_feature		6833..8691	1859	0	0	group I (?)	nad5	
+cont3	MT318856.1	Cnidaria	Stichopathes abyssicola	le6	cox1	+		895..2323	1429	intron_feature		894..2322	1429	-1	-1	group I (IB4)	cox1	
+cont3	MT318856.1	Cnidaria	Stichopathes abyssicola	exact	nad5	+		8758..10687	1930	intron_feature		8758..10687	1930	0	0	group I (?)	nad5	
+cont3	MT318857.1	Cnidaria	Stichopathes sp. n. NB-2020	le6	cox1	+		895..2360	1466	intron_feature		894..2359	1466	-1	-1	group I (IB1)	cox1	
+cont3	MT318857.1	Cnidaria	Stichopathes sp. n. NB-2020	exact	nad5	+		8529..10414	1886	intron_feature		8529..10414	1886	0	0	group I (?)	nad5	
+cont3	MT318858.1	Cnidaria	Telopathes sp. NB-2020	exact	nad5	+		6833..8691	1859	intron_feature		6833..8691	1859	0	0	group I (?)	nad5	
+cont3	MT318859.1	Cnidaria	Tylopathes sp. n. NB-2020	le6	cox1	+		895..1796	902	intron_feature		894..1795	902	-1	-1	group I (?)	cox1	
+cont3	MT318859.1	Cnidaria	Tylopathes sp. n. NB-2020	exact	nad5	+		7450..9148	1699	intron_feature		7450..9148	1699	0	0	group I (?)	nad5	
+cont3	MT318860.1	Cnidaria	Chrysopathes cf. micracantha NB-2020	exact	nad5	+		7109..9038	1930	intron_feature		7109..9038	1930	0	0	group I (?)	nad5	
+cont3	MT576637.1	Cnidaria	Psammocora nierstraszi	exact	nad5	+		2681..12229	9549	intron_feature	group I intron	2681..12229	9549	0	0	group I (?)	nad5	
+cont3	MT997141.1	Cnidaria	Paraphelliactis xishaensis	exact	nad5	+		718..2398	1681	intron_feature		718..2398	1681	0	0	group I (?)	nad5	
+cont3	MT997141.1	Cnidaria	Paraphelliactis xishaensis	exact	cox1	+		15721..16573	853	intron_feature		15721..16573	853	0	0	group I (?)	cox1	
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	exact	cox1	+		893..2974	2082	intron_feature	putative group II intron	893..2974	2082	0	0	group II (RF00029)	cox1	
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	exact	nad3	+		4163..4986	824	intron_feature	putative group II intron	4163..4986	824	0	0	group II (RF00029)	nad3	
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	missed	cob	+		7247..7827	581	intron_feature	putative group II intron							no candidate in intron_report.tsv
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	exact	cob	+		8472..8998	527	intron_feature	putative group II intron	8472..8998	527	0	0	group II (RF00029)	cob	
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	missed	cob	+		9302..9883	582	intron_feature	putative group II intron							no candidate in intron_report.tsv
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	missed	nad5	+		13568..13833	266	intron_feature	putative group II intron							no candidate in intron_report.tsv
+cont3	MW592986.1	Bryozoa	Exechonella vieirai	missed	atp6	+		16489..17094	606	intron_feature	putative group II intron							no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad6	+		953..1471	519	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	le6	nad1	+		2756..3021	266	intron_feature		2757..3022	266	1	1	type not identified	nad1	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	nad1	+		3154..3415	262	intron_feature		3154..3415	262	0	0	type not identified	nad1	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad2	+		5074..5333	260	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad5	+		6355..6608	254	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad5	+		6792..7047	256	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	cox1	+		8554..8821	268	intron_feature		8554..8821	268	0	0	type not identified	cox1	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	cox1	+		9464..9703	240	intron_feature		9464..9703	240	0	0	type not identified	cox1	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox2	+		14081..14350	270	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	le6	cox2	+		14759..14979	221	intron_feature		14754..14974	221	-5	-5	type not identified	cox2	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	cox3	+		17227..17472	246	intron_feature		17227..17472	246	0	0	type not identified	cox3	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	cox3	+		17809..18076	268	intron_feature		17809..18076	268	0	0	type not identified	cox3	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	cob	+		19080..19329	250	intron_feature		19080..19329	250	0	0	group II (RF00029)	cob	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	exact	cob	+		19702..19968	267	intron_feature		19702..19968	267	0	0	type not identified	cob	
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	cob	+		20335..20588	254	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad4l	+		20973..21237	265	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad4	+		21600..21851	252	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad4	+		21936..22213	278	intron_feature								no candidate in intron_report.tsv
+cont3	MW592987.1	Bryozoa	Cupuladria biporosa	fp		+						18194..18458	265			type not identified	cox3	no candidate in intron_report.tsv
+cont3	MW592988.1	Bryozoa	Parantropora penelope	exact	cob	+		4235..4858	624	intron_feature	putative group II intron	4235..4858	624	0	0	group II (RF00029)	cob	
+cont3	MW592988.1	Bryozoa	Parantropora penelope	missed	nad5	+		7407..8038	632	intron_feature	putative group II intron							no candidate in intron_report.tsv
+cont3	MW592988.1	Bryozoa	Parantropora penelope	exact	cox1	+		10754..12963	2210	intron_feature	putative group II intron	10754..12963	2210	0	0	group II (RF00029)	cox1	
+cont3	MW592988.1	Bryozoa	Parantropora penelope	exact	cox1	+		14038..14564	527	intron_feature	putative group II intron	14038..14564	527	0	0	group II (RF00029)	cox1	
+cont3	MW592988.1	Bryozoa	Parantropora penelope	missed	cox2	+		16581..17212	632	intron_feature	putative group II intron							no candidate in intron_report.tsv
+cont3	MW592989.1	Bryozoa	Discoporella cookae	missed	nad2	+		1..397	397	intron_feature								no candidate in intron_report.tsv
+cont3	MW592989.1	Bryozoa	Discoporella cookae	exact	nad5	+		1084..1375	292	intron_feature		1084..1375	292	0	0	type not identified	nad5	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	le6	nad5	+		1562..1809	248	intron_feature		1559..1806	248	-3	-3	type not identified	nad5	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	exact	nad5	+		1906..2145	240	intron_feature		1906..2145	240	0	0	type not identified	nad5	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	exact	cox1	+		3542..3818	277	intron_feature		3542..3818	277	0	0	type not identified	cox1	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	le6	cox1	+		4461..4705	245	intron_feature		4463..4707	245	2	2	group II (RF00029)	cox1	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	missed	cox2	+		5666..5927	262	intron_feature								no candidate in intron_report.tsv
+cont3	MW592989.1	Bryozoa	Discoporella cookae	le6	cox2	+		6336..6624	289	intron_feature		6331..6619	289	-5	-5	type not identified	cox2	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	exact	cox3	+		11022..11304	283	intron_feature		11022..11304	283	0	0	type not identified	cox3	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	exact	cox3	+		11641..11906	266	intron_feature		11641..11906	266	0	0	type not identified	cox3	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	le6	cob	+		12844..13093	250	intron_feature		12843..13092	250	-1	-1	type not identified	cob	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	le6	cob	+		13466..13747	282	intron_feature		13468..13749	282	2	2	type not identified	cob	
+cont3	MW592989.1	Bryozoa	Discoporella cookae	missed	cob	+		14114..14379	266	intron_feature								no candidate in intron_report.tsv
+cont3	MW592989.1	Bryozoa	Discoporella cookae	missed	nad4l	+		14758..15016	259	intron_feature								no candidate in intron_report.tsv
+cont3	MW592989.1	Bryozoa	Discoporella cookae	fp		+						12024..12282	259			type not identified	cox3	no candidate in intron_report.tsv
+cont3	MW773216.1	Cnidaria	Acropora sp. A aff. tenuis AC-2021	exact	nad5	+		3156..15080	11925	intron_feature	group I intron	3156..15080	11925	0	0	group I (?)	nad5	
+cont3	MW773217.1	Cnidaria	Acropora sp. B aff. cytherea AC-2021	exact	nad5	+		3152..15100	11949	intron_feature	group I intron	3152..15100	11949	0	0	group I (?)	nad5	
+cont3	MW773218.1	Cnidaria	Acropora sp. C aff. orbicularis AC-2021	exact	nad5	+		3153..15329	12177	intron_feature	group I intron	3153..15329	12177	0	0	group I (?)	nad5	
+cont3	MW773219.1	Cnidaria	Acropora sp. D AC-2021	exact	nad5	+		3152..15216	12065	intron_feature	group I intron	3152..15216	12065	0	0	group I (?)	nad5	
+cont3	MZ157399.1	Cnidaria	Stichopathes sp. SCBUCN-8850	le6	cox1	+		895..2372	1478	intron_feature		894..2371	1478	-1	-1	group I (?)	cox1	
+cont3	MZ157399.1	Cnidaria	Stichopathes sp. SCBUCN-8850	exact	nad5	+		8749..10810	2062	intron_feature		8749..10810	2062	0	0	group I (?)	nad5	
+cont3	MZ157400.1	Cnidaria	Stichopathes sp. SCBUCN-8849	le6	cox1	+		895..2312	1418	intron_feature		894..2311	1418	-1	-1	group I (?)	cox1	
+cont3	MZ157400.1	Cnidaria	Stichopathes sp. SCBUCN-8849	exact	nad5	+		8669..10730	2062	intron_feature		8669..10730	2062	0	0	group I (?)	nad5	
+cont3	NC_069232.1	Cnidaria	Plerogyra sinuosa	exact	nad5	+		2711..11996	9286	intron_feature	group I intron	2711..11996	9286	0	0	group I (?)	nad5	
+cont3	NC_069232.1	Cnidaria	Plerogyra sinuosa	gt6	cox1	+		14271..15335	1065	intron_feature	group II intron	14097..15176	1080	-174	-159		cox1	
+cont3	NC_069233.1	Cnidaria	Physogyra lichtensteini	exact	nad5	+		2709..11995	9287	intron_feature	group I intron	2709..11995	9287	0	0	group I (?)	nad5	
+cont3	NC_069233.1	Cnidaria	Physogyra lichtensteini	exact	cox1	+		14096..15172	1077	intron_feature	group II intron	14096..15172	1077	0	0		cox1	
+cont3	OL372279.1	Cnidaria	Goniopora planulata	le6	nad5	+		3357..14531	11175	intron_feature		3358..14532	11175	1	1	group I (?)	nad5	
+cont3	OL372279.1	Cnidaria	Goniopora planulata	le6	cox1	+		17023..17986	964	cds_join		17022..17991	970	-1	5	group I (?)	cox1	
+cont3	OM729606.2	Porifera	Acanthella acuta	exact	cox2	+		22946..25409	2464	intron_feature	Group II	22946..25409	2464	0	0	group II (RF00029)	cox2	
+cont3	OM729606.2	Porifera	Acanthella acuta	exact	cox1	+		34116..36461	2346	intron_feature	Group II	34116..36461	2346	0	0	group II (RF00029)	cox1	
+cont3	ON653414.1	Cnidaria	Cirrhipathes cf. anguina LS-2022	le6	cox1	+		6189..7603	1415	intron_feature		6188..7605	1418	-1	2	group I (?)	cox1	
+cont3	ON653414.1	Cnidaria	Cirrhipathes cf. anguina LS-2022	exact	nad5	+		13963..16024	2062	intron_feature		13963..16024	2062	0	0	group I (?)	nad5	
+cont3	OP311587.1	Cnidaria	Acropora digitifera	exact	nad5	+		3154..15224	12071	intron_feature	group I intron	3154..15224	12071	0	0	group I (?)	nad5	
+cont3	OQ469831.1	Cnidaria	Parazoanthus sp. f RH-2022	exact	cox1	+		889..2226	1338	intron_feature		889..2226	1338	0	0	group I (?)	cox1	
+cont3	OQ469831.1	Cnidaria	Parazoanthus sp. f RH-2022	gt6	nad5	+		11477..13802	2326	intron_feature		11479..13766	2288	2	-36	group I (?)	nad5	
+cont3	OQ469832.1	Cnidaria	Parazoanthus axinellae brevitentacularis	exact	cox1	+		889..2263	1375	intron_feature		889..2263	1375	0	0	group I (?)	cox1	
+cont3	OQ469832.1	Cnidaria	Parazoanthus axinellae brevitentacularis	exact	nad5	+		11466..13867	2402	intron_feature		11466..13867	2402	0	0	group I (?)	nad5	
+cont3	OQ740722.1	Cnidaria	Bergia sp. 'catenularis'	exact	nad5	+		501..2621	2121	intron_feature		501..2621	2121	0	0	group I (?)	nad5	
+cont3	OQ740722.1	Cnidaria	Bergia sp. 'catenularis'	exact	cox1	+		11212..12490	1279	intron_feature		11212..12490	1279	0	0	group I (?)	cox1	
+cont3	OQ740724.1	Cnidaria	Epizoanthus illoricatus	exact	cox1	+		8478..10163	1686	intron_feature		8478..10163	1686	0	0	group I (?)	cox1	
+cont3	OQ740724.1	Cnidaria	Epizoanthus illoricatus	exact	nad5	+		19012..21231	2220	cds_join		19012..21231	2220	0	0	group I (?)	nad5	
+cont3	OQ740730.1	Cnidaria	Hydrozoanthus gracilis	gt6	nad5	+		2628..5014	2387	intron_feature		2828..5014	2187	200	0	group I (?)	nad5	
+cont3	OQ740730.1	Cnidaria	Hydrozoanthus gracilis	exact	cox1	+		13076..14200	1125	intron_feature		13076..14200	1125	0	0	group I (?)	cox1	
+cont3	OQ759537.1	Cnidaria	Zoanthus sansibaricus	exact	cox1	+		10201..11479	1279	intron_feature		10201..11479	1279	0	0	group I (?)	cox1	
+cont3	OQ759537.1	Cnidaria	Zoanthus sansibaricus	exact	nad5	+		20644..22784	2141	cds_join		20644..22784	2141	0	0	group I (?)	nad5	
+cont3	OQ759538.1	Cnidaria	Zoanthus sociatus	exact	cox1	+		10018..11297	1280	intron_feature		10018..11297	1280	0	0	group I (?)	cox1	
+cont3	OQ759538.1	Cnidaria	Zoanthus sociatus	exact	nad5	+		20447..22587	2141	cds_join		20447..22587	2141	0	0	group I (?)	nad5	
+cont3	OQ759543.1	Cnidaria	Sphenopus marsupialis	exact	cox1	+		7014..8331	1318	intron_feature		7014..8331	1318	0	0	group I (?)	cox1	
+cont3	OQ759543.1	Cnidaria	Sphenopus marsupialis	exact	nad5	+		17548..19864	2317	intron_feature		17548..19864	2317	0	0	group I (?)	nad5	
+cont3	OQ789241.1	Cnidaria	Palythoa mutuki	gt6	cox1	+		10472..11754	1283	intron_feature		10448..11754	1307	-24	0	group I (?)	cox1	
+cont3	OQ789241.1	Cnidaria	Palythoa mutuki	exact	nad5	+		21150..23325	2176	cds_join		21150..23325	2176	0	0	group I (?)	nad5	
+cont3	OR906317.1	Cnidaria	Leiopathes sp.	exact	cox1	+		5004..6590	1587	intron_feature		5004..6590	1587	0	0	group I (IB1)	cox1	
+cont3	OR906317.1	Cnidaria	Leiopathes sp.	exact	nad5	+		13121..15354	2234	intron_feature		13121..15354	2234	0	0	group I (?)	nad5	
+cont3	OR906318.1	Cnidaria	Trissopathes sp.	missed		+		17767..18360	594	intron_feature								no candidate in intron_report.tsv
+cont3	OR906318.1	Cnidaria	Trissopathes sp.	exact	nad5	+		18037..19944	1908	cds_join		18037..19944	1908	0	0	group I (?)	nad5	
+cont3	OR992049.1	Cnidaria	Schizopathidae sp.	exact	nad5	+		15743..17595	1853	intron_feature		15743..17595	1853	0	0	group I (?)	nad5	
+cont3	OR992050.1	Cnidaria	Bathypathes sp. 1 YY-2024	exact	nad5	+		11229..13087	1859	intron_feature		11229..13087	1859	0	0	group I (?)	nad5	
+cont3	OR992051.1	Cnidaria	Bathypathes sp. 2 YY-2024	exact	nad5	+		11562..13420	1859	intron_feature		11562..13420	1859	0	0	group I (?)	nad5	
+cont3	PP438735.1	Cnidaria	Actinia equina	exact	nad5	+		718..2887	2170	intron_feature	group I	718..2887	2170	0	0	group I (?)	nad5	
+cont3	PP438735.1	Cnidaria	Actinia equina	exact	cox1	+		17578..18431	854	intron_feature	group I	17578..18431	854	0	0	group I (?)	cox1	
+cont3	PP526282.1	Cnidaria	Fimbriaphyllia divisa	exact	nad5	+		3178..15064	11887	intron_feature	intron1	3178..15064	11887	0	0		nad5	
+cont3	PP526283.1	Cnidaria	Fimbriaphyllia paradivisa	exact	nad5	+		3178..15064	11887	intron_feature	intron1	3178..15064	11887	0	0		nad5	
+cont3	PP526284.1	Cnidaria	Euphyllia paraglabrescens	exact	nad5	+		3163..15403	12241	intron_feature	intron1	3163..15403	12241	0	0		nad5	
+cont3	PP526285.1	Cnidaria	Euphyllia cristata	exact	nad5	+		3163..15403	12241	intron_feature	intron1	3163..15403	12241	0	0		nad5	
+cont3	PP526286.1	Cnidaria	Galaxea horrescens	exact	nad5	+		3178..15199	12022	intron_feature	intron1	3178..15199	12022	0	0		nad5	
+cont3	PP526287.1	Cnidaria	Galaxea fascicularis	exact	nad5	+		3178..15199	12022	intron_feature	intron1	3178..15199	12022	0	0		nad5	
+cont3	PP971518.1	Porifera	Porifera sp.	exact	cox1	+		874..1930	1057	intron_feature		874..1930	1057	0	0	group I (IB4)	cox1	
+cont3	PP990758.1	Bryozoa	Bryozoa sp.	exact	cox1	+		2158..4290	2133	intron_feature		2158..4290	2133	0	0	group II (RF00029)	cox1	
+cont3	PP990758.1	Bryozoa	Bryozoa sp.	exact	cox1	+		4823..5445	623	intron_feature		4823..5445	623	0	0	group II (RF00029)	cox1	
+cont3	PP990758.1	Bryozoa	Bryozoa sp.	exact	cob	+		14674..15246	573	intron_feature		14674..15246	573	0	0	group II (RF00029)	cob	
+cont3	PP990758.1	Bryozoa	Bryozoa sp.	exact	cob	+		15424..16002	579	intron_feature		15424..16002	579	0	0	group II (RF00029)	cob	
+cont3	PP990758.1	Bryozoa	Bryozoa sp.	exact	cob	+		16300..16969	670	intron_feature		16300..16969	670	0	0	group II (RF00029)	cob	
+cont3	PP990758.1	Bryozoa	Bryozoa sp.	gt6	cox2	+		17828..19837	2010	intron_feature		17842..19845	2004	14	8	group II (RF00029)	cox2	
+cont3	PQ359434.1	Cnidaria	Pocillopora meandrina	exact	nad5	+		2700..13562	10863	intron_feature	group I intron	2700..13562	10863	0	0	group I (?)	nad5	
+cont3	PQ554681.1	Cnidaria	Vitrumanthus sp. f HK-2024	exact	cox1	+		889..2045	1157	intron_feature		889..2045	1157	0	0	group I (?)	cox1	
+cont3	PQ554681.1	Cnidaria	Vitrumanthus sp. f HK-2024	exact	nad5	+		11148..13428	2281	intron_feature		11148..13428	2281	0	0	group I (?)	nad5	
+cont3	PQ554682.1	Cnidaria	Churabana kuroshioae	exact	cox1	+		889..2379	1491	intron_feature		889..2379	1491	0	0	group I (?)	cox1	
+cont3	PQ554682.1	Cnidaria	Churabana kuroshioae	exact	nad5	+		12732..15085	2354	intron_feature		12732..15085	2354	0	0	group I (?)	nad5	
+cont3	PV232310.1	Cnidaria	Actinostella flosculifera	gt6	nad5	+		718..2999	2282	intron_feature	group I	718..2963	2246	0	-36	group I (?)	nad5	
+cont3	PV232310.1	Cnidaria	Actinostella flosculifera	le6	cox1	+		16076..16931	856	intron_feature	group I	16075..16927	853	-1	-4	group I (?)	cox1	
+cont3	PX980026.1	Cnidaria	Abyssoanthidae sp. T77066-1	le6	cox1	+		889..1660	772	intron_feature		889..1663	775	0	3	group I (IB4)	cox1	
+cont3	PX980026.1	Cnidaria	Abyssoanthidae sp. T77066-1	gt6	nad5	+		9595..12161	2567	intron_feature		10316..12161	1846	721	0	group I (?)	nad5	
+cont3	PZ785798.2	Cnidaria	Montipora mollis	exact	nad5	+		3152..14640	11489	intron_feature	mitochondrial group I intron; contains other mitochondrial genes	3152..14640	11489	0	0	group I (?)	nad5	

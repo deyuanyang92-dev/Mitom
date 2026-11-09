@@ -426,8 +426,8 @@ def test_mini_exon_search_capped(monkeypatch):
 
 
 def test_core_only_gene_needs_typed_introns(monkeypatch, tmp_path):
-    """A gene that is a candidate only through the core's partial CDS (no ORF pre-screen hit) is written only when
-    Rfam types its introns: exonerate against a close homolog bridges divergent or frameshifted stretches with untyped
+    """--untyped_rule splice (the rule before 2026-11-09): a gene that is a candidate only through the core's partial
+    CDS (no ORF pre-screen hit) is written only when Rfam types its introns: exonerate against a close homolog bridges divergent or frameshifted stretches with untyped
     'introns' >= 142 nt (sponge NC_006894.1 nad2 / nad5, 2026-10-29 benchmark). The same model from the pre-screen
     is written (medium: untyped intron with group II splice sites)."""
     import argparse
@@ -444,7 +444,7 @@ def test_core_only_gene_needs_typed_introns(monkeypatch, tmp_path):
     monkeypatch.setattr(mi, "core_references", lambda *x: {"nad2": {"id": "X:nad2-1", "seq": prot, "strand": 1,
                                                                     "score": 500, "stub": True}})
     a = argparse.Namespace(genetic_code=4, exclude_own_species=False, refdir=None, threads=1, maxintron=5000,
-                           cm_files=[], evalue=0.01, stop_rule="first")
+                           cm_files=[], evalue=0.01, stop_rule="first", untyped_rule="splice")
     tools = {"exonerate": "exonerate", "cmsearch": None, "blastp": "blastp"}
     lib = {"L1": mi.LibProt("some species", "nad2", prot)}
 
@@ -620,3 +620,40 @@ def test_weak_group_i_subtype_hit_yields_to_group_ii_sites(monkeypatch, tmp_path
     row = [r for r in rows if r.get("intron_start")][0]
     assert row["intron_start"] == len(ex1) + 1 and row["intron_end"] == len(ex1) + len(intron)
     assert "type not identified" in row["note"] and "group II splice sites" in row["note"]
+
+
+def _cds(prot: str, code: int = 5) -> str:
+    from Bio.Data import CodonTable
+    back = CodonTable.unambiguous_dna_by_id[code].back_table
+    return "".join(back[x] for x in prot)
+
+
+P = ("MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKRQTLGQHDFSAGEGLYTHMKALRPDEDRL"
+     "SPLHSVYVDQWDWERVMGDGERQFSTLKSTVEAIWAGIKATEAAVSEEFGLAPFLPDQIHFVHSQELLSRYPDLDAKGRERAIAKDLGAVFLVGIGGKLSDGHRHDV")
+
+
+def test_junction_continuity_tells_an_intron_from_a_skipped_stretch():
+    """--untyped_rule continuity, part 1: an intron removes DNA only, so the gene's homolog runs on across the junction
+    of the spliced protein; exons joined over a divergent or frameshifted stretch lack homolog residues there."""
+    sys.path.insert(0, str(SCRIPT.parent))
+    from mito_intron_rules import junction_continuity
+    span, miss, extra = junction_continuity(P, [P, P[5:]], 60)
+    assert span == 1.0 and miss == 0 and extra == 0
+    span, miss, extra = junction_continuity(P[:60] + P[72:], [P, P[5:]], 60)      # 12 homolog residues skipped
+    assert span == 1.0 and miss >= 10
+
+
+def test_splicing_gain_rejects_an_intron_the_gene_does_not_need():
+    """--untyped_rule continuity, part 2: without splicing a true intron leaves the homolog uncovered (reading on runs
+    into a stop); an 'intron' around a stretch whose downstream exon reads on in place over the same homolog part is
+    not needed (Kuphus NC_063762.1 nad3)."""
+    sys.path.insert(0, str(SCRIPT.parent))
+    from mito_intron_rules import homolog_scorer, splicing_gain
+    junk = "TAATTAAGTTAATTTAATAATTTAAATTTAATATTTAA" * 8                          # stops in every frame
+    e1, e2 = _cds(P[:60]), _cds(P[60:])
+    s = e1 + junk + e2
+    ex = [(1, len(e1)), (len(e1) + len(junk) + 1, len(s))]
+    assert splicing_gain(s, ex, 0, 5, homolog_scorer(P)) > 100
+    s2 = e1 + junk + e1 + e2                                                 # the gene reads on in place
+    ex2 = [(1, len(e1)), (len(e1) + len(junk) + len(e1) + 1, len(s2))]
+    assert splicing_gain(s2, ex2, 0, 5, homolog_scorer(P)) < 20

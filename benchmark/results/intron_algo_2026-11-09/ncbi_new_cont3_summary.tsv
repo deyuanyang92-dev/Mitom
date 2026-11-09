@@ -1,0 +1,6 @@
+set	group	n_truth	exact	le6	gt6	missed	recall	n_pred	fp	precision
+cont3	Bryozoa	50	23	7	1	19	0.620	33	2	0.939
+cont3	Chordata	3	0	0	0	3	0.000	0	0	
+cont3	Cnidaria	189	119	39	30	1	0.995	189	1	0.995
+cont3	Porifera	6	5	1	0	0	1.000	6	0	1.000
+cont3	all	248	147	47	31	23	0.907	228	3	0.987

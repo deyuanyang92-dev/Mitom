@@ -1,2 +1,2 @@
-record	gene	strand	cds	intron	intron_start	intron_end	intron_len	confidence	written	evidence	note	homolog	homolog_coverage	exonerate_score
-NC_008164.1	ND5	+	2893..3609,5230..6360	1	3610	5229	1620	high	yes	all introns typed (Rfam), spliced CDS without internal stop	group I intron, subtype IB1 (Selles Vidal et al. 2025, doi:10.1093/bioadv/vbaf020 model, E=3.3e-09); splice score 15; MFannot method	metridium senile nad5	1.00	2735
+record	gene	strand	cds	intron	intron_start	intron_end	intron_len	confidence	written	evidence	note	homolog	homolog_coverage	exonerate_score	junction_span	junction_missing_aa	junction_extra_aa	splice_score	splicing_gain
+NC_008164.1	ND5	+	2893..3609,5230..6360	1	3610	5229	1620	high	yes	all introns typed (Rfam), spliced CDS without internal stop	group I intron, subtype IB1 (Selles Vidal et al. 2025, doi:10.1093/bioadv/vbaf020 model, E=3.3e-09); splice score 15; MFannot method	metridium senile nad5	1.00	2735	1.00	0.0	0.0	15.0	608

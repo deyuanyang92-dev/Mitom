@@ -1,0 +1,271 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+AF178678.1		Annelida						5		circular	15619					Annelida-segmented-worms	test	2026-11-09
+EU293739.1		Annelida						5		linear	17217					Annelida-segmented-worms	test	2026-11-09
+FJ975144.1		Annelida						5		linear	13190					Annelida-segmented-worms	test	2026-11-09
+FJ976040.1		Annelida						5		linear	13438					Annelida-segmented-worms	test	2026-11-09
+KT726961.1		Annelida						5		circular	16087					Annelida-segmented-worms	test	2026-11-09
+KT989323.1		Annelida						5		linear	20896					Annelida-segmented-worms	test	2026-11-09
+KT989324.1		Annelida						5		linear	20366					Annelida-segmented-worms	test	2026-11-09
+KU672397.1		Annelida						5		linear	14604					Annelida-segmented-worms	test	2026-11-09
+KY742027.1		Annelida						5		circular	19274					Annelida-segmented-worms	test	2026-11-09
+KY753835.1		Annelida						5		linear	15385					Annelida-segmented-worms	test	2026-11-09
+KY774370.1		Annelida						5		circular	19096					Annelida-segmented-worms	test	2026-11-09
+KY774371.1		Annelida						5		circular	19003					Annelida-segmented-worms	test	2026-11-09
+LC661358.1		Annelida						5		circular	15776					Annelida-segmented-worms	test	2026-11-09
+LC670763.1		Annelida						5		linear	1523					Annelida-segmented-worms	test	2026-11-09
+LC677172.1		Annelida						5		circular	15854					Annelida-segmented-worms	test	2026-11-09
+LC726502.1		Annelida						5		circular	15116					Annelida-segmented-worms	test	2026-11-09
+LC726518.1		Annelida						5		linear	14583					Annelida-segmented-worms	test	2026-11-09
+LC726534.1		Annelida						5		linear	14575					Annelida-segmented-worms	test	2026-11-09
+LC726550.1		Annelida						5		linear	14594					Annelida-segmented-worms	test	2026-11-09
+LC726566.1		Annelida						5		linear	14539					Annelida-segmented-worms	test	2026-11-09
+MG873458.1		Annelida						5		circular	15494					Annelida-segmented-worms	test	2026-11-09
+MN102127.1		Annelida						5		circular	15464					Annelida-segmented-worms	test	2026-11-09
+MT822294.1		Annelida						5		circular	16297					Annelida-segmented-worms	test	2026-11-09
+MW783689.1		Annelida						5		linear	10572					Annelida-segmented-worms	test	2026-11-09
+MW794259.1		Annelida						5		circular	15385					Annelida-segmented-worms	test	2026-11-09
+NC_000933.1		Cnidaria						4		circular	17443						test	2026-11-09
+NC_003522.1		Cnidaria						4		circular	18338						test	2026-11-09
+NC_006354.1		Mollusca						5		circular	20254					Mollusca	test	2026-11-09
+NC_006894.1		Porifera						4		circular	25610					Porifera-sponges	test	2026-11-09
+NC_006898.1		Cnidaria						4		circular	17888						test	2026-11-09
+NC_006902.1		Cnidaria						4		circular	17887						test	2026-11-09
+NC_007224.1		Cnidaria						4		circular	16138						test	2026-11-09
+NC_007225.1		Cnidaria						4		circular	16137						test	2026-11-09
+NC_007226.1		Cnidaria						4		circular	16138						test	2026-11-09
+NC_007933.1		Annelida						5		circular	15558					Annelida-segmented-worms	test	2026-11-09
+NC_008071.1		Cnidaria						4		circular	20908						test	2026-11-09
+NC_008072.1		Cnidaria						4		circular	20912						test	2026-11-09
+NC_008151.3		Placozoa						4		circular	43079						test	2026-11-09
+NC_008157.1		Cnidaria						4		circular	18733						test	2026-11-09
+NC_008158.1		Cnidaria						4		circular	20093						test	2026-11-09
+NC_008159.1		Cnidaria						4		circular	21376						test	2026-11-09
+NC_008160.1		Cnidaria						4		circular	18735						test	2026-11-09
+NC_008161.1		Cnidaria						4		circular	14853						test	2026-11-09
+NC_008162.1		Cnidaria						4		circular	16906						test	2026-11-09
+NC_008163.1		Cnidaria						4		circular	17245						test	2026-11-09
+NC_008164.1		Cnidaria						4		circular	16389						test	2026-11-09
+NC_008165.1		Cnidaria						4		circular	18315						test	2026-11-09
+NC_008166.1		Cnidaria						4		circular	18648						test	2026-11-09
+NC_008167.1		Cnidaria						4		circular	19387						test	2026-11-09
+NC_008411.1		Cnidaria						4		circular	18398						test	2026-11-09
+NC_008828.1		Nematoda						5		circular	24606					Nematoda	test	2026-11-09
+NC_009797.1		Cnidaria						4		circular	17415						test	2026-11-09
+NC_009798.1		Cnidaria						4		circular	17422						test	2026-11-09
+NC_010202.1		Porifera						4		circular	23929					Porifera-sponges	test	2026-11-09
+NC_010210.1		Porifera						4		circular	18312					Porifera-sponges	test	2026-11-09
+NC_010217.1		Porifera						4		circular	19790					Porifera-sponges	test	2026-11-09
+NC_010218.1		Porifera						4		circular	20658					Porifera-sponges	test	2026-11-09
+NC_010244.2		Cnidaria						4		circular	17059						test	2026-11-09
+NC_010245.2		Cnidaria						4		circular	17010						test	2026-11-09
+NC_010636.1		Mollusca						5		circular	20306					Mollusca	test	2026-11-09
+NC_011160.1		Cnidaria						4		circular	16951						test	2026-11-09
+NC_011162.1		Cnidaria						4		circular	17177						test	2026-11-09
+NC_014885.1		Porifera						4		circular	20069					Porifera-sponges	test	2026-11-09
+NC_014886.1		Porifera						4		circular	20332					Porifera-sponges	test	2026-11-09
+NC_015143.1		Cnidaria						4		circular	16150						test	2026-11-09
+NC_015309.1		Placozoa						4		circular	36676						test	2026-11-09
+NC_015640.1		Cnidaria						4		circular	19381						test	2026-11-09
+NC_015641.1		Cnidaria						4		circular	18875						test	2026-11-09
+NC_015642.1		Cnidaria						4		circular	15357						test	2026-11-09
+NC_015643.1		Cnidaria						4		circular	18766						test	2026-11-09
+NC_015644.1		Cnidaria						4		circular	18647						test	2026-11-09
+NC_018364.1		Cnidaria						4		circular	15841						test	2026-11-09
+NC_018377.1		Cnidaria						4		circular	20448						test	2026-11-09
+NC_018537.1		Cnidaria						4		circular	17922						test	2026-11-09
+NC_020049.1		Cnidaria						4		circular	16463						test	2026-11-09
+NC_022470.1		Cnidaria						4		circular	19143						test	2026-11-09
+NC_022823.1		Cnidaria						4		circular	18479						test	2026-11-09
+NC_022824.1		Cnidaria						4		circular	18481						test	2026-11-09
+NC_022825.1		Cnidaria						4		circular	18480						test	2026-11-09
+NC_022826.1		Cnidaria						4		circular	18566						test	2026-11-09
+NC_022827.1		Cnidaria						4		circular	18479						test	2026-11-09
+NC_022828.1		Cnidaria						4		circular	18365						test	2026-11-09
+NC_022829.1		Cnidaria						4		circular	18342						test	2026-11-09
+NC_022830.1		Cnidaria						4		circular	18479						test	2026-11-09
+NC_022831.1		Cnidaria						4		circular	18481						test	2026-11-09
+NC_022832.1		Cnidaria						4		circular	18481						test	2026-11-09
+NC_022833.1		Cnidaria						4		circular	18480						test	2026-11-09
+NC_024089.1		Cnidaria						4		circular	18637						test	2026-11-09
+NC_024090.1		Cnidaria						4		circular	18106						test	2026-11-09
+NC_024091.1		Cnidaria						4		circular	18725						test	2026-11-09
+NC_024092.1		Cnidaria						4		circular	18106						test	2026-11-09
+NC_024182.1		Cnidaria						4		circular	18628						test	2026-11-09
+NC_024653.1		Annelida						5		circular	15002					Annelida-segmented-worms	test	2026-11-09
+NC_024671.1		Cnidaria						4		circular	18966						test	2026-11-09
+NC_025335.1		Porifera						4		circular	18413					Porifera-sponges	test	2026-11-09
+NC_025472.1		Cnidaria						4		circular	15968						test	2026-11-09
+NC_026025.1		Cnidaria						4		circular	19070						test	2026-11-09
+NC_026026.1		Cnidaria						4		circular	19072						test	2026-11-09
+NC_026527.1		Cnidaria						4		circular	18378						test	2026-11-09
+NC_026530.1		Cnidaria						4		circular	19475						test	2026-11-09
+NC_026531.1		Cnidaria						4		circular	19475						test	2026-11-09
+NC_027100.1		Cnidaria						4		circular	20925						test	2026-11-09
+NC_027101.1		Cnidaria						4		circular	20188						test	2026-11-09
+NC_027102.1		Cnidaria						4		circular	20715						test	2026-11-09
+NC_027103.1		Cnidaria						4		circular	20100						test	2026-11-09
+NC_027104.1		Cnidaria						4		circular	20826						test	2026-11-09
+NC_027106.1		Cnidaria						4		circular	22015						test	2026-11-09
+NC_027524.1		Cnidaria						4		circular	18219						test	2026-11-09
+NC_027526.1		Cnidaria						4		circular	18647						test	2026-11-09
+NC_027590.1		Cnidaria						4		circular	19069						test	2026-11-09
+NC_027610.1		Cnidaria						4		circular	19575						test	2026-11-09
+NC_027611.1		Cnidaria						4		circular	17816						test	2026-11-09
+NC_027612.1		Cnidaria						4		circular	18038						test	2026-11-09
+NC_027614.1		Cnidaria						4		circular	19727						test	2026-11-09
+NC_027615.1		Cnidaria						4		circular	17446						test	2026-11-09
+NC_027667.1		Cnidaria						4		circular	17733						test	2026-11-09
+NC_027831.1		Annelida						5		circular	15176					Annelida-segmented-worms	test	2026-11-09
+NC_028710.1		Annelida						5		circular	16143					Annelida-segmented-worms	test	2026-11-09
+NC_029695.1		Cnidaria						4		circular	18646						test	2026-11-09
+NC_029696.1		Cnidaria						4		circular	18751						test	2026-11-09
+NC_030186.1		Cnidaria						4		circular	18647						test	2026-11-09
+NC_030269.1		Annelida						5		circular	15190					Annelida-segmented-worms	test	2026-11-09
+NC_030274.1		Cnidaria						4		circular	20039						test	2026-11-09
+NC_030352.1		Cnidaria						4		circular	19094						test	2026-11-09
+NC_034275.1		Cnidaria						4		circular	16310						test	2026-11-09
+NC_034916.1		Cnidaria						4		circular	18006						test	2026-11-09
+NC_035578.1		Cnidaria						4		circular	20972						test	2026-11-09
+NC_035579.1		Cnidaria						4		circular	20841						test	2026-11-09
+NC_035879.1		Cnidaria						4		circular	17825						test	2026-11-09
+NC_037177.1		Cnidaria						4		circular	20108						test	2026-11-09
+NC_037178.1		Cnidaria						4		circular	19545						test	2026-11-09
+NC_037359.1		Cnidaria						4		circular	17886						test	2026-11-09
+NC_037434.1		Cnidaria						4		circular	18658						test	2026-11-09
+NC_037435.1		Cnidaria						4		circular	18630						test	2026-11-09
+NC_037947.1		Annelida						5		circular	15013					Annelida-segmented-worms	test	2026-11-09
+NC_038175.1		Chordata						2		circular	16574					Chordata	test	2026-11-09
+NC_039929.1		Cnidaria						4		circular	20690						test	2026-11-09
+NC_039987.1		Chordata						2		circular	16909					Chordata	test	2026-11-09
+NC_040136.1		Cnidaria						4		circular	18144						test	2026-11-09
+NC_040137.1		Cnidaria						4		circular	17886						test	2026-11-09
+NC_040169.1		Cnidaria						4		circular	17697						test	2026-11-09
+NC_041549.1		Placozoa						4		circular	23462						test	2026-11-09
+NC_042481.1		Cnidaria						4		circular	15320						test	2026-11-09
+NC_042742.1		Cnidaria						4		circular	18385						test	2026-11-09
+NC_042795.1		Cnidaria						4		circular	17790						test	2026-11-09
+NC_043830.1		Chordata						2		circular	16686					Chordata	test	2026-11-09
+NC_044074.1		Cnidaria						4		circular	16466						test	2026-11-09
+NC_044480.1		Chordata						2		circular	24317					Chordata	test	2026-11-09
+NC_044745.1		Chordata						2		circular	16728					Chordata	test	2026-11-09
+NC_044902.1		Cnidaria						4		circular	20691						test	2026-11-09
+NC_045515.1		Cnidaria						4		circular	17552						test	2026-11-09
+NC_045931.1		Cnidaria						4		circular	18765						test	2026-11-09
+NC_046400.1		Cnidaria						4		circular	20689						test	2026-11-09
+NC_046401.1		Cnidaria						4		circular	21656						test	2026-11-09
+NC_046402.1		Cnidaria						4		circular	18577						test	2026-11-09
+NC_046403.1		Cnidaria						4		circular	21104						test	2026-11-09
+NC_046404.1		Cnidaria						4		circular	21278						test	2026-11-09
+NC_046405.1		Cnidaria						4		circular	21148						test	2026-11-09
+NC_046406.1		Cnidaria						4		circular	21199						test	2026-11-09
+NC_046474.1		Cnidaria						4		circular	20447						test	2026-11-09
+NC_046475.1		Cnidaria						4		circular	21499						test	2026-11-09
+NC_046476.1		Cnidaria						4		circular	21202						test	2026-11-09
+NC_046684.1		Chordata						2		circular	16911					Chordata	test	2026-11-09
+NC_046690.1		Cnidaria						4		circular	17054						test	2026-11-09
+NC_046775.1		Cnidaria						4		circular	16964						test	2026-11-09
+NC_046843.1		Cnidaria						4		circular	17712						test	2026-11-09
+NC_047217.1		Cnidaria						4		circular	18835						test	2026-11-09
+NC_047218.1		Cnidaria						4		circular	17416						test	2026-11-09
+NC_047219.1		Cnidaria						4		circular	19999						test	2026-11-09
+NC_047220.1		Cnidaria						4		circular	18835						test	2026-11-09
+NC_047221.1		Cnidaria						4		circular	19143						test	2026-11-09
+NC_049065.1		Cnidaria						4		circular	20390						test	2026-11-09
+NC_049066.1		Cnidaria						4		circular	20960						test	2026-11-09
+NC_050988.1		Chordata						2		circular	17334					Chordata	test	2026-11-09
+NC_052805.1		Chordata						2		circular	17473					Chordata	test	2026-11-09
+NC_053758.1		Chordata						2		circular	16626					Chordata	test	2026-11-09
+NC_056170.1		Chordata						2		circular	16521					Chordata	test	2026-11-09
+NC_056275.1		Cnidaria						4		circular	17562						test	2026-11-09
+NC_056290.1		Cnidaria						4		circular	19430						test	2026-11-09
+NC_056771.1		Cnidaria						4		circular	19790						test	2026-11-09
+NC_056883.1		Cnidaria						4		circular	19085						test	2026-11-09
+NC_056884.1		Cnidaria						4		circular	19093						test	2026-11-09
+NC_057074.1		Annelida						5		circular	15904					Annelida-segmented-worms	test	2026-11-09
+NC_057282.1		Chordata						2		circular	16552					Chordata	test	2026-11-09
+NC_060606.1		Cnidaria						4		circular	19054						test	2026-11-09
+NC_060802.1		Cnidaria						4		circular	18363						test	2026-11-09
+NC_061766.1		Cnidaria						4		circular	16308						test	2026-11-09
+NC_062818.1		Annelida						5		circular	15755					Annelida-segmented-worms	test	2026-11-09
+NC_063128.1		Chordata						2		circular	15523					Chordata	test	2026-11-09
+NC_065055.1		Chordata						2		circular	17443					Chordata	test	2026-11-09
+NC_065161.1		Cnidaria						4		circular	93065						test	2026-11-09
+NC_065774.1		Cnidaria						4		circular	18218						test	2026-11-09
+NC_065775.1		Cnidaria						4		circular	16127						test	2026-11-09
+NC_065776.1		Cnidaria						4		circular	16105						test	2026-11-09
+NC_066051.1		Cnidaria						4		circular	18511						test	2026-11-09
+NC_066398.1		Annelida						5		circular	15080					Annelida-segmented-worms	test	2026-11-09
+NC_066448.1		Cnidaria						4		circular	20720						test	2026-11-09
+NC_067864.1		Chordata						2		circular	16550					Chordata	test	2026-11-09
+NC_068220.1		Cnidaria						4		circular	16536						test	2026-11-09
+NC_068221.1		Cnidaria						4		circular	16536						test	2026-11-09
+NC_069594.1		Cnidaria						4		circular	17687						test	2026-11-09
+NC_070068.1		Chordata						2		circular	16248					Chordata	test	2026-11-09
+NC_070077.1		Annelida						5		circular	15228					Annelida-segmented-worms	test	2026-11-09
+NC_070437.1		Cnidaria						4		circular	18880						test	2026-11-09
+NC_071821.1		Cnidaria						4		circular	17711						test	2026-11-09
+NC_071915.1		Cnidaria						4		circular	20786						test	2026-11-09
+NC_072168.1		Cnidaria						4		circular	17885						test	2026-11-09
+NC_072224.1		Cnidaria						4		circular	18482						test	2026-11-09
+NC_072225.1		Cnidaria						4		circular	18480						test	2026-11-09
+NC_072569.1		Chordata						2		circular	18632					Chordata	test	2026-11-09
+NC_077265.1		Cnidaria						4		circular	18734						test	2026-11-09
+NC_077518.1		Cnidaria						4		circular	18154						test	2026-11-09
+NC_079937.1		Cnidaria						4		circular	21577						test	2026-11-09
+NC_079938.1		Cnidaria						4		circular	19672						test	2026-11-09
+NC_079939.1		Cnidaria						4		circular	19386						test	2026-11-09
+NC_079940.1		Cnidaria						4		circular	21875						test	2026-11-09
+NC_079941.1		Cnidaria						4		circular	20763						test	2026-11-09
+NC_079942.1		Cnidaria						4		circular	20651						test	2026-11-09
+NC_079943.1		Cnidaria						4		circular	20763						test	2026-11-09
+NC_080205.1		Cnidaria						4		circular	21114						test	2026-11-09
+NC_080206.1		Cnidaria						4		circular	21399						test	2026-11-09
+NC_080207.1		Cnidaria						4		circular	20753						test	2026-11-09
+NC_080208.1		Cnidaria						4		circular	21105						test	2026-11-09
+NC_080209.1		Cnidaria						4		circular	22654						test	2026-11-09
+NC_080258.1		Cnidaria						4		circular	21399						test	2026-11-09
+NC_080259.1		Cnidaria						4		circular	23133						test	2026-11-09
+NC_080260.1		Cnidaria						4		circular	23035						test	2026-11-09
+NC_080261.1		Cnidaria						4		circular	21242						test	2026-11-09
+NC_080262.1		Cnidaria						4		circular	21247						test	2026-11-09
+NC_080263.1		Cnidaria						4		circular	21519						test	2026-11-09
+NC_080894.1		Chordata						2		circular	16536					Chordata	test	2026-11-09
+NC_081188.1		Cnidaria						4		circular	18566						test	2026-11-09
+NC_081341.1		Cnidaria						4		circular	18480						test	2026-11-09
+NC_081452.1		Cnidaria						4		circular	18566						test	2026-11-09
+NC_081453.1		Cnidaria						4		circular	18366						test	2026-11-09
+NC_081454.1		Cnidaria						4		circular	18481						test	2026-11-09
+NC_081455.1		Cnidaria						4		circular	18465						test	2026-11-09
+NC_082103.1		Cnidaria						4		circular	19924						test	2026-11-09
+NC_082191.1		Annelida						5		circular	15019					Annelida-segmented-worms	test	2026-11-09
+NC_082550.1		Chordata						2		circular	16659					Chordata	test	2026-11-09
+NC_082917.1		Cnidaria						4		circular	18481						test	2026-11-09
+NC_082918.1		Cnidaria						4		circular	18481						test	2026-11-09
+NC_082997.1		Chordata						2		circular	16996					Chordata	test	2026-11-09
+NC_083027.1		Chordata						2		circular	16408					Chordata	test	2026-11-09
+NC_083272.1		Cnidaria						4		circular	18259						test	2026-11-09
+NC_083998.1		Chordata						2		circular	17977					Chordata	test	2026-11-09
+NC_086801.1		Cnidaria						4		circular	20979						test	2026-11-09
+NC_087806.1		Annelida						5		circular	18460					Annelida-segmented-worms	test	2026-11-09
+NC_087808.1		Annelida						5		circular	17540					Annelida-segmented-worms	test	2026-11-09
+NC_088052.1		Cnidaria						4		circular	20484						test	2026-11-09
+NC_088089.1		Cnidaria						4		circular	15841						test	2026-11-09
+NC_088773.1		Annelida						5		circular	16023					Annelida-segmented-worms	test	2026-11-09
+OM203184.1		Annelida						5		circular	16708					Annelida-segmented-worms	test	2026-11-09
+ON155433.1		Annelida						5		circular	17728					Annelida-segmented-worms	test	2026-11-09
+OP605754.1		Annelida						5		circular	15443					Annelida-segmented-worms	test	2026-11-09
+OQ076773.1		Annelida						5		circular	15201					Annelida-segmented-worms	test	2026-11-09
+OQ807206.1		Annelida						5		circular	16402					Annelida-segmented-worms	test	2026-11-09
+OR637230.1		Annelida						5		linear	15903					Annelida-segmented-worms	test	2026-11-09
+OR935904.1		Annelida						5		circular	17253					Annelida-segmented-worms	test	2026-11-09
+OR935920.1		Annelida						5		circular	16358					Annelida-segmented-worms	test	2026-11-09
+OR935936.1		Annelida						5		circular	17322					Annelida-segmented-worms	test	2026-11-09
+PP266604.1		Annelida						5		circular	15082					Annelida-segmented-worms	test	2026-11-09
+PP895294.1		Annelida						5		circular	16080					Annelida-segmented-worms	test	2026-11-09
+PP895295.1		Annelida						5		circular	17017					Annelida-segmented-worms	test	2026-11-09
+PP895296.1		Annelida						5		circular	15970					Annelida-segmented-worms	test	2026-11-09
+PP922152.1		Annelida						5		linear	15471					Annelida-segmented-worms	test	2026-11-09
+PQ131216.1		Annelida						5		linear	15200					Annelida-segmented-worms	test	2026-11-09
+PQ279307.1		Annelida						5		linear	20817					Annelida-segmented-worms	test	2026-11-09
+PQ593501.1		Annelida						5		circular	15462					Annelida-segmented-worms	test	2026-11-09
+PV480557.1		Annelida						5		circular	15581					Annelida-segmented-worms	test	2026-11-09
