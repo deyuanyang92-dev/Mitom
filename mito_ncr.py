@@ -101,16 +101,18 @@ def noncoding(rec: SeqRecord, min_len: int = MIN_LEN) -> List[Tuple[int, int]]:
     return [(s, e) for s, e in runs if e - s >= min_len]
 
 
-def add_ncr(rec: SeqRecord, min_len: int = MIN_LEN) -> int:
+def add_ncr(rec: SeqRecord, min_len: int = MIN_LEN, orfs: Sequence[Tuple[int, int, str]] = None) -> int:
     """Replace the record's NCR features with one misc_feature per stretch of >= min_len nt no feature covers (see
-    the module notes); returns the number written."""
+    the module notes); returns the number written. orfs: (start, end, text) of ORFs mito_orf reported but did not
+    write - each NCR overlapping one adds the text to its /note (no silent ORF)."""
     n = len(rec.seq)
     rec.features = [f for f in rec.features if not is_ncr(f)]
     regions = noncoding(rec, min_len)
     for k, (s, e) in enumerate(regions, 1):
         loc = FeatureLocation(s, e) if e <= n else CompoundLocation([FeatureLocation(s, n), FeatureLocation(0, e - n)])
+        extra = [t for a, b, t in (orfs or []) if a < e and s < b or (e > n and a < e - n)]
         rec.features.append(SeqFeature(loc, type="misc_feature", qualifiers={
-            "note": [f"{NOTE}{k}, {e - s:,} bp: no gene annotated (MitoM)"]}))
+            "note": [f"{NOTE}{k}, {e - s:,} bp: no gene annotated (MitoM)" + "".join(f"; {t}" for t in extra)]}))
     # in record order; an NCR across the origin where it begins (its first part), not at position 1
     rec.features.sort(key=lambda f: (f.type != "source", 0 if f.location is None else
                                      int(f.location.parts[0].start) if is_ncr(f) else int(f.location.start)))

@@ -95,7 +95,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | 4 | Check the annotation after re-orientation (round 2) | 转动后受影响的记录再注释一次 |
 | 5 | Write the annotation; copy the original GenBank header back | 写 GenBank，写回物种、文献、标本信息 |
 | 6 | Add what the core missed | 补 12S / 16S、内含子；`--rescue yes` 时用 MITOS2 补基因 |
-| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名；标出非编码区（NCR，`--ncr no` 不标） |
+| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名；注释受选择的未知 ORF（`--orf`）；标出非编码区（NCR，`--ncr no` 不标） |
 | 8 | NCBI check (table2asn) and submission files | 生成 `submission/` |
 | 9 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） |
 | 10 | Genome maps | 每条一张圈图（`annotation/plots/`） |
@@ -192,6 +192,7 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 | 蛋白基因与 rRNA 端点校正（`mito_curate.py`；起始密码子另由从 NCBI 记录学习的模型挑选，规则 P11）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
 | 环状 / 线状核对（`mitom_topology.py`、`mito_core.py --check_ends`：两端的基因跨接点再比对；跨接点的内含子用 protein2genome） | MitoM 自有步骤 |
 | 非编码区（`mito_ncr.py`：≥ 100 nt 无注释的区段写成 NCR misc_feature） | MitoM 自有步骤 |
+| 未知功能的 ORF（`mito_orf.py`：同源证明受选择才写，其余给 WARNING；`benchmark/results/orf_2026-11-09/`） | MitoM 自有步骤（MITOS2 不注释） |
 | 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
 | 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度，内含子画斜线、非编码区画浅灰；默认样式借鉴 mitoPlotR） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
 | GenBank / EMBL 转 NCBI 提交文件（`mito_tbl.py`，`mitom gb2tbl`） | MitoM 自有步骤（来源信息表、产物名表的做法借鉴 GB2sequin；管道输入、定义行借鉴 NCBI gbf2tbl / gbf2fsa） |

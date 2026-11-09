@@ -1,0 +1,58 @@
+accession	family	organism	gene	mitom_aa	verdict	outside_hits
+MT737361.1	Dorvilleidae	Ophryotrocha labronica	nad5	325	homolog runs past the CDS end: CDS too short, not an intron	
+MW143041.1	Serpulidae	Hydroides homoceros	nad6	76	homolog runs past the CDS end: CDS too short, not an intron	
+MW143042.1	Serpulidae	Hydroides operculata	cox2	113	homolog runs past the CDS end: CDS too short, not an intron	
+MW143043.1	Serpulidae	Hydroides pseudouncinata	cox2	130	homolog runs past the CDS end: CDS too short, not an intron	
+MW143043.1	Serpulidae	Hydroides pseudouncinata	atp6	0	homolog separate from the CDS (>= 142 nt): possible missed intron or misplaced gene	9000..9200 (9 refs)
+MW143043.1	Serpulidae	Hydroides pseudouncinata	cob	165	homolog next to the CDS (< 142 nt): CDS too short, not an intron	7400..7700 (20 refs)
+MW143043.1	Serpulidae	Hydroides pseudouncinata	nad4	277	homolog runs past the CDS end: CDS too short, not an intron	
+OQ729901.1	Protodrilidae	Protodriloides chaetifer	nad1	0	no homolog outside the annotated genes: divergent or absent gene	
+OQ729905.1	Dinophilidae	Trilobodrilus axi	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+OQ729905.1	Dinophilidae	Trilobodrilus axi	nad5	0	homolog separate from the CDS (>= 142 nt): possible missed intron or misplaced gene	0..200 (20 refs)
+OQ729906.1	Arenicolidae	Arenicola marina	nad2	232	homolog next to the CDS (< 142 nt): CDS too short, not an intron	15400..15600 (1 refs); 15500..15600 (1 refs)
+OW804103.1	Sigalionidae	Sthenelais limicola	nad1	122	no homolog outside the annotated genes: divergent or absent gene	
+OX457035.1	Serpulidae	Protula sp. h YS-2021	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ024941.1	Sabellidae	Sabellastarte sp. h YS-2021	cox3	136	no homolog outside the annotated genes: divergent or absent gene	
+OZ026631.1	Amphinomidae	Hermodice carunculata	cox3	135	no homolog outside the annotated genes: divergent or absent gene	
+OZ038319.1	Siboglinidae	Osedax frankpressi	nad5	221	no homolog outside the annotated genes: divergent or absent gene	
+OZ077499.1	Themistidae	Themiste lageniformis	cox3	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ077499.1	Themistidae	Themiste lageniformis	cob	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ210096.1	Phyllodocidae	Phyllodoce medipapillata	nad1	143	no homolog outside the annotated genes: divergent or absent gene	
+OZ317477.1	Glossiphoniidae	Helobdella europaea	cox1	343	no homolog outside the annotated genes: divergent or absent gene	
+OZ317477.1	Glossiphoniidae	Helobdella europaea	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ317477.1	Glossiphoniidae	Helobdella europaea	cob	100	no homolog outside the annotated genes: divergent or absent gene	
+OZ317477.1	Glossiphoniidae	Helobdella europaea	nad1	168	no homolog outside the annotated genes: divergent or absent gene	
+OZ317477.1	Glossiphoniidae	Helobdella europaea	nad2	159	homolog separate from the CDS (>= 142 nt): possible missed intron or misplaced gene	15100..15100 (11 refs); 15000..15100 (3 refs); 14600..15100 (1 refs)
+OZ317477.1	Glossiphoniidae	Helobdella europaea	nad5	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ404008.1	Siboglinidae	Sclerolinum annulatum	atp6	87	no homolog outside the annotated genes: divergent or absent gene	
+OZ409217.1	Nerillidae	Trochonerilla sp. QMOUL0000090	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ409217.1	Nerillidae	Trochonerilla sp. QMOUL0000090	nad5	0	homolog separate from the CDS (>= 142 nt): possible missed intron or misplaced gene	5300..5600 (3 refs); 5400..5600 (3 refs)
+OZ461320.1	Siboglinidae	Ridgeia piscesae	nad5	357	no homolog outside the annotated genes: divergent or absent gene	
+OZ500875.1	Pectinariidae	Lagis koreni	cox3	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ500875.1	Pectinariidae	Lagis koreni	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ500875.1	Pectinariidae	Lagis koreni	cob	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ500875.1	Pectinariidae	Lagis koreni	nad5	0	no homolog outside the annotated genes: divergent or absent gene	
+OZ500875.1	Pectinariidae	Lagis koreni	nad6	0	no homolog outside the annotated genes: divergent or absent gene	
+PQ105193.1	Hesionidae	Hesione genetta	nad2	215	homolog runs past the CDS end: CDS too short, not an intron	
+PV742346.1	Capitellidae	Capitella capitata	cox1	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742346.1	Capitellidae	Capitella capitata	cox2	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742346.1	Capitellidae	Capitella capitata	cox3	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742346.1	Capitellidae	Capitella capitata	nad2	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742346.1	Capitellidae	Capitella capitata	nad6	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742351.1	Capitellidae	Capitella capitata	cox1	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742351.1	Capitellidae	Capitella capitata	cox2	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742360.1	Golfingiidae	Thysanocardia nigra	nad2	0	homolog separate from the CDS (>= 142 nt): possible missed intron or misplaced gene	8300..8400 (26 refs); 8400..8400 (11 refs); 8400..8500 (4 refs)
+PV742373.1	Opheliidae	Armandia brevis	cox1	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742373.1	Opheliidae	Armandia brevis	cox2	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742373.1	Opheliidae	Armandia brevis	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742373.1	Opheliidae	Armandia brevis	cob	0	no homolog outside the annotated genes: divergent or absent gene	
+PV742373.1	Opheliidae	Armandia brevis	nad2	228	no homolog outside the annotated genes: divergent or absent gene	
+PV742374.1	Capitellidae	Capitella capitata	nad1	111	no homolog outside the annotated genes: divergent or absent gene	
+PX092912.1	Maldanidae	Maldane sarsi	cox1	340	no homolog outside the annotated genes: divergent or absent gene	
+PX092912.1	Maldanidae	Maldane sarsi	cox2	0	no homolog outside the annotated genes: divergent or absent gene	
+PX092912.1	Maldanidae	Maldane sarsi	cox3	0	no homolog outside the annotated genes: divergent or absent gene	
+PX092912.1	Maldanidae	Maldane sarsi	atp6	0	no homolog outside the annotated genes: divergent or absent gene	
+PX092912.1	Maldanidae	Maldane sarsi	cob	0	no homolog outside the annotated genes: divergent or absent gene	
+PX092912.1	Maldanidae	Maldane sarsi	nad6	0	no homolog outside the annotated genes: divergent or absent gene	
+PX970958.1	Serpulidae	Protula sp. 2 RZ-2026	atp6	0	homolog separate from the CDS (>= 142 nt): possible missed intron or misplaced gene	4800..5000 (3 refs); 4900..5000 (3 refs); 4700..5000 (2 refs)
+PX970960.1	Serpulidae	Hydroides bulbosa	cox2	0	no homolog outside the annotated genes: divergent or absent gene	

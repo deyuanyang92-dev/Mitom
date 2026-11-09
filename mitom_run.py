@@ -47,6 +47,7 @@ from mitom_steps import (
     run_curate,
     run_intron_fix,
     run_ncr,
+    run_orf,
     run_plots,
     run_rescue,
     run_rrna_hmm,
@@ -465,12 +466,15 @@ def stage_add_missing(r: RunState) -> Optional[int]:
 
 
 def stage_curate(r: RunState) -> Optional[int]:
-    """Boundary rules and NCBI gene names (mito_curate.py -> 05.curated/), non-coding regions."""
+    """Boundary rules and NCBI gene names (mito_curate.py -> 05.curated/), ORFs of unknown function, non-coding
+    regions."""
     steps = r.steps
     steps.start("curate", "Boundary rules for protein genes and rRNAs, NCBI gene names")
     r.curated = run_curate(r.args, r.final_dir, r.out_root)
     r.merge_dir = r.curated.gb_dir
-    steps.info(f"non-coding regions : {run_ncr(r.args, r.merge_dir, r.out_root).summary}")
+    orf = run_orf(r.args, r.merge_dir, r.out_root)
+    steps.info(f"unknown ORFs       : {orf.summary}")
+    steps.info(f"non-coding regions : {run_ncr(r.args, r.merge_dir, r.out_root, getattr(orf, 'notes', None)).summary}")
     steps.done(r.curated.summary, r.curated.ok)
     return None
 

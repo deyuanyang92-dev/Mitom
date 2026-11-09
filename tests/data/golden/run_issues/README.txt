@@ -19,6 +19,7 @@ qc/
   rrna_hmm_report.tsv          rRNAs searched / added by the per-phylum rRNA HMMs
   intron_report.tsv            introns found
   intron_ref_report.tsv        introns placed from the intron sites of annotated relatives (models/intron_sites)
+  orf_report.tsv               ORFs of unknown function in unannotated sequence: written or to check, with the evidence
   metadata_transfer_log.tsv    where each record's GenBank header came from
 
 summary.tsv columns

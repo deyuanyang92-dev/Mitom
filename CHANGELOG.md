@@ -5,6 +5,21 @@ installed one.
 
 ## Unreleased
 
+### Added (ORFs of unknown function)
+- `mito_orf.py`, step of `run` / `annotate` / `import` after the curation (`--orf yes`, default; `all`, `report`,
+  `no`; `--orf_ref` relatives): an ORF in unannotated sequence is written as CDS `orf<codons>` "hypothetical protein"
+  when a homolog stayed open through enough substitutions to show selection and the differences fall mostly at codon
+  position 3 (tandem repeats masked, shadow frames dropped), or is a known protein family (atp9 named). ORFs only
+  longer than chance, pieces of the 13 genes and frames running into the next gene are WARNINGs, rows in
+  `orf_report.tsv` and text in the NCR /note. ORF library `models/orf_library.fna.gz` (16,073 RefSeq animal
+  mitogenomes, `scripts/build_orf_library.py`). benchmark/results/orf_2026-11-09/.
+- Annelid intron evaluation, including the 335 NCBI annelid records without any annotation:
+  benchmark/results/intron_annelid_2026-11-09/.
+
+### Changed
+- The intron_report.tsv row for a CDS that still has an internal stop after the intron step says the curation may
+  still correct it (two Chaetopteridae cox2, corrected by rule P7).
+
 ### Changed (introns)
 - An intron of no known type (no Rfam group I / II hit) is written when the gene's homologs run on across its
   junction (no residue missing or added; a discontinuous junction is searched +-30 nt for a continuous placement) and

@@ -1,0 +1,2 @@
+record	orf	class	written	start	end	strand	codons	e_len	homolog	homolog_evalue	homolog_identity	substitutions	p_open	pos3_share	p_pos3	family	evidence
+NC_010217	orf75	known_family	yes	15357	15584	+	75	4.6e+00	atp9	3e-25	91.489					atp9	similar to atp9 (MFannot protein family), blastp E=3e-25

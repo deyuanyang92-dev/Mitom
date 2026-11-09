@@ -124,8 +124,15 @@
 			product	NADH dehydrogenase subunit 1
 			codon_start	1
 			transl_table	4
-15294	15625	misc_feature
-			note	non-coding region NCR5, 332 bp: no gene annotated
+15357	15584	gene
+			gene	atp9
+			note	found by MitoM mito_orf: atp9 by similarity (known protein family); similar to atp9 (MFannot protein family), blastp E=3e-25
+15357	15584	CDS
+			gene	atp9
+			codon_start	1
+			transl_table	4
+			product	ATP synthase F0 subunit 9
+			note	found by MitoM mito_orf: atp9 by similarity (known protein family); similar to atp9 (MFannot protein family), blastp E=3e-25
 15626	15946	gene
 			gene	ND4L
 15626	15946	CDS
@@ -166,4 +173,4 @@
 			codon_start	1
 			transl_table	4
 19584	19790	misc_feature
-			note	non-coding region NCR6, 207 bp: no gene annotated
+			note	non-coding region NCR5, 207 bp: no gene annotated

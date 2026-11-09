@@ -1216,7 +1216,9 @@ def stop_check_rows(rec, gencode: int) -> List[dict]:
     """After the intron step: genes whose CDS still has an internal stop codon (an intron not found, or a frameshift)."""
     return [{"record": rec.id, "gene": g, "strand": "+" if st == 1 else "-", "written": "no",
              "note": "CDS has internal stop codon(s) after the intron step: wrong frame or location, a frameshift, "
-                     "or an intron not annotated - check this gene"} for g, st, _ in internal_stops(rec, gencode)]
+                     "or an intron not annotated - check this gene (the curation after this step may still correct "
+                     "the frame: curation_report.tsv, rule P7; the final word is the NCBI check)"}
+            for g, st, _ in internal_stops(rec, gencode)]
 
 
 _JOB: Dict[str, Any] = {}               # shared state for process_file (set in main; inherited by fork workers)

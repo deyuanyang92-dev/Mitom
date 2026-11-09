@@ -36,11 +36,11 @@ Generated from each command's `-h` by `scripts/make_options_doc.py`; usage, exam
 usage: mitom run [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_maxlen ID_MAXLEN]
                  [--which_gene_first WHICH_GENE_FIRST] [--fallback_genes FALLBACK_GENES] [--force_forward]
                  [--no_force_forward] [--debug] [--mitos_bin MITOS_BIN] [--refdir DIR] [--plot {yes,no}]
-                 [--plot_style {circos,mitom}] [--ncr {yes,no}] [--ncr_min_len NCR_MIN_LEN]
-                 [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
-                 [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
-                 [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}] [--intron_bin INTRON_BIN]
-                 [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
+                 [--plot_style {circos,mitom}] [--ncr {yes,no}] [--orf {yes,all,report,no}] [--orf_ref GB]
+                 [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
+                 [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
+                 [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                 [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                  [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                  [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
                  [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
@@ -112,6 +112,17 @@ Annotation:
                         misc_feature /note="non-coding region NCR<k>, <length> bp: no gene annotated
                         (MitoM)" in the GenBank and NCBI files, shaded and labelled on the maps (unnamed
                         control region, sequence that may hold unidentified genes); no: none (mito_ncr.py)
+  --orf {yes,all,report,no}
+                        ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in
+                        orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein'
+                        when a homolog in another genome stayed open through enough substitutions to show
+                        selection (p <= 0.01, most of them at codon position 3) or is a known protein
+                        family; ORFs longer than chance without such a homolog and pieces of the 13 genes
+                        are WARNINGs and named in the NCR /note. all: also write ORFs longer than chance.
+                        report: write none. no: skip.
+  --orf_ref GB          GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat;
+                        default: none - the other records of the run and models/orf_library.fna.gz, RefSeq
+                        animal mitogenomes). Give relatives when a genome's family is not in RefSeq.
   --ncr_min_len NCR_MIN_LEN
                         shortest non-coding region written (nt, default 100; intergenic spacers are shorter)
   --curate {yes,no}     yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and
@@ -226,9 +237,10 @@ usage: mitom import [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_max
                     [--which_gene_first WHICH_GENE_FIRST] [--fallback_genes FALLBACK_GENES]
                     [--force_forward] [--no_force_forward] [--debug] [--mitos_bin MITOS_BIN] [--refdir DIR]
                     [--plot {yes,no}] [--plot_style {circos,mitom}] [--ncr {yes,no}]
-                    [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
-                    [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
-                    [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                    [--orf {yes,all,report,no}] [--orf_ref GB] [--ncr_min_len NCR_MIN_LEN]
+                    [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
+                    [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
+                    [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
                     [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                     [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                     [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
@@ -286,6 +298,17 @@ Annotation:
                         misc_feature /note="non-coding region NCR<k>, <length> bp: no gene annotated
                         (MitoM)" in the GenBank and NCBI files, shaded and labelled on the maps (unnamed
                         control region, sequence that may hold unidentified genes); no: none (mito_ncr.py)
+  --orf {yes,all,report,no}
+                        ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in
+                        orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein'
+                        when a homolog in another genome stayed open through enough substitutions to show
+                        selection (p <= 0.01, most of them at codon position 3) or is a known protein
+                        family; ORFs longer than chance without such a homolog and pieces of the 13 genes
+                        are WARNINGs and named in the NCR /note. all: also write ORFs longer than chance.
+                        report: write none. no: skip.
+  --orf_ref GB          GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat;
+                        default: none - the other records of the run and models/orf_library.fna.gz, RefSeq
+                        animal mitogenomes). Give relatives when a genome's family is not in RefSeq.
   --ncr_min_len NCR_MIN_LEN
                         shortest non-coding region written (nt, default 100; intergenic spacers are shorter)
   --curate {yes,no}     yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and
@@ -385,9 +408,10 @@ usage: mitom annotate [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_m
                       [--which_gene_first WHICH_GENE_FIRST] [--fallback_genes FALLBACK_GENES]
                       [--force_forward] [--no_force_forward] [--debug] [--mitos_bin MITOS_BIN]
                       [--refdir DIR] [--plot {yes,no}] [--plot_style {circos,mitom}] [--ncr {yes,no}]
-                      [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
-                      [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
-                      [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                      [--orf {yes,all,report,no}] [--orf_ref GB] [--ncr_min_len NCR_MIN_LEN]
+                      [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
+                      [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
+                      [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
                       [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                       [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                       [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
@@ -447,6 +471,17 @@ Annotation:
                         misc_feature /note="non-coding region NCR<k>, <length> bp: no gene annotated
                         (MitoM)" in the GenBank and NCBI files, shaded and labelled on the maps (unnamed
                         control region, sequence that may hold unidentified genes); no: none (mito_ncr.py)
+  --orf {yes,all,report,no}
+                        ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in
+                        orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein'
+                        when a homolog in another genome stayed open through enough substitutions to show
+                        selection (p <= 0.01, most of them at codon position 3) or is a known protein
+                        family; ORFs longer than chance without such a homolog and pieces of the 13 genes
+                        are WARNINGs and named in the NCR /note. all: also write ORFs longer than chance.
+                        report: write none. no: skip.
+  --orf_ref GB          GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat;
+                        default: none - the other records of the run and models/orf_library.fna.gz, RefSeq
+                        animal mitogenomes). Give relatives when a genome's family is not in RefSeq.
   --ncr_min_len NCR_MIN_LEN
                         shortest non-coding region written (nt, default 100; intergenic spacers are shorter)
   --curate {yes,no}     yes (default): mito_curate.py boundary rules and NCBI gene names -> 05.curated/, and

@@ -68,7 +68,9 @@ def run_curate_and_submit(args: argparse.Namespace, gb_dir: Path, out_root: Path
     files (run_submission); the result is the curation's (gb_dir: 05.curated/, or the input folder with --curate no
     or when curation failed)."""
     cur = run_curate(args, gb_dir, out_root)
-    logging.info(f"[NCR] {run_ncr(args, cur.gb_dir, out_root).summary}")
+    orf = run_orf(args, cur.gb_dir, out_root)
+    logging.info(f"[ORF] {orf.summary}")
+    logging.info(f"[NCR] {run_ncr(args, cur.gb_dir, out_root, getattr(orf, 'notes', None)).summary}")
     if cur.curated:
         run_submission(args, cur.gb_dir, out_root)
     return cur
@@ -106,10 +108,51 @@ def run_curate(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
                       gb_dir=cur, curated=True)
 
 
+@dataclass
+class OrfResult(StepResult):
+    """StepResult of run_orf, with the /note text of the ORFs not written for the NCR that holds them."""
+    notes: Optional[dict] = None
+
+
+@optional_step("ORF")
+def run_orf(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
+    """mito_orf.annotate on all final records in gb_dir together, in place: ORFs of unknown function in the sequence
+    no gene covers - written as CDS orf<codons> "hypothetical protein" when a homolog shows selection (--orf yes,
+    default), reported in orf_report.tsv and as WARNINGs when not (--orf no: none)."""
+    mode = getattr(args, "orf", "yes")
+    if mode == "no":
+        return StepResult("skipped (--orf no)")
+    import mito_orf
+    files = sorted(gb_dir.rglob("*.gbf"))
+    recs_by = {f: list(SeqIO.parse(str(f), "genbank")) for f in files}
+    recs = [r for rs in recs_by.values() for r in rs]
+    if not recs:
+        return StepResult("no records")
+    from mito_common import iter_gb_files
+    refs = [r for x in (getattr(args, "orf_ref", None) or [])
+            for f in ([Path(x)] if Path(x).is_file() else iter_gb_files(Path(x))) for r in SeqIO.parse(str(f), "genbank")]
+    orfs = mito_orf.annotate(recs, int(args.genetic_code), mode, threads=int(getattr(args, "threads", 1) or 1),
+                             bin_dir=getattr(args, "intron_bin", None), refs=refs)
+    for f, rs in recs_by.items():
+        write_gb(rs, f)
+    report = reports_dir(out_root) / "orf_report.tsv"
+    from mito_common import write_tsv
+    write_tsv(report, mito_orf.COLUMNS, mito_orf.report_rows(orfs))
+    for o in orfs:
+        if not o.written:
+            record_event(o.record, f"ORF {o.start + 1}..{o.end} ({o.codons} codons) not written: {o.cls}: "
+                                   f"{mito_orf.evidence(o)}")
+    n_w = sum(o.written for o in orfs)
+    return OrfResult(f"{n_w} written as hypothetical protein, {len(orfs) - n_w} to check (WARNING), in "
+                     f"{len(recs)} records; evidence in {where(args, 'reports/orf_report.tsv')}",
+                     notes=mito_orf.ncr_notes(orfs))
+
+
 @optional_step("NCR")
-def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
+def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path, orf_notes: Optional[dict] = None) -> StepResult:
     """mito_ncr.add_ncr on every final record in gb_dir, in place: a misc_feature 'non-coding region NCR<k>' per
-    stretch of >= --ncr_min_len nt no feature covers (--ncr no: none)."""
+    stretch of >= --ncr_min_len nt no feature covers (--ncr no: none); an NCR holding an ORF that mito_orf reported
+    but did not write names it in its /note (orf_notes)."""
     if getattr(args, "ncr", "yes") == "no":
         return StepResult("skipped (--ncr no)")
     from mito_ncr import add_ncr, is_ncr, MIN_LEN
@@ -118,7 +161,7 @@ def run_ncr(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
     for gbf in sorted(gb_dir.rglob("*.gbf")):
         recs = list(SeqIO.parse(str(gbf), "genbank"))
         for rec in recs:
-            n_rec, n_ncr = n_rec + 1, n_ncr + add_ncr(rec, min_len)
+            n_rec, n_ncr = n_rec + 1, n_ncr + add_ncr(rec, min_len, (orf_notes or {}).get(rec.id))
             nt += sum(len(f) for f in rec.features if is_ncr(f))
         write_gb(recs, gbf)                          # atomic, value-less /pseudo kept (2026-10-31 review)
     return StepResult(f"{n_ncr} non-coding regions of >= {min_len} nt ({nt:,} nt) in {n_rec} records "

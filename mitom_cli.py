@@ -108,6 +108,17 @@ def build_parser() -> argparse.ArgumentParser:
                             "misc_feature /note=\"non-coding region NCR<k>, <length> bp: no gene annotated (MitoM)\" "
                             "in the GenBank and NCBI files, shaded and labelled on the maps (unnamed control region, "
                             "sequence that may hold unidentified genes); no: none (mito_ncr.py)")
+        g.add_argument("--orf", choices=["yes", "all", "report", "no"], default="yes",
+                       help="ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in "
+                            "orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein' when a "
+                            "homolog in another genome stayed open through enough substitutions to show selection "
+                            "(p <= 0.01, most of them at codon position 3) or is a known protein family; ORFs longer "
+                            "than chance without such a homolog and pieces of the 13 genes are WARNINGs and named in "
+                            "the NCR /note. all: also write ORFs longer than chance. report: write none. no: skip.")
+        g.add_argument("--orf_ref", action="append", default=None, metavar="GB",
+                       help="GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat; "
+                            "default: none - the other records of the run and models/orf_library.fna.gz, RefSeq "
+                            "animal mitogenomes). Give relatives when a genome's family is not in RefSeq.")
         g.add_argument("--ncr_min_len", type=int, default=100,
                        help="shortest non-coding region written (nt, default 100; intergenic spacers are shorter)")
         g.add_argument("--curate", choices=["yes", "no"], default="yes",

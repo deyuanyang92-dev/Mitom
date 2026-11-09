@@ -1,0 +1,24 @@
+record	orf	class	written	start	end	strand	codons	e_len	homolog	homolog_evalue	homolog_identity	substitutions	p_open	pos3_share	p_pos3	family	evidence
+NC_008692.1	orf223	long_unconfirmed	no	2895	3566	+	223	3.3e-04									longer than chance ORFs (E=3e-04); no homolog - not confirmed, check
+NC_008692.1	orf215	long_unconfirmed	no	8259	8906	+	215	2.3e-04									longer than chance ORFs (E=2e-04); no homolog - not confirmed, check
+NC_010207.1	orf172	long_unconfirmed	no	2570	3088	+	172	9.1e-03									longer than chance ORFs (E=9e-03); no homolog - not confirmed, check
+NC_010207.1	orf79	standard_fragment	no	13294	13533	+	79	2.4e+00	nad1	3e-12	67.347					nad1	similar to nad1 (E=3e-12): a second copy, a pseudogene or a piece of nad1 the annotation missed - check
+NC_010769.1	orf181	long_unconfirmed	no	12132	12677	+	181	3.1e-03									longer than chance ORFs (E=3e-03); no homolog - not confirmed, check
+NC_013814.1	orf253	long_unconfirmed	no	8917	9676	-	253	1.5e-04									longer than chance ORFs (E=2e-04); no homolog - not confirmed, check; not written: no stop codon before the frame runs on into ND6 - check
+NC_014872.1	orf198	long_unconfirmed	no	12292	12888	+	198	1.3e-03	NC_014884.1|12813|13445|+|ncr|4|Porifera|Plakina_monolopha	6e-13	25.773	263	7.7e-06	0.29	7.9e-01		longer than chance ORFs (E=1e-03); homolog NC_014884.1|12813|13445|+|ncr|4|Porifera|Plakina_monolopha shows no selection (263 differences, p_open=0.00, position 3 p=0.79) - not confirmed, check
+NC_018344.1	orf257	long_unconfirmed	no	16495	17265	+	257	6.8e-04									longer than chance ORFs (E=7e-04); no homolog - not confirmed, check; not written: no stop codon before the frame runs on into COX1 (in frame) - perhaps a part of that gene (start further upstream?) - check
+NC_021406.1	orf424	standard_fragment	no	51	1325	-	424	1.5e-07	cox1	0e+00	69.575					cox1	similar to cox1 (E=0e+00): a second copy, a pseudogene or a piece of cox1 the annotation missed - check
+NC_026728.1	orf305	long_unconfirmed	no	4387	5304	+	305	6.5e-06									longer than chance ORFs (E=7e-06); no homolog - not confirmed, check
+NC_026728.1	orf152	standard_fragment	no	5606	6061	+	152	1.2e-01	cox2	1e-09	39.394					cox2	similar to cox2 (E=1e-09): a second copy, a pseudogene or a piece of cox2 the annotation missed - check
+NC_027419.1	orf284	long_unconfirmed	no	16481	17335	+	284	3.5e-05									longer than chance ORFs (E=4e-05); no homolog - not confirmed, check
+NC_027419.1	orf205	long_unconfirmed	no	17889	18506	+	205	3.0e-03									longer than chance ORFs (E=3e-03); no homolog - not confirmed, check
+NC_034300.1	orf898	long_unconfirmed	no	4521	7217	+	898	4.5e-11									longer than chance ORFs (E=5e-11); no homolog - not confirmed, check
+NC_034300.1	orf300	long_unconfirmed	no	20431	21333	+	300	5.2e-03									longer than chance ORFs (E=5e-03); no homolog - not confirmed, check
+NC_034300.1	orf293	long_unconfirmed	no	25722	26603	+	293	6.0e-03									longer than chance ORFs (E=6e-03); no homolog - not confirmed, check
+NC_034300.1	orf582	long_unconfirmed	no	29315	31063	+	582	1.3e-08									longer than chance ORFs (E=1e-08); no homolog - not confirmed, check
+NC_034948.1	orf313	long_unconfirmed	no	2323	3264	+	313	6.6e-05									longer than chance ORFs (E=7e-05); no homolog - not confirmed, check
+NC_046691.1	orf340	conserved	yes	3686	4708	+	340	5.9e-07	NC_046792.1|297|1265|-|ncr|4|Cnidaria|Aurelia_coerulea	6e-141	68.111	254	1.7e-05	0.53	4.9e-10		homolog NC_046792.1|297|1265|-|ncr|4|Cnidaria|Aurelia_coerulea (library), blastp E=6e-141, 68% identity, 254 nucleotide differences: both open by chance p=2e-05, 53% of the 227 differences of a nucleotide alignment at codon position 3 (p=5e-10)
+NC_061377.1	orf357	long_unconfirmed	no	2334	3405	+	357	2.4e-04									longer than chance ORFs (E=2e-04); no homolog - not confirmed, check
+NC_079950.1	orf60	standard_fragment	no	10820	11002	+	60	3.6e+01	nad1	1e-06	58.621					nad1	similar to nad1 (E=1e-06): a second copy, a pseudogene or a piece of nad1 the annotation missed - check
+NC_082830.1	orf116	long_unconfirmed	no	15753	16101	-	116	5.0e-03									longer than chance ORFs (E=5e-03); no homolog - not confirmed, check; not written: no stop codon before the frame runs on into 12S ribosomal RNA - check
+NC_085563.1	orf383	long_unconfirmed	no	13539	14687	+	383	5.1e-05									longer than chance ORFs (E=5e-05); no homolog - not confirmed, check; not written: no stop codon before the frame runs on into trnL1(tag), trnP(tgg) - check

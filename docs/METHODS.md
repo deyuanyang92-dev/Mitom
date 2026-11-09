@@ -15,7 +15,8 @@ What `mitom run` does step by step: [README](../README.md) section 3. This secti
 | `mitom_cli.py` | 命令行参数 / command-line options |
 | `mitom_prepare.py` | 环境检查、工具路径、`--clade auto`、输出目录锁 / environment, tools, clade plan, output lock |
 | `mitom_run.py` | `run` / `import` 的 11 步，共享 `RunState` / the 11 stages |
-| `mitom_steps.py` | 校正、内含子、NCR、NCBI 文件等步骤 / curation, introns, NCR, submission steps |
+| `mitom_steps.py` | 校正、内含子、未知 ORF、NCR、NCBI 文件等步骤 / curation, introns, ORFs, NCR, submission steps |
+| `mito_orf.py` | 未知功能的 ORF（同源证明受选择才写）/ ORFs of unknown function |
 | `mitom_groups.py` | 多个门或遗传密码时分组运行 / one run per phylum / genetic code group |
 | `mitom_commands.py` | 其他子命令（reorient、dedup、intron …）/ the other subcommands |
 | `mitom_context.py` | 一次运行的共享状态 `RunContext` / per-run state |
@@ -115,6 +116,32 @@ mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds 
 每条记录中 ≥ `--ncr_min_len`（默认 100）nt、没有任何特征覆盖的区段写成 misc_feature `/note="non-coding region NCR<k>, <长度> bp: no gene annotated (MitoM)"`：按在记录中的顺序编号，跨原点的写成 join；带内含子的基因覆盖它的内含子；再次运行时替换旧的 NCR。这一步在校正之后（`run` / `annotate` / `import`；`--ncr no` 不写，圈图也不画）。未命名的控制区、可能含未识别基因的序列因此在 GenBank、NCBI 提交文件和圈图里都看得到。
 
 验证（2026-10-30）：22 条 MJ20260820041 记录写出 26 个 NCR，table2asn 0 ERROR，WARNING 与不写 NCR 时相同（18 个）；20 条 NCBI 的 Hesionidae 线粒体基因组 33 个 NCR（24,280 nt），在 NCBI 有注释的记录上，与 NCBI 未注释的区段（如 *Sirsoe methanicola* 2,641 nt，其中一段含 288 个密码子的 ORF）及其控制区特征一致。
+
+## 未知功能的 ORF / ORFs of unknown function (mito_orf.py)
+
+13 个蛋白基因以外的编码区（如才女虫科 Polydorini 在 trnQ 与 trnA 之间约 355 个密码子的 ORF，NCBI 均未注释）：校正之后、
+标 NCR 之前，在没有基因覆盖的序列里找 ≥ 40 个密码子的 ORF（`--orf yes` 默认）。只看长度不行：富含 AT 的序列随机就有 80–110
+个密码子的 ORF，而短的真蛋白也不比随机 ORF 长。判定依据是“受选择而保持开放”：
+1. **长度超出随机**：按本记录未注释序列的碱基组成，随机出现至少这么长 ORF 的期望数 `E_len = 2·F·p_start·(1−p_stop)^L ≤ 0.01`；
+2. **保持开放**：同源（blastp E ≤ 1e-5）本身也是 ORF——来自同一次运行的其他记录、ORF 库 `models/orf_library.fna.gz`
+   （16,073 条 RefSeq 动物线粒体基因组未注释区的 120,248 个 ORF 和 371 个非标准 CDS，`scripts/build_orf_library.py`）或
+   `--orf_ref` 给的近缘物种。两份拷贝的密码子之间有 d 个核苷酸差异；非编码序列中每次替换产生终止的概率为 f（由 ORF 自身
+   的密码子算出），两份都碰巧保持开放的概率 `p_open = (1−f)^d ≤ 0.01`；近缘种差异太少，不构成证据；
+3. **编码读框**：在两份拷贝的核苷酸比对中（不受读框影响；蛋白比对会偏向第三位差异），差异集中在密码子第三位（二项检验
+   `p ≤ 0.01`，零假设 1/3）；
+4. 先屏蔽串联重复（周期 3–150 nt、相邻拷贝 ≥ 85 % 一致）：无终止的重复单元能拼出任意长的 ORF，也能与别的重复比对上；
+5. 与更强 ORF 重叠的（其他读框、反义链）是它的影子，去掉。
+
+满足 2 + 3（`conserved`）或与已知蛋白家族同源（`known_family`，MFannot 家族；atp9 用其基因名和产物）的写成 CDS
+`/gene="orf<密码子数>"` `/product="hypothetical protein"`，note 写明证据；读框读进下一个基因前没有终止的，按线粒体惯例以
+T / TA 不完整终止止于该基因之前，否则不写。只满足 1 的（`long_unconfirmed`）、与 13 个基因之一同源的（`standard_fragment`）、
+读框读进下一个基因的，都不写，但在日志里给 WARNING、在 `orf_report.tsv` 列出、并写进所在 NCR 的 note，不静默。`--orf all`
+连 `long_unconfirmed` 也写；`report` 只报告；`no` 跳过。验证与 MITOS2 比较见 `benchmark/results/orf_2026-11-09/README.md`。
+
+An ORF is written when a homolog shows that selection kept it open (`p_open`, nucleotide differences between the two
+copies against the chance a substitution makes a stop) and the differences of a nucleotide alignment fall mostly at
+codon position 3, after masking tandem repeats; ORFs only longer than chance, pieces of the 13 genes and ORFs whose
+frame runs into the next gene are WARNINGs, rows in `orf_report.tsv` and text in the NCR /note.
 
 ## 环状还是线状 / Topology (mitom_topology.py, mito_core.py --check_ends)
 
