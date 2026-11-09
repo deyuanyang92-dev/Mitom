@@ -68,6 +68,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 2026-10-29 | deyuan | 内含子金标准 + 端到端 | 193 记录 309 内含子；76 无内含子 | `mitom run` | 309/309；留一 299；0 假阳性；ERROR 0 | 位点库（f270b92） | benchmark/results/intron_gold_2026-10-29/ |
 | 2026-10-30 | ? | 起点在基因内的旋转测试 | 270 记录 × 5 种旋转 | mitom_lo | near3 232→295；near5 190(+12 假)→295 | 738f84d, 66e0e09, 2dae5b3 | benchmark/results/intron_rotation_2026-10-30/ |
 | 2026-10-30 | ? | MJ20260820041 cox1 内含子 | 22 MJ 线粒体基因组 | MitoM | 18 条加了 cox1 内含子；0 ERROR | 已核实 | docs/METHODS.md |
+| 2026-11-09 | cody | NCBI 中金标准以外带内含子的动物线粒体基因组能否注出 | NCBI esearch intron[FKEY] ≥10 kb 动物 291 条中不在金标准/位点库的 134 条（刺胞 122、苔藓虫 5、海绵 4、鸟 3） | `mitom run`（默认与留一）f04d839，mitotools；eval_introns.py；blastp refseq89m 比较拼接产物 | 刺胞 189 个：exact 119 / ≤6 39 / >6 30 / 漏 1（非可信内含子）/ 多 1（NCBI 漏注）；位置不同时 MitoM 产物更好 48、相同 19、NCBI 更好 2；海绵 6/6；苔藓虫 50 个只注出 12（Cupuladriidae ~250 nt 短内含子漏，23 个有低置信候选未写）；留一与默认相同 | 刺胞/海绵可用；苔藓虫短内含子是缺口 | benchmark/results/intron_ncbi_2026-11-09/README.md |
 | 2026-10-30 | ? | NCR 注释 | 22 MJ；20 NCBI Hesionidae | `--ncr` | 26 NCR，0 ERROR | a50402d | docs/METHODS.md |
 
 ## 6. 拓扑 / 方向 / 类群 / Topology, orientation, clade

@@ -1,0 +1,135 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+AF000023.1		Cnidaria						4		linear	17443						test	2026-11-09
+AF338425.1		Cnidaria						4		circular	18338						test	2026-11-09
+AP008973.1		Cnidaria						4		linear	16138						test	2026-11-09
+AP008974.1		Cnidaria						4		linear	16138						test	2026-11-09
+AP008975.1		Cnidaria						4		linear	16138						test	2026-11-09
+AP008976.1		Cnidaria						4		linear	16137						test	2026-11-09
+AP008977.1		Cnidaria						4		linear	16138						test	2026-11-09
+AP008978.1		Cnidaria						4		linear	16138						test	2026-11-09
+AY903295.1		Cnidaria						4		circular	17888						test	2026-11-09
+AY903296.2		Cnidaria						4		circular	17887						test	2026-11-09
+BK068676.1		Cnidaria						4		circular	20586						test	2026-11-09
+BK068678.1		Cnidaria						4		circular	19859						test	2026-11-09
+BK068680.1		Cnidaria						4		circular	18755						test	2026-11-09
+BK068681.1		Cnidaria						4		circular	18849						test	2026-11-09
+BK068682.1		Cnidaria						4		circular	17549						test	2026-11-09
+BK069890.1		Cnidaria						4		circular	20691						test	2026-11-09
+BK069891.1		Cnidaria						4		circular	18757						test	2026-11-09
+BK069892.1		Cnidaria						4		circular	15969						test	2026-11-09
+BK069893.1		Cnidaria						4		circular	18757						test	2026-11-09
+BK069894.1		Cnidaria						4		circular	18128						test	2026-11-09
+BK069895.1		Cnidaria						4		circular	20039						test	2026-11-09
+BK069896.1		Cnidaria						4		circular	20909						test	2026-11-09
+BK069897.1		Cnidaria						4		circular	18023						test	2026-11-09
+BK069898.1		Cnidaria						4		circular	17716						test	2026-11-09
+BK069899.1		Cnidaria						4		circular	19800						test	2026-11-09
+BK069900.1		Cnidaria						4		circular	20548						test	2026-11-09
+BK069901.1		Cnidaria						4		circular	19494						test	2026-11-09
+BK069902.1		Cnidaria						4		circular	18872						test	2026-11-09
+BK069903.1		Cnidaria						4		circular	18806						test	2026-11-09
+BK071241.1		Cnidaria						4		circular	17459						test	2026-11-09
+BK071242.1		Cnidaria						4		circular	20487						test	2026-11-09
+BK071243.1		Cnidaria						4		circular	17215						test	2026-11-09
+DQ304771.1		Cnidaria						4		circular	18398						test	2026-11-09
+DQ640647.1		Cnidaria						4		circular	20093						test	2026-11-09
+DQ640648.1		Cnidaria						4		circular	21376						test	2026-11-09
+DQ640650.1		Cnidaria						4		linear	11487						test	2026-11-09
+DQ643965.1		Cnidaria						4		circular	20908						test	2026-11-09
+DQ643966.1		Cnidaria						4		circular	20912						test	2026-11-09
+EF526302.1		Cnidaria						4		circular	17415						test	2026-11-09
+EF526303.1		Cnidaria						4		circular	17422						test	2026-11-09
+EF633600.2		Cnidaria						4		circular	17059						test	2026-11-09
+EF633601.2		Cnidaria						4		circular	17010						test	2026-11-09
+EU237487.1		Porifera						4		circular	19790					Porifera-sponges	test	2026-11-09
+EU400212.1		Cnidaria						4		circular	16951						test	2026-11-09
+EU400213.1		Cnidaria						4		circular	17425						test	2026-11-09
+EU400214.1		Cnidaria						4		circular	17177						test	2026-11-09
+HG423143.1		Cnidaria						4		circular	17444						test	2026-11-09
+HG423144.1		Cnidaria						4		circular	20458						test	2026-11-09
+HG423146.1		Cnidaria						4		circular	18754						test	2026-11-09
+HG423147.1		Cnidaria						4		circular	19791						test	2026-11-09
+HQ269356.1		Porifera						4		circular	20427					Porifera-sponges	test	2026-11-09
+KP938440.1		Cnidaria						4		circular	20488						test	2026-11-09
+KR051004.1		Cnidaria						4		linear	10972						test	2026-11-09
+KR051005.1		Cnidaria						4		linear	10989						test	2026-11-09
+KR051006.1		Cnidaria						4		circular	19001						test	2026-11-09
+KR051009.1		Cnidaria						4		linear	11445						test	2026-11-09
+KT001202.1		Cnidaria						4		circular	18528						test	2026-11-09
+KU507297.1		Cnidaria						4		circular	19463						test	2026-11-09
+LN589993.1		Chordata						2		linear	17125					Chordata	test	2026-11-09
+LN589994.2		Chordata						2		linear	17118					Chordata	test	2026-11-09
+LN589995.1		Chordata						2		linear	17131					Chordata	test	2026-11-09
+MN873592.1		Cnidaria						4		circular	21804						test	2026-11-09
+MN873593.1		Cnidaria						4		circular	21262						test	2026-11-09
+MN873599.1		Cnidaria						4		circular	21139						test	2026-11-09
+MN873600.1		Cnidaria						4		circular	21140						test	2026-11-09
+MN873602.1		Cnidaria						4		circular	21140						test	2026-11-09
+MT318840.1		Cnidaria						4		circular	18469						test	2026-11-09
+MT318841.1		Cnidaria						4		circular	19969						test	2026-11-09
+MT318842.1		Cnidaria						4		circular	17700						test	2026-11-09
+MT318843.1		Cnidaria						4		circular	17700						test	2026-11-09
+MT318844.1		Cnidaria						4		circular	17700						test	2026-11-09
+MT318845.1		Cnidaria						4		circular	17687						test	2026-11-09
+MT318846.1		Cnidaria						4		circular	21669						test	2026-11-09
+MT318847.1		Cnidaria						4		circular	21653						test	2026-11-09
+MT318848.1		Cnidaria						4		linear	21672						test	2026-11-09
+MT318849.1		Cnidaria						4		circular	17734						test	2026-11-09
+MT318850.1		Cnidaria						4		circular	17734						test	2026-11-09
+MT318851.1		Cnidaria						4		circular	17734						test	2026-11-09
+MT318852.1		Cnidaria						4		circular	20304						test	2026-11-09
+MT318853.1		Cnidaria						4		circular	17734						test	2026-11-09
+MT318854.1		Cnidaria						4		circular	17700						test	2026-11-09
+MT318855.1		Cnidaria						4		circular	17690						test	2026-11-09
+MT318856.1		Cnidaria						4		circular	19968						test	2026-11-09
+MT318857.1		Cnidaria						4		circular	19839						test	2026-11-09
+MT318858.1		Cnidaria						4		circular	17681						test	2026-11-09
+MT318859.1		Cnidaria						4		circular	17679						test	2026-11-09
+MT318860.1		Cnidaria						4		linear	17874						test	2026-11-09
+MT576637.1		Cnidaria						4		circular	16274						test	2026-11-09
+MT997141.1		Cnidaria						4		circular	18592						test	2026-11-09
+MW592986.1		Bryozoa						5		linear	23057					Bryozoa	test	2026-11-09
+MW592987.1		Bryozoa						5		linear	23200					Bryozoa	test	2026-11-09
+MW592988.1		Bryozoa						5		linear	21889					Bryozoa	test	2026-11-09
+MW592989.1		Bryozoa						5		linear	15539					Bryozoa	test	2026-11-09
+MW773216.1		Cnidaria						4		circular	18334						test	2026-11-09
+MW773217.1		Cnidaria						4		circular	18353						test	2026-11-09
+MW773218.1		Cnidaria						4		circular	18584						test	2026-11-09
+MW773219.1		Cnidaria						4		circular	18471						test	2026-11-09
+MZ157399.1		Cnidaria						4		circular	20463						test	2026-11-09
+MZ157400.1		Cnidaria						4		circular	20389						test	2026-11-09
+NC_069232.1		Cnidaria						4		circular	17586						test	2026-11-09
+NC_069233.1		Cnidaria						4		circular	17286						test	2026-11-09
+OL372279.1		Cnidaria						4		circular	18766						test	2026-11-09
+OM729606.2		Porifera						4		circular	37239					Porifera-sponges	test	2026-11-09
+ON653414.1		Cnidaria						4		circular	20452						test	2026-11-09
+OP311587.1		Cnidaria						4		circular	18480						test	2026-11-09
+OQ469831.1		Cnidaria						4		circular	21135						test	2026-11-09
+OQ469832.1		Cnidaria						4		circular	21184						test	2026-11-09
+OQ740722.1		Cnidaria						4		circular	21565						test	2026-11-09
+OQ740724.1		Cnidaria						4		circular	20449						test	2026-11-09
+OQ740730.1		Cnidaria						4		circular	20689						test	2026-11-09
+OQ759537.1		Cnidaria						4		circular	21139						test	2026-11-09
+OQ759538.1		Cnidaria						4		circular	21125						test	2026-11-09
+OQ759543.1		Cnidaria						4		circular	21217						test	2026-11-09
+OQ789241.1		Cnidaria						4		circular	21244						test	2026-11-09
+OR906317.1		Cnidaria						4		circular	21653						test	2026-11-09
+OR906318.1		Cnidaria						4		circular	18360						test	2026-11-09
+OR992049.1		Cnidaria						4		circular	17699						test	2026-11-09
+OR992050.1		Cnidaria						4		circular	17700						test	2026-11-09
+OR992051.1		Cnidaria						4		circular	17681						test	2026-11-09
+PP438735.1		Cnidaria						4		circular	20691						test	2026-11-09
+PP526282.1		Cnidaria						4		circular	18896						test	2026-11-09
+PP526283.1		Cnidaria						4		circular	18896						test	2026-11-09
+PP526284.1		Cnidaria						4		circular	19167						test	2026-11-09
+PP526285.1		Cnidaria						4		circular	19167						test	2026-11-09
+PP526286.1		Cnidaria						4		circular	18751						test	2026-11-09
+PP526287.1		Cnidaria						4		circular	18751						test	2026-11-09
+PP971518.1		Porifera						4		circular	22712					Porifera-sponges	test	2026-11-09
+PP990758.1		Bryozoa						5		linear	23683					Bryozoa	test	2026-11-09
+PQ359434.1		Cnidaria						4		circular	17422						test	2026-11-09
+PQ554681.1		Cnidaria						4		circular	20556						test	2026-11-09
+PQ554682.1		Cnidaria						4		circular	22738						test	2026-11-09
+PV232310.1		Cnidaria						4		circular	19504						test	2026-11-09
+PX980026.1		Cnidaria						4		circular	18570						test	2026-11-09
+PZ785798.2		Cnidaria						4		circular	17884						test	2026-11-09

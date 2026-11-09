@@ -1,0 +1,250 @@
+accession	group	organism	class	gene	ncbi_intron	mitom_intron	ncbi_aa	ncbi_stops	ncbi_bits	ncbi_qcov	mitom_aa	mitom_stops	mitom_bits	mitom_qcov	better
+AF000023.1	Cnidaria	Metridium senile	exact	cox1	4156..5008	4156..5008	530	0	1054	100	530	0	1054	100	same
+AF000023.1	Cnidaria	Metridium senile	exact	nad5	7744..9424	7744..9424	600	0	1208	100	600	0	1208	100	same
+AF338425.1	Cnidaria	Acropora tenuis	exact	nad5	3155..15082	3155..15082	611	0	1212	100	611	0	1212	100	same
+AP008973.1	Cnidaria	Orbicella annularis	exact	nad5	2757..12296	2757..12296	604	0	1180	100	604	0	1180	100	same
+AP008974.1	Cnidaria	Orbicella annularis	exact	nad5	2757..12296	2757..12296	604	0	1180	100	604	0	1180	100	same
+AP008975.1	Cnidaria	Orbicella franksi	exact	nad5	2757..12296	2757..12296	604	0	1180	100	604	0	1180	100	same
+AP008976.1	Cnidaria	Orbicella franksi	exact	nad5	2757..12295	2757..12295	604	0	1180	100	604	0	1180	100	same
+AP008977.1	Cnidaria	Orbicella faveolata	exact	nad5	2757..12296	2757..12296	604	0	1180	100	604	0	1180	100	same
+AP008978.1	Cnidaria	Orbicella faveolata	exact	nad5	2757..12296	2757..12296	604	0	1180	100	604	0	1180	100	same
+AY903295.1	Cnidaria	Anacropora matthai	exact	nad5	3155..14646	3155..14646	611	0	1215	100	611	0	1215	100	same
+AY903296.2	Cnidaria	Montipora cactus	le6	nad5	3161..14645	3160..14644	611	0	1215	100	611	0	1215	100	same
+BK068676.1	Cnidaria	Urticina crassicornis	gt6	nad5	744..2435	718..2398	247	0	486	97	610	0	1226	100	mitom
+BK068676.1	Cnidaria	Urticina crassicornis	le6	cox1	17208..18063	17207..18059	521	0	1027	100	522	0	1030	100	mitom
+BK068678.1	Cnidaria	Radianthus crispa	gt6	nad5	744..3570	718..2454	247	0	476	97	610	0	1207	100	mitom
+BK068678.1	Cnidaria	Radianthus crispa	le6	cox1	16763..17615	16759..17611	523	0	1036	100	523	0	1038	100	mitom
+BK068680.1	Cnidaria	Stomphia didemon	gt6	nad5	744..2539	718..2502	247	0	469	97	610	0	1146	100	mitom
+BK068680.1	Cnidaria	Stomphia didemon	fp	cox1		15806..16739	610	0	591	49	530	0	1034	100	mitom
+BK068681.1	Cnidaria	Stichodactyla mertensii	gt6	nad5	744..3514	718..2398	247	0	473	97	610	0	1205	100	mitom
+BK068681.1	Cnidaria	Stichodactyla mertensii	gt6	cox1	15318..16035	15165..16030	348	0	587	86	524	0	1031	99	mitom
+BK068682.1	Cnidaria	Metridium farcimen	gt6	nad5	744..2435	718..2398	247	0	485	97	610	0	1206	98	mitom
+BK068682.1	Cnidaria	Metridium farcimen	gt6	cox1	14702..15535	14678..15530	305	0	587	98	530	0	1051	100	mitom
+BK069890.1	Cnidaria	Actinia mediterranea	gt6	nad5	718..2923	718..2887	598	0	1186	100	610	0	1217	100	mitom
+BK069890.1	Cnidaria	Actinia mediterranea	le6	cox1	17579..18435	17578..18431	522	0	1031	100	523	0	1038	100	mitom
+BK069891.1	Cnidaria	Actinodendron alcyonoideum	gt6	nad5	718..2638	718..2602	601	0	1159	98	613	0	1193	98	mitom
+BK069891.1	Cnidaria	Actinodendron alcyonoideum	le6	cox1	15874..16702	15873..16698	522	0	1030	100	523	0	1037	100	mitom
+BK069892.1	Cnidaria	Actinernus sp. WN-2022	gt6	nad5	718..2369	718..2333	593	0	1071	100	605	0	1103	100	mitom
+BK069893.1	Cnidaria	Actinodendron arboreum	gt6	nad5	718..2636	718..2600	601	0	1163	98	613	0	1196	98	mitom
+BK069893.1	Cnidaria	Actinodendron arboreum	le6	cox1	15874..16699	15873..16698	523	0	1037	100	523	0	1037	100	same
+BK069894.1	Cnidaria	Ragactis hyalina	gt6	nad5	718..2533	718..2497	603	0	1084	98	615	0	1118	98	mitom
+BK069894.1	Cnidaria	Ragactis hyalina	le6	cox1	15278..16126	15277..16122	529	0	1033	100	530	0	1039	100	mitom
+BK069895.1	Cnidaria	Anthopleura artemisia	gt6	nad5	718..2467	718..2431	598	0	1189	100	610	0	1221	100	mitom
+BK069895.1	Cnidaria	Anthopleura artemisia	le6	cox1	17004..17860	17003..17856	522	0	1031	100	523	0	1038	100	mitom
+BK069896.1	Cnidaria	Bunodosoma granuliferum	gt6	nad5	718..2677	718..2641	598	0	1183	100	610	0	1216	100	mitom
+BK069896.1	Cnidaria	Bunodosoma granuliferum	le6	cox1	17523..18389	17522..18385	522	0	1031	100	523	0	1038	100	mitom
+BK069897.1	Cnidaria	Diadumene cincta	gt6	nad5	718..2433	718..2397	598	0	1141	98	610	0	1174	98	mitom
+BK069897.1	Cnidaria	Diadumene cincta	le6	cox1	15153..16008	15152..16004	529	0	1040	100	530	0	1046	100	mitom
+BK069898.1	Cnidaria	Diadumene leucolena	gt6	nad5	718..2430	718..2394	598	0	1166	100	610	0	1199	100	mitom
+BK069898.1	Cnidaria	Diadumene leucolena	le6	cox1	14652..15506	14651..15502	522	0	1018	99	523	0	1024	99	mitom
+BK069899.1	Cnidaria	Heteractis aurora	gt6	nad5	718..2490	718..2454	598	0	1174	100	610	0	1207	100	mitom
+BK069899.1	Cnidaria	Heteractis aurora	le6	cox1	16701..17556	16700..17552	522	0	1031	100	523	0	1038	100	mitom
+BK069900.1	Cnidaria	Heteranthus verruculatus	gt6	nad5	718..2612	718..2576	598	0	1182	100	610	0	1216	100	mitom
+BK069900.1	Cnidaria	Heteranthus verruculatus	le6	cox1	17447..18303	17446..18299	522	0	1031	100	523	0	1037	100	mitom
+BK069901.1	Cnidaria	Phymanthus loligo	gt6	nad5	718..2490	718..2454	598	0	1182	100	610	0	1215	100	mitom
+BK069901.1	Cnidaria	Phymanthus loligo	le6	cox1	16395..17250	16394..17246	522	0	1031	100	523	0	1038	100	mitom
+BK069902.1	Cnidaria	Thalassianthus aster	gt6	nad5	718..2434	718..2398	598	0	1167	100	610	0	1201	100	mitom
+BK069902.1	Cnidaria	Thalassianthus aster	le6	cox1	15166..16034	15165..16030	523	0	1025	99	524	0	1031	99	mitom
+BK069903.1	Cnidaria	Stichodactyla tapetum	gt6	nad5	718..2434	718..2398	598	0	1171	100	610	0	1204	100	mitom
+BK069903.1	Cnidaria	Stichodactyla tapetum	le6	cox1	15165..16033	15164..16029	523	0	1025	99	524	0	1031	99	mitom
+BK071241.1	Cnidaria	Actinoscyphia sp. m1220	gt6	nad5	718..2434	718..2398	598	0	1181	100	610	0	1212	100	mitom
+BK071241.1	Cnidaria	Actinoscyphia sp. m1220	le6	cox1	14588..15444	14587..15440	528	0	1035	99	529	0	1041	99	mitom
+BK071242.1	Cnidaria	Condylactis gigantea	gt6	nad5	718..2677	718..2641	598	0	1183	100	610	0	1216	100	mitom
+BK071242.1	Cnidaria	Condylactis gigantea	le6	cox1	17200..18066	17199..18062	522	0	1030	100	523	0	1037	100	mitom
+BK071243.1	Cnidaria	Edwardsia elegans	gt6	nad5	718..2375	718..2339	603	0	1075	98	615	0	1106	98	mitom
+DQ304771.1	Cnidaria	Chrysopathes formosa	exact	nad5	10733..12664	10733..12664	616	0	1234	100	616	0	1234	100	same
+DQ640647.1	Cnidaria	Rhodactis sp. CASIZ 171755	le6	cox1	898..2103	897..2102	526	0	1043	100	526	0	1043	100	same
+DQ640647.1	Cnidaria	Rhodactis sp. CASIZ 171755	exact	nad5	13276..31276	13276..31276									
+DQ640648.1	Cnidaria	Ricordea florida	le6	cox1	892..2088	891..2087	540	0	1053	100	536	0	1060	99	mitom
+DQ640648.1	Cnidaria	Ricordea florida	exact	nad5	14185..33431	14185..33431									
+DQ640650.1	Cnidaria	Palythoa sp. JVK-2006	exact	cox1	2710..4017	2710..4017	530	0	1040	100	534	0	1048	100	mitom
+DQ643965.1	Cnidaria	Discosoma sp. CASIZ 168915	exact	nad5	721..19523	721..19523	612	0	1221	100	612	0	1221	100	same
+DQ643965.1	Cnidaria	Discosoma sp. CASIZ 168915	le6	cox1	8890..10096	8889..10095	526	0	1043	100	526	0	1043	100	same
+DQ643966.1	Cnidaria	Discosoma sp. CASIZ 168916	exact	nad5	721..19527	721..19527	612	0	1221	100	612	0	1221	100	same
+DQ643966.1	Cnidaria	Discosoma sp. CASIZ 168916	le6	cox1	8891..10096	8890..10095	526	0	1043	100	526	0	1043	100	same
+EF526302.1	Cnidaria	Pocillopora damicornis	exact	nad5	2699..13561	2699..13561	612	0	1187	100	612	0	1187	100	same
+EF526303.1	Cnidaria	Pocillopora grandis	exact	nad5	2700..13562	2700..13562	612	0	1187	100	612	0	1187	100	same
+EF633600.2	Cnidaria	Seriatopora hystrix	exact	nad5	2687..13151	2687..13151	612	0	1188	100	612	0	1188	100	same
+EF633601.2	Cnidaria	Seriatopora caliendrum	exact	nad5	2685..13121	2685..13121	612	0	1191	100	612	0	1191	100	same
+EU237487.1	Porifera	Plakinastrella cf. onkodes DVL-2011	le6	cox1	11548..11935	11547..11934	522	0	1036	100	522	0	1036	100	same
+EU237487.1	Porifera	Plakinastrella cf. onkodes DVL-2011	exact	cox1	11945..13062	11945..13062	522	0	1036	100	522	0	1036	100	same
+EU400212.1	Cnidaria	Madracis myriaster	exact	nad5	2720..13134	2720..13134	604	0	1176	100	604	0	1176	100	same
+EU400213.1	Cnidaria	Pocillopora damicornis	exact	nad5	2700..13563	2700..13563	612	0	1186	100	612	0	1186	100	same
+EU400214.1	Cnidaria	Stylophora pistillata	exact	nad5	2719..13301	2719..13301	612	0	1189	100	612	0	1189	100	same
+HG423143.1	Cnidaria	Metridium senile	exact	nad5	718..2398	718..2398	610	0	1209	98	610	0	1209	98	same
+HG423143.1	Cnidaria	Metridium senile	exact	cox1	14573..15425	14573..15425	530	0	1051	100	530	0	1051	100	same
+HG423144.1	Cnidaria	Urticina eques	exact	nad5	718..2398	718..2398	610	0	1226	100	610	0	1226	100	same
+HG423144.1	Cnidaria	Urticina eques	le6	cox1	17186..18035	17184..18036	523	0	1036	100	522	0	1030	100	ncbi
+HG423146.1	Cnidaria	Hormathia digitata	exact	nad5	718..2398	718..2398	610	0	1229	100	610	0	1229	100	same
+HG423146.1	Cnidaria	Hormathia digitata	exact	cox1	15883..16735	15883..16735	530	0	1053	100	530	0	1053	100	same
+HG423147.1	Cnidaria	Exaiptasia diaphana	exact	nad5	718..2447	718..2447	723	0	1456	100	723	0	1456	100	same
+HG423147.1	Cnidaria	Exaiptasia diaphana	exact	cox1	16281..17127	16281..17127	541	0	1078	100	541	0	1078	100	same
+HQ269356.1	Porifera	Plakina trilopha	exact	cox1	11838..12801	11838..12801	694	0	935	75	694	0	935	75	same
+KP938440.1	Cnidaria	Corallimorphus profundus	exact	nad5	721..13109	721..13109	612	0	1216	100	612	0	1216	100	same
+KP938440.1	Cnidaria	Corallimorphus profundus	le6	cox1	15701..16882	15700..16881	577	0	1149	100	577	0	1149	100	same
+KR051004.1	Cnidaria	Halcurias pilatus	exact	nad5	8074..9708	8074..9708	610	0	1162	100	610	0	1162	100	same
+KR051005.1	Cnidaria	Isactinernus quadrilobatus	exact	nad5	7105..8709	7105..8709	610	0	1059	100	610	0	1059	100	same
+KR051006.1	Cnidaria	Isosicyonis striata	exact	cox1	4106..4958	4106..4958	523	0	1037	100	523	0	1037	100	same
+KR051006.1	Cnidaria	Isosicyonis striata	exact	nad5	7945..9639	7945..9639	610	0	1224	100	610	0	1224	100	same
+KR051009.1	Cnidaria	Synhalcurias elegans	exact	nad5	8547..10181	8547..10181	610	0	1162	100	610	0	1162	100	same
+KT001202.1	Cnidaria	Acropora aculeus	exact	nad5	3154..15269	3154..15269	612	0	1216	100	612	0	1216	100	same
+KU507297.1	Cnidaria	Bolocera sp. BZ-2016	exact	nad5	718..3114	718..3114	610	0	1224	100	610	0	1224	100	same
+KU507297.1	Cnidaria	Bolocera sp. BZ-2016	exact	cox1	16143..16995	16143..16995	523	0	1036	100	523	0	1036	100	same
+LN589993.1	Chordata	Goura victoria beccarii	missed	nad3	9778..9778		116	0	223	100	116	0	222	100	ncbi
+LN589994.2	Chordata	Goura cristata minor	missed	nad3	9778..9778		116	0	218	100	116	0	223	100	mitom
+LN589995.1	Chordata	Goura scheepmakeri	missed	nad3	9777..9777		116	0	223	100	116	0	222	100	ncbi
+MN873592.1	Cnidaria	Neozoanthus aff. uchina AP-2020	exact	cox1	889..2281	889..2281	543	0	1036	100	543	0	1036	100	same
+MN873592.1	Cnidaria	Neozoanthus aff. uchina AP-2020	exact	nad5	11630..13791	11630..13791	631	0	1225	100	631	0	1225	100	same
+MN873593.1	Cnidaria	Palythoa heliodiscus	exact	cox1	889..2184	889..2184	534	0	1054	100	534	0	1054	100	same
+MN873593.1	Cnidaria	Palythoa heliodiscus	exact	nad5	11477..13667	11477..13667	620	0	1229	100	620	0	1229	100	same
+MN873599.1	Cnidaria	Zoanthus cf. pulchellus AP-2020	exact	cox1	889..2168	889..2168	534	0	1051	100	534	0	1051	100	same
+MN873599.1	Cnidaria	Zoanthus cf. pulchellus AP-2020	exact	nad5	11333..13473	11333..13473	620	0	1245	100	620	0	1245	100	same
+MN873600.1	Cnidaria	Zoanthus cf. sociatus AP-2020	exact	cox1	889..2168	889..2168	534	0	1051	100	534	0	1051	100	same
+MN873600.1	Cnidaria	Zoanthus cf. sociatus AP-2020	exact	nad5	11333..13473	11333..13473	620	0	1245	100	620	0	1245	100	same
+MN873602.1	Cnidaria	Zoanthus sp. AP-2020	exact	cox1	889..2168	889..2168	534	0	1051	100	534	0	1051	100	same
+MN873602.1	Cnidaria	Zoanthus sp. AP-2020	exact	nad5	11333..13473	11333..13473	620	0	1245	100	620	0	1245	100	same
+MT318840.1	Cnidaria	Trissopathes cf. tetracrada NB-2020	exact	nad5	7142..9071	7142..9071	616	0	1230	100	616	0	1230	100	same
+MT318841.1	Cnidaria	Antipathes cf. dichotoma NB-2020	le6	cox1	895..2323	894..2322	530	0	1035	100	530	0	1035	100	same
+MT318841.1	Cnidaria	Antipathes cf. dichotoma NB-2020	exact	nad5	8758..10687	8758..10687	621	0	1147	99	616	0	1147	100	same
+MT318842.1	Cnidaria	Bathypathes sp. n. 2 NB-2020	exact	nad5	6833..8691	6833..8691	612	0	1186	100	612	0	1186	100	same
+MT318843.1	Cnidaria	Bathypathes sp. n. 3 NB-2020	exact	nad5	6833..8691	6833..8691	612	0	1186	100	612	0	1186	100	same
+MT318844.1	Cnidaria	Bathypathes sp. 1 NB-2020	exact	nad5	6833..8691	6833..8691	612	0	1186	100	612	0	1186	100	same
+MT318845.1	Cnidaria	Dendrobathypathes sp. n. NB-2020	exact	nad5	6807..8659	6807..8659	612	0	1182	100	612	0	1182	100	same
+MT318846.1	Cnidaria	Leiopathes cf. glaberrima NB-2020	le6	cox1	895..2481	894..2480	530	0	1035	99	530	0	1035	99	same
+MT318846.1	Cnidaria	Leiopathes cf. glaberrima NB-2020	exact	nad5	9011..11244	9011..11244	616	0	1198	100	616	0	1198	100	same
+MT318847.1	Cnidaria	Leiopathes expansa	le6	cox1	895..2481	894..2480	530	0	1035	99	530	0	1035	99	same
+MT318847.1	Cnidaria	Leiopathes expansa	exact	nad5	9011..11244	9011..11244	616	0	1198	100	616	0	1198	100	same
+MT318848.1	Cnidaria	Leiopathes montana	le6	cox1	895..2481	894..2480	530	0	1035	99	530	0	1035	99	same
+MT318848.1	Cnidaria	Leiopathes montana	exact	nad5	9011..11244	9011..11244	616	0	1198	100	616	0	1198	100	same
+MT318849.1	Cnidaria	Parantipathes cf. hirondelle NB-2020	exact	nad5	6854..8724	6854..8724	612	0	1181	100	612	0	1181	100	same
+MT318850.1	Cnidaria	Parantipathes hirondelle	exact	nad5	6854..8724	6854..8724	612	0	1181	100	612	0	1181	100	same
+MT318851.1	Cnidaria	Parantipathes sp. NB-2020	exact	nad5	6854..8724	6854..8724	612	0	1181	100	612	0	1181	100	same
+MT318852.1	Cnidaria	Phanopathes sp. NB-2020	le6	cox1	895..2322	894..2321	530	0	1026	98	530	0	1026	98	same
+MT318852.1	Cnidaria	Phanopathes sp. NB-2020	exact	nad5	8941..10937	8941..10937	621	0	1149	99	616	0	1149	100	same
+MT318853.1	Cnidaria	Sibopathes cf. macrospina NB-2020	exact	nad5	6854..8724	6854..8724	612	0	1181	100	612	0	1181	100	same
+MT318854.1	Cnidaria	Stauropathes arctica	exact	nad5	6833..8691	6833..8691	612	0	1186	100	612	0	1186	100	same
+MT318855.1	Cnidaria	Stauropathes cf. punctata NB-2020	exact	nad5	6833..8691	6833..8691	612	0	1186	100	612	0	1186	100	same
+MT318856.1	Cnidaria	Stichopathes abyssicola	le6	cox1	895..2323	894..2322	530	0	1035	100	530	0	1035	100	same
+MT318856.1	Cnidaria	Stichopathes abyssicola	exact	nad5	8758..10687	8758..10687	621	0	1147	99	616	0	1147	100	same
+MT318857.1	Cnidaria	Stichopathes sp. n. NB-2020	le6	cox1	895..2360	894..2359	530	0	1034	100	530	0	1034	100	same
+MT318857.1	Cnidaria	Stichopathes sp. n. NB-2020	exact	nad5	8529..10414	8529..10414	616	0	1194	100	616	0	1194	100	same
+MT318858.1	Cnidaria	Telopathes sp. NB-2020	exact	nad5	6833..8691	6833..8691	612	0	1187	100	612	0	1187	100	same
+MT318859.1	Cnidaria	Tylopathes sp. n. NB-2020	le6	cox1	895..1796	894..1795	526	0	1041	100	526	0	1041	100	same
+MT318859.1	Cnidaria	Tylopathes sp. n. NB-2020	exact	nad5	7450..9148	7450..9148	616	0	1222	100	616	0	1222	100	same
+MT318860.1	Cnidaria	Chrysopathes cf. micracantha NB-2020	exact	nad5	7109..9038	7109..9038	595	22	34.7	8	619	0	1158	96	mitom
+MT576637.1	Cnidaria	Psammocora nierstraszi	exact	nad5	2681..12229	2681..12229	603	0	1163	100	603	0	1163	100	same
+MT997141.1	Cnidaria	Paraphelliactis xishaensis	exact	nad5	718..2398	718..2398	610	0	1217	100	610	0	1217	100	same
+MT997141.1	Cnidaria	Paraphelliactis xishaensis	exact	cox1	15721..16573	15721..16573	530	0	1048	100	530	0	1048	100	same
+MW592986.1	Bryozoa	Exechonella vieirai	exact	cox1	893..2974	893..2974	520	0	829	98	520	0	830	98	mitom
+MW592986.1	Bryozoa	Exechonella vieirai	exact	nad3	4163..4986	4163..4986	117	0	142	98	117	0	144	98	mitom
+MW592986.1	Bryozoa	Exechonella vieirai	missed	cob	7247..7827		378	0	550	96					
+MW592986.1	Bryozoa	Exechonella vieirai	exact	cob	8472..8998	8472..8998	378	0	550	96	331	0	477	93	ncbi
+MW592986.1	Bryozoa	Exechonella vieirai	missed	cob	9302..9883		378	0	550	96	331	0	477	93	ncbi
+MW592986.1	Bryozoa	Exechonella vieirai	missed	nad5	13568..13833		565	0	523	95					
+MW592986.1	Bryozoa	Exechonella vieirai	missed	atp6	16489..17094		233	0	209	97	174	0	134	93	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad6	953..1471		149	0	63.2	83	59	0	42.7	90	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad1	2756..3021		290	0	363	95					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad1	3154..3415		290	0	363	95					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad2	5074..5333		310	0	199	89	135	0	132	81	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad5	6355..6608		568	0	519	95					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad5	6792..7047		568	0	519	95					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox1	8554..8821		518	0	815	99					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox1	9464..9703		518	0	815	99	225	0	352	95	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox2	14081..14350		222	0	310	99	139	0	184	97	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox2	14759..14979		222	0	310	99	139	0	184	97	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox3	17227..17472		258	0	359	98					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cox3	17809..18076		258	0	359	98	109	0	171	98	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cob	19080..19329		373	0	522	97	171	0	199	73	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cob	19702..19968		373	0	522	97	171	0	199	73	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	cob	20335..20588		373	0	522	97					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad4l	20973..21237		97	0	74.3	76	48	0	47.0	67	ncbi
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad4	21600..21851		437	0	392	92					
+MW592987.1	Bryozoa	Cupuladria biporosa	missed	nad4	21936..22213		437	0	392	92	346	0	354	94	ncbi
+MW592988.1	Bryozoa	Parantropora penelope	exact	cob	4235..4858	4235..4858	378	0	530	97	387	0	531	94	mitom
+MW592988.1	Bryozoa	Parantropora penelope	missed	nad5	7407..8038		554	0	574	94	540	0	575	97	mitom
+MW592988.1	Bryozoa	Parantropora penelope	exact	cox1	10754..12963	10754..12963	515	0	833	98	521	0	842	98	mitom
+MW592988.1	Bryozoa	Parantropora penelope	exact	cox1	14038..14564	14038..14564	515	0	833	98	521	0	842	98	mitom
+MW592988.1	Bryozoa	Parantropora penelope	missed	cox2	16581..17212		225	0	326	98	212	0	279	94	ncbi
+MW592989.1	Bryozoa	Discoporella cookae	missed	nad2	1..397										
+MW592989.1	Bryozoa	Discoporella cookae	missed	nad5	1084..1375		566	0	518	93					
+MW592989.1	Bryozoa	Discoporella cookae	missed	nad5	1562..1809		566	0	518	93					
+MW592989.1	Bryozoa	Discoporella cookae	missed	nad5	1906..2145		566	0	518	93	352	0	300	92	ncbi
+MW592989.1	Bryozoa	Discoporella cookae	missed	cox1	3542..3818		520	0	850	98					
+MW592989.1	Bryozoa	Discoporella cookae	missed	cox1	4461..4705		520	0	850	98	241	0	391	96	ncbi
+MW592989.1	Bryozoa	Discoporella cookae	missed	cox2	5666..5927		222	0	296	99					
+MW592989.1	Bryozoa	Discoporella cookae	missed	cox2	6336..6624		222	0	296	99	151	0	179	90	ncbi
+MW592989.1	Bryozoa	Discoporella cookae	missed	cox3	11022..11304		258	0	354	97					
+MW592989.1	Bryozoa	Discoporella cookae	missed	cox3	11641..11906		258	0	354	97	112	0	166	98	ncbi
+MW592989.1	Bryozoa	Discoporella cookae	missed	cob	12844..13093		365	0	540	100					
+MW592989.1	Bryozoa	Discoporella cookae	missed	cob	13466..13747		365	0	540	100	108	0	172	95	ncbi
+MW592989.1	Bryozoa	Discoporella cookae	missed	cob	14114..14379		365	0	540	100					
+MW592989.1	Bryozoa	Discoporella cookae	missed	nad4l	14758..15016		97	0	89.0	94	72	0	46.2	94	ncbi
+MW773216.1	Cnidaria	Acropora sp. A aff. tenuis AC-2021	exact	nad5	3156..15080	3156..15080	611	0	1212	100	611	0	1212	100	same
+MW773217.1	Cnidaria	Acropora sp. B aff. cytherea AC-2021	exact	nad5	3152..15100	3152..15100	611	0	1212	100	611	0	1212	100	same
+MW773218.1	Cnidaria	Acropora sp. C aff. orbicularis AC-2021	exact	nad5	3153..15329	3153..15329	611	0	1212	100	611	0	1212	100	same
+MW773219.1	Cnidaria	Acropora sp. D AC-2021	exact	nad5	3152..15216	3152..15216	611	0	1212	100	611	0	1212	100	same
+MZ157399.1	Cnidaria	Stichopathes sp. SCBUCN-8850	le6	cox1	895..2372	894..2371	530	0	1053	100	530	0	1053	100	same
+MZ157399.1	Cnidaria	Stichopathes sp. SCBUCN-8850	exact	nad5	8749..10810	8749..10810	616	0	1234	100	616	0	1234	100	same
+MZ157400.1	Cnidaria	Stichopathes sp. SCBUCN-8849	le6	cox1	895..2312	894..2311	530	0	1053	100	530	0	1053	100	same
+MZ157400.1	Cnidaria	Stichopathes sp. SCBUCN-8849	exact	nad5	8669..10730	8669..10730	616	0	1231	100	616	0	1231	100	same
+NC_069232.1	Cnidaria	Plerogyra sinuosa	exact	nad5	2711..11996	2711..11996	604	0	1117	100	604	0	1117	100	same
+NC_069232.1	Cnidaria	Plerogyra sinuosa	gt6	cox1	14271..15335	14097..15176	526	0	939	99	512	0	969	99	mitom
+NC_069233.1	Cnidaria	Physogyra lichtensteini	exact	nad5	2709..11995	2709..11995	604	0	1117	100	604	0	1117	100	same
+NC_069233.1	Cnidaria	Physogyra lichtensteini	exact	cox1	14096..15172	14096..15172	537	0	983	99	531	0	969	99	ncbi
+OL372279.1	Cnidaria	Goniopora planulata	le6	nad5	3357..14531	3358..14532	611	0	1213	100	611	0	1213	100	same
+OL372279.1	Cnidaria	Goniopora planulata	le6	cox1	17023..17986	17022..17991	525	0	1043	100	523	0	1034	100	ncbi
+OM729606.2	Porifera	Acanthella acuta	exact	cox2	22946..25409	22946..25409	242	0	450	97	247	0	450	95	same
+OM729606.2	Porifera	Acanthella acuta	exact	cox1	34116..36461	34116..36461	519	0	1000	99	521	0	1004	99	mitom
+ON653414.1	Cnidaria	Cirrhipathes cf. anguina LS-2022	le6	cox1	6189..7603	6188..7605	531	0	1048	100	530	0	1053	100	mitom
+ON653414.1	Cnidaria	Cirrhipathes cf. anguina LS-2022	exact	nad5	13963..16024	13963..16024	616	0	1231	100	616	0	1231	100	same
+OP311587.1	Cnidaria	Acropora digitifera	exact	nad5	3154..15224	3154..15224	611	0	1212	100	611	0	1212	100	same
+OQ469831.1	Cnidaria	Parazoanthus sp. f RH-2022	exact	cox1	889..2226	889..2226	534	0	1035	100	534	0	1035	100	same
+OQ469831.1	Cnidaria	Parazoanthus sp. f RH-2022	gt6	nad5	11477..13802	11479..13766	603	0	1178	100	615	0	1211	100	mitom
+OQ469832.1	Cnidaria	Parazoanthus axinellae brevitentacularis	exact	cox1	889..2263	889..2263	534	0	1034	100	534	0	1034	100	same
+OQ469832.1	Cnidaria	Parazoanthus axinellae brevitentacularis	exact	nad5	11466..13867	11466..13867	615	0	1211	100	615	0	1211	100	same
+OQ740722.1	Cnidaria	Bergia sp. 'catenularis'	exact	nad5	501..2621	501..2621	615	0	1205	100	615	0	1205	100	same
+OQ740722.1	Cnidaria	Bergia sp. 'catenularis'	exact	cox1	11212..12490	11212..12490	535	0	1033	100	534	0	1038	100	mitom
+OQ740724.1	Cnidaria	Epizoanthus illoricatus	exact	cox1	8478..10163	8478..10163	534	0	1018	98	534	0	1018	98	same
+OQ740724.1	Cnidaria	Epizoanthus illoricatus	exact	nad5	19012..21231	19012..21231									
+OQ740730.1	Cnidaria	Hydrozoanthus gracilis	gt6	nad5	2628..5014	2828..5014	620	0	1218	100	620	0	1218	100	same
+OQ740730.1	Cnidaria	Hydrozoanthus gracilis	exact	cox1	13076..14200	13076..14200	534	0	1050	99	534	0	1050	99	same
+OQ759537.1	Cnidaria	Zoanthus sansibaricus	exact	cox1	10201..11479	10201..11479	534	0	1042	100	534	0	1042	100	same
+OQ759537.1	Cnidaria	Zoanthus sansibaricus	exact	nad5	20644..22784	20644..22784									
+OQ759538.1	Cnidaria	Zoanthus sociatus	exact	cox1	10018..11297	10018..11297	534	0	1051	100	534	0	1051	100	same
+OQ759538.1	Cnidaria	Zoanthus sociatus	exact	nad5	20447..22587	20447..22587									
+OQ759543.1	Cnidaria	Sphenopus marsupialis	exact	cox1	7014..8331	7014..8331	534	0	1049	100	534	0	1049	100	same
+OQ759543.1	Cnidaria	Sphenopus marsupialis	exact	nad5	17548..19864	17548..19864	620	0	1226	100	620	0	1226	100	same
+OQ789241.1	Cnidaria	Palythoa mutuki	gt6	cox1	10472..11754	10448..11754	532	0	1038	100	534	0	1048	100	mitom
+OQ789241.1	Cnidaria	Palythoa mutuki	exact	nad5	21150..23325	21150..23325									
+OR906317.1	Cnidaria	Leiopathes sp.	exact	cox1	5004..6590	5004..6590	530	0	1035	99	530	0	1035	99	same
+OR906317.1	Cnidaria	Leiopathes sp.	exact	nad5	13121..15354	13121..15354	616	0	1198	100	616	0	1198	100	same
+OR906318.1	Cnidaria	Trissopathes sp.	missed		17767..18360										
+OR906318.1	Cnidaria	Trissopathes sp.	exact	nad5	18037..19944	18037..19944									
+OR992049.1	Cnidaria	Schizopathidae sp.	exact	nad5	15743..17595	15743..17595	612	0	1182	100	612	0	1182	100	same
+OR992050.1	Cnidaria	Bathypathes sp. 1 YY-2024	exact	nad5	11229..13087	11229..13087	612	0	1186	100	612	0	1186	100	same
+OR992051.1	Cnidaria	Bathypathes sp. 2 YY-2024	exact	nad5	11562..13420	11562..13420	612	0	1187	100	612	0	1187	100	same
+PP438735.1	Cnidaria	Actinia equina	exact	nad5	718..2887	718..2887	610	0	1217	100	610	0	1217	100	same
+PP438735.1	Cnidaria	Actinia equina	exact	cox1	17578..18431	17578..18431	523	0	1038	100	523	0	1038	100	same
+PP526282.1	Cnidaria	Fimbriaphyllia divisa	exact	nad5	3178..15064	3178..15064	611	0	1211	100	611	0	1211	100	same
+PP526283.1	Cnidaria	Fimbriaphyllia paradivisa	exact	nad5	3178..15064	3178..15064	611	0	1211	100	611	0	1211	100	same
+PP526284.1	Cnidaria	Euphyllia paraglabrescens	exact	nad5	3163..15403	3163..15403	611	0	1193	100	611	0	1193	100	same
+PP526285.1	Cnidaria	Euphyllia cristata	exact	nad5	3163..15403	3163..15403	611	0	1194	100	611	0	1194	100	same
+PP526286.1	Cnidaria	Galaxea horrescens	exact	nad5	3178..15199	3178..15199	611	0	1215	100	611	0	1215	100	same
+PP526287.1	Cnidaria	Galaxea fascicularis	exact	nad5	3178..15199	3178..15199	611	0	1215	100	611	0	1215	100	same
+PP971518.1	Porifera	Porifera sp.	exact	cox1	874..1930	874..1930	520	0	1031	100	520	0	1031	100	same
+PP990758.1	Bryozoa	Bryozoa sp.	exact	cox1	2158..4290	2158..4290	505	0	655	98	505	0	655	98	same
+PP990758.1	Bryozoa	Bryozoa sp.	exact	cox1	4823..5445	4823..5445	505	0	655	98	505	0	655	98	same
+PP990758.1	Bryozoa	Bryozoa sp.	exact	cob	14674..15246	14674..15246	370	0	373	96	368	0	373	95	same
+PP990758.1	Bryozoa	Bryozoa sp.	exact	cob	15424..16002	15424..16002	370	0	373	96	368	0	373	95	same
+PP990758.1	Bryozoa	Bryozoa sp.	exact	cob	16300..16969	16300..16969	370	0	373	96	368	0	373	95	same
+PP990758.1	Bryozoa	Bryozoa sp.	gt6	cox2	17828..19837	17842..19845	221	0	275	99	223	0	266	99	ncbi
+PQ359434.1	Cnidaria	Pocillopora meandrina	exact	nad5	2700..13562	2700..13562	612	0	1187	100	612	0	1187	100	same
+PQ554681.1	Cnidaria	Vitrumanthus sp. f HK-2024	exact	cox1	889..2045	889..2045	534	0	1035	100	534	0	1035	100	same
+PQ554681.1	Cnidaria	Vitrumanthus sp. f HK-2024	exact	nad5	11148..13428	11148..13428	615	0	1200	100	615	0	1200	100	same
+PQ554682.1	Cnidaria	Churabana kuroshioae	exact	cox1	889..2379	889..2379	543	0	1027	100	543	0	1027	100	same
+PQ554682.1	Cnidaria	Churabana kuroshioae	exact	nad5	12732..15085	12732..15085	626	0	1198	99	626	0	1198	99	same
+PV232310.1	Cnidaria	Actinostella flosculifera	gt6	nad5	718..2999	718..2963	598	0	1172	100	610	0	1206	100	mitom
+PV232310.1	Cnidaria	Actinostella flosculifera	le6	cox1	16076..16931	16075..16927	522	0	1031	100	523	0	1037	100	mitom
+PX980026.1	Cnidaria	Abyssoanthidae sp. T77066-1	le6	cox1	889..1660	889..1663	535	0	1010	99	534	0	1014	99	mitom
+PX980026.1	Cnidaria	Abyssoanthidae sp. T77066-1	gt6	nad5	9595..12161	10316..12161	617	0	1048	99	617	0	1048	99	same
+PZ785798.2	Cnidaria	Montipora mollis	exact	nad5	3152..14640	3152..14640	611	0	1209	100	611	0	1209	100	same

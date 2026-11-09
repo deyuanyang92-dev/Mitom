@@ -5,6 +5,14 @@ installed one.
 
 ## Unreleased
 
+### Fixed
+- `benchmark/mito_bench_run.py` and `benchmark/eval_introns.py` read the grouped output layout (annotation/,
+  qc/intron_report.tsv) as well as the classic one; they found no output after the layout change of #9.
+
+### Added
+- Intron test on the NCBI animal mitogenomes with introns outside the gold standard (134 records):
+  benchmark/results/intron_ncbi_2026-11-09/.
+
 ### Fixed (GitHub issues, 2026-11-09; checked on NCBI MZ052209.1, OZ287881.1, OZ346613.1)
 - #6: `logs/intron_fix.log` (and run.log) named `04.final_gb/intron_report.tsv`, a folder removed after the run; the
   paths are now where the reports end up (also in merged group runs).

@@ -2,7 +2,7 @@
 
 Tools:
   ours    mitom_pipeline.py run (current defaults) + mito_curate.py
-  mitom   mitom run (one command: cores, MitoM steps, curation; final_annotation/)
+  mitom   mitom run (one command: cores, MitoM steps, curation; annotation/, classic layout final_annotation/)
   mitoz   MitoZ `annotate` unchanged (no post-processing)
   mitos2  MITOS2 runmitos, full mode (proteins, rRNA, tRNA), refseq89m
   mitos1  MITOS 1 (bioconda mitos 1.1.7, Infernal 1.0, MITOS1 reference data refseq39 of Zenodo 2683856):
@@ -46,6 +46,9 @@ from mito_compare import LiftError, _lift_except, lift_to_ncbi  # noqa: E402,F40
 sys.path.insert(0, str(HERE))
 from mito_names import PCG, gene_name  # noqa: E402
 
+# the final GenBank of a `mitom run` / `mitom import` (every mitom* tool): output layout grouped (default since
+# 2026-11-09: annotation/<acc>.gb next to all_records.gb, which is skipped) or classic (final_annotation/<acc>.gb)
+MITOM_GB = "raw/annotation/*.gb|raw/final_annotation/*.gb"
 MIN_REF_PCG = 12                          # a MitoFinder reference must carry (nearly) all genes with standard names
 
 TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder",
@@ -300,14 +303,10 @@ def collect(tool: str, out: Path, ncbi: SeqRecord) -> SeqRecord:
     """The tool's annotation of this record, before lift-over."""
     if tool in ("mitos2", "mitos1"):
         return mitos_to_record(out / "mitos", Seq(str(ncbi.seq)), str(ncbi.id))
-    pattern = {"ours": "curated/*.gbf", "mitom": "raw/final_annotation/*.gb",
-               "mitom_auto": "raw/final_annotation/*.gb", "mitom_native": "raw/final_annotation/*.gb",
-               "mitom_blind": "raw/final_annotation/*.gb",
-               "mitom_lo": "raw/final_annotation/*.gb", "mitoz": "w/**/*.gbf",
-               "mitom_nocur": "raw/final_annotation/*.gb", "mitoz_cur": "raw/final_annotation/*.gb",
-               "mitos2_cur": "raw/final_annotation/*.gb",
-               "mitofinder": "*/*_Final_Results/*_mtDNA_contig.gb"}[tool]
-    files = sorted(out.glob(pattern), key=lambda p: p.stat().st_size, reverse=True)
+    pattern = {"ours": "curated/*.gbf", "mitoz": "w/**/*.gbf",
+               "mitofinder": "*/*_Final_Results/*_mtDNA_contig.gb"}.get(tool, MITOM_GB)
+    files = sorted((p for pat in pattern.split("|") for p in out.glob(pat) if p.name != "all_records.gb"),
+                   key=lambda p: p.stat().st_size, reverse=True)
     if not files:
         raise LiftError(f"no GenBank output ({pattern})")
     rec = SeqIO.read(str(files[0]), "genbank")

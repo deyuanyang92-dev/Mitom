@@ -20,9 +20,9 @@ misc_feature whose /note starts with "eval_introns: ignore" marks an intron whos
 lying >= 50 % inside it and predictions lying >= 50 % inside it are not scored (rows of class "ignored").
 
 Predicted records: <pred>/<acc>/final.gbf (benchmark runs: MitoM's final record in NCBI coordinates), else
-<pred>/<acc>/raw/final_annotation/<acc>.gb or <pred>/<acc>.gb[f] (any GenBank file in its own orientation); a record
+<pred>/<acc>/raw/annotation/<acc>.gb (classic layout: raw/final_annotation/) or <pred>/<acc>.gb[f] (any GenBank file in its own orientation); a record
 is mapped onto the NCBI sequence (rotation, reverse complement) before comparing. When
-<pred>/<acc>/raw/reports/intron_report.tsv exists, every missed intron and fp gets the mito_intron.py candidate at
+<pred>/<acc>/raw/qc/intron_report.tsv (classic: raw/reports/) exists, every missed intron and fp gets the mito_intron.py candidate at
 that place (confidence, written, evidence) or, if there is none, the report's notes for that gene.
 
 Usage:
@@ -178,7 +178,8 @@ def type_label(note: str) -> str:
 
 
 def pred_file(pred: Path, acc: str) -> Optional[Path]:
-    for p in (pred / acc / "final.gbf", pred / acc / "raw" / "final_annotation" / f"{acc}.gb",
+    for p in (pred / acc / "final.gbf", pred / acc / "raw" / "annotation" / f"{acc}.gb",
+              pred / acc / "raw" / "final_annotation" / f"{acc}.gb",
               pred / f"{acc}.gb", pred / f"{acc}.gbf"):
         if p.exists():
             return p
@@ -187,8 +188,10 @@ def pred_file(pred: Path, acc: str) -> Optional[Path]:
 
 def report_rows(pred: Path, acc: str, ref: str) -> List[dict]:
     """intron_report.tsv rows of a MitoM run, intron coordinates mapped to the NCBI record (keys s, e, strand)."""
-    rep = pred / acc / "raw" / "reports" / "intron_report.tsv"
-    own = pred / acc / "raw" / "final_annotation" / f"{acc}.gb"
+    raw = pred / acc / "raw"
+    grouped = (raw / "qc").is_dir()                       # output layout grouped (default) or classic
+    rep = raw / ("qc" if grouped else "reports") / "intron_report.tsv"
+    own = raw / ("annotation" if grouped else "final_annotation") / f"{acc}.gb"
     if not rep.exists():
         return []
     fmap = mapper(ref, str(SeqIO.read(str(own), "genbank").seq).upper()) if own.exists() else None

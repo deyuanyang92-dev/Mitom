@@ -265,6 +265,9 @@ NCBI 的内含子边界写法因课题组而异（同一位点不同记录可差
 
 留一口径下 A / B / 纠正类全部完全一致（202 / 39 / 37）；差的 10 个是 3 个金标准保留 NCBI 偏离共识写法的珊瑚 nad5 和 7 个库中别无其他记录的扁盘动物反式剪接 / rRNA 内含子。另报出 2 个 NCBI 未注释、很可能真实的内含子（KT989324.1 *Glycera* cox1；丝盘虫 rrnL）。与 NCBI 原注释直接比（311 个）：默认 218 完全一致 / 76 ≤6 nt / 15 >6 nt / 2 漏检（即 NCBI 写错、金标准删除的 2 个）。耗时：从头识别每条 10–20 s，位点迁移 2–5 s。
 
+**金标准以外的 NCBI 记录（2026-11-09）**：NCBI 中全部带 intron 特征、≥ 10 kb 的动物线粒体记录里，不在金标准（也不在位点库）中的 134 条（刺胞、苔藓虫、海绵、鸟类）用 `mitom run` 注释，与 NCBI 的内含子比较，位置不同时再比较两种拼接产物与同源蛋白的相似度。刺胞动物和海绵的内含子几乎全部注出，位置不同时多为 NCBI 写错；苔藓虫 Cupuladriidae 的短内含子（约 250 nt，没有 I/II 类特征）大多漏检，是目前的缺口。数字与逐条结果见 [benchmark/results/intron_ncbi_2026-11-09/](../benchmark/results/intron_ncbi_2026-11-09/README.md)。
+Beyond the gold standard (2026-11-09): the 134 NCBI animal mitogenomes with introns that are not in the gold standard or the site library; cnidarian and sponge introns are nearly all found (where placements differ, NCBI's is mostly wrong); the short (~250 nt, no group I / II signature) introns of cupuladriid bryozoans are mostly missed. Numbers: the benchmark README linked above.
+
 从头识别（`mito_intron.py`）本轮的改动：跨环状原点的基因在旋转后的副本上建模（原来按 cox1 定向时原点切进 cox1 内含子，环节动物 cox1 内含子因此漏掉一半）；外显子按蛋白顺序串联（刺胞 nad5 的反序片段不再拼成假内含子）；内含子里含有本基因外显子拷贝时拒绝（*Hexamermis* 三个相同 atp6 被拼成 3.7 kb 假内含子）；外显子在两条链上 / 相隔很远的反式剪接基因写成带 `<`/`>` 的部分 CDS；核心的部分基因用核心参考蛋白补搜（*Decemunciger* nad4）；内含子两端可独立微调（按至多 5 个同源蛋白的中位得分）；小外显子插入后两侧内含子重新定边界。`mitom_pipeline` 在内含子步骤后再次旋转，使定向基因的第一个外显子位于序列起点；旋转保留 `<`/`>` 不完整端（此前丢失，反式剪接片段因此出 table2asn ERROR）。
 
 ### 从头识别的方法（MFannot 移植）与早期验证（2026-10-09 / 10）/ De novo method and earlier validation

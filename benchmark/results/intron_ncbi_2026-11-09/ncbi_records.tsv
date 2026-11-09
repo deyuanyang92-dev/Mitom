@@ -1,0 +1,292 @@
+accession	phylum	class	organism	length	topology	n_intron_features	intron_genes	status	date
+AF000023.1	Cnidaria	Anthozoa	Metridium senile	17443	linear	2	COI,ND5	tested	25-JUL-2016
+AF338425.1	Cnidaria	Anthozoa	Acropora tenuis	18338	circular	1	nad5	tested	26-JUL-2016
+AP008973.1	Cnidaria	Anthozoa	Orbicella annularis	16138	linear	1	nad5	tested	03-MAY-2017
+AP008974.1	Cnidaria	Anthozoa	Orbicella annularis	16138	linear	1	nad5	tested	03-MAY-2017
+AP008975.1	Cnidaria	Anthozoa	Orbicella franksi	16138	linear	1	nad5	tested	03-MAY-2017
+AP008976.1	Cnidaria	Anthozoa	Orbicella franksi	16137	linear	1	nad5	tested	03-MAY-2017
+AP008977.1	Cnidaria	Anthozoa	Orbicella faveolata	16138	linear	1	nad5	tested	03-MAY-2017
+AP008978.1	Cnidaria	Anthozoa	Orbicella faveolata	16138	linear	1	nad5	tested	03-MAY-2017
+AY903295.1	Cnidaria	Anthozoa	Anacropora matthai	17888	circular	1	ND5	tested	26-JUL-2016
+AY903296.2	Cnidaria	Anthozoa	Montipora cactus	17887	circular	1	ND5	tested	26-JUL-2016
+BK068676.1	Cnidaria	Anthozoa	Urticina crassicornis	20586	circular	1	ND5	tested	06-FEB-2026
+BK068678.1	Cnidaria	Anthozoa	Radianthus crispa	19859	circular	1	ND5	tested	06-FEB-2026
+BK068680.1	Cnidaria	Anthozoa	Stomphia didemon	18755	circular	1	ND5	tested	06-FEB-2026
+BK068681.1	Cnidaria	Anthozoa	Stichodactyla mertensii	18849	circular	2	COX1,ND5	tested	06-FEB-2026
+BK068682.1	Cnidaria	Anthozoa	Metridium farcimen	17549	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069890.1	Cnidaria	Anthozoa	Actinia mediterranea	20691	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069891.1	Cnidaria	Anthozoa	Actinodendron alcyonoideum	18757	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069892.1	Cnidaria	Anthozoa	Actinernus sp. WN-2022	15969	circular	1	ND5	tested	06-FEB-2026
+BK069893.1	Cnidaria	Anthozoa	Actinodendron arboreum	18757	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069894.1	Cnidaria	Anthozoa	Ragactis hyalina	18128	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069895.1	Cnidaria	Anthozoa	Anthopleura artemisia	20039	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069896.1	Cnidaria	Anthozoa	Bunodosoma granuliferum	20909	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069897.1	Cnidaria	Anthozoa	Diadumene cincta	18023	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069898.1	Cnidaria	Anthozoa	Diadumene leucolena	17716	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069899.1	Cnidaria	Anthozoa	Heteractis aurora	19800	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069900.1	Cnidaria	Anthozoa	Heteranthus verruculatus	20548	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069901.1	Cnidaria	Anthozoa	Phymanthus loligo	19494	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069902.1	Cnidaria	Anthozoa	Thalassianthus aster	18872	circular	2	COX1,ND5	tested	06-FEB-2026
+BK069903.1	Cnidaria	Anthozoa	Stichodactyla tapetum	18806	circular	2	COX1,ND5	tested	06-FEB-2026
+BK071241.1	Cnidaria	Anthozoa	Actinoscyphia sp. m1220	17459	circular	2	COX1,ND5	tested	22-MAY-2026
+BK071242.1	Cnidaria	Anthozoa	Condylactis gigantea	20487	circular	2	COX1,ND5	tested	22-MAY-2026
+BK071243.1	Cnidaria	Anthozoa	Edwardsia elegans	17215	circular	1	ND5	tested	22-MAY-2026
+DQ304771.1	Cnidaria	Anthozoa	Chrysopathes formosa	18398	circular	1	ND5	tested	26-JUL-2016
+DQ640647.1	Cnidaria	Anthozoa	Rhodactis sp. CASIZ 171755	20093	circular	1	cox1	tested	14-JUL-2016
+DQ640648.1	Cnidaria	Anthozoa	Ricordea florida	21376	circular	1	cox1	tested	14-JUL-2016
+DQ640650.1	Cnidaria	Anthozoa	Palythoa sp. JVK-2006	11487	linear	1	cox1	tested	26-JUL-2016
+DQ643965.1	Cnidaria	Anthozoa	Discosoma sp. CASIZ 168915	20908	circular	1	cox1	tested	26-JUL-2016
+DQ643966.1	Cnidaria	Anthozoa	Discosoma sp. CASIZ 168916	20912	circular	1	cox1	tested	26-JUL-2016
+EF526302.1	Cnidaria	Anthozoa	Pocillopora damicornis	17415	circular	1	nad5	tested	20-JUL-2016
+EF526303.1	Cnidaria	Anthozoa	Pocillopora grandis	17422	circular	1	nad5	tested	20-JUL-2016
+EF633600.2	Cnidaria	Anthozoa	Seriatopora hystrix	17059	circular	1	?	tested	26-JUL-2016
+EF633601.2	Cnidaria	Anthozoa	Seriatopora caliendrum	17010	circular	1	?	tested	26-JUL-2016
+EU237487.1	Porifera	Homoscleromorpha	Plakinastrella cf. onkodes DVL-2011	19790	circular	2	cox1	tested	26-JUL-2016
+EU400212.1	Cnidaria	Anthozoa	Madracis myriaster	16951	circular	1	ND5	tested	26-JUL-2016
+EU400213.1	Cnidaria	Anthozoa	Pocillopora damicornis	17425	circular	1	ND5	tested	26-JUL-2016
+EU400214.1	Cnidaria	Anthozoa	Stylophora pistillata	17177	circular	1	ND5	tested	26-JUL-2016
+FJ975144.1	Annelida	Myzostomida	Endomyzostoma sp. MZ-2009	13190	linear	2	cox1	in_gold	24-JUL-2016
+FR821799.1	Cnidaria	Anthozoa	Desmophyllum pertusum	16150	circular	1	nd5	insdc_copy_of_gold	25-JUL-2016
+HG423143.1	Cnidaria	Anthozoa	Metridium senile	17444	circular	2	coi,nd5	tested	01-SEP-2013
+HG423144.1	Cnidaria	Anthozoa	Urticina eques	20458	circular	2	coi,nd5	tested	01-SEP-2013
+HG423145.1	Cnidaria	Anthozoa	Bolocera tuediae	19143	circular	2	coi,nd5	insdc_copy_of_gold	01-SEP-2013
+HG423146.1	Cnidaria	Anthozoa	Hormathia digitata	18754	circular	2	coi,nd5	tested	01-SEP-2013
+HG423147.1	Cnidaria	Anthozoa	Exaiptasia diaphana	19791	circular	2	coi,nd5	tested	01-SEP-2013
+HG423148.1	Cnidaria	Anthozoa	Exaiptasia diaphana	19790	circular	2	coi,nd5	insdc_copy_of_gold	01-SEP-2013
+HQ269352.1	Porifera	Homoscleromorpha	Plakina crypta	20069	circular	1	cox1	insdc_copy_of_gold	25-JUL-2016
+HQ269356.1	Porifera	Homoscleromorpha	Plakina trilopha	20427	circular	1	cox1	tested	25-JUL-2016
+JF825141.1	Cnidaria	Anthozoa	Goniopora columna	18766	circular	1	?	insdc_copy_of_gold	25-JUL-2016
+JF825142.1	Cnidaria	Anthozoa	Porites okinawensis	18647	circular	1	COX1	insdc_copy_of_gold	25-JUL-2016
+JX456459.1	Cnidaria	Anthozoa	Myriopathes japonica	17733	circular	2	COX1,ND5	insdc_copy_of_gold	31-JUL-2015
+KF448528.1	Cnidaria	Anthozoa	Acropora humilis	18479	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448529.1	Cnidaria	Anthozoa	Acropora muricata	18481	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448530.1	Cnidaria	Anthozoa	Acropora horrida	18480	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448531.1	Cnidaria	Anthozoa	Acropora hyacinthus	18566	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448532.1	Cnidaria	Anthozoa	Acropora aspera	18479	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448533.1	Cnidaria	Anthozoa	Acropora florida	18365	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448534.1	Cnidaria	Anthozoa	Acropora yongei	18342	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448535.1	Cnidaria	Anthozoa	Acropora digitifera	18479	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448536.1	Cnidaria	Anthozoa	Acropora nasuta	18481	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448537.1	Cnidaria	Anthozoa	Acropora divaricata	18481	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KF448538.1	Cnidaria	Anthozoa	Acropora robusta	18480	circular	1	?	insdc_copy_of_gold	02-NOV-2013
+KJ546638.1	Cnidaria	Anthozoa	Porites panamensis	18628	circular	1	COX1	insdc_copy_of_gold	21-MAY-2014
+KP938440.1	Cnidaria	Anthozoa	Corallimorphus profundus	20488	circular	1	?	tested	11-MAY-2015
+KR051001.1	Cnidaria	Anthozoa	Alicia sansibarensis	19575	circular	1	ND5	insdc_copy_of_gold	20-JUL-2015
+KR051002.1	Cnidaria	Anthozoa	Antholoba achates	17816	circular	2	COX1,ND5	insdc_copy_of_gold	20-JUL-2015
+KR051003.1	Cnidaria	Anthozoa	Halcampoides purpureus	18038	circular	2	COX1,ND5	insdc_copy_of_gold	20-JUL-2015
+KR051004.1	Cnidaria	Anthozoa	Halcurias pilatus	10972	linear	1	ND5	tested	20-JUL-2015
+KR051005.1	Cnidaria	Anthozoa	Isactinernus quadrilobatus	10989	linear	1	ND5	tested	20-JUL-2015
+KR051006.1	Cnidaria	Anthozoa	Isosicyonis striata	19001	circular	2	COX1,ND5	tested	20-JUL-2015
+KR051007.1	Cnidaria	Anthozoa	Phymanthus crucifer	19727	circular	2	COX1,ND5	insdc_copy_of_gold	20-JUL-2015
+KR051008.1	Cnidaria	Anthozoa	Cylista ornata	17446	circular	2	COX1,ND5	insdc_copy_of_gold	20-JUL-2015
+KR051009.1	Cnidaria	Anthozoa	Synhalcurias elegans	11445	linear	1	ND5	tested	20-JUL-2015
+KT001202.1	Cnidaria	Anthozoa	Acropora aculeus	18528	circular	1	?	tested	09-JAN-2016
+KU507297.1	Cnidaria	Anthozoa	Bolocera sp. BZ-2016	19463	circular	2	?,COI	tested	31-DEC-2016
+KU572435.1	Cnidaria	Anthozoa	Porites lobata	18647	circular	1	?	insdc_copy_of_gold	09-MAY-2016
+KY742027.1	Annelida	Polychaeta	Decemunciger sp. AB-2017	19274	circular	1	COX1	in_gold	03-JUL-2017
+KY860669.1	Cnidaria	Anthozoa	Anemonia viridis	20108	circular	2	?,coi	insdc_copy_of_gold	22-FEB-2018
+KY860670.1	Cnidaria	Anthozoa	Anemonia manjano	19545	circular	2	coi,nd5	insdc_copy_of_gold	22-FEB-2018
+KY888672.1	Cnidaria	Anthozoa	Zoanthus sansibaricus	20972	circular	2	?,COI	insdc_copy_of_gold	01-AUG-2017
+KY888673.1	Cnidaria	Anthozoa	Palythoa heliodiscus	20841	circular	2	?,COI	insdc_copy_of_gold	01-AUG-2017
+LC661358.1	Annelida	Polychaeta	Notomastus sp. GK-2021	15776	circular	1	cox1	in_gold	31-MAY-2022
+LC677172.1	Annelida	Polychaeta	Travisia sanrikuensis	15854	circular	1	cox1	in_gold	18-MAR-2022
+LN589993.1	Chordata	Craniata	Goura victoria beccarii	17125	linear	1	nad3	tested	12-JAN-2016
+LN589994.2	Chordata	Craniata	Goura cristata minor	17118	linear	1	nad3	tested	12-JAN-2016
+LN589995.1	Chordata	Craniata	Goura scheepmakeri	17131	linear	1	nad3	tested	12-JAN-2016
+MG754069.1	Cnidaria	Anthozoa	Porites fontanesii	18658	circular	1	?	insdc_copy_of_gold	07-MAR-2018
+MG754070.1	Cnidaria	Anthozoa	Porites harrisoni	18630	circular	1	?	insdc_copy_of_gold	07-MAR-2018
+MG792550.1	Cnidaria	Anthozoa	Echinophyllia aspera	17697	circular	2	?,cox1	insdc_copy_of_gold	20-NOV-2018
+MG851913.1	Cnidaria	Anthozoa	Alveopora japonica	18144	circular	1	?	insdc_copy_of_gold	03-NOV-2018
+MG851914.1	Cnidaria	Anthozoa	Montipora efflorescens	17886	circular	1	?	insdc_copy_of_gold	28-JUL-2026
+MH545699.1	Cnidaria	Anthozoa	Actinia equina	20690	circular	2	?	insdc_copy_of_gold	19-SEP-2019
+MH682141.1	Placozoa	Polyplacotoma	Polyplacotoma mediterranea	23462	circular	5	?,COX1	insdc_copy_of_gold	03-MAY-2019
+MH699974.1	Cnidaria	Anthozoa	Diadumene lineata	17552	circular	2	COX1,ND5	insdc_copy_of_gold	10-JUN-2021
+MK291977.1	Cnidaria	Anthozoa	Actinia tenebrosa	20691	circular	2	COX1,ND5	insdc_copy_of_gold	25-SEP-2019
+MN873588.1	Cnidaria	Anthozoa	Epizoanthus illoricatus	20447	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873589.1	Cnidaria	Anthozoa	Hydrozoanthus gracilis	20689	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873590.1	Cnidaria	Anthozoa	Microzoanthus occultus	21656	circular	1	ND5	insdc_copy_of_gold	23-FEB-2020
+MN873591.1	Cnidaria	Anthozoa	Nanozoanthus harenaceus	18577	circular	1	ND5	insdc_copy_of_gold	23-FEB-2020
+MN873592.1	Cnidaria	Anthozoa	Neozoanthus aff. uchina AP-2020	21804	circular	2	COX1,ND5	tested	23-FEB-2020
+MN873593.1	Cnidaria	Anthozoa	Palythoa heliodiscus	21262	circular	2	COX1,ND5	tested	23-FEB-2020
+MN873594.1	Cnidaria	Anthozoa	Palythoa mizigama	21104	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873595.1	Cnidaria	Anthozoa	Palythoa mutuki	21278	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873596.1	Cnidaria	Anthozoa	Parazoanthus elongatus	21148	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873597.1	Cnidaria	Anthozoa	Parazoanthus swiftii	21499	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873598.1	Cnidaria	Anthozoa	Sphenopus marsupialis	21199	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873599.1	Cnidaria	Anthozoa	Zoanthus cf. pulchellus AP-2020	21139	circular	2	COX1,ND5	tested	23-FEB-2020
+MN873600.1	Cnidaria	Anthozoa	Zoanthus cf. sociatus AP-2020	21140	circular	2	COX1,ND5	tested	23-FEB-2020
+MN873601.1	Cnidaria	Anthozoa	Zoanthus sociatus	21202	circular	2	COX1,ND5	insdc_copy_of_gold	23-FEB-2020
+MN873602.1	Cnidaria	Anthozoa	Zoanthus sp. AP-2020	21140	circular	2	COX1,ND5	tested	23-FEB-2020
+MT318840.1	Cnidaria	Anthozoa	Trissopathes cf. tetracrada NB-2020	18469	circular	1	ND5	tested	13-MAY-2020
+MT318841.1	Cnidaria	Anthozoa	Antipathes cf. dichotoma NB-2020	19969	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318842.1	Cnidaria	Anthozoa	Bathypathes sp. n. 2 NB-2020	17700	circular	1	ND5	tested	17-MAY-2020
+MT318843.1	Cnidaria	Anthozoa	Bathypathes sp. n. 3 NB-2020	17700	circular	1	ND5	tested	17-MAY-2020
+MT318844.1	Cnidaria	Anthozoa	Bathypathes sp. 1 NB-2020	17700	circular	1	ND5	tested	17-MAY-2020
+MT318845.1	Cnidaria	Anthozoa	Dendrobathypathes sp. n. NB-2020	17687	circular	1	ND5	tested	17-MAY-2020
+MT318846.1	Cnidaria	Anthozoa	Leiopathes cf. glaberrima NB-2020	21669	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318847.1	Cnidaria	Anthozoa	Leiopathes expansa	21653	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318848.1	Cnidaria	Anthozoa	Leiopathes montana	21672	linear	2	COX1,ND5	tested	17-MAY-2020
+MT318849.1	Cnidaria	Anthozoa	Parantipathes cf. hirondelle NB-2020	17734	circular	1	ND5	tested	17-MAY-2020
+MT318850.1	Cnidaria	Anthozoa	Parantipathes hirondelle	17734	circular	1	ND5	tested	17-MAY-2020
+MT318851.1	Cnidaria	Anthozoa	Parantipathes sp. NB-2020	17734	circular	1	ND5	tested	17-MAY-2020
+MT318852.1	Cnidaria	Anthozoa	Phanopathes sp. NB-2020	20304	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318853.1	Cnidaria	Anthozoa	Sibopathes cf. macrospina NB-2020	17734	circular	1	ND5	tested	17-MAY-2020
+MT318854.1	Cnidaria	Anthozoa	Stauropathes arctica	17700	circular	1	ND5	tested	17-MAY-2020
+MT318855.1	Cnidaria	Anthozoa	Stauropathes cf. punctata NB-2020	17690	circular	1	ND5	tested	17-MAY-2020
+MT318856.1	Cnidaria	Anthozoa	Stichopathes abyssicola	19968	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318857.1	Cnidaria	Anthozoa	Stichopathes sp. n. NB-2020	19839	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318858.1	Cnidaria	Anthozoa	Telopathes sp. NB-2020	17681	circular	1	ND5	tested	17-MAY-2020
+MT318859.1	Cnidaria	Anthozoa	Tylopathes sp. n. NB-2020	17679	circular	2	COX1,ND5	tested	17-MAY-2020
+MT318860.1	Cnidaria	Anthozoa	Chrysopathes cf. micracantha NB-2020	17874	linear	1	ND5	tested	17-MAY-2020
+MT560600.1	Cnidaria	Anthozoa	Diploastrea heliopora	18363	circular	1	cox1	insdc_copy_of_gold	30-JAN-2022
+MT576637.1	Cnidaria	Anthozoa	Psammocora nierstraszi	16274	circular	1	?	tested	09-MAY-2021
+MT806020.1	Cnidaria	Anthozoa	Turbinaria bifrons	18880	circular	1	COX1	insdc_copy_of_gold	16-JAN-2023
+MT997141.1	Cnidaria	Anthozoa	Paraphelliactis xishaensis	18592	circular	2	COX1,ND5	tested	24-MAY-2021
+MW592986.1	Bryozoa	Gymnolaemata	Exechonella vieirai	23057	linear	7	atp6,cox1,cytb,nad3,nad5	tested	29-JUL-2022
+MW592987.1	Bryozoa	Gymnolaemata	Cupuladria biporosa	23200	linear	18	cox1,cox2,cox3,cytb,nad1,nad2,nad4,nad4L,nad5,nad6	tested	29-JUL-2022
+MW592988.1	Bryozoa	Gymnolaemata	Parantropora penelope	21889	linear	5	cox1,cox2,cytb,nad5	tested	29-JUL-2022
+MW592989.1	Bryozoa	Gymnolaemata	Discoporella cookae	15539	linear	14	cox1,cox2,cox3,cytb,nad2,nad4L,nad5	tested	29-JUL-2022
+MW773216.1	Cnidaria	Anthozoa	Acropora sp. A aff. tenuis AC-2021	18334	circular	1	?	tested	03-OCT-2021
+MW773217.1	Cnidaria	Anthozoa	Acropora sp. B aff. cytherea AC-2021	18353	circular	1	?	tested	03-OCT-2021
+MW773218.1	Cnidaria	Anthozoa	Acropora sp. C aff. orbicularis AC-2021	18584	circular	1	?	tested	03-OCT-2021
+MW773219.1	Cnidaria	Anthozoa	Acropora sp. D AC-2021	18471	circular	1	?	tested	03-OCT-2021
+MW936598.1	Cnidaria	Anthozoa	Plerogyra sinuosa	17586	circular	2	?,cox1	insdc_copy_of_tested_nc	03-DEC-2022
+MW970409.1	Cnidaria	Anthozoa	Physogyra lichtensteini	17286	circular	2	?,cox1	insdc_copy_of_tested_nc	03-DEC-2022
+MZ157399.1	Cnidaria	Anthozoa	Stichopathes sp. SCBUCN-8850	20463	circular	2	COX1,ND5	tested	21-JUN-2021
+MZ157400.1	Cnidaria	Anthozoa	Stichopathes sp. SCBUCN-8849	20389	circular	2	COX1,ND5	tested	21-JUN-2021
+NC_000933.1	Cnidaria	Anthozoa	Metridium senile	17443	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_003522.1	Cnidaria	Anthozoa	Acropora tenuis	18338	circular	1	ND5	in_gold	03-APR-2023
+NC_006898.1	Cnidaria	Anthozoa	Anacropora matthai	17888	circular	1	ND5	in_gold	03-APR-2023
+NC_006902.1	Cnidaria	Anthozoa	Montipora cactus	17887	circular	1	ND5	in_gold	03-APR-2023
+NC_007224.1	Cnidaria	Anthozoa	Orbicella annularis	16138	circular	1	ND5	in_gold	03-APR-2023
+NC_007225.1	Cnidaria	Anthozoa	Orbicella franksi	16137	circular	1	ND5	in_gold	03-APR-2023
+NC_007226.1	Cnidaria	Anthozoa	Orbicella faveolata	16138	circular	1	ND5	in_gold	03-APR-2023
+NC_008071.1	Cnidaria	Anthozoa	Discosoma sp. CASIZ 168915	20908	circular	1	COX1	in_gold	03-APR-2023
+NC_008072.1	Cnidaria	Anthozoa	Discosoma sp. CASIZ 168916	20912	circular	1	COX1	in_gold	03-APR-2023
+NC_008158.1	Cnidaria	Anthozoa	Rhodactis sp. CASIZ 171755	20093	circular	1	COX1	in_gold	03-APR-2023
+NC_008159.1	Cnidaria	Anthozoa	Ricordea florida	21376	circular	1	COX1	in_gold	03-APR-2023
+NC_008411.1	Cnidaria	Anthozoa	Chrysopathes formosa	18398	circular	1	ND5	in_gold	03-APR-2023
+NC_009797.1	Cnidaria	Anthozoa	Pocillopora damicornis	17415	circular	1	ND5	in_gold	03-APR-2023
+NC_009798.1	Cnidaria	Anthozoa	Pocillopora grandis	17422	circular	1	ND5	in_gold	03-APR-2023
+NC_010217.1	Porifera	Homoscleromorpha	Plakinastrella cf. onkodes DVL-2011	19790	circular	2	COX1	in_gold	03-APR-2023
+NC_010244.2	Cnidaria	Anthozoa	Seriatopora hystrix	17059	circular	1	ND5	in_gold	03-APR-2023
+NC_010245.2	Cnidaria	Anthozoa	Seriatopora caliendrum	17010	circular	1	ND5	in_gold	03-APR-2023
+NC_011160.1	Cnidaria	Anthozoa	Madracis myriaster	16951	circular	1	ND5	in_gold	03-APR-2023
+NC_011162.1	Cnidaria	Anthozoa	Stylophora pistillata	17177	circular	1	ND5	in_gold	03-APR-2023
+NC_014885.1	Porifera	Homoscleromorpha	Plakina crypta	20069	circular	1	COX1	in_gold	03-APR-2023
+NC_015143.1	Cnidaria	Anthozoa	Desmophyllum pertusum	16150	circular	1	ND5	in_gold	03-APR-2023
+NC_015643.1	Cnidaria	Anthozoa	Goniopora columna	18766	circular	1	ND5	in_gold	03-APR-2023
+NC_015644.1	Cnidaria	Anthozoa	Porites okinawensis	18647	circular	1	COX1	in_gold	03-APR-2023
+NC_022470.1	Cnidaria	Anthozoa	Bolocera tuediae	19143	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_022823.1	Cnidaria	Anthozoa	Acropora humilis	18479	circular	1	ND5	in_gold	03-APR-2023
+NC_022824.1	Cnidaria	Anthozoa	Acropora muricata	18481	circular	1	ND5	in_gold	03-APR-2023
+NC_022825.1	Cnidaria	Anthozoa	Acropora horrida	18480	circular	1	ND5	in_gold	03-APR-2023
+NC_022826.1	Cnidaria	Anthozoa	Acropora hyacinthus	18566	circular	1	ND5	in_gold	03-APR-2023
+NC_022827.1	Cnidaria	Anthozoa	Acropora aspera	18479	circular	1	ND5	in_gold	03-APR-2023
+NC_022828.1	Cnidaria	Anthozoa	Acropora florida	18365	circular	1	ND5	in_gold	03-APR-2023
+NC_022829.1	Cnidaria	Anthozoa	Acropora yongei	18342	circular	1	ND5	in_gold	03-APR-2023
+NC_022830.1	Cnidaria	Anthozoa	Acropora digitifera	18479	circular	1	ND5	in_gold	03-APR-2023
+NC_022831.1	Cnidaria	Anthozoa	Acropora nasuta	18481	circular	1	ND5	in_gold	03-APR-2023
+NC_022832.1	Cnidaria	Anthozoa	Acropora divaricata	18481	circular	1	ND5	in_gold	03-APR-2023
+NC_022833.1	Cnidaria	Anthozoa	Acropora robusta	18480	circular	1	ND5	in_gold	03-APR-2023
+NC_024182.1	Cnidaria	Anthozoa	Porites panamensis	18628	circular	1	COX1	in_gold	03-APR-2023
+NC_027610.1	Cnidaria	Anthozoa	Alicia sansibarensis	19575	circular	1	ND5	in_gold	03-APR-2023
+NC_027611.1	Cnidaria	Anthozoa	Antholoba achates	17816	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_027612.1	Cnidaria	Anthozoa	Halcampoides purpureus	18038	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_027614.1	Cnidaria	Anthozoa	Phymanthus crucifer	19727	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_027615.1	Cnidaria	Anthozoa	Cylista ornata	17446	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_027667.1	Cnidaria	Anthozoa	Myriopathes japonica	17733	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_030186.1	Cnidaria	Anthozoa	Porites lobata	18647	circular	1	ND5	in_gold	03-APR-2023
+NC_035578.1	Cnidaria	Anthozoa	Zoanthus sansibaricus	20972	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_035579.1	Cnidaria	Anthozoa	Palythoa heliodiscus	20841	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_037177.1	Cnidaria	Anthozoa	Anemonia viridis	20108	circular	2	ND5,coi	in_gold	03-APR-2023
+NC_037178.1	Cnidaria	Anthozoa	Anemonia manjano	19545	circular	2	ND5,coi	in_gold	03-APR-2023
+NC_037434.1	Cnidaria	Anthozoa	Porites fontanesii	18658	circular	1	ND5	in_gold	03-APR-2023
+NC_037435.1	Cnidaria	Anthozoa	Porites harrisoni	18630	circular	1	ND5	in_gold	03-APR-2023
+NC_039929.1	Cnidaria	Anthozoa	Actinia equina	20690	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_040136.1	Cnidaria	Anthozoa	Alveopora japonica	18144	circular	1	ND5	in_gold	03-APR-2023
+NC_040137.1	Cnidaria	Anthozoa	Montipora efflorescens	17886	circular	1	ND5	in_gold	28-JUL-2026
+NC_040169.1	Cnidaria	Anthozoa	Echinophyllia aspera	17697	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_041549.1	Placozoa	Polyplacotoma	Polyplacotoma mediterranea	23462	circular	5	?,COX1	in_gold	03-APR-2023
+NC_044902.1	Cnidaria	Anthozoa	Actinia tenebrosa	20691	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_045515.1	Cnidaria	Anthozoa	Diadumene lineata	17552	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046400.1	Cnidaria	Anthozoa	Hydrozoanthus gracilis	20689	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046401.1	Cnidaria	Anthozoa	Microzoanthus occultus	21656	circular	1	ND5	in_gold	03-APR-2023
+NC_046402.1	Cnidaria	Anthozoa	Nanozoanthus harenaceus	18577	circular	1	ND5	in_gold	03-APR-2023
+NC_046403.1	Cnidaria	Anthozoa	Palythoa mizigama	21104	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046404.1	Cnidaria	Anthozoa	Palythoa mutuki	21278	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046405.1	Cnidaria	Anthozoa	Parazoanthus elongatus	21148	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046406.1	Cnidaria	Anthozoa	Sphenopus marsupialis	21199	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046474.1	Cnidaria	Anthozoa	Epizoanthus illoricatus	20447	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046475.1	Cnidaria	Anthozoa	Parazoanthus swiftii	21499	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_046476.1	Cnidaria	Anthozoa	Zoanthus sociatus	21202	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_056771.1	Cnidaria	Anthozoa	Exaiptasia diaphana	19790	circular	2	COX1,ND5	in_gold	03-APR-2023
+NC_060606.1	Cnidaria	Anthozoa	Dendrophyllia minuscula	19054	circular	1	ND5	in_gold	03-APR-2023
+NC_060802.1	Cnidaria	Anthozoa	Diploastrea heliopora	18363	circular	1	COX1	in_gold	03-APR-2023
+NC_069232.1	Cnidaria	Anthozoa	Plerogyra sinuosa	17586	circular	2	COX1,ND5	tested	03-APR-2023
+NC_069233.1	Cnidaria	Anthozoa	Physogyra lichtensteini	17286	circular	2	COX1,ND5	tested	03-APR-2023
+NC_070437.1	Cnidaria	Anthozoa	Turbinaria bifrons	18880	circular	1	COX1	in_gold	03-APR-2023
+NC_072224.1	Cnidaria	Anthozoa	Acropora intermedia	18482	circular	1	ND5	in_gold	03-APR-2023
+NC_077518.1	Cnidaria	Anthozoa	Homophyllia bowerbanki	18154	circular	1	ND5	in_gold	22-JUN-2023
+NC_079937.1	Cnidaria	Anthozoa	Bergia puertoricense	21577	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_079938.1	Cnidaria	Anthozoa	Epizoanthus ramosus	19672	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_079939.1	Cnidaria	Anthozoa	Epizoanthus rinbou	19386	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_079940.1	Cnidaria	Anthozoa	Epizoanthus scotinus	21875	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_079941.1	Cnidaria	Anthozoa	Hydrozoanthus antumbrosus	20763	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_079942.1	Cnidaria	Anthozoa	Hydrozoanthus sils	20651	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_079943.1	Cnidaria	Anthozoa	Hydrozoanthus tunicans	20763	circular	2	COX1,ND5	in_gold	22-JUN-2023
+NC_080205.1	Cnidaria	Anthozoa	Zoanthus pulchellus	21114	circular	2	COX1,ND5	in_gold	15-JUL-2023
+NC_080206.1	Cnidaria	Anthozoa	Zoanthus solanderi	21399	circular	1	COX1	in_gold	15-JUL-2023
+NC_080207.1	Cnidaria	Anthozoa	Antipathozoanthus remengesaui	20753	circular	2	COX1,ND5	in_gold	15-JUL-2023
+NC_080208.1	Cnidaria	Anthozoa	Antipathozoanthus obscurus	21105	circular	2	COX1,ND5	in_gold	15-JUL-2023
+NC_080209.1	Cnidaria	Anthozoa	Umimayanthus nakama	22654	circular	2	COX1,ND5	in_gold	15-JUL-2023
+NC_086801.1	Cnidaria	Anthozoa	Parazoanthus axinellae	20979	circular	2	COX1	in_gold	05-MAR-2024
+OL372279.1	Cnidaria	Anthozoa	Goniopora planulata	18766	circular	1	nad5	tested	14-DEC-2021
+OL634845.1	Cnidaria	Anthozoa	Dendrophyllia minuscula	19054	circular	1	?	insdc_copy_of_gold	15-JAN-2022
+OM729606.2	Porifera	Demospongiae	Acanthella acuta	37239	circular	2	cox1,cox2	tested	03-JAN-2024
+ON653414.1	Cnidaria	Anthozoa	Cirrhipathes cf. anguina LS-2022	20452	circular	2	COX1,ND5	tested	24-DEC-2022
+OP311587.1	Cnidaria	Anthozoa	Acropora digitifera	18480	circular	1	?	tested	19-FEB-2023
+OP311588.1	Cnidaria	Anthozoa	Acropora intermedia	18482	circular	1	?	insdc_copy_of_gold	19-FEB-2023
+OP821698.1	Cnidaria	Anthozoa	Homophyllia bowerbanki	18154	circular	1	?	insdc_copy_of_gold	09-APR-2023
+OQ469830.1	Cnidaria	Anthozoa	Parazoanthus axinellae	20979	circular	2	COX1	insdc_copy_of_gold	04-FEB-2024
+OQ469831.1	Cnidaria	Anthozoa	Parazoanthus sp. f RH-2022	21135	circular	2	COX1,ND5	tested	04-FEB-2024
+OQ469832.1	Cnidaria	Anthozoa	Parazoanthus axinellae brevitentacularis	21184	circular	2	COX1,ND5	tested	04-FEB-2024
+OQ740722.1	Cnidaria	Anthozoa	Bergia sp. 'catenularis'	21565	circular	2	COX1,ND5	tested	09-MAY-2023
+OQ740723.1	Cnidaria	Anthozoa	Bergia puertoricense	21577	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ740724.1	Cnidaria	Anthozoa	Epizoanthus illoricatus	20449	circular	1	COX1	tested	09-MAY-2023
+OQ740725.1	Cnidaria	Anthozoa	Epizoanthus ramosus	19672	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ740726.1	Cnidaria	Anthozoa	Epizoanthus rinbou	19386	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ740727.1	Cnidaria	Anthozoa	Epizoanthus scotinus	21875	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ740728.1	Cnidaria	Anthozoa	Hydrozoanthus antumbrosus	20763	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ740729.1	Cnidaria	Anthozoa	Hydrozoanthus sils	20651	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ740730.1	Cnidaria	Anthozoa	Hydrozoanthus gracilis	20689	circular	2	COX1,ND5	tested	09-MAY-2023
+OQ740731.1	Cnidaria	Anthozoa	Hydrozoanthus tunicans	20763	circular	2	COX1,ND5	insdc_copy_of_gold	09-MAY-2023
+OQ759536.1	Cnidaria	Anthozoa	Zoanthus pulchellus	21114	circular	2	COX1,ND5	insdc_copy_of_gold	10-MAY-2023
+OQ759537.1	Cnidaria	Anthozoa	Zoanthus sansibaricus	21139	circular	1	COX1	tested	10-MAY-2023
+OQ759538.1	Cnidaria	Anthozoa	Zoanthus sociatus	21125	circular	1	COX1	tested	10-MAY-2023
+OQ759539.1	Cnidaria	Anthozoa	Zoanthus solanderi	21399	circular	1	COX1	insdc_copy_of_gold	10-MAY-2023
+OQ759540.1	Cnidaria	Anthozoa	Antipathozoanthus remengesaui	20753	circular	2	COX1,ND5	insdc_copy_of_gold	13-JUL-2023
+OQ759541.1	Cnidaria	Anthozoa	Antipathozoanthus obscurus	21105	circular	2	COX1,ND5	insdc_copy_of_gold	10-MAY-2023
+OQ759542.1	Cnidaria	Anthozoa	Umimayanthus nakama	22654	circular	2	COX1,ND5	insdc_copy_of_gold	10-MAY-2023
+OQ759543.1	Cnidaria	Anthozoa	Sphenopus marsupialis	21217	circular	2	COX1,ND5	tested	10-MAY-2023
+OQ789241.1	Cnidaria	Anthozoa	Palythoa mutuki	21244	circular	1	COX1	tested	14-MAY-2023
+OR906317.1	Cnidaria	Anthozoa	Leiopathes sp.	21653	circular	2	COX1,ND5	tested	24-DEC-2023
+OR906318.1	Cnidaria	Anthozoa	Trissopathes sp.	18360	circular	1	trnY-AUA	tested	02-JUL-2024
+OR992049.1	Cnidaria	Anthozoa	Schizopathidae sp.	17699	circular	1	ND5	tested	02-JUL-2024
+OR992050.1	Cnidaria	Anthozoa	Bathypathes sp. 1 YY-2024	17700	circular	1	ND5	tested	14-JAN-2024
+OR992051.1	Cnidaria	Anthozoa	Bathypathes sp. 2 YY-2024	17681	circular	1	ND5	tested	14-JAN-2024
+PP438735.1	Cnidaria	Anthozoa	Actinia equina	20691	circular	2	?	tested	23-MAY-2025
+PP526282.1	Cnidaria	Anthozoa	Fimbriaphyllia divisa	18896	circular	1	?	tested	18-AUG-2024
+PP526283.1	Cnidaria	Anthozoa	Fimbriaphyllia paradivisa	18896	circular	1	?	tested	18-AUG-2024
+PP526284.1	Cnidaria	Anthozoa	Euphyllia paraglabrescens	19167	circular	1	?	tested	18-AUG-2024
+PP526285.1	Cnidaria	Anthozoa	Euphyllia cristata	19167	circular	1	?	tested	18-AUG-2024
+PP526286.1	Cnidaria	Anthozoa	Galaxea horrescens	18751	circular	1	?	tested	18-AUG-2024
+PP526287.1	Cnidaria	Anthozoa	Galaxea fascicularis	18751	circular	1	?	tested	18-AUG-2024
+PP971518.1	Porifera		Porifera sp.	22712	circular	1	COX1	tested	08-JUL-2024
+PP990758.1	Bryozoa		Bryozoa sp.	23683	linear	6	COX1,COX2,CYTB	tested	14-JUL-2024
+PQ359434.1	Cnidaria	Anthozoa	Pocillopora meandrina	17422	circular	1	?	tested	21-NOV-2024
+PQ554681.1	Cnidaria	Anthozoa	Vitrumanthus sp. f HK-2024	20556	circular	2	COX1,ND5	tested	24-DEC-2024
+PQ554682.1	Cnidaria	Anthozoa	Churabana kuroshioae	22738	circular	2	COX1,ND5	tested	24-DEC-2024
+PV232310.1	Cnidaria	Anthozoa	Actinostella flosculifera	19504	circular	2	COX1,ND5	tested	10-MAR-2025
+PX980026.1	Cnidaria	Anthozoa	Abyssoanthidae sp. T77066-1	18570	circular	2	COX1,ND5	tested	15-FEB-2026
+PZ785798.2	Cnidaria	Anthozoa	Montipora mollis	17884	circular	1	?	tested	02-NOV-2026
