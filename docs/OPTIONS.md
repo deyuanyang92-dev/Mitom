@@ -1382,16 +1382,13 @@ Massive assemblies: both searches first run with one reference per genus (rDNA; 
 seed) / per gene and phylum (histones) against a BLAST database of all contigs; only the regions hit (+-PAD nt) go
 to the steps above, each gene set in its own regions, and at most MAX_RDNA_REGIONS rDNA regions and
 MAX_HIST_REGIONS histone regions per gene of them (best first; the time is bounded whatever the assembly).
-2026-10-30: 30 SPAdes assemblies of 0.005-1.7 Gb took 6 s - 2.2 min on 8 threads, <= 1.6 GB (before: up to 20 min
-and 16 GB on 16 threads; barrnap 0.9 on 8 threads 2 s - 4.6 min).
+Time and memory: docs/METHODS.md, nuclear markers.
 
 Per-gene consensus (multi-copy rDNA split over many contigs of one assembly): see consensus(); output
 consensus/<gene>.fasta and consensus.tsv (which contigs were used, which were dropped and why).
 
-Evidence (2026-10-23, benchmark/nuc_bench.py, knowledge/topics/nuclear_markers.md): NCBI metazoan records with
-complete 18S-ITS1-5.8S-ITS2-28S annotation, one per species (378), references of the same genus left out:
-boundaries exact 85.2 %, within 5 nt 92.6 % (barrnap 0.9 --kingdom euk: 1.8 % / 42.1 %); 677 complete histone
-CDS: whole model (start, stop, exons, name) exact 97.5 %.
+Accuracy (benchmark/nuc_bench.py, nuc_gold_bench.py; knowledge/topics/nuclear_markers.md): docs/METHODS.md,
+nuclear markers.
 
 Usage:
   mitom nuc fetch -o nuc_refs                           # NCBI GenBank records: rdna.gb, histone.gb

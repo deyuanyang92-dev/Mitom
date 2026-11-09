@@ -1,13 +1,14 @@
 flowchart TD
-    A["输入数据<br/>FASTA / GenBank；FASTQ 双端可选"]
-    B["输入识别与依赖检查<br/>Biopython、Snakemake"]
-    C["GenBank 去重与转换<br/>保留 B64_2 与 B64 为不同编号"]
-    D["生成内部 FASTA<br/>S00001...；记录 id_map.tsv"]
-    E["第一轮注释（mito_core.py）<br/>输出 01.anno_round1/ 和 sample.log"]
-    F["按目标基因重定向<br/>默认 cox1；保留 linear / circular"]
-    G["可选第二轮重注释<br/>if_reannotation_2=yes 时运行"]
-    H["最终 GenBank 生成<br/>ID 重写、metadata 恢复、/organism= 同步"]
-    I["统计与问题清单<br/>annotation-summary.tsv、failed/mismatch 列表"]
-    J["合并最终结果<br/>04.final_gb/*.gbf 与 all.final.gbf"]
+    A["1 读入与去重<br/>同一基因组只留一条；qc/dedup_report.tsv"]
+    B["2 第一轮注释<br/>13 个蛋白基因、2 个 rRNA、22 个 tRNA；核对环状 / 线状"]
+    C["3 统一方向与起点<br/>正链，从 cox1（--which_gene_first）开始"]
+    D["4 转动后核查，必要时第二轮注释<br/>--if_reannotation_2 auto：只重注受转动影响的记录"]
+    E["5 写 GenBank<br/>写回原记录的物种、文献、标本信息"]
+    F["6 补漏<br/>12S / 16S（rRNA HMM）、内含子；--rescue 时 MITOS2"]
+    G["7 校正<br/>按 NCBI 规范修整端点和基因名；标出非编码区"]
+    H["8 NCBI 检查与提交文件<br/>table2asn → submission/"]
+    I["9 与原注释比较<br/>qc/original_vs_mitom.tsv（GenBank 输入）"]
+    J["10 基因组圈图<br/>annotation/plots/"]
+    K["11 整理输出<br/>summary.tsv、annotation/、submission/、qc/、input/、logs/"]
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K

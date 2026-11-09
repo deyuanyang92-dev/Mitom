@@ -100,13 +100,9 @@ mitom gb2tbl -i curated/ -o ncbi --genetic_code 5 --validate      # NCBI 提交�
 | `curated/curation_report.tsv` | 每处修改，不同意的回 Geneious 改回 / every change; revert in Geneious if you disagree |
 | `curated/validation_compare.tsv` | table2asn 修整前后 ERROR/WARNING 对比 / errors before vs after |
 
-curate 只改端点和名称，不增删基因。伸入下游 tRNA 不长的完整终止密码子保留不改（上限见下表）；MITOS2 常这样结尾（本例 cox1、atp8、cox3、nad6），请在 Geneious 中核对。
+curate 只改端点和名称，不增删基因。伸入下游 tRNA 不长的完整终止密码子保留不改（上限见 [METHODS 校正规则表 P3](METHODS.md)）；MITOS2 常这样结尾（本例 cox1、atp8、cox3、nad6），请在 Geneious 中核对。
 curate changes ends and names only; it never adds or removes genes. A complete stop codon running a short way into the
-next tRNA is kept (limit in the table); MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6); check these in Geneious.
-
-| 规则 / rule | 上限 / limit |
-|---|---|
-| 保留伸入下游 tRNA 的完整终止密码子 / complete stop kept when it runs into the next tRNA | ≤ 20 nt |
+next tRNA is kept (limit: METHODS curation table, P3); MITOS2 often ends genes this way (here cox1, atp8, cox3, nad6); check these in Geneious.
 
 ## 5. 本例与 NCBI 比较 / This genome vs NCBI
 

@@ -313,7 +313,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 
 ### `mitom annotate`：注释，但不整理输出目录
 
-- **做什么**：与 `run` 做的事相同，但保留工作目录结构（日志为 `run.log`），给脚本或集群流程调用。一般用户用 `run` 即可。
+- **做什么**：一轮注释，之后与 `run` 相同的写 GenBank、补漏、校正、NCBI 文件、作图（共 7 步）；不做第二轮、不与原注释比较，保留工作目录结构（日志为 `run.log`），给脚本或集群流程调用。最终记录仍按 `--which_gene_first` 旋转，但没有 `run` 第 4 步的转动后核查（受转动影响的基因不重注）；需要核查时用 `run`。
 - **示例**：`mitom annotate -i contigs.fasta -o out --clade Mollusca --genetic_code 5`
 
 ### `mitom check`：检查已有注释
@@ -398,7 +398,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   mitom nuc annotate -i scaffolds.fasta -o nuc_out --genes rdna       # 只要 rDNA
   ```
 - **输出**：`nuc_features.tsv`（每个特征一行）、`nuc_annotation.gb`、`genes/<基因>.fasta`、`consensus/<基因>.fasta` 和 `consensus.tsv`、`submission/`（NCBI 提交文件）、`nuc.log`。
-- **用时**：0.1–1.7 Gb 的全基因组组装，默认 8 线程 6 秒至 2.2 分钟。
+- **用时**：见 [METHODS 核基因节](METHODS.md#核基因标记--nuclear-markers-rdna-and-histones-mito_nucpy)。
 
 ### `mitom debug`：出问题时定位原因
 
@@ -496,7 +496,7 @@ mitom debug out
 | 行 | 含义 |
 |---|---|
 | `[ENV] ...` | 版本、命令、Python、机器等（开头几行） |
-| `[STEP 6/11 add_missing] start: ...` / `done 9.2s: ...` / `failed ...` | 每一步的开始、结束、耗时和结果 |
+| `[STEP 6/11 add_missing] start: ...` / `done 9.2s: ...` / `failed ...` | 每一步的开始、结束、耗时和结果（k/n：`run` 共 11 步，`annotate` 共 7 步） |
 | `[CMD rc=1 12.3s] <命令>  (in <目录>)` | 每个外部程序：退出码、耗时、完整命令；失败时下面以 `    | ` 开头列出错误输出的末尾 |
 | `[RECORD <名称>] ...` | 失败、被跳过或有 NCBI ERROR 的记录 |
 | `[ERROR] ...` | 运行出错停止时的完整 traceback |
@@ -999,11 +999,11 @@ The generated Snakefile declares real per-job `threads` and memory resources.
 主要文件：
 
 - `annotation/<登录号>.gb`：**最终 GenBank**：端点校正（mito_curate.py）并统一为 NCBI 命名——CDS `COX1…CYTB`、`ND1…ND6`、`ND4L`；rRNA `rrnS`/`rrnL`（12S/16S ribosomal RNA）；tRNA `/gene` 只写符号（`trnL1`/`trnL2`、`trnS1`/`trnS2` 按反密码子，与 MITOS2（2.1.10）相同：所有类群、包括脊椎动物都是 L1 = CUN、L2 = UUR、S1 = AGN、S2 = UCN；NCBI 的脊椎动物记录（如人 NC_012920.1）L1/L2、S1/S2 编号相反，MitoM 按 MITOS2，不随类群改变），反密码子写在 `/note`；非法起始密码子按 NCBI 惯例标 5′ partial（"start codon not determined"）。`--curate no` 时为校正前的注释。
-- `submission/`：每条记录的 NCBI 提交文件和校验报告。`submission_summary.tsv` 中 ERROR 为 0 的记录可直接提交；GenBank 平面文件（.gb）本身不能直接提交给 NCBI（NCBI 只收 table2asn 生成的 `.sqn`，或 BankIt 上传 `.fsa` + `.tbl`），`.sqn/.tbl` 与 `annotation/*.gb` 是同一份注释。正式提交时用 `--sbt` 给出 NCBI 提交者模板（https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。2026-10-27 全部基准记录（2,497 条：1,050 条多类群 RefSeq、669 条环节动物、577 条科未参与训练的无脊椎动物、188 条脊椎动物、13 条锚定基因组）用默认流程注释：table2asn ERROR 0 条（此前 199 条，主要是鸟类/龟类 ND3 移码、蚌类 nad1 包住 trnL2、环节动物 nad2 跨原点无终止子）；余下 WARNING 为 NCBI 自己记录里也有的类型（ND3 移码 join 的 ShortIntron、无起始/终止密码子基因的 partial 提示）。
+- `submission/`：每条记录的 NCBI 提交文件和校验报告。`submission_summary.tsv` 中 ERROR 为 0 的记录可直接提交；GenBank 平面文件（.gb）本身不能直接提交给 NCBI（NCBI 只收 table2asn 生成的 `.sqn`，或 BankIt 上传 `.fsa` + `.tbl`），`.sqn/.tbl` 与 `annotation/*.gb` 是同一份注释。正式提交时用 `--sbt` 给出 NCBI 提交者模板（https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。基准记录上的 table2asn ERROR 数见 [README 精度表](../README.md)（此前的 ERROR 主要是鸟类/龟类 ND3 移码、蚌类 nad1 包住 trnL2、环节动物 nad2 跨原点无终止子，已修正）；余下 WARNING 为 NCBI 自己记录里也有的类型（ND3 移码 join 的 ShortIntron、无起始/终止密码子基因的 partial 提示）。
 - `summary.tsv` 的 `annotation_used`：`round 2` = 定向后重注；`round 1, shifted` = 第一轮注释随序列平移（通过检查，不必重注）；`round 1, not re-oriented` = 未找到定向基因。
 - 输出目录里用户自己的文件和目录不会被移动或删除；同一目录再次运行会替换上一次的结果。
 
-The `run` / `import` output (section 7): summary.tsv, README.txt and annotation/ (one GenBank per record, all_records.gb, genes.fna, proteins.faa, plots/), submission/<record>/, qc/ (original_vs_mitom.tsv and the step reports), input/ (the input records), logs/ (run.log, run_params.json) and, with `--keep_intermediate yes`, work/; `--output_layout classic` gives the layout before 2026-11-09. Files the user put into the folder are left alone; a second run into the same folder replaces the previous results. NCBI accepts the `.sqn` (table2asn) or `.fsa` + `.tbl` (BankIt) of `submission/`, not a GenBank flat file; give the submitter template with `--sbt`. On the 2,497 benchmark records of 2026-10-27 no table2asn ERROR remains (199 before: bird / turtle nad3 frameshift, unionid nad1 over trnL2, annelid nad2 across the origin without a stop).
+The `run` / `import` output (section 7): summary.tsv, README.txt and annotation/ (one GenBank per record, all_records.gb, genes.fna, proteins.faa, plots/), submission/<record>/, qc/ (original_vs_mitom.tsv and the step reports), input/ (the input records), logs/ (run.log, run_params.json) and, with `--keep_intermediate yes`, work/; `--output_layout classic` gives the layout before 2026-11-09. Files the user put into the folder are left alone; a second run into the same folder replaces the previous results. NCBI accepts the `.sqn` (table2asn) or `.fsa` + `.tbl` (BankIt) of `submission/`, not a GenBank flat file; give the submitter template with `--sbt`. table2asn ERRORs on the benchmark records: README accuracy table (the earlier ones, bird / turtle nad3 frameshift, unionid nad1 over trnL2, annelid nad2 across the origin without a stop, are fixed).
 
 `annotate`（只做一轮注释和其后的补漏、校正、NCBI 文件、作图；不做第二轮、不比较）保留工作目录布局：
 

@@ -1,13 +1,14 @@
 flowchart TD
-    A["Input data<br/>FASTA / GenBank; optional paired FASTQ"]
-    B["Detect input and check dependencies<br/>Biopython, Snakemake"]
-    C["Deduplicate and convert GenBank<br/>Keep local IDs such as B64_2 distinct from B64"]
-    D["Create internal FASTA files<br/>S00001... plus id_map.tsv"]
-    E["Annotation, phase 1 (mito_core.py)<br/>Writes 01.anno_round1/ and sample.log files"]
-    F["Reorient by target gene<br/>Default cox1; preserve linear / circular topology"]
-    G["Optional phase-2 re-annotation<br/>Runs when if_reannotation_2=yes"]
-    H["Build final GenBank files<br/>Rewrite IDs, restore metadata, synchronize /organism="]
-    I["Write statistics and problem lists<br/>annotation-summary.tsv and failed/mismatch files"]
-    J["Merge final outputs<br/>04.final_gb/*.gbf and all.final.gbf"]
+    A["1 Read input, remove duplicates<br/>one record per genome; qc/dedup_report.tsv"]
+    B["2 Round-1 annotation<br/>13 protein genes, 2 rRNAs, 22 tRNAs; circular or linear checked"]
+    C["3 Re-orient<br/>plus strand, start at cox1 (--which_gene_first)"]
+    D["4 Check after re-orientation (round 2)<br/>--if_reannotation_2 auto: only records the shift broke"]
+    E["5 Write GenBank<br/>original header (organism, references, voucher) copied back"]
+    F["6 Add what the core missed<br/>12S / 16S (rRNA HMM), introns; MITOS2 with --rescue"]
+    G["7 Curate<br/>gene ends and names to NCBI rules; non-coding regions"]
+    H["8 NCBI check and submission files<br/>table2asn -> submission/"]
+    I["9 Compare with the original annotation<br/>qc/original_vs_mitom.tsv (GenBank input)"]
+    J["10 Genome maps<br/>annotation/plots/"]
+    K["11 Organise the output<br/>summary.tsv, annotation/, submission/, qc/, input/, logs/"]
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K

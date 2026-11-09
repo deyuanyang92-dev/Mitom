@@ -117,7 +117,7 @@ def workflow_run(args: argparse.Namespace, ctx: Optional[RunContext] = None) -> 
 
 def run_stages(args: argparse.Namespace, ctx: Optional[RunContext], stages) -> int:
     """The stages in order, one numbered step each; a stage that returns an exit code ends the run."""
-    r = start_run(args, ctx if ctx is not None else RunContext(), len(stages))
+    r = start_run(args, ctx if ctx is not None else RunContext(), stages)
     for stage in stages:
         rc = stage(r)
         if rc is not None:
@@ -125,8 +125,9 @@ def run_stages(args: argparse.Namespace, ctx: Optional[RunContext], stages) -> i
     return run_exit_code(r)
 
 
-def start_run(args: argparse.Namespace, ctx: RunContext, n_steps: int = 11) -> RunState:
-    """Output folder emptied of a previous run's work, run.log, [ENV] / [PARAMS] lines, the summary on the terminal."""
+def start_run(args: argparse.Namespace, ctx: RunContext, stages) -> RunState:
+    """Output folder emptied of a previous run's work, run.log, [ENV] / [PARAMS] lines, the summary on the terminal;
+    one numbered step per stage of `stages` (run: 11, annotate: 7)."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     removed = clear_previous_work(out_root, keep=("00.input", "00.imported"),   # made by this run (input copies, `import`)
@@ -138,7 +139,7 @@ def start_run(args: argparse.Namespace, ctx: RunContext, n_steps: int = 11) -> R
     log_environment(args)
     logging.info("[PARAMS]\n" + json.dumps(vars(args), indent=2, ensure_ascii=False))
     preflight(args)
-    steps = Steps(n_steps)
+    steps = Steps(len(stages))
     say("")
     say("MitoM - mitochondrial genome annotation")
     say(f"    input        : {Path(args.input).resolve()}")
@@ -146,7 +147,7 @@ def start_run(args: argparse.Namespace, ctx: RunContext, n_steps: int = 11) -> R
     say(f"    clade        : {args.clade}    genetic code: {args.genetic_code}")
     say(f"    parallel     : {args.max_tasks} records at a time x {args.threads} threads")
     say(f"    annotation   : {ENGINE_LABEL[getattr(args, 'engine', 'native')]}")
-    if hasattr(args, "if_reannotation_2"):                # (`mitom annotate`: one round)
+    if stage_round2 in stages:                            # (`mitom annotate`: one round)
         say(f"    round 2      : {args.if_reannotation_2}  (auto = only records whose annotation is broken by the cox1 shift)")
     if getattr(args, "engine", "native") == "native":
         say(f"    topology     : {args.topology}" + ("  (as labelled, checked at the sequence ends)"
@@ -156,7 +157,7 @@ def start_run(args: argparse.Namespace, ctx: RunContext, n_steps: int = 11) -> R
 
 
 def stage_input(r: RunState) -> Optional[int]:
-    """1. Input read, GenBank records deduplicated (original annotation saved), one sample per record."""
+    """Input read, GenBank records deduplicated (original annotation saved), one sample per record."""
     args, ctx, out_root, steps = r.args, r.ctx, r.out_root, r.steps
     in_path     = Path(args.input).resolve()
     split_dir   = out_root / "00.internal_fasta"
@@ -202,7 +203,7 @@ def stage_input(r: RunState) -> Optional[int]:
 
 
 def stage_round1(r: RunState) -> Optional[int]:
-    """2. Round-1 annotation of every sample (the engine), topology checked at the sequence ends."""
+    """Round-1 annotation of every sample (the engine), topology checked at the sequence ends."""
     args, out_root, steps, summary = r.args, r.out_root, r.steps, r.summary
     steps.start("annotate", f"Round-1 annotation ({ENGINE_LABEL[getattr(args, 'engine', 'native')]}: protein genes, rRNAs, tRNAs)")
     results1 = run_annotation_stage(
@@ -220,7 +221,7 @@ def stage_round1(r: RunState) -> Optional[int]:
 
 
 def stage_reorient(r: RunState) -> Optional[int]:
-    """3. Re-orientation: plus strand, the sequence starts with --which_gene_first (else a fallback gene)."""
+    """Re-orientation: plus strand, the sequence starts with --which_gene_first (else a fallback gene)."""
     args, ctx, out_root, steps, summary = r.args, r.ctx, r.out_root, r.steps, r.summary
     steps.start("reorient", f"Re-orient: plus strand, sequence starts with {args.which_gene_first} "
                 f"(if missing: {args.fallback_genes})")
@@ -272,7 +273,7 @@ def stage_reorient(r: RunState) -> Optional[int]:
 
 
 def stage_round2(r: RunState) -> Optional[int]:
-    """4. Round 2: the re-oriented records annotated again where the shift broke the annotation (--if_reannotation_2)."""
+    """Round 2: the re-oriented records annotated again where the shift broke the annotation (--if_reannotation_2)."""
     args, out_root, steps, summary = r.args, r.out_root, r.steps, r.summary
     steps.start("round2", "Check the annotation after re-orientation; annotate again where it is offset (round 2)")
     r.do_phase2 = args.if_reannotation_2 in ("yes", "auto")
@@ -356,7 +357,7 @@ def with_partial_contigs(r: RunState, si: SampleInfo, chosen_gb: Path, src_tag: 
 
 
 def stage_write_final(r: RunState) -> Optional[int]:
-    """5. Final GenBank per sample (04.final_gb/): re-oriented once more, the original header and /organism restored."""
+    """Final GenBank per sample (04.final_gb/): re-oriented once more, the original header and /organism restored."""
     args, ctx, out_root, steps, summary = r.args, r.ctx, r.out_root, r.steps, r.summary
     steps.start("write", "Write the annotation; copy the original GenBank header (organism, references ...) back")
 
@@ -451,7 +452,7 @@ def write_problem_lists(r: RunState) -> None:
 
 
 def stage_add_missing(r: RunState) -> Optional[int]:
-    """6. What the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns; re-oriented to the first exon."""
+    """What the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns; re-oriented to the first exon."""
     args, steps = r.args, r.steps
     steps.start("add_missing", "Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
     for name, step in (("rescue", run_rescue), ("rrna_hmm", run_rrna_hmm), ("introns", run_intron_fix)):
@@ -464,7 +465,7 @@ def stage_add_missing(r: RunState) -> Optional[int]:
 
 
 def stage_curate(r: RunState) -> Optional[int]:
-    """7. Boundary rules and NCBI gene names (mito_curate.py -> 05.curated/), non-coding regions."""
+    """Boundary rules and NCBI gene names (mito_curate.py -> 05.curated/), non-coding regions."""
     steps = r.steps
     steps.start("curate", "Boundary rules for protein genes and rRNAs, NCBI gene names")
     r.curated = run_curate(r.args, r.final_dir, r.out_root)
@@ -475,7 +476,7 @@ def stage_curate(r: RunState) -> Optional[int]:
 
 
 def stage_ncbi(r: RunState) -> Optional[int]:
-    """8. NCBI check (table2asn) and submission files; summary.tsv; all records in one GenBank file."""
+    """NCBI check (table2asn) and submission files; summary.tsv; all records in one GenBank file."""
     args, out_root, steps, merge_dir = r.args, r.out_root, r.steps, r.merge_dir
     steps.start("ncbi", "NCBI check (table2asn) and submission files")
     submitted = run_submission(args, merge_dir, out_root) if merge_dir != r.final_dir else r.curated
@@ -503,7 +504,7 @@ def stage_ncbi(r: RunState) -> Optional[int]:
 
 
 def stage_compare(r: RunState) -> Optional[int]:
-    """9. Original annotation vs MitoM, gene by gene (GenBank input)."""
+    """Original annotation vs MitoM, gene by gene (GenBank input)."""
     r.steps.start("compare", "Compare with the original annotation")
     compared = run_compare(r.args, r.merge_dir, r.out_root, original=r.out_root / "original_annotation"
                            if r.input_type == "converted_from_gb" else None)
@@ -512,7 +513,7 @@ def stage_compare(r: RunState) -> Optional[int]:
 
 
 def stage_maps(r: RunState) -> Optional[int]:
-    """10. Circular genome maps (--plot)."""
+    """Circular genome maps (--plot)."""
     r.steps.start("maps", "Genome maps (circular plots)")
     maps = run_plots(r.args, r.merge_dir, r.out_root)
     r.steps.done(maps.summary, maps.ok)
@@ -520,7 +521,7 @@ def stage_maps(r: RunState) -> Optional[int]:
 
 
 def stage_output(r: RunState) -> Optional[int]:
-    """11. The output layout (OUTPUT_LAYOUT, README.txt)."""
+    """The output layout (OUTPUT_LAYOUT, README.txt)."""
     args, out_root, steps = r.args, r.out_root, r.steps
     steps.start("output", "Organise the output")
     organize_outputs(out_root, r.merge_dir, keep=args.keep_intermediate == "yes",

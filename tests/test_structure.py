@@ -40,3 +40,15 @@ def test_mitom_pipeline_is_only_the_entry_point():
     tree = MODULES["mitom_pipeline.py"]
     defs = re.findall(r"^def (\w+)", tree, re.M)
     assert defs == ["main"] and len(tree.splitlines()) < 250
+
+
+def test_annotate_stages_are_run_stages_without_round2_compare_output():
+    """`mitom annotate` = the run stages minus re-orientation, round 2, comparison and output layout; the terminal
+    counts its own steps (start_run: Steps(len(stages))) and shows the round-2 line only when round 2 is a stage."""
+    import inspect
+    import mitom_run as mr
+    assert set(mr.ANNOTATE_STAGES) <= set(mr.RUN_STAGES)
+    assert set(mr.RUN_STAGES) - set(mr.ANNOTATE_STAGES) == {mr.stage_reorient, mr.stage_round2, mr.stage_compare,
+                                                            mr.stage_output}
+    src = inspect.getsource(mr.start_run)
+    assert "Steps(len(stages))" in src and "stage_round2 in stages" in src and "hasattr" not in src

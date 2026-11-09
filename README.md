@@ -16,10 +16,10 @@ genomes, orients them, curates gene ends and names to NCBI rules, and writes NCB
 | 精度 / Accuracy（开发期基准，2026-10-27 / 10-29，与 NCBI 比较；不是论文的冻结评测 [benchmark/frozen/PLAN.md](benchmark/frozen/PLAN.md)；细节见 [docs/METHODS.md](docs/METHODS.md)） / development benchmarks, not the frozen evaluation | |
 |---|---|
 | 蛋白基因两端与 NCBI 完全一致 / protein genes, both ends exact | 1,050 条多类群 RefSeq：24 个门全部高于 MITOS2 |
-| NCBI table2asn ERROR | 2,497 条基准记录：0 |
+| NCBI table2asn ERROR | 2,497 条基准记录 / benchmark records（2026-10-27；1,050 多类群 RefSeq、669 环节动物、577 科未参与训练的无脊椎动物、188 脊椎动物、13 锚定基因组）：0（此前 / before：199） |
 | tRNA（未参与训练的类群）/ tRNAs (families unseen in training) | 召回率高于 MITOS2，精确率持平或更高 |
-| 内含子 / introns（193 条 NCBI 记录逐个核实的 309 个） | 309 / 309 完全一致；被测记录不进参考库时 299 / 309；76 条无内含子记录 0 假阳性 |
-| 核 rDNA / 组蛋白 / nuclear markers | 0.1–1.7 Gb 全基因组组装，默认 8 线程 6 秒至 2.2 分钟 |
+| 内含子 / introns | 逐个核实的 NCBI 内含子金标准：默认全部一致，被测记录不进参考库时少数不一致，无内含子记录无假阳性（数字见 [METHODS 内含子表](docs/METHODS.md#intron-注释--introns-mito_intronpy-mito_intron_refpy)） / gold-standard introns: see the METHODS intron table |
+| 核 rDNA / 组蛋白 / nuclear markers | 全基因组组装几秒到几分钟；准确度与用时见 [METHODS 核基因节](docs/METHODS.md#核基因标记--nuclear-markers-rdna-and-histones-mito_nucpy) / seconds to minutes per assembly; accuracy and time in METHODS |
 
 ## 快速上手 / Quick start
 

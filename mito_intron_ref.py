@@ -59,9 +59,7 @@ Deviations and limits: a site no library record has comes only from the de novo 
 placements the gold standard corrected for homology (class D-corrected) are reproduced only through relatives that
 carry the corrected site; an intron across the origin of a circular record is given by the CDS join (GenBank allows
 no multi-interval intron, table2asn MultiIntervalIntron); a start / stop not found gives a 5' / 3'-partial CDS.
-Benchmark (benchmark/bench_intron_ref.py; 193 intron records + 77 intron-free, pipeline input, de novo first, final
-gold standard 2026-10-29): whole library (pipeline default) and own annotation 309 / 309 exact; leave-one-out 298
-exact, 4 within 6 nt, 1 more, 6 missed (de novo alone 295 / 4 / 4 / 6); 0 false introns in the intron-free records.
+Benchmark (benchmark/bench_intron_ref.py, gold standard 2026-10-29): docs/METHODS.md, intron table.
 
 API: build_library(paths) / save_library / load_library; ref_genes(record) (sites of one annotated record);
 annotate_record(record, library, genetic_code, lineage=, exclude=, own=) -> (gene models, report rows);

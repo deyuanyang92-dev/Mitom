@@ -110,6 +110,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 2026-11-08 | cody | 第二次拆分（mito_curate → 4 个规则模块，mito_intron_ref → junction / models；删除旧名转发；setup.py）前后输出是否相同 | scripts/golden.py 6 例（同上一行） | MitoM f606ccf→本提交，mitotools 环境 | 6 例文本输出逐字相同；pytest 813 通过；wheel 含全部模块；pip install -e . 可用 | 拆分不改结果 | CHANGELOG.md Unreleased |
 | 2026-11-09 | cody | `mitom annotate` 改用 run 的阶段函数后结果是否相同 | NC_000931 `annotate`（新 golden 例 annotate_gb）；其余 6 例 | MitoM 4b79cca→本提交，mitotools 环境 | all.final.gbf、05.curated、06.ncbi_submission 逐字相同；新增 original_annotation/、clade_decision.tsv、metadata_transfer_log.tsv、body_source 列，日志改为 run.log；7 例 golden 相同；pytest 813 通过 | annotate 与 run 只剩一份后处理代码 | CHANGELOG.md Unreleased；tests/data/golden/annotate_gb |
 | 2026-11-09 | cody | GitHub issue #6 #7 #8 #9 能否复现、修复后结果 | NCBI MZ052209.1、OZ287881.1、OZ346613.1（tests/data/issues，golden 例 run_issues）；NC_001636+NC_008164 两门（新布局） | MitoM 8e1a9f6→本提交，mitotools 环境 | #7 当前代码不复现（1 个 trnP 7832..7894，22 tRNA）；#8 两条 linear 组装记录改判环状、cox1 起始、source 1..L、OZ287881 NCR1 6,121 bp 连成一段，NCBI ERROR 0；#6 日志路径指向真实报告；#9 新布局顶层 summary + README + 5 个目录，genes.fna 45 条、proteins.faa 39 条；classic 布局 7 例 golden 除 run_params、intron_fix.log 路径外逐字相同；pytest 816 通过 | 四个 issue 已修复 / 核实 | CHANGELOG.md Unreleased；tests/data/golden/run_issues |
+| 2026-11-09 | cody | 结构审阅后的小改（start_run 按阶段表计步、去掉 hasattr；annotate 帮助；文档数字只写一处）是否影响测试 | 全部单元测试（不跑 golden：两条命令执行的阶段与终端行未变） | MitoM 2571869→本提交，mitotools 环境 | pytest 817 通过（新增 1 个阶段表测试），2 跳过 | 无行为变化 | CHANGELOG.md Unreleased |
 
 ## 9. 核标记 / mitom nuc
 

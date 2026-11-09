@@ -2,7 +2,8 @@
 file, the console gets the numbered steps), numbered steps and progress lines on the terminal (Steps, Progress, say),
 one log file per sample of the annotation stage.
 
-Lines of the run log that `mitom debug` reads (their form stays as it is):
+Lines of the run log that `mitom debug` reads (their form stays as it is; k/n = step k of n stages: run 11,
+annotate 7):
   [STEP 6/11 add_missing] start: <title>            a step starts (Steps.start)
   [STEP 6/11 add_missing] introns done 5.4s: ...    a part of a step (Steps.part)
   [STEP 6/11 add_missing] done 9.2s: <result>       ... ends ('failed' instead of 'done': it could not do its work)

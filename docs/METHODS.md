@@ -77,7 +77,7 @@ Curation and introns run as separate processes, so a crash affects only that ste
 | P1 | (i) 起始密码子取离上游基因最近且不重叠者 | 起点与上游 tRNA/rRNA 或同框 PCG 重叠 → 后移到第一个起始密码子，但只在 15 nt 内有起始密码子时才移动，否则保留重叠（173 条多类群真值：≤15 nt 的移动对 31 错 12，更远的移动对 14 错 28）；起点放在一个完整同链 tRNA 的上游（基因前三分之一包住整个 tRNA，如蚌类 nad1 包住 trnL2）→ 移到该 tRNA 之后第一个同框起始密码子；首密码子非起始密码子时才向上游找；`--aggressive_start_genes` 列出的基因总是按准则找最上游——默认为空，`mitom run` 只在环节动物 clade 传 `ND5,ND4L`（环节动物 benchmark 7/7 正确；其他类群 173 条里错 52 对 17）；`--aggressive_start` 对所有基因如此 |
 | P11 | (i) 的补充：起始密码子的选择 | P1 之后，在 P1 的起点前后 30 个密码子内、读码框连续的所有起始密码子中，取 NCBI 记录会选的那个：梯度提升树（`mito_start.py`，模型 `models/start_model/start_model.json`，纯 JSON 树，不用 pickle）根据密码子、与上游特征的距离及其类型和链、核心工具的比对（N 端缺多少残基、覆盖度）、基因、门打分。训练：1,683 条留一基准记录的候选（`benchmark/train_start_model.py`）。按科交叉验证：起点与 NCBI 完全一致 89.1 → 90.7 %（节肢 77.8 → 82.3 %，刺胞 79.8 → 83.2 %，软体 79.5 → 81.3 %，环节 91.5 → 92.9 %，脊索 97.3 → 97.9 %）；`--start_model no` 关闭 |
 | P2 | (ii) 同链同框 PCG 不可重叠（不同框可以，如 atp8-atp6、nad4L-nad4） | 只报告 |
-| P3 | (iii) 第一个完整终止密码子，或紧接下游 tRNA 前的 T/TA 不完整终止（tRNA 间断模型） | 完整终止落在下游同链 tRNA 内 ≥3 nt → 截到 tRNA 前并加 `/transl_except` 与 polyA note（真值：伸入 1–2 nt 时 NCBI 保留完整终止 130:57，≥5 nt 时多用 T/TA）；完整终止仅与 tRNA 重叠 1–2 nt 时保留；下游无 tRNA 而完整终止伸入下一个同链蛋白基因 > 30 nt（环节动物 > 10 nt，`--abbreviated_pcg_overlap`，与原点处 O1 一致；atp8-atp6、nad4L-nad4 除外；真值：11–30 nt 内保留完整终止 17:6，更深则 T/TA 为主；本地全部 NCBI 记录中 11–30 nt 的情形：环节动物 T/TA 142:43，刺胞动物 5:109，软体动物 12:66）→ 不延伸：保留原 T/TA 末端（如 cox1→cox2），否则取下一基因前的 T/TA（如 nad6→cob）；核心工具已注释的、伸入下一基因的完整终止不回缩；已是 T/TA 结尾的基因不会为了 90 nt 内的完整终止伸入其他特征（rRNA、反链 tRNA）> 10 nt；注释末端停在第一个完整终止之前、且中间没有任何已注释基因 → 延伸到该终止（≤ 600 nt；核心工具在分化大的类群丢了 C 端同源区：nad5/nad4/nad2/cox1 短 100–500 nt；多类群 benchmark 52 例中 50 例延伸后与 NCBI 完全一致）；会把整个同链 tRNA 包进去、且 tRNA 前没有 T/TA 的基因 → 结束在该 tRNA 之前（3′ partial）；脊椎动物（`--abbreviated_overlap`，`mitom run` 对 Chordata 自动加）：完整终止伸入下游同链 tRNA 1–2 nt 时也改为 T/TA，但伸入下一个蛋白基因时保留完整终止（NCBI 脊椎动物记录 atp6 的 TAA 与 cox3 的 ATG 共用 A；1,719 条留一基准记录只重跑校正：两端一致 17,727 → 17,951，80.0 → 81.0 %；脊索动物多对 294、少对 70，辐鳍鱼 atp6 两种写法都有 104 : 60，鸟类 86 : 2，哺乳类 60 : 2；其他门不变；完全不用该规则 17,373） |
+| P3 | (iii) 第一个完整终止密码子，或紧接下游 tRNA 前的 T/TA 不完整终止（tRNA 间断模型） | 完整终止落在下游同链 tRNA 内 ≥3 nt → 截到 tRNA 前并加 `/transl_except` 与 polyA note（真值：伸入 1–2 nt 时 NCBI 保留完整终止 130:57，≥5 nt 时多用 T/TA）；完整终止仅与 tRNA 重叠 1–2 nt 时保留；下游无 tRNA 而完整终止伸入下一个同链蛋白基因 > 30 nt（环节动物 > 10 nt，`--abbreviated_pcg_overlap`，与原点处 O1 一致；atp8-atp6、nad4L-nad4 除外；真值：11–30 nt 内保留完整终止 17:6，更深则 T/TA 为主；本地全部 NCBI 记录中 11–30 nt 的情形：环节动物 T/TA 142:43，刺胞动物 5:109，软体动物 12:66）→ 不延伸：保留原 T/TA 末端（如 cox1→cox2），否则取下一基因前的 T/TA（如 nad6→cob）；下游特征前没有 T/TA 时，完整终止伸入它 ≤ 20 nt（`OVERLAP_FALLBACK`；预测的 tRNA 端点不精确）则采用；核心比对已到达、只伸入预测 tRNA ≤ 20 nt 的完整终止保留；核心工具已注释的、伸入下一基因的完整终止不回缩；已是 T/TA 结尾的基因不会为了 90 nt 内的完整终止伸入其他特征（rRNA、反链 tRNA）> 10 nt；注释末端停在第一个完整终止之前、且中间没有任何已注释基因 → 延伸到该终止（≤ 600 nt；核心工具在分化大的类群丢了 C 端同源区：nad5/nad4/nad2/cox1 短 100–500 nt；多类群 benchmark 52 例中 50 例延伸后与 NCBI 完全一致）；会把整个同链 tRNA 包进去、且 tRNA 前没有 T/TA 的基因 → 结束在该 tRNA 之前（3′ partial）；脊椎动物（`--abbreviated_overlap`，`mitom run` 对 Chordata 自动加）：完整终止伸入下游同链 tRNA 1–2 nt 时也改为 T/TA，但伸入下一个蛋白基因时保留完整终止（NCBI 脊椎动物记录 atp6 的 TAA 与 cox3 的 ATG 共用 A；1,719 条留一基准记录只重跑校正：两端一致 17,727 → 17,951，80.0 → 81.0 %；脊索动物多对 294、少对 70，辐鳍鱼 atp6 两种写法都有 104 : 60，鸟类 86 : 2，哺乳类 60 : 2；其他门不变；完全不用该规则 17,373） |
 | D1 | — | 同一蛋白基因在不同位置注释两次（MitoZ 遇重复区）→ 只保留完整、较长、靠前的一份；另一条链上与之重叠、不完整或含内部终止的同名拷贝（反义链假阳性）也删除 |
 | P7 | — | 起点与终点不在同一读码框（内部终止，NCBI ERROR）→ 取两者中较长的开放读码框：保留起点到第一个终止，或保留终止、在其读码框内取离原起点最近的起始密码子；新 ORF 不足原长一半时不改，只报告（多类群 benchmark：内部终止 14 → 5） |
 | P8 | — | 起点与终点同框但有内部终止（起点越过终止子放在上游，或终点越过基因的终止子）→ 取"原起点到第一个终止"与"最后一个内部终止之后的第一个起始密码子到原终点"中较长者（≥ 原长一半） |
@@ -396,6 +396,7 @@ mitom 与人类精编同源位置一致。方法与证据：`knowledge/topics/nu
 
 低配运行（2 线程，`/usr/bin/time`，2026-10-26）：3 条 contig 4.6 s / 132 MB（1 线程 5.1 s / 101 MB）；61 条 GenBank 23 s / 269 MB；
 200 条 rDNA 记录 3 分 6 秒 / 533 MB（优化前 24 分 20 秒 / 2.7 GB）；5.6 Mb 混合输入（走预筛）3 分 25 秒 / 608 MB。
+30 个 SPAdes 组装（0.005–1.7 Gb，8 线程，2026-10-30）：6 秒至 2.2 分钟，≤ 1.6 GB（改动前 16 线程最长 20 分钟、16 GB；barrnap 0.9 8 线程 2 秒至 4.6 分钟）。
 
 NCBI 提交校验（table2asn 1.28 `-V vb -Z`，2026-10-25）：多鳞虫 + 沙蚕 50 条、23007 3 条 0 条消息；独立 rDNA 898 条本软件写的特征 0 ERROR
 （剩 40 个 rRNA 跨越长度未知缺口的 WARNING，与 NCBI 现有记录写法相同；1 个 ERROR 是 NCBI 原记录 source 文字括号不配对）；组蛋白 2012 条 0 ERROR
@@ -432,50 +433,8 @@ NCBI 提交校验（table2asn 1.28 `-V vb -Z`，2026-10-25）：多鳞虫 + 沙�
 
 ## 流程图 / Flowcharts
 
-已生成以下流程图文件：
-
-- 中文 SVG: [docs/flowcharts/mitom_workflow.zh.svg](flowcharts/mitom_workflow.zh.svg)
-- English SVG: [docs/flowcharts/mitom_workflow.en.svg](flowcharts/mitom_workflow.en.svg)
-- 中文 Mermaid: [docs/flowcharts/mitom_workflow.zh.mmd](flowcharts/mitom_workflow.zh.mmd)
-- English Mermaid: [docs/flowcharts/mitom_workflow.en.mmd](flowcharts/mitom_workflow.en.mmd)
-- SVG 生成脚本: [scripts/render_workflow_diagrams.py](../scripts/render_workflow_diagrams.py)
-
-重新生成 SVG：
-
-```bash
-python3 scripts/render_workflow_diagrams.py
-```
-
-### 中文流程图 / Chinese Workflow
-
-```mermaid
-flowchart TD
-    A["输入数据<br/>FASTA / GenBank；FASTQ 双端可选"]
-    B["输入识别与依赖检查<br/>Biopython、Snakemake"]
-    C["GenBank 去重与转换<br/>保留 B64_2 与 B64 为不同编号"]
-    D["生成内部 FASTA<br/>S00001...；记录 id_map.tsv"]
-    E["第一轮注释（mito_core.py）<br/>输出 01.anno_round1/ 和 sample.log"]
-    F["按目标基因重定向<br/>默认 cox1；保留 linear / circular"]
-    G["可选第二轮重注释<br/>if_reannotation_2=yes 时每条运行；auto 时只对未通过平移检查的运行"]
-    H["最终 GenBank 生成<br/>ID 重写、metadata 恢复、/organism= 同步"]
-    I["统计与问题清单<br/>annotation-summary.tsv、failed/mismatch 列表"]
-    J["合并最终结果<br/>04.final_gb/*.gbf 与 all.final.gbf"]
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J
-```
-
-### English Workflow
-
-```mermaid
-flowchart TD
-    A["Input data<br/>FASTA / GenBank; optional paired FASTQ"]
-    B["Detect input and check dependencies<br/>Biopython, Snakemake"]
-    C["Deduplicate and convert GenBank<br/>Keep local IDs such as B64_2 distinct from B64"]
-    D["Create internal FASTA files<br/>S00001... plus id_map.tsv"]
-    E["Annotation, phase 1 (mito_core.py)<br/>Writes 01.anno_round1/ and sample.log files"]
-    F["Reorient by target gene<br/>Default cox1; preserve linear / circular topology"]
-    G["Optional phase-2 re-annotation<br/>if_reannotation_2=yes: every record; auto: only records failing the shift check"]
-    H["Build final GenBank files<br/>Rewrite IDs, restore metadata, synchronize /organism="]
-    I["Write statistics and problem lists<br/>annotation-summary.tsv and failed/mismatch files"]
-    J["Merge final outputs<br/>04.final_gb/*.gbf and all.final.gbf"]
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J
-```
+`mitom run` 的 11 步（与 README 第 3 节的步骤表、终端的 `[Step k/11]` 一致；`mitom annotate` 不做第 3、4、9、11 步）。
+The 11 steps of `mitom run` (as the step table in README section 3; `mitom annotate` skips steps 3, 4, 9 and 11):
+[中文 SVG](flowcharts/mitom_workflow.zh.svg) · [English SVG](flowcharts/mitom_workflow.en.svg) ·
+[中文 Mermaid](flowcharts/mitom_workflow.zh.mmd) · [English Mermaid](flowcharts/mitom_workflow.en.mmd)。
+重新生成 / regenerate：`python3 scripts/render_workflow_diagrams.py`

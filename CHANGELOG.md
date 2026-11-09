@@ -17,6 +17,11 @@ installed one.
   MZ052209 is now a golden case (run_issues).
 
 ### Changed
+- `start_run` takes the stage list: the step count and the round-2 line on the terminal follow it (was a default of 11
+  and `hasattr(args, ...)`); stage docstrings no longer carry run step numbers. `mitom annotate --help` says what it
+  does (7 steps; records rotated to `--which_gene_first` without the round-2 check). Docs: the METHODS flowchart
+  (04.final_gb / annotation-summary era) is redrawn from the 11 run stages; benchmark numbers that were in two places
+  (table2asn ERROR count, intron gold standard, nuclear-marker accuracy and time, P3 20 nt limit) are in one.
 - #9: output of `run` / `import` (`--output_layout grouped`, default): summary.tsv, README.txt and annotation/
   (<record>.gb, all_records.gb, genes.fna, proteins.faa named `<accession>|<gene>|<organism>`, plots/),
   submission/<record>/ (.fsa .tbl .sqn .val; submission_summary.tsv), qc/ (original_vs_mitom.tsv and the step

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1156" viewBox="0 0 980 1156" role="img" aria-label="MitoM 工作流程">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1256" viewBox="0 0 980 1256" role="img" aria-label="MitoM 工作流程（mitom run）">
 <defs>
 <style>
 text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
@@ -14,35 +14,38 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 </marker>
 </defs>
 <rect x="0" y="0" width="980" height="100%" fill="#ffffff" />
-<text class="title" x="490" y="42" font-size="26" text-anchor="middle">MitoM 工作流程</text>
-<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">从输入识别到最终 GenBank 结果的主要步骤</text>
+<text class="title" x="490" y="42" font-size="26" text-anchor="middle">MitoM 工作流程（mitom run）</text>
+<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">11 步，与终端的 [Step k/11] 一致</text>
 <rect class="node-accent" x="140" y="112" width="700" height="72" />
-<text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">输入数据</tspan><tspan x="490" dy="1.35em">FASTA / GenBank；FASTQ 双端可选</tspan></text>
+<text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">1 读入与去重</tspan><tspan x="490" dy="1.35em">同一基因组只留一条；qc/dedup_report.tsv</tspan></text>
 <path class="arrow" d="M 490 189 L 490 206" />
 <rect class="node" x="140" y="212" width="700" height="72" />
-<text x="490" y="240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">输入识别与依赖检查</tspan><tspan x="490" dy="1.35em">Biopython、Snakemake</tspan></text>
+<text x="490" y="240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">2 第一轮注释</tspan><tspan x="490" dy="1.35em">13 个蛋白基因、2 个 rRNA、22 个 tRNA；核对环状 / 线状</tspan></text>
 <path class="arrow" d="M 490 289 L 490 306" />
 <rect class="node" x="140" y="312" width="700" height="72" />
-<text x="490" y="340" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">GenBank 去重与转换</tspan><tspan x="490" dy="1.35em">保留 B64_2 与 B64 为不同编号</tspan></text>
+<text x="490" y="340" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">3 统一方向与起点</tspan><tspan x="490" dy="1.35em">正链，从 cox1（--which_gene_first）开始</tspan></text>
 <path class="arrow" d="M 490 389 L 490 406" />
 <rect class="node" x="140" y="412" width="700" height="72" />
-<text x="490" y="440" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">生成内部 FASTA</tspan><tspan x="490" dy="1.35em">S00001...；记录 id_map.tsv</tspan></text>
+<text x="490" y="440" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">4 转动后核查，必要时第二轮注释</tspan><tspan x="490" dy="1.35em">--if_reannotation_2 auto：只重注受转动影响的记录</tspan></text>
 <path class="arrow" d="M 490 489 L 490 506" />
 <rect class="node" x="140" y="512" width="700" height="72" />
-<text x="490" y="540" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">第一轮注释（mito_core.py）</tspan><tspan x="490" dy="1.35em">输出 01.anno_round1/ 和 sample.log</tspan></text>
+<text x="490" y="540" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">5 写 GenBank</tspan><tspan x="490" dy="1.35em">写回原记录的物种、文献、标本信息</tspan></text>
 <path class="arrow" d="M 490 589 L 490 606" />
 <rect class="node" x="140" y="612" width="700" height="72" />
-<text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">按目标基因重定向</tspan><tspan x="490" dy="1.35em">默认 cox1；保留 linear / circular</tspan></text>
+<text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">6 补漏</tspan><tspan x="490" dy="1.35em">12S / 16S（rRNA HMM）、内含子；--rescue 时 MITOS2</tspan></text>
 <path class="arrow" d="M 490 689 L 490 706" />
 <rect class="node" x="140" y="712" width="700" height="72" />
-<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">可选第二轮重注释</tspan><tspan x="490" dy="1.35em">if_reannotation_2=yes 时运行</tspan></text>
+<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">7 校正</tspan><tspan x="490" dy="1.35em">按 NCBI 规范修整端点和基因名；标出非编码区</tspan></text>
 <path class="arrow" d="M 490 789 L 490 806" />
 <rect class="node" x="140" y="812" width="700" height="72" />
-<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">最终 GenBank 生成</tspan><tspan x="490" dy="1.35em">ID 重写、metadata 恢复、/organism= 同步</tspan></text>
+<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">8 NCBI 检查与提交文件</tspan><tspan x="490" dy="1.35em">table2asn → submission/</tspan></text>
 <path class="arrow" d="M 490 889 L 490 906" />
 <rect class="node" x="140" y="912" width="700" height="72" />
-<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">统计与问题清单</tspan><tspan x="490" dy="1.35em">annotation-summary.tsv、failed/mismatch 列表</tspan></text>
+<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">9 与原注释比较</tspan><tspan x="490" dy="1.35em">qc/original_vs_mitom.tsv（GenBank 输入）</tspan></text>
 <path class="arrow" d="M 490 989 L 490 1006" />
-<rect class="node-accent" x="140" y="1012" width="700" height="72" />
-<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">合并最终结果</tspan><tspan x="490" dy="1.35em">04.final_gb/*.gbf 与 all.final.gbf</tspan></text>
+<rect class="node" x="140" y="1012" width="700" height="72" />
+<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">10 基因组圈图</tspan><tspan x="490" dy="1.35em">annotation/plots/</tspan></text>
+<path class="arrow" d="M 490 1089 L 490 1106" />
+<rect class="node-accent" x="140" y="1112" width="700" height="72" />
+<text x="490" y="1140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">11 整理输出</tspan><tspan x="490" dy="1.35em">summary.tsv、annotation/、submission/、qc/、input/、logs/</tspan></text>
 </svg>

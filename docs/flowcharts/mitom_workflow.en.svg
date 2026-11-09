@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1156" viewBox="0 0 980 1156" role="img" aria-label="MitoM Workflow">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1256" viewBox="0 0 980 1256" role="img" aria-label="MitoM workflow (mitom run)">
 <defs>
 <style>
 text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
@@ -14,35 +14,38 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 </marker>
 </defs>
 <rect x="0" y="0" width="980" height="100%" fill="#ffffff" />
-<text class="title" x="490" y="42" font-size="26" text-anchor="middle">MitoM Workflow</text>
-<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">Main steps from input detection to final GenBank outputs</text>
+<text class="title" x="490" y="42" font-size="26" text-anchor="middle">MitoM workflow (mitom run)</text>
+<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">11 steps, as [Step k/11] on the terminal</text>
 <rect class="node-accent" x="140" y="112" width="700" height="72" />
-<text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Input data</tspan><tspan x="490" dy="1.35em">FASTA / GenBank; optional paired FASTQ</tspan></text>
+<text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">1 Read input, remove duplicates</tspan><tspan x="490" dy="1.35em">one record per genome; qc/dedup_report.tsv</tspan></text>
 <path class="arrow" d="M 490 189 L 490 206" />
 <rect class="node" x="140" y="212" width="700" height="72" />
-<text x="490" y="240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Detect input and check dependencies</tspan><tspan x="490" dy="1.35em">Biopython, Snakemake</tspan></text>
+<text x="490" y="240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">2 Round-1 annotation</tspan><tspan x="490" dy="1.35em">13 protein genes, 2 rRNAs, 22 tRNAs; circular or linear checked</tspan></text>
 <path class="arrow" d="M 490 289 L 490 306" />
 <rect class="node" x="140" y="312" width="700" height="72" />
-<text x="490" y="340" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Deduplicate and convert GenBank</tspan><tspan x="490" dy="1.35em">Keep local IDs such as B64_2 distinct from B64</tspan></text>
+<text x="490" y="340" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">3 Re-orient</tspan><tspan x="490" dy="1.35em">plus strand, start at cox1 (--which_gene_first)</tspan></text>
 <path class="arrow" d="M 490 389 L 490 406" />
 <rect class="node" x="140" y="412" width="700" height="72" />
-<text x="490" y="440" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Create internal FASTA files</tspan><tspan x="490" dy="1.35em">S00001... plus id_map.tsv</tspan></text>
+<text x="490" y="440" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">4 Check after re-orientation (round 2)</tspan><tspan x="490" dy="1.35em">--if_reannotation_2 auto: only records the shift broke</tspan></text>
 <path class="arrow" d="M 490 489 L 490 506" />
 <rect class="node" x="140" y="512" width="700" height="72" />
-<text x="490" y="540" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Annotation, phase 1 (mito_core.py)</tspan><tspan x="490" dy="1.35em">Writes 01.anno_round1/ and sample.log files</tspan></text>
+<text x="490" y="540" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">5 Write GenBank</tspan><tspan x="490" dy="1.35em">original header (organism, references, voucher) copied back</tspan></text>
 <path class="arrow" d="M 490 589 L 490 606" />
 <rect class="node" x="140" y="612" width="700" height="72" />
-<text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Reorient by target gene</tspan><tspan x="490" dy="1.35em">Default cox1; preserve linear / circular topology</tspan></text>
+<text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">6 Add what the core missed</tspan><tspan x="490" dy="1.35em">12S / 16S (rRNA HMM), introns; MITOS2 with --rescue</tspan></text>
 <path class="arrow" d="M 490 689 L 490 706" />
 <rect class="node" x="140" y="712" width="700" height="72" />
-<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Optional phase-2 re-annotation</tspan><tspan x="490" dy="1.35em">Runs when if_reannotation_2=yes</tspan></text>
+<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">7 Curate</tspan><tspan x="490" dy="1.35em">gene ends and names to NCBI rules; non-coding regions</tspan></text>
 <path class="arrow" d="M 490 789 L 490 806" />
 <rect class="node" x="140" y="812" width="700" height="72" />
-<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Build final GenBank files</tspan><tspan x="490" dy="1.35em">Rewrite IDs, restore metadata, synchronize /organism=</tspan></text>
+<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">8 NCBI check and submission files</tspan><tspan x="490" dy="1.35em">table2asn -&gt; submission/</tspan></text>
 <path class="arrow" d="M 490 889 L 490 906" />
 <rect class="node" x="140" y="912" width="700" height="72" />
-<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Write statistics and problem lists</tspan><tspan x="490" dy="1.35em">annotation-summary.tsv and failed/mismatch files</tspan></text>
+<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">9 Compare with the original annotation</tspan><tspan x="490" dy="1.35em">qc/original_vs_mitom.tsv (GenBank input)</tspan></text>
 <path class="arrow" d="M 490 989 L 490 1006" />
-<rect class="node-accent" x="140" y="1012" width="700" height="72" />
-<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">Merge final outputs</tspan><tspan x="490" dy="1.35em">04.final_gb/*.gbf and all.final.gbf</tspan></text>
+<rect class="node" x="140" y="1012" width="700" height="72" />
+<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">10 Genome maps</tspan><tspan x="490" dy="1.35em">annotation/plots/</tspan></text>
+<path class="arrow" d="M 490 1089 L 490 1106" />
+<rect class="node-accent" x="140" y="1112" width="700" height="72" />
+<text x="490" y="1140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">11 Organise the output</tspan><tspan x="490" dy="1.35em">summary.tsv, annotation/, submission/, qc/, input/, logs/</tspan></text>
 </svg>

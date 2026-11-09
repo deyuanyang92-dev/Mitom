@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Render bilingual workflow diagrams for the MitoM pipeline (mitom_pipeline.py).
+Render the bilingual workflow diagrams (SVG and Mermaid) of `mitom run` (mitom_run.RUN_STAGES) into docs/flowcharts/.
 """
 
 from __future__ import annotations
@@ -88,45 +88,50 @@ def render_svg(title: str, subtitle: str, nodes: Iterable[Node], out_path: Path)
     out_path.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
+# The 11 stages of `mitom run` (mitom_run.RUN_STAGES; `mitom annotate` skips 3, 4, 9, 11). Keep in step with the
+# step table of README.md section 3.
+ZH_NODES: List[Node] = [
+    ("input", ["1 读入与去重", "同一基因组只留一条；qc/dedup_report.tsv"]),
+    ("annotate", ["2 第一轮注释", "13 个蛋白基因、2 个 rRNA、22 个 tRNA；核对环状 / 线状"]),
+    ("reorient", ["3 统一方向与起点", "正链，从 cox1（--which_gene_first）开始"]),
+    ("round2", ["4 转动后核查，必要时第二轮注释", "--if_reannotation_2 auto：只重注受转动影响的记录"]),
+    ("write", ["5 写 GenBank", "写回原记录的物种、文献、标本信息"]),
+    ("add_missing", ["6 补漏", "12S / 16S（rRNA HMM）、内含子；--rescue 时 MITOS2"]),
+    ("curate", ["7 校正", "按 NCBI 规范修整端点和基因名；标出非编码区"]),
+    ("ncbi", ["8 NCBI 检查与提交文件", "table2asn → submission/"]),
+    ("compare", ["9 与原注释比较", "qc/original_vs_mitom.tsv（GenBank 输入）"]),
+    ("maps", ["10 基因组圈图", "annotation/plots/"]),
+    ("output", ["11 整理输出", "summary.tsv、annotation/、submission/、qc/、input/、logs/"]),
+]
+EN_NODES: List[Node] = [
+    ("input", ["1 Read input, remove duplicates", "one record per genome; qc/dedup_report.tsv"]),
+    ("annotate", ["2 Round-1 annotation", "13 protein genes, 2 rRNAs, 22 tRNAs; circular or linear checked"]),
+    ("reorient", ["3 Re-orient", "plus strand, start at cox1 (--which_gene_first)"]),
+    ("round2", ["4 Check after re-orientation (round 2)", "--if_reannotation_2 auto: only records the shift broke"]),
+    ("write", ["5 Write GenBank", "original header (organism, references, voucher) copied back"]),
+    ("add_missing", ["6 Add what the core missed", "12S / 16S (rRNA HMM), introns; MITOS2 with --rescue"]),
+    ("curate", ["7 Curate", "gene ends and names to NCBI rules; non-coding regions"]),
+    ("ncbi", ["8 NCBI check and submission files", "table2asn -> submission/"]),
+    ("compare", ["9 Compare with the original annotation", "qc/original_vs_mitom.tsv (GenBank input)"]),
+    ("maps", ["10 Genome maps", "annotation/plots/"]),
+    ("output", ["11 Organise the output", "summary.tsv, annotation/, submission/, qc/, input/, logs/"]),
+]
+
+
+def write_mermaid(nodes: Sequence[Node], out_path: Path) -> None:
+    ids = [chr(ord("A") + i) for i in range(len(nodes))]
+    lines = ["flowchart TD"] + [f'    {i}["{t}<br/>{d}"]' for i, (_, (t, d)) in zip(ids, nodes)]
+    lines += ["", "    " + " --> ".join(ids)]
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main() -> int:
-    zh_nodes: List[Node] = [
-        ("input", ["输入数据", "FASTA / GenBank；FASTQ 双端可选"]),
-        ("preflight", ["输入识别与依赖检查", "Biopython、Snakemake"]),
-        ("gb_convert", ["GenBank 去重与转换", "保留 B64_2 与 B64 为不同编号"]),
-        ("internal", ["生成内部 FASTA", "S00001...；记录 id_map.tsv"]),
-        ("phase1", ["第一轮注释（mito_core.py）", "输出 01.anno_round1/ 和 sample.log"]),
-        ("reorient", ["按目标基因重定向", "默认 cox1；保留 linear / circular"]),
-        ("phase2", ["可选第二轮重注释", "if_reannotation_2=yes 时运行"]),
-        ("finalize", ["最终 GenBank 生成", "ID 重写、metadata 恢复、/organism= 同步"]),
-        ("summary", ["统计与问题清单", "annotation-summary.tsv、failed/mismatch 列表"]),
-        ("merge", ["合并最终结果", "04.final_gb/*.gbf 与 all.final.gbf"]),
-    ]
-
-    en_nodes: List[Node] = [
-        ("input", ["Input data", "FASTA / GenBank; optional paired FASTQ"]),
-        ("preflight", ["Detect input and check dependencies", "Biopython, Snakemake"]),
-        ("gb_convert", ["Deduplicate and convert GenBank", "Keep local IDs such as B64_2 distinct from B64"]),
-        ("internal", ["Create internal FASTA files", "S00001... plus id_map.tsv"]),
-        ("phase1", ["Annotation, phase 1 (mito_core.py)", "Writes 01.anno_round1/ and sample.log files"]),
-        ("reorient", ["Reorient by target gene", "Default cox1; preserve linear / circular topology"]),
-        ("phase2", ["Optional phase-2 re-annotation", "Runs when if_reannotation_2=yes"]),
-        ("finalize", ["Build final GenBank files", "Rewrite IDs, restore metadata, synchronize /organism="]),
-        ("summary", ["Write statistics and problem lists", "annotation-summary.tsv and failed/mismatch files"]),
-        ("merge", ["Merge final outputs", "04.final_gb/*.gbf and all.final.gbf"]),
-    ]
-
-    render_svg(
-        "MitoM 工作流程",
-        "从输入识别到最终 GenBank 结果的主要步骤",
-        zh_nodes,
-        OUT_DIR / "mitom_workflow.zh.svg",
-    )
-    render_svg(
-        "MitoM Workflow",
-        "Main steps from input detection to final GenBank outputs",
-        en_nodes,
-        OUT_DIR / "mitom_workflow.en.svg",
-    )
+    render_svg("MitoM 工作流程（mitom run）", "11 步，与终端的 [Step k/11] 一致", ZH_NODES,
+               OUT_DIR / "mitom_workflow.zh.svg")
+    render_svg("MitoM workflow (mitom run)", "11 steps, as [Step k/11] on the terminal", EN_NODES,
+               OUT_DIR / "mitom_workflow.en.svg")
+    write_mermaid(ZH_NODES, OUT_DIR / "mitom_workflow.zh.mmd")
+    write_mermaid(EN_NODES, OUT_DIR / "mitom_workflow.en.mmd")
     return 0
 
 
