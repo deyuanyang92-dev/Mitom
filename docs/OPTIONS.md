@@ -115,11 +115,11 @@ Annotation:
   --orf {yes,all,report,no}
                         ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in
                         orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein'
-                        when a homolog in another genome stayed open through enough substitutions to show
-                        selection (p <= 0.01, most of them at codon position 3) or is a known protein
-                        family; ORFs longer than chance without such a homolog and pieces of the 13 genes
-                        are WARNINGs and named in the NCR /note. all: also write ORFs longer than chance.
-                        report: write none. no: skip.
+                        when a homologs in other genomes stayed open through enough substitutions to show
+                        selection and differ in the codon pattern of a coding frame (most at position 3,
+                        least at 2), or it belongs to a known protein family; ORFs longer than chance
+                        without such a homolog and pieces of the 13 genes are WARNINGs and named in the NCR
+                        /note. all: also write ORFs longer than chance. report: write none. no: skip.
   --orf_ref GB          GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat;
                         default: none - the other records of the run and models/orf_library.fna.gz, RefSeq
                         animal mitogenomes). Give relatives when a genome's family is not in RefSeq.
@@ -301,11 +301,11 @@ Annotation:
   --orf {yes,all,report,no}
                         ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in
                         orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein'
-                        when a homolog in another genome stayed open through enough substitutions to show
-                        selection (p <= 0.01, most of them at codon position 3) or is a known protein
-                        family; ORFs longer than chance without such a homolog and pieces of the 13 genes
-                        are WARNINGs and named in the NCR /note. all: also write ORFs longer than chance.
-                        report: write none. no: skip.
+                        when a homologs in other genomes stayed open through enough substitutions to show
+                        selection and differ in the codon pattern of a coding frame (most at position 3,
+                        least at 2), or it belongs to a known protein family; ORFs longer than chance
+                        without such a homolog and pieces of the 13 genes are WARNINGs and named in the NCR
+                        /note. all: also write ORFs longer than chance. report: write none. no: skip.
   --orf_ref GB          GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat;
                         default: none - the other records of the run and models/orf_library.fna.gz, RefSeq
                         animal mitogenomes). Give relatives when a genome's family is not in RefSeq.
@@ -474,11 +474,11 @@ Annotation:
   --orf {yes,all,report,no}
                         ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in
                         orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein'
-                        when a homolog in another genome stayed open through enough substitutions to show
-                        selection (p <= 0.01, most of them at codon position 3) or is a known protein
-                        family; ORFs longer than chance without such a homolog and pieces of the 13 genes
-                        are WARNINGs and named in the NCR /note. all: also write ORFs longer than chance.
-                        report: write none. no: skip.
+                        when a homologs in other genomes stayed open through enough substitutions to show
+                        selection and differ in the codon pattern of a coding frame (most at position 3,
+                        least at 2), or it belongs to a known protein family; ORFs longer than chance
+                        without such a homolog and pieces of the 13 genes are WARNINGs and named in the NCR
+                        /note. all: also write ORFs longer than chance. report: write none. no: skip.
   --orf_ref GB          GenBank file or folder of relatives whose ORFs count as homologs for --orf (repeat;
                         default: none - the other records of the run and models/orf_library.fna.gz, RefSeq
                         animal mitogenomes). Give relatives when a genome's family is not in RefSeq.

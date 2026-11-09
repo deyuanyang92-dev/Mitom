@@ -111,8 +111,9 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--orf", choices=["yes", "all", "report", "no"], default="yes",
                        help="ORFs of unknown function in the sequence no gene covers (mito_orf.py; evidence in "
                             "orf_report.tsv). yes (default): written as CDS orf<codons> 'hypothetical protein' when a "
-                            "homolog in another genome stayed open through enough substitutions to show selection "
-                            "(p <= 0.01, most of them at codon position 3) or is a known protein family; ORFs longer "
+                            "homologs in other genomes stayed open through enough substitutions to show selection and "
+                            "differ in the codon pattern of a coding frame (most at position 3, least at 2), or it "
+                            "belongs to a known protein family; ORFs longer "
                             "than chance without such a homolog and pieces of the 13 genes are WARNINGs and named in "
                             "the NCR /note. all: also write ORFs longer than chance. report: write none. no: skip.")
         g.add_argument("--orf_ref", action="append", default=None, metavar="GB",

@@ -153,3 +153,47 @@ def test_circular_orf_across_the_origin_is_found():
     o = [o for o in m.candidates(rec, 5) if o.strand == 1 and o.codons >= 89]
     assert o and o[0].end > len(seq) and m.location(o[0], len(seq)).parts[1].start == 0
     assert np.isfinite(o[0].e_len)
+
+
+def test_codon_pattern_rejects_even_differences_and_the_other_strand_frame():
+    assert m.third_position_p([71, 35, 117]) < 1e-8               # coding: 2 least, 3 most
+    assert m.third_position_p([27, 22, 38]) > 0.05                # nearly even (a fish control region)
+    assert m.third_position_p([35, 71, 117]) == 1.0               # position 1 least: the frame on the other strand
+
+
+def test_fisher_combines_two_tests():
+    assert m.fisher(0.01, 0.01) == pytest.approx(1e-4 * (1 - np.log(1e-4)))
+    assert m.fisher(1.0, 1.0) == 1.0
+
+
+def test_mst_bound_adds_up_many_close_relatives():
+    """Ten copies, each 5 differences from the query at its own positions: the MST is 50 long, the bound half of it
+    (combined_evidence takes the larger of this and one substitution per extra base kind and position)."""
+    q = {i: "A" for i in range(100)}
+    copies = [q] + [{**q, **{10 * k + j: "G" for j in range(5)}} for k in range(10)]
+    assert m.mst_bound(copies) == 25
+    assert m.mst_bound([q, dict(q)]) == 0
+
+
+def test_introns_are_open_to_the_orf_search():
+    """A homing endonuclease ORF inside an intron: the joined CDS covers its exons only."""
+    from Bio.SeqFeature import CompoundLocation
+    body = orf_nt(120)
+    seq = filler(300) + "ATG" + "GCT" * 40 + filler(200, 9) + body + filler(200, 10) + "GCT" * 40 + "TAA" + filler(300, 11)
+    e1 = (300, 300 + 123)
+    i0 = e1[1] + 200
+    e2s = i0 + len(body) + 200
+    rec = record(seq)
+    rec.features.append(SeqFeature(CompoundLocation([FeatureLocation(*e1, 1), FeatureLocation(e2s, e2s + 123, 1)]),
+                                   type="CDS", qualifiers={"gene": ["cox1"]}))
+    rec.features.append(SeqFeature(FeatureLocation(300, e2s + 123, 1), type="gene", qualifiers={"gene": ["cox1"]}))
+    assert [o for o in m.candidates(rec, 5) if o.strand == 1 and o.start == i0]
+
+
+def test_frame_rank_prefers_the_frame_with_position_2_least_changed():
+    a = m.Orf("R", 0, 300, 1, "Y" * 99, "TAC" * 99, "Y" * 99, "TAC" * 100, 1.0, True)
+    b = m.Orf("R", 0, 300, -1, "Y" * 99, "TAC" * 99, "Y" * 99, "TAC" * 100, 1.0, True)
+    a.cls = b.cls = "conserved"
+    a.best = {"d": [71, 35, 117], "pos3": 0.52, "p_joint": 1e-6}
+    b.best = {"d": [35, 71, 117], "pos3": 0.52, "p_joint": 1e-9}          # stronger p, wrong pattern
+    assert m.frame_rank(a) < m.frame_rank(b)

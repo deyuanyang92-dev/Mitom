@@ -1,2 +1,3 @@
 record	orf	class	written	start	end	strand	codons	e_len	homolog	homolog_evalue	homolog_identity	substitutions	p_open	pos3_share	p_pos3	family	evidence
-NC_010217	orf75	known_family	yes	15357	15584	+	75	4.6e+00	atp9	3e-25	91.489					atp9	similar to atp9 (MFannot protein family), blastp E=3e-25
+NC_010217	orf334	long_unconfirmed	no	1115	2119	+	334	7.7e-07	NC_069233.1|14114|15076|+|ncr|4|Cnidaria|Physogyra_lichtensteini and 14 more	5e-175	76.133	1048	6.6e-23	0.61	1.0e+00		longer than chance ORFs (E=8e-07); homolog NC_069233.1|14114|15076|+|ncr|4|Cnidaria|Physogyra_lichtensteini and 14 more shows no selection (1048 differences, p_open=0.00, position 3 p=1.00) - not confirmed, check
+NC_010217	orf75	known_family	yes	15357	15584	+	75	1.0e+01	atp9	3e-25	91.489					atp9	similar to atp9 (MFannot protein family), blastp E=3e-25

@@ -138,10 +138,10 @@ def run_orf(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResul
     report = reports_dir(out_root) / "orf_report.tsv"
     from mito_common import write_tsv
     write_tsv(report, mito_orf.COLUMNS, mito_orf.report_rows(orfs))
-    for o in orfs:
+    for o in orfs:                       # (a WARNING, not record_event: the record did not fail)
         if not o.written:
-            record_event(o.record, f"ORF {o.start + 1}..{o.end} ({o.codons} codons) not written: {o.cls}: "
-                                   f"{mito_orf.evidence(o)}")
+            logging.warning(f"[ORF] {o.record} {o.start + 1}..{o.end} ({o.codons} codons) not written: {o.cls}: "
+                            f"{mito_orf.evidence(o)}")
     n_w = sum(o.written for o in orfs)
     return OrfResult(f"{n_w} written as hypothetical protein, {len(orfs) - n_w} to check (WARNING), in "
                      f"{len(recs)} records; evidence in {where(args, 'reports/orf_report.tsv')}",

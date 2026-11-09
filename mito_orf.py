@@ -1,41 +1,48 @@
 #!/usr/bin/env python3
-"""mito_orf.py - open reading frames of unknown function in the sequence no gene covers.
+"""mito_orf.py - open reading frames of unknown function in the sequence no gene exon covers.
 
-Many animal mitogenomes hold a protein gene that is not one of the 13 (e.g. a conserved ~355-codon ORF between trnQ
-and trnA in the spionid polychaetes Polydora and Boccardiella, which NCBI leaves unannotated). An ORF is a gene when
-selection has kept it open; length alone cannot tell that: AT-rich sequence has few stop codons, so 80-110-codon ORFs
-are common by chance, and a short real protein is no longer than a chance ORF. Two pieces of evidence, both from
-first principles, decide it:
+Many animal mitogenomes hold protein genes beyond the 13: atp9 of sponges, mutS of octocorals, F-ORF / M-ORF of
+freshwater mussels, homing endonucleases and maturases inside introns, a conserved ~355-codon ORF between trnQ and
+trnA of the spionid polychaetes Polydora and Boccardiella (NCBI leaves it unannotated). An ORF is a gene when
+selection has kept it open. Length alone cannot tell: AT-rich sequence has few stops, so ORFs of 75 codons and more
+are common by chance (an ORF finder at that length writes 357 ORFs in 362 intron-free RefSeq mitogenomes), and short
+real proteins are no longer. The evidence, from first principles:
 
-1. Length beyond chance (E_len): under the base composition of the record's unannotated sequence, the expected number
-   of ORFs at least this long that start at a start codon of the genetic code,
-       E_len = 2 * F * p_start * (1 - p_stop) ** L      (F nt unannotated, both strands; L codons),
-   tells whether the ORF is longer than chance ORFs are.
-2. Kept open (p_open): the ORF's protein has a homolog (blastp E <= 1e-5, low-complexity masked) that is itself an
-   ORF: in the other records of the run, or in a library of ORFs and non-standard CDS of RefSeq animal mitogenomes
-   (models/orf_library.fna.gz, scripts/build_orf_library.py). The nucleotide differences between the aligned codons
-   of the two copies, d, are a lower bound of the substitutions since they split; in non-coding sequence a
-   substitution makes a stop codon with probability f (the share of single-nucleotide changes of the ORF's own
-   codons that give one), so both copies stayed open by chance with probability
-       p_open = (1 - f) ** d.
-   A close relative (few differences) proves nothing; p_open <= 0.01 shows selection. A homolog in a known protein
-   family (models/mfannot_proteins, mitochondrial and plastid genes of all eukaryotes) is evidence by itself.
+1. Length beyond chance: under the base composition of the record's unannotated sequence, the expected number of
+   ORFs at least this long from a start codon of the code, E_len = 2 F p_start (1 - p_stop)^L (F nt; L codons).
+2. Kept open: the ORF has homologs (blastp E <= 1e-5, low-complexity masked) that are ORFs themselves - the other
+   records of the run, the ORF library of 16,073 RefSeq animal mitogenomes (models/orf_library.fna.gz,
+   scripts/build_orf_library.py), --ref relatives. Up to 20 are placed on the ORF; the substitutions since they split
+   are at least the larger of (a) one per extra base kind at each position and (b) half the minimum spanning tree of
+   their differences (any history with ancestors is at least that long). In non-coding sequence a substitution makes
+   a stop with probability f (single-nucleotide changes of the ORF's own codons), so all stayed open by chance with
+   p_open = (1 - f)^substitutions. A close relative proves nothing; many relatives add up.
+3. Coding frame: in local nucleotide alignments with the homologs (which do not know the frame; the protein alignment
+   would favour differences at position 3), a coding frame changes most at codon position 3 and least at 2 (every
+   change there alters the amino acid): chi-square against 1/3 each, p_frame, counted only in that order (else 1).
+   The frame on the other strand whose third positions coincide changes least at its position 1, so it fails.
+4. Tandem repeats (copies >= 85 % identical, period 3-150 nt) are masked first: an array of a stop-free unit is an
+   ORF of any length and aligns with any other array (control regions).
+5. Overlapping ORFs (other frames, other strand) keep the one whose position 2 changes least, then the larger share
+   at position 3, then the stronger evidence; the rest are its shadows.
 
-Classes (orf_report.tsv: every ORF of >= 40 codons longer than chance or with a homolog that shows selection):
-    conserved          p_open <= 0.01                                  -> CDS orf<codons>, "hypothetical protein"
-    known_family       homolog in a known family (not the 13)           -> CDS orf<codons>, the /note names the family
-    long_unconfirmed   E_len <= 0.01, no homolog showing selection      -> not written (--orf all: written);
-                                                                           a WARNING, and the NCR /note names it
-    standard_fragment  homolog of one of the 13 protein genes           -> not written; a WARNING (second copy,
-                                                                           pseudogene, or a piece the annotation missed)
-ORFs within chance length without such a homolog are not reported (chance ORFs: in all frames of any AT-rich stretch).
-A written ORF is a CDS from the first start codon of the unannotated stretch to its stop codon, or - when the frame
-runs on into the next gene - to the base before it with an incomplete stop T / TA (/transl_except, as mitochondrial
-genes end before a tRNA); /gene="orf<codons>", /product="hypothetical protein", /note with the evidence. Records of
-an earlier run: their mito_orf genes are replaced.
+Classes (orf_report.tsv):
+    conserved          Fisher's combined p of p_open and p_frame <= 1e-4, each <= 0.05
+                                                                    -> CDS orf<codons>, "hypothetical protein"
+    known_family       homolog in a known family (models/mfannot_proteins, not the 13; atp9 gets its name)
+                                                                    -> CDS
+    long_unconfirmed   E_len <= 0.01 without such evidence           -> a WARNING, NCR /note (--orf all: written)
+    standard_fragment  homolog of one of the 13 protein genes        -> a WARNING (second copy, pseudogene, or a
+                                                                       piece the annotation missed)
+ORFs within chance length without such homologs are not reported (chance ORFs are in every AT-rich stretch).
+Introns are open to the search (non-coding to their host gene). A written ORF runs from the first start codon of the
+unannotated stretch to its stop, or - when the frame runs on into the next gene - to the base before it with an
+incomplete stop T / TA (/transl_except); a frame that runs into a gene otherwise is a WARNING naming that gene ("in
+frame": perhaps its start lies further upstream). Records of an earlier run: their mito_orf genes are replaced.
+Measured: benchmark/results/orf_2026-11-09/README.md.
 
 Usage: python3 mito_orf.py -i <GenBank file or folder> -o <out folder> [--genetic_code 5] [--orf yes|all|report]
-       (in `mitom run` / `annotate` / `import`: the step after curation, before the non-coding regions; --orf no: off)
+       [--ref relatives.gb]  (`mitom run` / `annotate` / `import`: after curation, before the non-coding regions)
 """
 from __future__ import annotations
 
@@ -66,14 +73,16 @@ LIBRARY = HERE / "models" / "orf_library.fna.gz"
 FAMILIES = HERE / "models" / "mfannot_proteins"
 MIN_AA = 40                 # shortest ORF considered (codons): below this a homology search has no power
 E_LEN = 0.01                # length beyond chance: expected chance ORFs this long per record
-P_OPEN = 0.01               # kept open by selection: chance that both copies stayed open
-TESTED = 5                  # homologs (best blastp E) given the nucleotide selection tests
+P_OPEN = 0.01               # kept open by selection: chance that both copies stayed open (alone)
+P_JOINT = 1e-4              # kept open and coding frame: Fisher's combined p (two tests at 0.01 each)
+P_EACH = 0.05               # ... each of the two pointing the right way
+MAX_HOMOLOGS = 20           # homologs (best blastp E, distinct) joined in the selection tests
 E_BLAST = 1e-5              # homolog: blastp E-value
 REPEAT_ID = 0.85            # tandem repeat: copies >= 85 % identical ...
 REPEAT_COPIES = 2           # ... over >= 2 periods (period 3-150 nt)
 FREE = 0.9                  # share of a written ORF's codons in unannotated sequence (overlaps with a tRNA end)
 NOTE = "found by MitoM mito_orf"      # start of the /note of every gene this module writes
-COVERING = {"CDS", "rRNA", "tRNA", "gene", "mRNA", "intron", "exon"}
+EXON_TYPES = {"CDS", "rRNA", "tRNA"}
 STANDARD = set(PCG)
 COLUMNS = ["record", "orf", "class", "written", "start", "end", "strand", "codons", "e_len", "homolog",
            "homolog_evalue", "homolog_identity", "substitutions", "p_open", "pos3_share", "p_pos3", "family", "evidence"]
@@ -97,16 +106,20 @@ def code_of(rec: SeqRecord, default: int) -> int:
 
 
 def covered_mask(rec: SeqRecord) -> np.ndarray:
-    """True where a gene, CDS, rRNA, tRNA or intron lies (a joined gene covers its introns: mito_ncr.extent);
-    this module's own ORFs and non-coding / control-region features do not cover."""
+    """True where an exon of a CDS, rRNA or tRNA lies. Introns are free: to their host gene they are non-coding, and
+    they hold ORFs of their own (homing endonucleases of group I introns, maturases of group II; the mutS of
+    octocorals). A gene feature covers only when no CDS / RNA feature gives its exons. This module's own ORFs and
+    non-coding / control-region features do not cover."""
     n = len(rec.seq)
-    circular = rec.annotations.get("topology") == "circular"
     cov = np.zeros(n, dtype=bool)
-    for f in rec.features:
-        if f.type not in COVERING or f.location is None or is_orf(f):
-            continue
-        s, length = extent(f.location, n, circular)
-        cov[np.arange(s, s + length) % n] = True
+    exons = [f for f in rec.features if f.type in EXON_TYPES and f.location is not None and not is_orf(f)]
+    named = {f.qualifiers.get("gene", [""])[0] for f in exons}
+    for f in exons + [f for f in rec.features if f.type == "gene" and f.location is not None and not is_orf(f)
+                      and f.qualifiers.get("gene", [""])[0] not in named and len(f.location.parts) == 1
+                      and len(f) < 6000]:
+        for part in f.location.parts:
+            s, e = int(part.start), int(part.end)
+            cov[np.arange(s, e if e >= s else e + n) % n] = True
     return cov
 
 
@@ -321,6 +334,68 @@ def nt_differences(o: "Orf", s_nt: str) -> List[int]:
     return d
 
 
+def combined_evidence(o: "Orf", homologs: List[dict]) -> dict:
+    """The selection tests over the ORF and all its homologs together. Each homolog is placed on the ORF's codons
+    (by its blastp HSP for the substitution count, by a local nucleotide alignment for the codon positions); at every
+    position of the ORF, k different nucleotides among the copies mean >= k - 1 substitutions on any tree that joins
+    them. The sum over positions is a lower bound of the substitutions since the copies split, so that more relatives,
+    each of them close, add up; identical copies add nothing."""
+    by_p: Dict[int, set] = {}
+    by_n: Dict[int, set] = {}
+    q = o.piece_nt
+    placed: List[Dict[int, str]] = [dict(enumerate(q))]     # each copy's base at each ORF position (HSP)
+    for h in homologs:
+        qa, sa, qi, si = h["hsp"]
+        s_nt = h["s_nt"]
+        mine: Dict[int, str] = {}
+        for x, y in zip(qa, sa):
+            if x != "-" and y != "-" and x != "X":
+                for j in range(3):
+                    if 3 * si + j < len(s_nt) and 3 * qi + j < len(q):
+                        by_p.setdefault(3 * qi + j, {q[3 * qi + j]}).add(s_nt[3 * si + j])
+                        mine[3 * qi + j] = s_nt[3 * si + j]
+            qi += x != "-"
+            si += y != "-"
+        placed.append(mine)
+        aln = nt_aligner().align(q, s_nt)[0]
+        for (a, b), (c, _) in zip(*aln.aligned):
+            for k in range(b - a):
+                i = a + k
+                if o.piece[i // 3] != "X":
+                    by_n.setdefault(i, {q[i]}).add(s_nt[c + k])
+    d = [0, 0, 0]
+    for i, v in by_n.items():
+        d[i % 3] += len(v) - 1
+    columns = sum(len(v) - 1 for v in by_p.values())
+    best = homologs[0]
+    return {"name": best["name"] + (f" and {len(homologs) - 1} more" if len(homologs) > 1 else ""),
+            "src": best["src"], "evalue": best["evalue"], "identity": best["identity"], "n_homologs": len(homologs),
+            "subs": max(columns, mst_bound(placed)), "nt_diffs": sum(d),
+            "pos3": d[2] / sum(d) if sum(d) else 0.0, "p_pos3": third_position_p(d), "d": d}
+
+
+def mst_bound(copies: Sequence[Dict[int, str]]) -> int:
+    """Half the minimum spanning tree over the copies, distances = differences at the positions both hold: a lower
+    bound of the substitutions of any history joining them (a tree with ancestors at least half its MST long; tree
+    paths at least the differences). With many close relatives it is far tighter than one difference per base kind
+    and position."""
+    n = len(copies)
+    if n < 2:
+        return 0
+
+    def dist(a: Dict[int, str], b: Dict[int, str]) -> int:
+        return sum(1 for i, x in a.items() if i in b and b[i] != x)
+    inside, best = {0}, {j: dist(copies[0], copies[j]) for j in range(1, n)}
+    total = 0
+    while best:                                            # Prim
+        j = min(best, key=best.get)
+        total += best.pop(j)
+        inside.add(j)
+        for k in best:
+            best[k] = min(best[k], dist(copies[j], copies[k]))
+    return total // 2
+
+
 def codon_differences(q_aln: str, s_aln: str, q_nt: str, q_from: int, s_nt: str, s_from: int) -> int:
     """Nucleotide differences between the codons of two aligned proteins (the blastp HSP; gaps and masked repeat
     codons skipped): a lower bound of the substitutions since the two copies split - synonymous ones included, they
@@ -335,12 +410,17 @@ def codon_differences(q_aln: str, s_aln: str, q_nt: str, q_from: int, s_nt: str,
 
 
 def third_position_p(d: Sequence[int]) -> float:
-    """One-sided binomial p that >= d[2] of the sum(d) differences fall on codon position 3 if each position were
-    equally likely (1/3, as in non-coding sequence read in any frame). A protein-coding frame changes mostly at its
-    synonymous third positions; the frames beside it (and the other strand) do not."""
-    from math import comb
-    n, k = sum(d), d[2]
-    return float(sum(comb(n, i) * (1 / 3) ** i * (2 / 3) ** (n - i) for i in range(k, n + 1))) if n else 1.0
+    """p of the coding pattern of the differences at codon positions 1, 2, 3 of a frame: a protein-coding frame changes
+    most at its synonymous third positions and least at the second (every change there alters the amino acid);
+    non-coding sequence read in any frame changes the three alike. Chi-square goodness of fit against 1/3 each (2 df:
+    p = exp(-X/2)), counted only when position 3 is the most and position 2 the least changed (else 1). The frame on
+    the other strand whose third positions coincide with the gene's changes least at its position 1, so it fails."""
+    from math import exp
+    n = sum(d)
+    if not n or d[2] < max(d) or d[1] > min(d):
+        return 1.0
+    x = sum((k - n / 3) ** 2 / (n / 3) for k in d)
+    return min(1.0, exp(-x / 2))
 
 
 # ── homology ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -416,18 +496,38 @@ def search(batch: List[Orf], library: Optional[Path], exclude: set, threads: int
         h = {"name": name, "src": src, "evalue": float(ev), "identity": float(pid), "length": int(length),
              "mismatches": int(mm)}
         if s_nt:
-            h["s_nt"] = s_nt
-            h["subs"] = codon_differences(qa, sa, o.piece_nt, int(qs) - 1, s_nt, int(ss) - 1)
+            h["s_nt"], h["hsp"] = s_nt, (qa, sa, int(qs) - 1, int(ss) - 1)
         o.hits.append(h)
-    for o in batch:                                          # the selection tests on the best few homologs
-        for h in sorted((h for h in o.hits if "s_nt" in h), key=lambda h: h["evalue"])[:TESTED]:
-            d = nt_differences(o, h.pop("s_nt"))
-            h.update(nt_diffs=sum(d), pos3=d[2] / sum(d) if sum(d) else 0.0, p_pos3=third_position_p(d))
+    for o in batch:                                          # the selection tests on all homologs together
+        homologs, seen_names = [], set()
+        for h in sorted((h for h in o.hits if "s_nt" in h), key=lambda h: h["evalue"]):
+            if h["name"] not in seen_names and len(homologs) < MAX_HOMOLOGS:
+                seen_names.add(h["name"])
+                homologs.append(h)
+        if homologs:
+            o.hits.append(combined_evidence(o, homologs))
         for h in o.hits:
             h.pop("s_nt", None)
+            h.pop("hsp", None)
 
 
 STANDARD_FAMILIES = {g.lower() for g in STANDARD}
+
+
+def fisher(p1: float, p2: float) -> float:
+    """Fisher's combined p of two independent tests: P(chi2_4 >= -2 ln(p1 p2)) = p1 p2 (1 - ln(p1 p2))."""
+    from math import log
+    x = max(p1 * p2, 1e-300)
+    return min(1.0, x * (1 - log(x)))
+
+
+def frame_rank(o: "Orf") -> tuple:
+    """Order of overlapping ORFs: the coding frame changes least at codon position 2 (every change there alters the
+    amino acid) and most at 3; the frame on the other strand whose third positions coincide with them changes least
+    at its position 1. So: position 2 <= position 1 first, then the larger share at position 3, then the evidence."""
+    h = o.best or {}
+    d = h.get("d") or [0, 0, 0]
+    return (0 if d[1] <= d[0] else 1, -h.get("pos3", 0.0), strength(o))
 
 
 def classify(o: Orf, code: int) -> None:
@@ -439,7 +539,8 @@ def classify(o: Orf, code: int) -> None:
     orf = [h for h in orf if "p_pos3" in h]
     for h in orf:
         h["p_open"] = (1 - f) ** h["subs"]
-        h["selected"] = h["p_open"] <= P_OPEN and h["p_pos3"] <= P_OPEN
+        h["p_joint"] = fisher(h["p_open"], h["p_pos3"])
+        h["selected"] = h["p_joint"] <= P_JOINT and h["p_open"] <= P_EACH and h["p_pos3"] <= P_EACH
     if std:
         o.best = min(std, key=lambda h: h["evalue"])
         o.cls, o.family = "standard_fragment", o.best["name"]
@@ -447,7 +548,7 @@ def classify(o: Orf, code: int) -> None:
         o.best = min(fam, key=lambda h: h["evalue"])
         o.cls, o.family = "known_family", o.best["name"]
     elif any(h["selected"] for h in orf):
-        o.best = min((h for h in orf if h["selected"]), key=lambda h: h["p_open"] * h["p_pos3"])
+        o.best = min((h for h in orf if h["selected"]), key=lambda h: h["p_joint"])
         o.cls, o.p_open = "conserved", o.best["p_open"]
     elif o.e_len <= E_LEN:
         o.cls = "long_unconfirmed"
@@ -468,8 +569,8 @@ def evidence(o: Orf) -> str:
 def _evidence(o: Orf) -> str:
     h = o.best
     if o.cls == "conserved":
-        return (f"homolog {h['name']} ({h['src']}), blastp E={h['evalue']:.0e}, {h['identity']:.0f}% identity, "
-                f"{h['subs']} nucleotide differences: both open by chance p={o.p_open:.0e}, "
+        return (f"homolog {h['name']} ({h['src']}), blastp E={h['evalue']:.0e}, {h['identity']:.0f}% identity; "
+                f">= {h['subs']} substitutions among the copies: all open by chance p={o.p_open:.0e}, "
                 f"{100 * h['pos3']:.0f}% of the {h['nt_diffs']} differences of a nucleotide alignment at codon position 3 "
                 f"(p={h['p_pos3']:.0e})")
     if o.cls == "known_family":
@@ -548,7 +649,8 @@ def annotate(recs: List[SeqRecord], default_code: int, mode: str = "yes", librar
     for o in batch:
         classify(o, codes[o.record])
     rank = {"standard_fragment": 0, "known_family": 1, "conserved": 2, "long_unconfirmed": 3}
-    reported = sorted((o for o in batch if o.cls), key=lambda o: (rank[o.cls], strength(o)))
+    reported = sorted((o for o in batch if o.cls),
+                      key=lambda o: (rank[o.cls], *(frame_rank(o) if o.cls == "conserved" else (0, 0, strength(o)))))
     by_id = {r.id: r for r in recs}
     kept: List[Orf] = []
     for o in reported:                       # strongest first; an ORF overlapping a stronger one is its shadow
@@ -571,7 +673,7 @@ def annotate(recs: List[SeqRecord], default_code: int, mode: str = "yes", librar
 def strength(o: Orf) -> float:
     """Smaller is stronger: the chance explanation of the ORF's evidence."""
     if o.cls == "conserved":
-        return o.best["p_open"] * o.best["p_pos3"]
+        return o.best["p_joint"]
     if o.best is not None and o.cls in ("standard_fragment", "known_family"):
         return o.best["evalue"]
     return o.e_len

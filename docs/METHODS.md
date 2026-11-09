@@ -119,29 +119,35 @@ mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds 
 
 ## 未知功能的 ORF / ORFs of unknown function (mito_orf.py)
 
-13 个蛋白基因以外的编码区（如才女虫科 Polydorini 在 trnQ 与 trnA 之间约 355 个密码子的 ORF，NCBI 均未注释）：校正之后、
-标 NCR 之前，在没有基因覆盖的序列里找 ≥ 40 个密码子的 ORF（`--orf yes` 默认）。只看长度不行：富含 AT 的序列随机就有 80–110
-个密码子的 ORF，而短的真蛋白也不比随机 ORF 长。判定依据是“受选择而保持开放”：
-1. **长度超出随机**：按本记录未注释序列的碱基组成，随机出现至少这么长 ORF 的期望数 `E_len = 2·F·p_start·(1−p_stop)^L ≤ 0.01`；
-2. **保持开放**：同源（blastp E ≤ 1e-5）本身也是 ORF——来自同一次运行的其他记录、ORF 库 `models/orf_library.fna.gz`
-   （16,073 条 RefSeq 动物线粒体基因组未注释区的 120,248 个 ORF 和 371 个非标准 CDS，`scripts/build_orf_library.py`）或
-   `--orf_ref` 给的近缘物种。两份拷贝的密码子之间有 d 个核苷酸差异；非编码序列中每次替换产生终止的概率为 f（由 ORF 自身
-   的密码子算出），两份都碰巧保持开放的概率 `p_open = (1−f)^d ≤ 0.01`；近缘种差异太少，不构成证据；
-3. **编码读框**：在两份拷贝的核苷酸比对中（不受读框影响；蛋白比对会偏向第三位差异），差异集中在密码子第三位（二项检验
-   `p ≤ 0.01`，零假设 1/3）；
+13 个蛋白基因以外的编码区（海绵 atp9、八放珊瑚 mutS、淡水蚌 F-ORF / M-ORF、内含子中的归巢内切酶，才女虫科 Polydorini
+在 trnQ 与 trnA 之间约 355 个密码子的 ORF 等）：校正之后、标 NCR 之前，在没有外显子覆盖的序列（内含子也算）里找 ≥ 40 个
+密码子的 ORF（`--orf yes` 默认）。只看长度不行（ORFfinder / Geneious 式：≥ 75 个密码子在 362 条无内含子 RefSeq 中报出
+357 个），判定依据是“受选择而保持开放”：
+1. **长度超出随机**：按本记录未注释序列的碱基组成，随机出现至少这么长 ORF 的期望数 `E_len = 2·F·p_start·(1−p_stop)^L`；
+2. **保持开放**：同源（blastp E ≤ 1e-5）本身也是 ORF——同一次运行的其他记录、ORF 库 `models/orf_library.fna.gz`
+   （16,073 条 RefSeq 动物线粒体基因组，`scripts/build_orf_library.py`）、`--orf_ref` 近缘种。最多 20 个同源放到 ORF 上，
+   替换数取两个严格下限中的较大者：每个位置多出的碱基种类数之和；两两差异最小生成树长度的一半（任何带祖先的历史至少这么长）。
+   非编码序列中每次替换产生终止的概率为 f（由 ORF 自身的密码子算出），全部碰巧保持开放的概率 `p_open = (1−f)^替换数`；
+   近缘种单独不构成证据，多个近缘种可以累加；
+3. **编码读框**：在与同源的核苷酸比对中（不受读框影响；蛋白比对会偏向第三位差异），编码读框第三位差异最多、第二位最少
+   （第二位的改变一定改变氨基酸）：对 1/3 均匀的卡方检验，只在这个顺序成立时计；与真基因第三位重合的反义读框，第一位
+   差异最少，因而不成立；
 4. 先屏蔽串联重复（周期 3–150 nt、相邻拷贝 ≥ 85 % 一致）：无终止的重复单元能拼出任意长的 ORF，也能与别的重复比对上；
-5. 与更强 ORF 重叠的（其他读框、反义链）是它的影子，去掉。
+5. 重叠的 ORF（其他读框、反义链）只保留第二位差异最少、第三位比例最高、证据最强的一个。
 
-满足 2 + 3（`conserved`）或与已知蛋白家族同源（`known_family`，MFannot 家族；atp9 用其基因名和产物）的写成 CDS
-`/gene="orf<密码子数>"` `/product="hypothetical protein"`，note 写明证据；读框读进下一个基因前没有终止的，按线粒体惯例以
-T / TA 不完整终止止于该基因之前，否则不写。只满足 1 的（`long_unconfirmed`）、与 13 个基因之一同源的（`standard_fragment`）、
-读框读进下一个基因的，都不写，但在日志里给 WARNING、在 `orf_report.tsv` 列出、并写进所在 NCR 的 note，不静默。`--orf all`
-连 `long_unconfirmed` 也写；`report` 只报告；`no` 跳过。验证与 MITOS2 比较见 `benchmark/results/orf_2026-11-09/README.md`。
+`p_open` 与第 3 条的 p 用 Fisher 法合并 ≤ 1e-4、且各自 ≤ 0.05 的（`conserved`），或与已知蛋白家族同源的（`known_family`，
+MFannot 家族；atp9 用其基因名和产物），写成 CDS `/gene="orf<密码子数>"` `/product="hypothetical protein"`，note 写明证据；
+读框读进下一个基因前没有终止的，按线粒体惯例以 T / TA 不完整终止止于该基因之前，否则不写并给 WARNING（同读框时写明
+“可能是该基因起点更靠上游”）。只满足 1 的（`long_unconfirmed`）、与 13 个基因之一同源的（`standard_fragment`）也不写，
+在日志中给 WARNING、在 `orf_report.tsv` 列出、写进所在 NCR 的 note，不静默。`--orf all` 连 `long_unconfirmed` 也写；
+`report` 只报告；`no` 跳过。密码子使用偏好（GeneMark 式，与本记录 13 个基因比较）也测过：区分力太弱，未采用。
+测试结果（含与 MITOS2、ORFfinder 式长度判定的比较）：`benchmark/results/orf_2026-11-09/README.md`。
 
-An ORF is written when a homolog shows that selection kept it open (`p_open`, nucleotide differences between the two
-copies against the chance a substitution makes a stop) and the differences of a nucleotide alignment fall mostly at
-codon position 3, after masking tandem repeats; ORFs only longer than chance, pieces of the 13 genes and ORFs whose
-frame runs into the next gene are WARNINGs, rows in `orf_report.tsv` and text in the NCR /note.
+An ORF is written when homologs show that selection kept it open (substitutions since the copies split - the larger
+of one per extra base kind per position and half the MST of their differences - against the chance a substitution
+makes a stop) and differ in the codon pattern of a coding frame (most at position 3, least at 2), Fisher-combined;
+tandem repeats are masked, shadows of a stronger frame dropped, introns searched. ORFs only longer than chance,
+pieces of the 13 genes and frames running into the next gene are WARNINGs, rows in `orf_report.tsv` and NCR notes.
 
 ## 环状还是线状 / Topology (mitom_topology.py, mito_core.py --check_ends)
 

@@ -5,6 +5,13 @@ installed one.
 
 ## Unreleased
 
+### Changed (ORFs of unknown function, after a recall test on 342 NCBI-annotated non-standard CDS)
+- Introns are searched (homing endonucleases, intron mutS); substitutions are summed over up to 20 homologs (the
+  larger of one per extra base kind per position and half the MST of their differences); the frame test uses the
+  full codon pattern (position 3 most, 2 least; chi-square), which also picks the right strand of overlapping ORFs;
+  the two tests are Fisher-combined (<= 1e-4, each <= 0.05). Known ORFs written 175 -> 228 of 342; intron-free
+  RefSeq records 5 writes (ORF finding by length >= 75 codons: 357). ORF library rebuilt with these rules.
+
 ### Added (ORFs of unknown function)
 - `mito_orf.py`, step of `run` / `annotate` / `import` after the curation (`--orf yes`, default; `all`, `report`,
   `no`; `--orf_ref` relatives): an ORF in unannotated sequence is written as CDS `orf<codons>` "hypothetical protein"

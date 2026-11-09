@@ -1,0 +1,342 @@
+NC_088052.1	Cnidaria	homing endonuclease	354	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-07); homolog NC_018377.1|6475|7536|+|cds|4|Cnidaria|Stichopathes_luetk
+NC_086771.1	Cnidaria	hypothetical protein	176	1	missed		
+NC_086771.1	Cnidaria	hypothetical protein	104	1	missed		
+NC_086771.1	Cnidaria	hypothetical protein	331	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-04); no homolog - not confirmed, check; not written: no stop codon bef
+NC_086771.1	Cnidaria	hypothetical protein	207	1	missed		
+NC_086771.1	Cnidaria	hypothetical protein	187	1	missed		
+NC_086771.1	Cnidaria	hypothetical protein	147	1	missed		
+NC_086771.1	Cnidaria	hypothetical protein	1085	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=4e-23); no homolog - not confirmed, check
+NC_086771.1	Cnidaria	hypothetical protein	116	1	missed		
+NC_086771.1	Cnidaria	hypothetical protein	704	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=3e-13); no homolog - not confirmed, check
+NC_086771.1	Cnidaria	hypothetical protein	896	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=3e-18); no homolog - not confirmed, check
+NC_086771.1	Cnidaria	hypothetical protein	615	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-11); no homolog - not confirmed, check
+NC_086771.1	Cnidaria	hypothetical protein	360	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=8e-06); no homolog - not confirmed, check
+NC_086770.1	Cnidaria	hypothetical protein	119	1	missed		
+NC_086770.1	Cnidaria	hypothetical protein	118	1	missed		
+NC_086770.1	Cnidaria	hypothetical protein	131	1	missed		
+NC_086770.1	Cnidaria	hypothetical protein	367	1	written	conserved	homolog NC_086768.1|13520|14647|+|cds|4|Cnidaria|Myxobolus_wulii (library), blastp E=4e-13, 40% iden
+NC_086770.1	Cnidaria	hypothetical protein	301	1	warned:conserved	conserved	homolog NC_086768.1|21554|22442|+|cds|4|Cnidaria|Myxobolus_wulii (library), blastp E=1e-07, 60% iden
+NC_086770.1	Cnidaria	hypothetical protein	379	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=9e-09); homolog NC_086768.1|25900|27033|+|cds|4|Cnidaria|Myxobolus_wulii 
+NC_086770.1	Cnidaria	hypothetical protein	1028	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=7e-30); no homolog - not confirmed, check
+NC_086770.1	Cnidaria	hypothetical protein	979	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=3e-28); no homolog - not confirmed, check
+NC_086769.1	Cnidaria	hypothetical protein	360	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-06); homolog NC_086767.1|14382|15390|+|cds|4|Cnidaria|Myxobolus_shantu
+NC_086769.1	Cnidaria	hypothetical protein	117	1	missed		
+NC_086769.1	Cnidaria	hypothetical protein	306	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-05); no homolog - not confirmed, check
+NC_086769.1	Cnidaria	hypothetical protein	580	1	warned:standard_fragment	standard_fragment	similar to cob (E=4e-06): a second copy, a pseudogene or a piece of cob the annotation missed - chec
+NC_086769.1	Cnidaria	hypothetical protein	404	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-07); no homolog - not confirmed, check
+NC_086769.1	Cnidaria	hypothetical protein	579	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=4e-12); no homolog - not confirmed, check
+NC_086769.1	Cnidaria	hypothetical protein	377	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=7e-29); no homolog - not confirmed, check
+NC_086769.1	Cnidaria	hypothetical protein	787	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=7e-29); no homolog - not confirmed, check
+NC_086769.1	Cnidaria	hypothetical protein	120	1	missed		
+NC_086769.1	Cnidaria	hypothetical protein	784	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-18); homolog NC_086767.1|1|3624|+|cds|4|Cnidaria|Myxobolus_shantungens
+NC_086768.1	Cnidaria	hypothetical protein	958	1	missed		
+NC_086768.1	Cnidaria	hypothetical protein	325	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-05); no homolog - not confirmed, check
+NC_086768.1	Cnidaria	hypothetical protein	376	1	written	conserved	homolog NC_086770.1|4744|5844|+|cds|4|Cnidaria|Myxobolus_honghuensis (library), blastp E=2e-15, 46% 
+NC_086768.1	Cnidaria	hypothetical protein	284	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-04); no homolog - not confirmed, check
+NC_086768.1	Cnidaria	hypothetical protein	104	1	missed		
+NC_086768.1	Cnidaria	hypothetical protein	115	1	missed		
+NC_086768.1	Cnidaria	hypothetical protein	870	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-20); no homolog - not confirmed, check
+NC_086768.1	Cnidaria	hypothetical protein	296	1	missed		
+NC_086768.1	Cnidaria	hypothetical protein	378	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-07); homolog NC_086770.1|10725|11861|+|cds|4|Cnidaria|Myxobolus_honghu
+NC_086767.1	Cnidaria	hypothetical protein	1208	1	missed		
+NC_086767.1	Cnidaria	hypothetical protein	514	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-12); no homolog - not confirmed, check
+NC_086767.1	Cnidaria	hypothetical protein	356	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-07); no homolog - not confirmed, check
+NC_086767.1	Cnidaria	hypothetical protein	336	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-06); no homolog - not confirmed, check; not written: no stop codon bef
+NC_086767.1	Cnidaria	hypothetical protein	115	1	missed		
+NC_086767.1	Cnidaria	hypothetical protein	719	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-18); no homolog - not confirmed, check
+NC_086767.1	Cnidaria	hypothetical protein	418	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-10); no homolog - not confirmed, check
+NC_086767.1	Cnidaria	hypothetical protein	126	1	missed		
+NC_086767.1	Cnidaria	hypothetical protein	248	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-04); no homolog - not confirmed, check
+NC_086767.1	Cnidaria	hypothetical protein	196	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=9e-04); no homolog - not confirmed, check
+NC_086720.1	Spiralia	male open reading frame	263	1	warned:conserved	conserved	homolog NC_013659.1|14599|15279|-|ncr|5|Spiralia|Venustaconcha_ellipsiformis and 1 more (library), b
+NC_085825.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_084193.1	Cnidaria	replication helicase subunit	296	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=5e-06); homolog NC_061766.1|105|1025|-|cds|4|Cnidaria|Catostylus_townsend
+NC_084193.1	Cnidaria	hypothetical protein	101	1	missed		
+NC_082284.1	Cnidaria	DNA mismatch repair protein Mu	988	1	written	conserved	homolog NC_062004.1|16012|18969|+|cds|4|Cnidaria|Chrysogorgia_tricaulis and 19 more (library), blast
+NC_082114.1	Cnidaria	DNA mismatch repair protein Mu	990	1	written	conserved	homolog NC_062002.1|15902|18871|+|cds|4|Cnidaria|Candidella_imbricata and 19 more (library), blastp 
+NC_080358.1	Cnidaria	replication helicase subunit	331	1	written	conserved	homolog NC_046775.1|172|1236|-|ncr|4|Cnidaria|Chrysaora_pacifica and 11 more (library), blastp E=2e-
+NC_080358.1	Cnidaria	hypothetical protein	107	1	missed		
+NC_081603.1	Cnidaria	MutS-like protein	983	1	written	conserved	homolog NC_061281.1|15560|18508|+|cds|4|Cnidaria|Sarcophyton_trocheliophorum and 19 more (library), 
+NC_073494.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_035667.1|6193|9150|+|cds|4|Cnidaria|Eunicella_cavolini and 19 more (library), blastp E=0e
+NC_073493.1	Cnidaria	MutS-like protein	992	1	written	conserved	homolog NC_062014.1|15978|19004|+|cds|4|Cnidaria|Ideogorgia_capensis and 19 more (library), blastp E
+NC_073492.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_073491.1|6197|9166|+|cds|4|Cnidaria|Telestula_humilis and 19 more (library), blastp E=0e+
+NC_073491.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_073492.1|6452|9433|+|cds|4|Cnidaria|Incrustatus_comauensis and 19 more (library), blastp 
+NC_072970.1	Spiralia	F-ORF	87	1	missed		
+NC_072601.1	Porifera	ATP synthase F0 subunit 9	80	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=7e-22
+NC_067077.1	Cnidaria	mutS-like protein	975	1	written	conserved	homolog NC_044086.1|13000|15945|-|cds|4|Cnidaria|Anthoptilum_grandiflorum and 19 more (library), bla
+NC_066664.1	Spiralia	F-ORF	84	1	written	conserved	homolog NC_042471.1|13998|14249|-|ncr|5|Spiralia|Cuneopsis_heudei and 19 more (library), blastp E=1e
+NC_066661.1	Spiralia	F-ORF	88	1	written	conserved	homolog NC_060593.1|3136|3372|+|ncr|5|Spiralia|Nodularia_douglasiae and 19 more (library), blastp E=
+NC_062036.1	Cnidaria	MutS-like protein	337	1	written	conserved	homolog NC_061990.1|16056|19010|+|cds|4|Cnidaria|Acrophytum_claviger and 19 more (library), blastp E
+NC_062036.1	Cnidaria	MutS-like protein	1045	1	missed		
+NC_062025.1	Cnidaria	MutS-like protein	973	1	written	conserved	homolog NC_062021.1|15846|18764|+|cds|4|Cnidaria|Ovabunda_macrospiculata and 19 more (library), blas
+NC_062017.1	Cnidaria	MutS-like protein	1020	1	written	conserved	homolog NC_010764.1|13312|16293|-|cds|4|Cnidaria|Tridentisis_candelabrum and 19 more (library), blas
+NC_062001.1	Cnidaria	MutS-like protein	973	1	written	conserved	homolog NC_062025.1|15935|18853|+|cds|4|Cnidaria|Protodendron_repens and 19 more (library), blastp E
+NC_061766.1	Cnidaria	DNA polymerase	307	1	written	conserved	homolog NC_061659.1|175|1407|-|ncr|4|Cnidaria|Thysanostoma_flagellatum and 8 more (library), blastp 
+NC_066899.1	Cnidaria	MutS-like protein	988	1	written	conserved	homolog NC_034749.1|6130|9093|+|cds|4|Cnidaria|Paramuricea_clavata and 19 more (library), blastp E=0
+NC_062039.1	Cnidaria	MutS-like protein	997	1	written	conserved	homolog NC_022864.1|14345|17335|-|cds|4|Cnidaria|Corallium_rubrum and 19 more (library), blastp E=0e
+NC_062038.1	Cnidaria	MutS-like protein	985	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_062034.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_062002.1|15902|18871|+|cds|4|Cnidaria|Candidella_imbricata and 19 more (library), blastp 
+NC_062032.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_073491.1|6197|9166|+|cds|4|Cnidaria|Telestula_humilis and 19 more (library), blastp E=0e+
+NC_062031.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_062028.1|15749|18730|+|cds|4|Cnidaria|Sclerophytum_lochmodes and 19 more (library), blast
+NC_062024.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_046480.1|6307|9258|+|cds|4|Cnidaria|Plumarella_adhaerans and 19 more (library), blastp E=
+NC_062023.1	Cnidaria	MutS-like protein	985	1	written	conserved	homolog NC_073493.1|6206|9181|+|cds|4|Cnidaria|Telestula_septentrionalis and 19 more (library), blas
+NC_062021.1	Cnidaria	MutS-like protein	973	1	written	conserved	homolog NC_062025.1|15935|18853|+|cds|4|Cnidaria|Protodendron_repens and 19 more (library), blastp E
+NC_062015.1	Cnidaria	MutS-like protein	976	1	written	conserved	homolog NC_062004.1|16012|18969|+|cds|4|Cnidaria|Chrysogorgia_tricaulis and 19 more (library), blast
+NC_062012.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_035666.1|6195|9152|+|cds|4|Cnidaria|Eunicella_albicans and 19 more (library), blastp E=0e
+NC_062010.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_062003.1|16022|18973|+|cds|4|Cnidaria|Ceeceenus_quadrus and 19 more (library), blastp E=0
+NC_062007.1	Cnidaria	MutS-like protein	962	1	written	conserved	homolog NC_062004.1|16012|18969|+|cds|4|Cnidaria|Chrysogorgia_tricaulis and 19 more (library), blast
+NC_062004.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_082284.1|6236|9199|+|cds|4|Cnidaria|Metallogorgia_melanotrichos and 19 more (library), bl
+NC_061999.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_061994.1|15722|18691|+|cds|4|Cnidaria|Alertigorgia_orientalis and 19 more (library), blas
+NC_061998.1	Cnidaria	MutS-like protein	983	1	written	conserved	homolog NC_073491.1|6197|9166|+|cds|4|Cnidaria|Telestula_humilis and 19 more (library), blastp E=0e+
+NC_061994.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_061999.1|15743|18712|+|cds|4|Cnidaria|Azoriella_bayeri and 19 more (library), blastp E=0e
+NC_061990.1	Cnidaria	MutS-like protein	985	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_061988.1	Cnidaria	MutS-like protein	995	1	written	conserved	homolog NC_048963.1|6178|9156|+|cds|4|Cnidaria|Carijoa_riisei and 19 more (library), blastp E=0e+00,
+NC_065020.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=4e-30
+NC_062037.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_062036.1|18379|21513|+|cds|4|Cnidaria|Tenerodus_fallax and 19 more (library), blastp E=0e
+NC_062035.1	Cnidaria	MutS-like protein	995	1	written	conserved	homolog NC_044091.1|6267|9257|+|cds|4|Cnidaria|Virgularia_mirabilis and 19 more (library), blastp E=
+NC_062030.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_057590.1|6156|9137|+|cds|4|Cnidaria|Sclerophytum_penghuense and 19 more (library), blastp
+NC_062027.1	Cnidaria	MutS-like protein	989	1	written	conserved	homolog NC_062012.1|16227|19184|+|cds|4|Cnidaria|Eunicella_tricoronata and 19 more (library), blastp
+NC_062026.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_057590.1|6156|9137|+|cds|4|Cnidaria|Sclerophytum_penghuense and 19 more (library), blastp
+NC_062022.1	Cnidaria	MutS-like protein	977	1	written	conserved	homolog NC_061275.1|15951|18869|+|cds|4|Cnidaria|Coelogorgia_palmosa and 19 more (library), blastp E
+NC_062020.1	Cnidaria	MutS-like protein	985	1	written	conserved	homolog NC_062032.1|15758|18739|+|cds|4|Cnidaria|Siphonogorgia_godeffroyi and 19 more (library), bla
+NC_062019.1	Cnidaria	MutS-like protein	970	1	written	conserved	homolog NC_061999.1|15743|18712|+|cds|4|Cnidaria|Azoriella_bayeri and 19 more (library), blastp E=0e
+NC_062016.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_062014.1	Cnidaria	MutS-like protein	1009	1	written	conserved	homolog NC_073493.1|6206|9181|+|cds|4|Cnidaria|Telestula_septentrionalis and 19 more (library), blas
+NC_062013.1	Cnidaria	MutS-like protein	1036	1	written	conserved	homolog NC_062000.1|15922|18993|+|cds|4|Cnidaria|Briareum_hamrum and 19 more (library), blastp E=0e+
+NC_062009.1	Cnidaria	MutS-like protein	992	1	written	conserved	homolog NC_024181.1|15752|18715|+|cds|4|Cnidaria|Junceella_fragilis and 19 more (library), blastp E=
+NC_062008.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_022809.1|6348|9287|+|cds|4|Cnidaria|Dendronephthya_suensoni and 19 more (library), blastp
+NC_062005.1	Cnidaria	MutS-like protein	976	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_062003.1	Cnidaria	MutS-like protein	984	1	written	conserved	homolog NC_062010.1|15943|18900|+|cds|4|Cnidaria|Eunephthya_thyrsoidea and 19 more (library), blastp
+NC_062000.1	Cnidaria	MutS-like protein	1024	1	written	conserved	homolog NC_008073.1|5948|9013|+|cds|4|Cnidaria|Briareum_asbestinum and 19 more (library), blastp E=0
+NC_061996.1	Cnidaria	MutS-like protein	975	1	written	conserved	homolog NC_062021.1|15846|18764|+|cds|4|Cnidaria|Ovabunda_macrospiculata and 19 more (library), blas
+NC_061995.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_061993.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_061273.1|15748|18717|+|cds|4|Cnidaria|Alcyonium_acaule and 19 more (library), blastp E=0e
+NC_061992.1	Cnidaria	MutS-like protein	992	1	written	conserved	homolog NC_044089.1|6290|9259|+|cds|4|Cnidaria|Protoptilum_carpenterii and 19 more (library), blastp
+NC_061989.1	Cnidaria	MutS-like protein	982	1	written	conserved	homolog NC_020458.1|6191|9136|+|cds|4|Cnidaria|Euplexaura_crassa and 19 more (library), blastp E=0e+
+NC_062033.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_034750.1|6296|9253|+|cds|4|Cnidaria|Paramuricea_macrospina and 19 more (library), blastp 
+NC_062029.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_057590.1|6156|9137|+|cds|4|Cnidaria|Sclerophytum_penghuense and 19 more (library), blastp
+NC_062028.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_062031.1|15749|18730|+|cds|4|Cnidaria|Sclerophytum_wanannense and 19 more (library), blas
+NC_062018.1	Cnidaria	MutS-like protein	980	1	written	conserved	homolog NC_061273.1|15748|18717|+|cds|4|Cnidaria|Alcyonium_acaule and 19 more (library), blastp E=0e
+NC_062011.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061279.1|15773|18730|+|cds|4|Cnidaria|Plexaura_kuna and 19 more (library), blastp E=0e+00
+NC_062006.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_061273.1|15748|18717|+|cds|4|Cnidaria|Alcyonium_acaule and 19 more (library), blastp E=0e
+NC_062002.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_082114.1|6304|9273|+|cds|4|Cnidaria|Abyssoprimnoa_gemina and 19 more (library), blastp E=
+NC_061997.1	Cnidaria	MutS-like protein	983	1	written	conserved	homolog NC_061273.1|15748|18717|+|cds|4|Cnidaria|Alcyonium_acaule and 19 more (library), blastp E=0e
+NC_061991.1	Cnidaria	MutS-like protein	992	1	written	conserved	homolog NC_062032.1|15758|18739|+|cds|4|Cnidaria|Siphonogorgia_godeffroyi and 19 more (library), bla
+NC_066663.1	Spiralia	F-ORF	80	1	written	conserved	homolog NC_060431.1|13996|14268|-|cds|5|Spiralia|Cuneopsis_celtiformis and 19 more (library), blastp
+NC_066662.1	Spiralia	F-ORF	80	1	written	conserved	homolog NC_042470.1|14036|14272|-|ncr|5|Spiralia|Schistodesmus_lampreyanus and 19 more (library), bl
+NC_061281.1	Cnidaria	MutS-like protein	983	1	written	conserved	homolog NC_081603.1|15563|18511|+|cds|4|Cnidaria|Sarcophyton_minusculum and 19 more (library), blast
+NC_061280.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_061279.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_062011.1|15774|18731|+|cds|4|Cnidaria|Eunicea_flexuosa and 19 more (library), blastp E=0e
+NC_061278.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_061276.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061279.1|15773|18730|+|cds|4|Cnidaria|Plexaura_kuna and 19 more (library), blastp E=0e+00
+NC_061273.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_071215.1|6190|9159|+|cds|4|Cnidaria|Eleutherobia_rubra and 19 more (library), blastp E=0e
+NC_065161.1	Cnidaria	hypothetical protein	127	1	missed		
+NC_065161.1	Cnidaria	hypothetical protein	511	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=9e-05); no homolog - not confirmed, check
+NC_065161.1	Cnidaria	hypothetical protein	563	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-05); no homolog - not confirmed, check
+NC_065161.1	Cnidaria	hypothetical protein	147	1	missed		
+NC_065161.1	Cnidaria	hypothetical protein	282	1	missed		
+NC_065161.1	Cnidaria	hypothetical protein	245	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=5e-03); no homolog - not confirmed, check
+NC_065161.1	Cnidaria	hypothetical protein	195	1	missed		
+NC_061284.1	Cnidaria	MutS-like protein	987	1	written	conserved	homolog NC_062032.1|15758|18739|+|cds|4|Cnidaria|Siphonogorgia_godeffroyi and 19 more (library), bla
+NC_061283.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_061276.1|15766|18723|+|cds|4|Cnidaria|Discophyton_rudyi and 19 more (library), blastp E=0
+NC_061282.1	Cnidaria	MutS-like protein	991	1	written	conserved	homolog NC_044122.1|6177|9149|+|cds|4|Cnidaria|Sclerophytum_ceramense and 19 more (library), blastp 
+NC_061277.1	Cnidaria	MutS-like protein	996	1	written	conserved	homolog NC_073493.1|6206|9181|+|cds|4|Cnidaria|Telestula_septentrionalis and 19 more (library), blas
+NC_061275.1	Cnidaria	MutS-like protein	973	1	written	conserved	homolog NC_062021.1|15846|18764|+|cds|4|Cnidaria|Ovabunda_macrospiculata and 19 more (library), blas
+NC_061274.1	Cnidaria	MutS-like protein	981	1	written	conserved	homolog NC_061273.1|15748|18717|+|cds|4|Cnidaria|Alcyonium_acaule and 19 more (library), blastp E=0e
+NC_071915.1	Cnidaria	hypothetical protein	645	1	written	conserved	homolog NC_049065.1|7109|9046|+|ncr|4|Cnidaria|Anemonia_sulcata and 19 more (library), blastp E=0e+0
+NC_071215.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_061273.1|15748|18717|+|cds|4|Cnidaria|Alcyonium_acaule and 19 more (library), blastp E=0e
+NC_069646.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=4e-32
+NC_069554.1	Cnidaria	MutS-like protein	974	1	written	conserved	homolog NC_062032.1|15758|18739|+|cds|4|Cnidaria|Siphonogorgia_godeffroyi and 19 more (library), bla
+NC_068679.1	Spiralia	female open reading frame	78	1	written	conserved	homolog NC_037431.1|12531|12767|-|cds|5|Spiralia|Prolasmidonta_heterodon and 19 more (library), blas
+NC_068678.1	Spiralia	female open reading frame	89	1	written	conserved	homolog NC_037720.1|4005|4274|+|cds|5|Spiralia|Lampsilis_powellii and 9 more (library), blastp E=3e-
+NC_068677.1	Spiralia	female open reading frame	92	1	written	conserved	homolog NC_068678.1|3287|3553|+|cds|5|Spiralia|Lampsilis_cardium and 9 more (library), blastp E=3e-3
+NC_060431.1	Spiralia	F-ORF	91	1	written	conserved	homolog NC_066664.1|14089|14340|-|cds|5|Spiralia|Cuneopsis_demangei and 19 more (library), blastp E=
+NC_059856.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_020457.1|6542|9499|+|cds|4|Cnidaria|Echinogorgia_complexa and 19 more (library), blastp E
+NC_059855.1	Cnidaria	MutS-like protein	1000	1	written	conserved	homolog NC_062009.1|15794|18769|+|cds|4|Cnidaria|Dichotella_gemmacea and 19 more (library), blastp E
+NC_057590.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_062026.1|15749|18730|+|cds|4|Cnidaria|Sclerophytum_acutum and 19 more (library), blastp E
+NC_057514.1	Spiralia	hypothetical protein	124	1	missed		
+NC_057514.1	Spiralia	hypothetical protein	85	1	missed		
+NC_057514.1	Spiralia	hypothetical protein	85	1	missed		
+NC_057514.1	Spiralia	hypothetical protein	85	1	missed		
+NC_057514.1	Spiralia	hypothetical protein	81	1	missed		
+NC_057514.1	Spiralia	hypothetical protein	45	1	missed		
+NC_057514.1	Spiralia	hypothetical protein	82	1	missed		
+NC_057093.1	Spiralia	hypothetical protein	88	1	written	conserved	homolog NC_028522.1|3230|3499|+|ncr|5|Spiralia|Potamilus_leptodon and 8 more (library), blastp E=9e-
+NC_056771.1	Cnidaria	homing endonuclease	232	1	written	conserved	homolog NC_047218.1|14682|15371|+|ncr|4|Cnidaria|Haloclava_producta and 19 more (library), blastp E=
+NC_053937.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-27
+NC_050390.1	Spiralia	hypothetical protein	101	1	missed		
+NC_048963.1	Cnidaria	DNA mismatch repair protein Mu	993	1	written	conserved	homolog NC_062032.1|15758|18739|+|cds|4|Cnidaria|Siphonogorgia_godeffroyi and 19 more (library), bla
+NC_046465.1	Cnidaria	DNA mismatch repair protein Mu	984	1	written	conserved	homolog NC_046480.1|6307|9258|+|cds|4|Cnidaria|Plumarella_adhaerans and 19 more (library), blastp E=
+NC_046480.1	Cnidaria	MutS-like protein	984	1	written	conserved	homolog NC_046465.1|6307|9258|+|cds|4|Cnidaria|Plumarella_spinosa and 19 more (library), blastp E=0e
+NC_045864.1	Ctenophora	hypothetical protein	46	1	missed		
+NC_045864.1	Ctenophora	hypothetical protein	446	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-06); no homolog - not confirmed, check
+NC_045864.1	Ctenophora	hypothetical protein	48	1	missed		
+NC_045515.1	Cnidaria	heg	224	1	written	conserved	homolog NC_000933.1|4310|4981|+|cds|4|Cnidaria|Metridium_senile and 19 more (library), blastp E=2e-1
+NC_045305.1	Ctenophora	hypothetical protein	97	1	missed		
+NC_044122.1	Cnidaria	mutS	991	1	written	conserved	homolog NC_018379.1|6177|9149|+|cds|4|Cnidaria|Sclerophytum_peculiare and 19 more (library), blastp 
+NC_044091.1	Cnidaria	MutS-like protein	997	1	written	conserved	homolog NC_062035.1|15757|18741|+|cds|4|Cnidaria|Virgularia_schultzei and 19 more (library), blastp 
+NC_044089.1	Cnidaria	MutS-like protein	990	1	written	conserved	homolog NC_044077.1|6290|9250|+|cds|4|Cnidaria|Distichoptilum_gracile and 19 more (library), blastp 
+NC_044088.1	Cnidaria	MutS-like protein	989	1	written	conserved	homolog NC_044089.1|6290|9259|+|cds|4|Cnidaria|Protoptilum_carpenterii and 19 more (library), blastp
+NC_044087.1	Cnidaria	MutS-like protein	998	1	written	conserved	homolog NC_061992.1|15762|18737|+|cds|4|Cnidaria|Actinoptilum_molle and 19 more (library), blastp E=
+NC_044086.1	Cnidaria	MutS-like protein	982	1	written	conserved	homolog NC_044089.1|6290|9259|+|cds|4|Cnidaria|Protoptilum_carpenterii and 19 more (library), blastp
+NC_044078.1	Cnidaria	MutS-like protein	985	1	written	conserved	homolog NC_044089.1|6290|9259|+|cds|4|Cnidaria|Protoptilum_carpenterii and 19 more (library), blastp
+NC_044077.1	Cnidaria	MutS-like protein	987	1	written	conserved	homolog NC_044089.1|6290|9259|+|cds|4|Cnidaria|Protoptilum_carpenterii and 19 more (library), blastp
+NC_040168.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=4e-32
+NC_039929.1	Cnidaria	hypothetical protein	646	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=9e-11); homolog NC_044902.1|7684|9621|+|ncr|4|Cnidaria|Actinia_tenebrosa 
+NC_038155.1	Spiralia	HORF	78	1	written	conserved	homolog NC_037431.1|12531|12767|-|cds|5|Spiralia|Prolasmidonta_heterodon and 19 more (library), blas
+NC_038065.1	Ctenophora	hypothetical protein	355	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=6e-05); no homolog - not confirmed, check
+NC_038065.1	Ctenophora	hypothetical protein	223	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=7e-04); no homolog - not confirmed, check
+NC_037942.1	Spiralia	F-specific ORF protein	103	1	missed		
+NC_037721.1	Spiralia	F-ORF protein	103	1	missed		
+NC_037720.1	Spiralia	F-ORF protein	90	1	written	conserved	homolog NC_005335.1|6750|7028|+|ncr|5|Spiralia|Lampsilis_ornata and 9 more (library), blastp E=8e-35
+NC_037608.1	Ecdysozoa	ATP synthase FO subunit 8	57	1	missed		
+NC_037608.1	Ecdysozoa	ATP synthase FO subunit 6	226	1	warned:standard_fragment	standard_fragment	similar to atp6 (E=7e-21): a second copy, a pseudogene or a piece of atp6 the annotation missed - ch
+NC_037431.1	Spiralia	HORF	79	1	written	conserved	homolog NC_038155.1|12302|12535|-|cds|5|Spiralia|Alasmidonta_varicosa and 19 more (library), blastp 
+NC_037391.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=4e-33
+NC_037178.1	Cnidaria	hypothetical protein	382	1	written	conserved	homolog NC_049065.1|7109|9046|+|ncr|4|Cnidaria|Anemonia_sulcata and 19 more (library), blastp E=0e+0
+NC_037178.1	Cnidaria	truncated homing endonuclease	340	1	missed		
+NC_037177.1	Cnidaria	hypothetical protein	519	1	written	conserved	homolog NC_049065.1|7109|9046|+|ncr|4|Cnidaria|Anemonia_sulcata and 19 more (library), blastp E=0e+0
+NC_037177.1	Cnidaria	truncated homing endonuclease	340	1	missed		
+NC_008151.3	Placozoa	hypothetical protein	169	1	missed		
+NC_008151.3	Placozoa	hypothetical protein	169	1	missed		
+NC_008151.3	Placozoa	hypothetical protein	176	1	missed		
+NC_008151.3	Placozoa	hypothetical protein	678	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=7e-05); homolog NC_015309.1|32279|33853|+|cds|4|Placozoa|Placozoan_sp._'S
+NC_036022.1	Cnidaria	MutS-like protein	980	1	written	conserved	homolog NC_022809.1|6348|9287|+|cds|4|Cnidaria|Dendronephthya_suensoni and 19 more (library), blastp
+NC_035983.1	Porifera	SecY-independent transporter p	247	1	written	known_family	similar to tatC_mito (MFannot protein family), blastp E=4e-07
+NC_035983.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=4e-25
+NC_035670.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_035663.1|6205|9162|+|cds|4|Cnidaria|Leptogorgia_capverdensis and 19 more (library), blast
+NC_035669.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_035665.1|6201|9146|+|cds|4|Cnidaria|Leptogorgia_mutabilis and 19 more (library), blastp E
+NC_035668.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_035669.1|6216|9173|+|cds|4|Cnidaria|Leptogorgia_alba and 19 more (library), blastp E=0e+0
+NC_035667.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_073494.1|6193|9150|+|cds|4|Cnidaria|Eunicella_verrucosa and 19 more (library), blastp E=0
+NC_035666.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_062012.1|16227|19184|+|cds|4|Cnidaria|Eunicella_tricoronata and 19 more (library), blastp
+NC_035665.1	Cnidaria	MutS-like protein	982	1	written	conserved	homolog NC_035669.1|6216|9173|+|cds|4|Cnidaria|Leptogorgia_alba and 19 more (library), blastp E=0e+0
+NC_035663.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_035670.1|6205|9162|+|cds|4|Cnidaria|Leptogorgia_sarmentosa and 19 more (library), blastp 
+NC_034846.1	Spiralia	F-ORF	92	1	missed		
+NC_034845.1	Spiralia	F-ORF	93	1	missed		
+NC_034750.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_020457.1|6542|9499|+|cds|4|Cnidaria|Echinogorgia_complexa and 19 more (library), blastp E
+NC_034749.1	Cnidaria	MutS-like protein	988	1	written	conserved	homolog NC_066899.1|6130|9093|+|cds|4|Cnidaria|Paramuricea_grayi and 19 more (library), blastp E=0e+
+NC_034318.1	Cnidaria	mutS-like protein	994	1	missed		
+NC_033976.1	Spiralia	F-ORF	84	1	written	conserved	homolog NC_085472.1|13860|14111|-|ncr|5|Spiralia|Unio_vicarius and 19 more (library), blastp E=1e-31
+NC_033858.1	Spiralia	MORF	204	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=3e-03); homolog NC_086720.1|14317|15105|-|cds|5|Spiralia|Ortmanniana_liga
+NC_033854.1	Spiralia	F-specific ORF protein	83	1	written	conserved	homolog NC_057113.1|13910|14161|-|ncr|5|Spiralia|Unio_elongatulus and 19 more (library), blastp E=5e
+NC_031192.1	Porifera	ATP synthase F0 subunit 9	78	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-15
+NC_029698.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_029697.1|6555|9512|+|cds|4|Cnidaria|Muricea_crassa and 19 more (library), blastp E=0e+00,
+NC_029697.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_029698.1|6371|9328|+|cds|4|Cnidaria|Muricea_purpurea and 19 more (library), blastp E=0e+0
+NC_029210.1	Spiralia	female-specific orf protein	83	1	written	conserved	homolog NC_021404.1|3173|3418|+|ncr|5|Spiralia|Lamprotula_tortuosa and 19 more (library), blastp E=3
+NC_028054.1	Porifera	ATP synthase F0 subunit 9	80	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-19
+NC_027615.1	Cnidaria	homing endonuclease	224	1	written	conserved	homolog NC_047218.1|14682|15371|+|ncr|4|Cnidaria|Haloclava_producta and 19 more (library), blastp E=
+NC_027614.1	Cnidaria	homing endonuclease	233	1	written	conserved	homolog NC_071915.1|1203|1919|+|ncr|4|Cnidaria|Paracondylactis_sinensis and 19 more (library), blast
+NC_027614.1	Cnidaria	ORFA	445	1	written	conserved	homolog NC_071915.1|11793|13727|+|cds|4|Cnidaria|Paracondylactis_sinensis and 19 more (library), bla
+NC_027612.1	Cnidaria	homing endonuclease	234	1	written	conserved	homolog NC_047217.1|15756|16574|+|ncr|4|Cnidaria|Epiactis_japonica and 19 more (library), blastp E=1
+NC_027612.1	Cnidaria	ORFA	100	1	missed		
+NC_027611.1	Cnidaria	homing endonuclease	225	1	written	conserved	homolog NC_047221.1|15948|16757|+|ncr|4|Cnidaria|Liponema_brevicorne and 19 more (library), blastp E
+NC_027611.1	Cnidaria	ORFA	71	1	missed		
+NC_027610.1	Cnidaria	ORFC	415	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=4e-04); no homolog - not confirmed, check
+NC_027524.1	Cnidaria	orf1 protein	123	1	missed		
+NC_027524.1	Cnidaria	orf2 protein	103	1	missed		
+NC_027524.1	Cnidaria	orf3 protein	270	1	written	conserved	homolog NC_027523.1|13862|14656|+|cds|4|Cnidaria|Kudoa_septempunctata (library), blastp E=3e-86, 59%
+NC_027523.1	Cnidaria	hypothetical protein	119	1	missed		
+NC_027523.1	Cnidaria	hypothetical protein	106	1	missed		
+NC_027523.1	Cnidaria	hypothetical protein	265	1	written	conserved	homolog NC_027524.1|13314|14123|+|cds|4|Cnidaria|Kudoa_hexapunctata (library), blastp E=4e-82, 58% i
+NC_027520.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-32
+NC_027419.1	Porifera	ATP synthase F0 subunit 9	80	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-23
+NC_026193.1	Cnidaria	DNA mismatch repair protein Mu	997	1	written	conserved	homolog NC_022864.1|14345|17335|-|cds|4|Cnidaria|Corallium_rubrum and 19 more (library), blastp E=0e
+NC_026192.1	Cnidaria	DNA mismatch repair protein Mu	979	1	written	conserved	homolog NC_062002.1|15902|18871|+|cds|4|Cnidaria|Candidella_imbricata and 19 more (library), blastp 
+NC_025335.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=6e-35
+NC_024943.1	Spiralia	F-ORF	87	1	written	conserved	homolog NC_026673.1|3132|3395|+|ncr|5|Spiralia|Elliptio_icterina and 19 more (library), blastp E=3e-
+NC_024181.1	Cnidaria	mismatch repair protein	988	1	written	conserved	homolog NC_062009.1|15794|18769|+|cds|4|Cnidaria|Dichotella_gemmacea and 19 more (library), blastp E
+NC_023942.1	Spiralia	h open reading frame	91	1	missed		
+NC_023834.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-34
+NC_023345.1	Cnidaria	DNA mismatch repair protein	983	1	written	conserved	homolog NC_062033.1|15760|18717|+|cds|4|Cnidaria|Thrombophyton_coronatum and 19 more (library), blas
+NC_023344.1	Cnidaria	DNA mismatch repair protein	983	1	written	conserved	homolog NC_022809.1|6348|9287|+|cds|4|Cnidaria|Dendronephthya_suensoni and 19 more (library), blastp
+NC_023343.1	Cnidaria	DNA mismatch repair protein	980	1	written	conserved	homolog NC_013573.1|6347|9286|+|cds|4|Cnidaria|Dendronephthya_gigantea and 19 more (library), blastp
+NC_023250.1	Spiralia	F-ORF	87	1	missed		
+NC_022864.1	Cnidaria	putative mismatch repair prote	997	1	written	conserved	homolog NC_015406.1|4906|7896|+|cds|4|Cnidaria|Pleurocorallium_konojoi and 19 more (library), blastp
+NC_022809.1	Cnidaria	DNA mismatch repair protein	980	1	written	conserved	homolog NC_036022.1|6348|9287|+|cds|4|Cnidaria|Dendronephthya_putteri and 19 more (library), blastp 
+NC_022804.1	Cnidaria	putative mismatch repair prote	997	1	written	conserved	homolog NC_015406.1|4906|7896|+|cds|4|Cnidaria|Pleurocorallium_konojoi and 19 more (library), blastp
+NC_022803.1	Spiralia	F ORF	79	1	written	conserved	homolog NC_057112.1|14344|14583|-|ncr|5|Spiralia|Pseudanodonta_complanata and 19 more (library), bla
+NC_022470.1	Cnidaria	homing endonuclease	578	1	missed		
+NC_022450.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_021422.1	Porifera	ATP synthase F0 subunit 9	60	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=5e-19
+NC_020459.1	Cnidaria	hypothetical protein	174	1	missed		
+NC_020459.1	Cnidaria	hypothetical protein	121	1	missed		
+NC_020458.1	Cnidaria	MutS-like protein	982	1	written	conserved	homolog NC_061989.1|15769|18714|+|cds|4|Cnidaria|Acanthogorgia_breviflora and 19 more (library), bla
+NC_020457.1	Cnidaria	MutS-like protein	986	1	written	conserved	homolog NC_059856.1|16479|19436|+|cds|4|Cnidaria|Echinogorgia_reticulata and 19 more (library), blas
+NC_020456.1	Cnidaria	MutS-like protein	980	1	written	conserved	homolog NC_013573.1|6347|9286|+|cds|4|Cnidaria|Dendronephthya_gigantea and 19 more (library), blastp
+NC_020375.1	Cnidaria	msh1	992	1	written	conserved	homolog NC_073493.1|6206|9181|+|cds|4|Cnidaria|Telestula_septentrionalis and 19 more (library), blas
+NC_018790.1	Cnidaria	MutS-like protein	998	1	written	conserved	homolog NC_022864.1|14345|17335|-|cds|4|Cnidaria|Corallium_rubrum and 19 more (library), blastp E=0e
+NC_018763.1	Spiralia	hypothetical protein	339	1	written	conserved	homolog NC_013997.1|10745|11761|+|ncr|5|Spiralia|Magallana_bilineata and 3 more (library), blastp E=
+NC_018763.1	Spiralia	hypothetical protein	337	1	written	conserved	homolog NC_013997.1|12361|13524|+|ncr|5|Spiralia|Magallana_bilineata and 4 more (library), blastp E=
+NC_018537.1	Cnidaria	putative family B DNA polymera	537	1	written	conserved	homolog NC_015309.1|20651|22447|+|cds|4|Placozoa|Placozoan_sp._'Shirahama' and 6 more (library), bla
+NC_018537.1	Cnidaria	hypothetical protein	118	1	missed		
+NC_018380.1	Cnidaria	mutS	985	1	written	conserved	homolog NC_044089.1|6290|9259|+|cds|4|Cnidaria|Protoptilum_carpenterii and 19 more (library), blastp
+NC_018379.1	Cnidaria	mutS	991	1	written	conserved	homolog NC_044122.1|6177|9149|+|cds|4|Cnidaria|Sclerophytum_ceramense and 19 more (library), blastp 
+NC_018378.1	Cnidaria	mutS	985	1	written	conserved	homolog NC_044087.1|6236|9229|+|cds|4|Cnidaria|Pennatula_aculeata and 19 more (library), blastp E=0e
+NC_018377.1	Cnidaria	HEG	354	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=3e-07); homolog NC_088052.1|1205|2266|+|cds|4|Cnidaria|Antipathes_grandis
+NC_018360.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_018343.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_016949.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-27
+NC_016467.1	Cnidaria	replication helicase subunit	202	1	missed		
+NC_016467.1	Cnidaria	orf314	97	1	missed		
+NC_016466.1	Cnidaria	replication helicase subunit	189	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=1e-04); homolog NC_061766.1|105|1025|-|cds|4|Cnidaria|Catostylus_townsend
+NC_016466.1	Cnidaria	orf314	102	1	missed		
+NC_016431.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_015481.1	Spiralia	h open reading frame	173	1	missed		
+NC_015479.1	Spiralia	h open reading frame	243	1	missed		
+NC_015477.1	Spiralia	M-specific morf protein	219	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=2e-04); no homolog - not confirmed, check
+NC_015476.1	Spiralia	h open reading frame	127	1	missed		
+NC_015406.1	Cnidaria	putative mismatch repair prote	997	1	written	conserved	homolog NC_022804.1|4906|7896|+|cds|4|Cnidaria|Pleurocorallium_elatius and 19 more (library), blastp
+NC_015309.1	Placozoa	hypothetical protein	127	1	missed		
+NC_015309.1	Placozoa	DNA polymerase type B	599	1	written	conserved	homolog NC_018537.1|496|2106|-|cds|4|Cnidaria|Craspedacusta_sowerbii and 3 more (library), blastp E=
+NC_015309.1	Placozoa	hypothetical protein	525	1	written	conserved	homolog NC_008151.3|38530|40563|+|cds|4|Placozoa|Trichoplax_adhaerens and 1 more (library), blastp E
+NC_014850.1	Porifera	SecY-independent transporter p	244	1	written	known_family	similar to tatC_mito (MFannot protein family), blastp E=4e-06
+NC_014850.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-21
+NC_014876.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=9e-28
+NC_014872.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-25
+NC_014863.1	Porifera	SecY-independent transporter p	243	1	written	known_family	similar to tatC_mito (MFannot protein family), blastp E=1e-06
+NC_014863.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-25
+NC_014892.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-25
+NC_014888.1	Porifera	SecY-independent transporter p	243	1	written	known_family	similar to tatC_mito (MFannot protein family), blastp E=1e-08
+NC_014888.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-25
+NC_014886.1	Porifera	SecY-independent transporter p	254	1	written	known_family	similar to tatC_mito (MFannot protein family), blastp E=3e-11
+NC_014886.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-25
+NC_014885.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-25
+NC_014884.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=4e-25
+NC_014868.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-24
+NC_014860.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-25
+NC_014856.1	Porifera	SecY-independent transporter p	254	1	written	conserved	homolog NC_014886.1|2555|3316|+|cds|4|Porifera|Oscarella_malakhovi and 4 more (library), blastp E=6e
+NC_014856.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-25
+NC_013760.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_013662.1	Porifera	ATP synthase F0 subunit 9	78	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-15
+NC_013573.1	Cnidaria	DNA mismatch repair protein	980	1	written	conserved	homolog NC_020456.1|6347|9286|+|cds|4|Cnidaria|Dendronephthya_mollis and 19 more (library), blastp E
+NC_011016.2	Cnidaria	MutS-like protein	988	1	written	conserved	homolog NC_010764.1|13312|16293|-|cds|4|Cnidaria|Tridentisis_candelabrum and 19 more (library), blas
+NC_010764.1	Cnidaria	MutS-like protein	994	1	written	conserved	homolog NC_011016.2|13002|15965|-|cds|4|Cnidaria|Acanella_arbuscula and 19 more (library), blastp E=
+NC_010769.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-25
+NC_010496.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-32
+NC_010216.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=5e-31
+NC_010218.1	Porifera	ATP synthase F0 subunit 9	78	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-15
+NC_010209.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=7e-22
+NC_010215.1	Porifera	ATP synthase F0 subunit 9	78	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-15
+NC_010208.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=9e-28
+NC_010210.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-18
+NC_010198.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=6e-35
+NC_010213.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-33
+NC_010217.1	Porifera	ATP synthase F0 subunit 9	76	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-25
+NC_010217.1	Porifera	orf345	335	1	warned:long_unconfirmed	long_unconfirmed	longer than chance ORFs (E=5e-07); homolog NC_069233.1|14114|15076|+|ncr|4|Cnidaria|Physogyra_lichte
+NC_010203.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-27
+NC_010207.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-31
+NC_010204.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=7e-33
+NC_010212.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-23
+NC_010211.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-30
+NC_010206.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=7e-30
+NC_010201.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=2e-23
+NC_010202.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=8e-33
+NC_010171.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=1e-27
+NC_008446.1	Cnidaria	hypothetical protein	108	1	written	conserved	homolog NC_046792.1|1285|1611|-|ncr|4|Cnidaria|Aurelia_coerulea and 1 more (library), blastp E=4e-49
+NC_008446.1	Cnidaria	replication helicase subunit	323	1	written	conserved	homolog NC_046691.1|3686|4708|+|ncr|4|Cnidaria|Aurelia_limbata and 9 more (library), blastp E=3e-136
+NC_008157.1	Cnidaria	DNA mismatch repair protein mu	986	1	written	conserved	homolog NC_062033.1|15760|18717|+|cds|4|Cnidaria|Thrombophyton_coronatum and 19 more (library), blas
+NC_008073.1	Cnidaria	DNA mismatch repair protein mu	1022	1	written	conserved	homolog NC_062000.1|15922|18993|+|cds|4|Cnidaria|Briareum_hamrum and 19 more (library), blastp E=0e+
+NC_006991.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=5e-29
+NC_006990.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=5e-35
+NC_006894.1	Porifera	ATP synthase F0 subunit 9	79	1	written	known_family	similar to atp9 (MFannot protein family), blastp E=3e-34
+NC_000933.1	Cnidaria	homing endonuclease	224	1	written	conserved	homolog NC_047218.1|14682|15371|+|ncr|4|Cnidaria|Haloclava_producta and 19 more (library), blastp E=

@@ -1,76 +1,72 @@
 # ORFs of unknown function in animal mitogenomes (mito_orf.py, 2026-11-09)
 
-问题：线粒体基因组里 13 个蛋白基因以外的编码区（如才女虫科报道的未知 ORF），MitoM 能否注释、会不会乱报？与 MITOS2 比较。
-Question: can MitoM annotate protein-coding regions beyond the 13 genes (e.g. the unknown ORF of spionid polychaetes)
-without writing chance ORFs, and how does it compare with MITOS2?
+问题：13 个蛋白基因以外的编码区（MutS、atp9、F-ORF、内含子 ORF、才女虫科的未知 ORF ……），MitoM 能找回多少、会不会乱写？
+与只看长度的 ORF 查找（NCBI ORFfinder / Geneious 式）和 MITOS2 比较。方法见 `docs/METHODS.md`“未知功能的 ORF”与
+`mito_orf.py` 文件头。
+Question: how many protein genes beyond the 13 does MitoM recover, without writing chance ORFs? Compared with ORF
+finding by length (ORFfinder / Geneious style) and MITOS2. Method: docs/METHODS.md, mito_orf.py header.
 
-## Method / 方法（`mito_orf.py`; `mitom run --orf yes`, default）
+## Data / 数据
 
-ORF 是否是基因，取决于它是否受选择、一直保持开放；只看长度判断不了。富含 AT 的序列终止密码子少，80–110 个密码子的 ORF
-随机就常见，而短的真蛋白又不比随机 ORF 长。所以按以下原理判定：
-An ORF is a gene when selection has kept it open; length alone cannot tell (AT-rich sequence holds 80-110-codon
-chance ORFs; short real proteins are no longer). Evidence, from first principles:
+| 数据 / set | 记录 / records | 真值 / truth |
+|---|---|---|
+| 已知 ORF / known ORFs (`make_truth.py`) | 260 条 RefSeq，去掉 NCBI 注释的非标准 CDS 后运行 / RefSeq records run without their non-standard CDS | 342 个 NCBI 注释的非标准 CDS（MutS 125、hypothetical 123、atp9 57、归巢内切酶 10 …）/ annotated CDS |
+| 无内含子 / intron-free (`../intron_algo_2026-11-09/negatives_set.tsv`) | 362 RefSeq，26 门 / phyla | 未知；写出的应很少且有依据 / unknown; writes should be few and explained |
+| 才女虫科 / Spionidae (NCBI, >= 10 CDS) | 46 | Polydorini trnQ–trnA ORF |
+| 无注释环节动物 / unannotated annelids (`mitom run`, ../intron_annelid_2026-11-09/) | 335 | 未知 / unknown |
 
-1. Length beyond chance: `E_len = 2 F p_start (1 - p_stop)^L` from the base composition of the record's unannotated
-   sequence (F nt); `E_len <= 0.01`.
-2. Kept open: a homolog (blastp E <= 1e-5) that is itself an ORF - in the other records of the run, the ORF library
-   (`models/orf_library.fna.gz`: 120,248 ORFs in unannotated sequence and 371 non-standard CDS of 16,073 RefSeq animal
-   mitogenomes, `scripts/build_orf_library.py`) or `--orf_ref` relatives. The d nucleotide differences between the
-   codons of the two copies (blastp HSP) are a lower bound of the substitutions; each makes a stop with probability f
-   (from the ORF's codons) in non-coding sequence: `p_open = (1 - f)^d <= 0.01`.
-3. Coding frame: in a local nucleotide alignment of the two (which does not know the frame, unlike the protein
-   alignment that favours differences at position 3), the differences fall mostly at codon position 3: binomial
-   `p_pos3 <= 0.01` against 1/3.
-4. Tandem repeats (copies >= 85 % identical, period 3-150 nt) are masked first: an array of a stop-free unit is an
-   ORF of any length and aligns with any other array (control regions of birds, fishes, insects - the false hits of
-   the first version).
-5. ORFs overlapping a stronger one (other frame or strand) are its shadow and are dropped.
-
-`conserved` (2 + 3) and `known_family` (homolog in the MFannot protein families; atp9 gets its own name) are written
-as CDS; `long_unconfirmed` (1 only), `standard_fragment` (homolog of one of the 13 genes) and ORFs whose frame runs on
-into a gene without a stop are WARNINGs in the log, rows in `orf_report.tsv` and text in the NCR /note - not silent.
+每条已知 ORF 记录单独运行，参考库中去掉它自己（留一）。Each known-ORF record run alone, itself left out of the library.
 
 ## Results / 结果
 
-| 数据 / set | 记录 / records | 写出 / written | 保守但未写出 / conserved, not written | 较长未确认 / long, unconfirmed | 13 基因片段 / fragment of the 13 |
-|---|---|---|---|---|---|
-| 才女虫科 / Spionidae (NCBI, >= 10 CDS) | 46 | 4 | 8 | 1 | 0 |
-| 无内含子 RefSeq，26 门 / intron-free RefSeq, 26 phyla | 362 | 1 | 0 | 18 | 4 |
-| 无注释环节动物（MitoM 注释）/ unannotated annelids (annotated by MitoM) | 335 | 16 | 9 | 29 | 21 |
+| 方法 / method | 已知 ORF 写出 / known ORFs written (342) | 只给 WARNING / WARNING only | 无内含子 362 条写出 / written in 362 intron-free |
+|---|---|---|---|
+| 只看长度 ≥ 75 密码子（ORFfinder 式）/ length >= 75 codons | 326 | — | 357（118 条记录 / records） |
+| 只看长度 ≥ 150 密码子 / length >= 150 codons | 214 | — | 71 |
+| 第一版 / first version (f2e73e1) | 175 | 69 | 1 |
+| **当前 / now** | **228** | **47** | **5** |
+| MITOS2 | 0（不注释额外 ORF / no extra ORFs） | — | 0 |
 
-- **才女虫科**：Polydorini（*Polydora*、*Boccardiella*）trnQ 与 trnA 之间的 ~355 个密码子 ORF，在 4 条有注释的记录中
-  全部写出（NCBI 都没有注释）；在 335 条无注释记录中的 3 条 *Polydora* 中也写出（另 1 条 *P. caeca* 写出 orf137）。
-  同一组属里另有两处很强的编码信号（ND5 前 ~140 个密码子、trnE 与 trnK 之间 ~190 个密码子），读框没有终止就读进 ND5
-  或 trnK/16S，所以没有写出，只给 WARNING（ND5 那处与 ND5 同读框，可能是 ND5 的起点更靠上游）。
-- **362 条无内含子记录**：只写出 1 个，*Aurelia limbata* orf340，与同属 *A. coerulea* 的 ORF 同源（钵水母线粒体基因组
-  有额外的 ORF）。第一版写出的 7 个跨门“同源”全部是控制区串联重复，加入重复屏蔽和核苷酸比对检验后消失。
-- **335 条无注释环节动物**：写出的 16 个是 3 条 *Polydora* 的 ~355 密码子 ORF、*P. caeca* orf137、*Spirobranchus
-  corniculatus* 两个相邻、互为重复的 ORF（5 条同种记录 × 2）、*Hydroides minax* orf81 和 *S. giganteus* orf152。保守但
-  未写出的 9 个：6 个是龙介虫科 *Hydroides* 与 COX1 / ATP6 同读框的 ORF（这些基因的起点可能更靠上游），3 个是
-  *Polydora* ND5 前那一处，都给 WARNING。
-- **MITOS2** 在三条 Polydorini 记录（NC_061377、OQ078742、MW528029）中都没有注释这个 ORF（只有 13 个基因、tRNA、
-  rRNA 和 OH/OL）。MitoM 单条运行时，OQ078742 和 MW528029 写出 orf353；NC_061377 的近缘属不在 RefSeq，只给 WARNING，
-  加 `--orf_ref`（OQ078742）后写出（`NC_061377_with_orf_ref.tsv`）。
-- **Golden 回归**：*Plakinastrella* NC_010217（只给 FASTA）中注释核心漏掉的海绵 atp9 由本步骤补上（known_family）。
+已知 ORF 按类别 / known ORFs by kind（写出 / WARNING / 漏 — written / WARNING / missed）：
 
-- Spionidae: the ~355-codon Polydorini ORF between trnQ and trnA is written in all 4 annotated records (NCBI
-  annotates none) and in 3 unannotated *Polydora*; two more strong coding signals read on into ND5 (in frame) or
-  trnK/16S without a stop and are WARNINGs.
-- 362 intron-free records: 1 written (*Aurelia limbata* orf340, homolog in *A. coerulea*). The 7 cross-phylum "homologs"
-  of the first version were tandem repeats of control regions; repeat masking and the nucleotide-alignment test
-  removed them.
-- MITOS2 annotates none of these ORFs. A single genome whose relatives are not in RefSeq gets a WARNING; with
-  `--orf_ref` relatives it is written.
+| atp9 | MutS | 归巢内切酶 / homing endonuclease | hypothetical / ORF（含 F-ORF）| 其他 / other |
+|---|---|---|---|---|
+| 57 / 0 / 0 | 123 / 0 / 2 | 6 / 1 / 3 | 26 / 41 / 56 | 16 / 5 / 6 |
 
-## Limits / 局限
+其他数据 / other sets：才女虫科 46 条写出 4（Polydorini ORF 4/4），8 个保守 ORF 读进 ND5 / trnK，给 WARNING；无注释环节
+动物 335 条写出 24。
 
-- 证据来自同源比较：一个类群如果在 RefSeq、同一次运行和 `--orf_ref` 中都没有分化足够的近缘序列，真实 ORF 只能给出
-  WARNING。短 ORF（< 60 个密码子）要求同源有足够多的替换，才能证明受选择。
-- 读框没有终止就读进下一个基因的 ORF 不写出（终点无法确定）。
-- Evidence needs a homolog diverged enough to show selection; short ORFs need many substitutions; ORFs whose frame
-  runs into the next gene are not written (no end).
+- **从第一版改进的地方**（每处都由真值中的失败例找出）：内含子不再排除（归巢内切酶、内含子中的 MutS：0 → 6、103 → 123）；
+  多个同源合并计替换数（逐位置碱基种类数，或最小生成树长度的一半，取大者）——近缘种单独不够，多个可以累加；编码读框改用
+  三个密码子位置的完整模式（第三位最多、第二位最少），选重叠读框时按此判断（F-ORF 原先选成了反义链）；两项检验用 Fisher
+  法合并（每项 ≤ 0.05，合并 ≤ 1e-4）。第一版之前还修过两处：控制区串联重复造成的跨门假同源（屏蔽重复）；蛋白比对造成的
+  第三位偏差（改用核苷酸比对计位置）。
+- **只看长度不可行**：≥ 75 个密码子时候选里已有 326/342 个真 ORF，但同时在 362 条无内含子记录中写出 357 个 ORF；MitoM 的
+  候选步骤就是这一步，第二步按证据判断。
+- **362 条无内含子记录中写出的 5 个**：*Aurelia limbata* orf340、orf104（同属 *A. coerulea* 有同源；钵水母有额外 ORF）、
+  *Pseudanodonta complanata* orf79（与 20 种淡水蚌已注释的 F-ORF 同源，NCBI 此条未注释）、玻璃海绵 *Oopsacas minuta*
+  orf110、*Iheyomytilidicola lauensis* orf148，都有同源和编码模式证据。
+- **335 条无注释环节动物写出的 24 个**：Polydorini ORF（3 条 *Polydora* 加 *P. caeca*）；*Glycera fallax* orf728 与
+  *Podarkeopsis* orf778 互为同源，都在 cox1 的 ~2.4 kb II 类内含子中，应是内含子编码的逆转录酶 / 成熟酶；*Hydroides*
+  orf412；*Spirobranchus corniculatus* 5 条同种记录中各 3 个（orf154 / orf170 相邻且互为重复，同源包括基因组内的重复拷贝，
+  是否真实不确定）。
+- **漏检的 67 个**：多为没有任何同源的类群特有 hypothetical protein（黏孢子虫、扁盘动物、钵水母、栉水母），其真实性本身未
+  证实；较长的给 WARNING。密码子使用偏好（与本记录 13 个基因比，GeneMark 式）也测过：在 362 条无内含子记录中只放进 14 个
+  随机 ORF 时只能找回 29 % 的真 ORF，区分力太弱，未采用。
+- **单个基因组**：NC_061377 单独运行时近缘属不在 RefSeq，orf357 只给 WARNING；`--orf_ref` 给出 OQ078742 后写出
+  （`NC_061377_with_orf_ref.tsv`）。MITOS2 在 NC_061377、OQ078742、MW528029 中都没有注释它。
+
+- What changed since the first version, each found from failures on the truth: introns searched (homing endonucleases
+  0 -> 6, MutS 103 -> 123); substitutions summed over many homologs (per-position base kinds or half the MST); the
+  frame test uses the full codon pattern (position 3 most, 2 least), which also picks the right strand of overlapping
+  ORFs; the two tests Fisher-combined.
+- Length alone: at >= 75 codons the candidates hold 326/342 true ORFs, but 357 ORFs would be written in 362 intron-free
+  records. The 5 MitoM writes there all have homologs and the coding pattern.
+- Misses: mostly lineage-specific hypothetical proteins without any homolog; long ones are WARNINGs. Codon usage was
+  tested and is too weak to use.
 
 ## Files / 文件
 
-`run.sh`; `*_orf_report.tsv` (one per set); `NC_061377_with_orf_ref.tsv`. Work data on cody:
+`run.sh`; `make_truth.py`, `score_recall.py`, `length_baseline.py`; `recall_truth.tsv`, `recall_scored.tsv`,
+`length_baseline.tsv`; `*_orf_report.tsv` (one per set); `NC_061377_with_orf_ref.tsv`. Work data on cody:
 `/media/cody/18T_R1/yzz/_realtest/orf_2026-11-09/`.
