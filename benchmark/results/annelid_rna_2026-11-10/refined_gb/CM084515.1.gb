@@ -139,7 +139,7 @@ FEATURES             Location/Qualifiers
                      /note="TAA stop codon is completed by the addition of 3' A
                      residues to the mRNA"
                      /note="3' end from 18 poly(A) RNA-seq reads (SRR26513850)
-                     (was 3492..4022, 177 codons)"
+                     (was 3492..4022)"
                      /translation="MIDSFCFLIVILFLNMLFISTPLVMLLNILFISLMLSCMFSILFS
                      NWFAFMIFLIYVGGMLVMFSYFVALTPNQFIRLNKVVFSLFIGLLSLMSLLNSDMKPYK
                      YTYASLYDSMYNSCYFYMLILMILLLLLMMLIVVKLVYSSKGPLRPFK"
@@ -283,6 +283,8 @@ FEATURES             Location/Qualifiers
      rRNA            11374..12105
                      /gene="rrnS"
                      /product="12S ribosomal RNA"
+                     /note="3' end confirmed by 42 poly(A) RNA-seq reads
+                     (SRR26513850)"
      gene            12106..12166
                      /gene="trnV"
      tRNA            12106..12166
@@ -294,6 +296,8 @@ FEATURES             Location/Qualifiers
      rRNA            12167..13304
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 1926 poly(A) RNA-seq reads
+                     (SRR26513850)"
      gene            13305..13365
                      /gene="trnL1"
      tRNA            13305..13365

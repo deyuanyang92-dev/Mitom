@@ -1375,8 +1375,9 @@ read accordingly. Measured: benchmark/results/rnaseq_2026-11-10/README.md.
 
 Refinement (--refine, on a finished output folder; no mapping): rna_refined.gb and rna_end_corrections.tsv. A protein
 gene's 3' end is CONFIRMED by >= MIN_POLYA_READS poly(A) reads within END_WINDOW of it (note added). It is MOVED to a
-poly(A) site inside the gene's last CORRECT_MAX_NT nt when that site has >= CORRECT_MIN_READS reads, more than the
-annotated end, is not internal priming, and leaves an in-frame incomplete stop T / TA (completed by polyadenylation;
+poly(A) site inside the gene's last CORRECT_MAX_NT nt when the annotated end is not confirmed (Travisia COX3: a site
+6 codons inside, 11 reads, would have cut the conserved ...YWWGS end), the site has >= CORRECT_MIN_READS reads, is not
+internal priming, and leaves an in-frame incomplete stop T / TA (completed by polyadenylation;
 /transl_except, translation and a note with the old end). ORFs get their expression as a note.
 
 Usage: python3 mito_rna.py -g annotated.gb -1 R1.fq.gz [-2 R2.fq.gz] -o outdir [--threads 8]

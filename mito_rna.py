@@ -69,13 +69,18 @@ INTERNAL_A = 9              # ... or >= 9 A's (none of the 1,047)
 MAPPERS = ("bwa", "minimap2", "bowtie2")
 CORRECT_MIN_READS = 10      # poly(A) reads for a site to move a gene's 3' end
 CORRECT_MAX_NT = 90         # ... lying inside the gene's last 90 nt
+UTR_MAX = 30                # a gene with a complete stop: a site up to 30 nt beyond (no feature between) confirms it
+RRNA_MAX_NT = 30            # rRNA 3' end moved to a site within 30 nt ...
+RRNA_SHARE = 0.9            # ... holding >= 90 % of the poly(A) reads there, when the annotated end has none
+DUPLICATED = 0.5            # share of a feature's 25-mers found elsewhere in the record: reads map ambiguously
 CORRECTION_COLUMNS = ["record", "gene", "strand", "old_start", "old_end", "new_start", "new_end", "old_aa", "new_aa",
-                      "incomplete_stop", "site_reads", "reads_at_old_end"]
+                      "incomplete_stop", "site_reads", "reads_at_old_end", "kind"]
 DIVERGED = 0.02             # reads differ from the genome by more than this: another individual / population (or
                             # species); fast-evolving genes then get fewer reads - their low depth is not low expression
 POLYA_FEW = 1e-4            # poly(A) reads below this share of the reads: no 3'-end evidence in this library
 FEATURE_COLUMNS = ["record", "feature", "type", "start", "end", "strand", "length", "mean_depth", "relative_depth",
-                   "covered_share", "transcribed_like_genes", "sense_share", "polya_reads_at_3prime_end"]
+                   "covered_share", "transcribed_like_genes", "sense_share", "polya_reads_at_3prime_end",
+                   "duplicated_share"]
 SITE_COLUMNS = ["record", "position", "strand", "reads", "feature_ending_here", "distance_to_feature_end",
                 "internal_priming"]
 
@@ -211,6 +216,20 @@ def polya_sites(polya: Counter) -> List[Tuple[int, int, int]]:
     return [x for x in out if x[2] >= MIN_POLYA_READS]
 
 
+def _kmer_counts(seq: str, k: int = 25) -> Counter:
+    """25-mers of both strands of the (circular) record."""
+    s2 = seq + seq[: k - 1]
+    rc = s2[::-1].translate(str.maketrans("ACGT", "TGCA"))
+    return Counter(x[i: i + k] for x in (s2, rc) for i in range(len(seq)))
+
+
+def _duplicated_share(seg: str, kcount: Counter, k: int = 25) -> float:
+    """Share of a feature's 25-mers that occur more than once in the record (either strand): there reads get mapping
+    quality 0 and are not counted, so the depth says nothing."""
+    km = [seg[i: i + k] for i in range(len(seg) - k + 1)]
+    return sum(1 for x in km if kcount[x] > 1) / len(km) if km else 0.0
+
+
 def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict], dict]:
     n = len(rec.seq)
     res = parse_sam(sam, n)
@@ -234,8 +253,10 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
     primed = [x for x in polya_sites(res["polya"]) if internal_priming(seq, x[0], x[1])]
     tRNA_ends = {(e - 1 if st == 1 else s, st) for nm, t, s, e, st in feats if t == "tRNA"}
     rows = []
+    kcount = _kmer_counts(str(rec.seq).upper())
     for nm, t, s, e, st in feats:
         d = float(tot[s:e].mean()) if e > s else 0.0
+        dup = _duplicated_share(str(rec.seq).upper()[s:e], kcount)
         end = e - 1 if st == 1 else s
         pa = sum(c for p, sst, c in sites if (sst == st or not stranded) and abs(p - end) <= END_WINDOW)
         ss = float(res["depth"][st][s:e].sum()) / max(1.0, float(tot[s:e].sum()))
@@ -243,9 +264,10 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
         rows.append({"record": rec.id, "feature": nm, "type": t, "start": s + 1, "end": e,
                      "strand": "+" if st == 1 else "-", "length": e - s, "mean_depth": f"{d:.1f}",
                      "relative_depth": f"{d / med:.2f}" if med else "", "covered_share": f"{cov:.2f}",
-                     "transcribed_like_genes": ("" if med < MIN_MEDIAN_DEPTH else
+                     "transcribed_like_genes": ("" if med < MIN_MEDIAN_DEPTH or dup > DUPLICATED else
                                                 "yes" if pcg and d >= 0.5 * lowest else "no"),
-                     "sense_share": f"{ss:.2f}" if stranded else "", "polya_reads_at_3prime_end": pa})
+                     "sense_share": f"{ss:.2f}" if stranded else "", "polya_reads_at_3prime_end": pa,
+                     "duplicated_share": f"{dup:.2f}"})
     srows = []
     for p, st, c in sites + primed:
         if (p, st) in tRNA_ends or any(abs(p - x) <= 1 and sx == st for x, sx in tRNA_ends):
@@ -271,65 +293,124 @@ def _site_reads(sites: List[dict], pos1: int, strand: str, stranded: bool, windo
                and (x["strand"] == strand or not stranded) and abs(int(x["position"]) - pos1) <= window)
 
 
+def _stop_codons(code: int) -> set:
+    from Bio.Data import CodonTable
+    return set(CodonTable.unambiguous_dna_by_id[code].stop_codons)
+
+
 def refine(rec: SeqRecord, features: List[dict], sites: List[dict], stranded: bool, run: str = "") -> List[dict]:
-    """Write the RNA evidence into rec (in place): confirmed 3' ends, moved 3' ends, ORF expression. -> corrections."""
+    """Write the RNA evidence into rec (in place): confirmed / moved 3' ends of protein genes and rRNAs, ORF
+    expression, duplicated genes. -> corrections (see the module docstring for the rules)."""
     from Bio.SeqFeature import FeatureLocation
     src = f" ({run})" if run else ""
     expr = {(r["feature"], int(r["start"])): r for r in features}
     out = []
+    n = len(rec.seq)
     genes = {f.qualifiers.get("gene", [""])[0]: f for f in rec.features if f.type == "gene"}
+    starts = {(int(f.location.start) if (f.location.strand or 1) == 1 else int(f.location.end) - 1,
+               f.location.strand or 1)
+              for f in rec.features if f.type in ("CDS", "tRNA", "rRNA") and f.location is not None}
+    seq = str(rec.seq).upper()
+    kcount = _kmer_counts(seq)
+    usable = [x for x in sites if not x.get("internal_priming")]
+
+    def free_between(a: int, b: int, st: int) -> bool:      # no feature starts on strand st in [a, b) (0-based)
+        return not any(st2 == st and a <= p < b for p, st2 in starts)
+
+    def move(f, name, loc, nt, reads, at_end, kind):
+        tail = len(nt) % 3
+        s0, e0 = int(f.location.start), int(f.location.end)
+        old = (s0 + 1, e0, (e0 - s0) // 3)
+        f.location = loc
+        if name in genes:
+            genes[name].location = loc
+        notes = [x for x in f.qualifiers.get("note", []) if x != "stop codon not determined"]
+        if f.type == "CDS":
+            code = int(f.qualifiers.get("transl_table", ["5"])[0])
+            f.qualifiers["transl_except"] = [transl_except_term(int(loc.start) + 1, int(loc.end), loc.strand, tail)]
+            f.qualifiers["translation"] = [codon_translate(nt, code).rstrip("*")]
+            notes.append(POLYA_NOTE)
+        f.qualifiers["note"] = notes + [f"3' end from {reads} poly(A) RNA-seq reads{src} (was {old[0]}..{old[1]})"]
+        out.append({"record": rec.id, "gene": name, "strand": "+" if loc.strand == 1 else "-", "old_start": old[0],
+                    "old_end": old[1], "new_start": int(loc.start) + 1, "new_end": int(loc.end),
+                    "old_aa": old[2] if f.type == "CDS" else "", "new_aa": len(nt) // 3 if f.type == "CDS" else "",
+                    "incomplete_stop": nt[-tail:] if f.type == "CDS" and tail else "", "site_reads": reads,
+                    "reads_at_old_end": at_end, "kind": kind})
+
     for f in rec.features:
-        if f.type != "CDS" or len(f.location.parts) > 1:
+        if f.type not in ("CDS", "rRNA") or f.location is None or len(f.location.parts) > 1:
             continue
         name = f.qualifiers.get("gene", f.qualifiers.get("product", [""]))[0]
         st = f.location.strand or 1
         s0, e0 = int(f.location.start), int(f.location.end)
+        L = e0 - s0
         sign = "+" if st == 1 else "-"
         end1 = e0 if st == 1 else s0 + 1                                  # 1-based 3'-end position
-        at_end = _site_reads(sites, end1, sign, stranded, END_WINDOW)
+        at_end = _site_reads(usable, end1, sign, stranded, END_WINDOW)
         notes = f.qualifiers.setdefault("note", [])
         r = expr.get((name, s0 + 1))
-        if name.lower().startswith("orf") and r and r["relative_depth"]:
+        dup = _duplicated_share(seq[s0:e0], kcount)
+        if dup > DUPLICATED:
+            notes.append(f"RNA-seq{src}: {dup:.0%} of this sequence occurs elsewhere in the "
+                         "record, reads there map ambiguously: depth not measurable")
+        elif name.lower().startswith("orf") and r and r["relative_depth"]:
             notes.append(f"RNA-seq{src}: depth {r['relative_depth']} x the protein genes' median, "
                          f"{float(r['covered_share']):.0%} of its length transcribed")
-        best = None
-        for x in sites:
-            if x.get("internal_priming") or (stranded and x["strand"] != sign):
+        cand = []                                    # (k = transcript length up to the site, reads)
+        for x in usable:
+            if stranded and x["strand"] != sign:
                 continue
-            pos = int(x["position"])                                        # 1-based last base before the tail
-            k = pos - s0 if st == 1 else e0 - pos + 1                       # transcript length up to the site
-            reads = int(x["reads"])
-            if not (e0 - s0 - CORRECT_MAX_NT <= k <= e0 - s0 - 1) or reads < CORRECT_MIN_READS \
-                    or at_end >= MIN_POLYA_READS:                   # a confirmed end is never moved
-                continue
-            if reads <= at_end:
-                continue
-            loc = FeatureLocation(s0, s0 + k, st) if st == 1 else FeatureLocation(e0 - k, e0, st)
-            nt = str(loc.extract(rec.seq)).upper()
-            if not abbreviated_stop(nt):
-                continue
-            if best is None or reads > best[1]:
-                best = (loc, reads, nt)
-        if best:
-            loc, reads, nt = best
-            tail = len(nt) % 3
+            pos = int(x["position"])                                       # 1-based last base before the tail
+            cand.append((pos - s0 if st == 1 else e0 - pos + 1, int(x["reads"])))
+        done = False
+        if f.type == "CDS":
             code = int(f.qualifiers.get("transl_table", ["5"])[0])
-            old = (s0 + 1, e0, (e0 - s0) // 3)
-            f.location = loc
-            if name in genes:
-                genes[name].location = loc
-            f.qualifiers["transl_except"] = [transl_except_term(int(loc.start) + 1, int(loc.end), st, tail)]
-            f.qualifiers["translation"] = [codon_translate(nt, code).rstrip("*")]
-            f.qualifiers["note"] = [n for n in notes if n != "stop codon not determined"] + [
-                POLYA_NOTE, f"3' end from {reads} poly(A) RNA-seq reads{src} (was {old[0]}..{old[1]}, "
-                f"{old[2]} codons)"]
-            out.append({"record": rec.id, "gene": name, "strand": sign, "old_start": old[0], "old_end": old[1],
-                        "new_start": int(loc.start) + 1, "new_end": int(loc.end), "old_aa": old[2],
-                        "new_aa": len(nt) // 3, "incomplete_stop": nt[-tail:], "site_reads": reads,
-                        "reads_at_old_end": at_end})
-        elif at_end >= MIN_POLYA_READS:
+            nt0 = str(f.location.extract(rec.seq)).upper()
+            has_stop = (len(nt0) % 3 == 0 and nt0[-3:] in _stop_codons(code)) or abbreviated_stop(nt0)
+            if not has_stop:              # no stop codon: a site beyond the end does not confirm it
+                at_end = sum(reads for k, reads in cand if L - END_WINDOW <= k <= L)
+        if f.type == "CDS" and at_end < MIN_POLYA_READS:                    # a confirmed end is never moved
+            best = None
+            for k, reads in cand:
+                shorten = max(3, L - CORRECT_MAX_NT) <= k <= L - 1
+                extend = not has_stop and L + 1 <= k <= L + CORRECT_MAX_NT
+                if not (shorten or extend) or reads < CORRECT_MIN_READS or reads <= at_end:
+                    continue
+                if st == 1 and s0 + k > n or st == -1 and e0 - k < 0:
+                    continue
+                loc = FeatureLocation(s0, s0 + k, st) if st == 1 else FeatureLocation(e0 - k, e0, st)
+                nt = str(loc.extract(rec.seq)).upper()
+                if not abbreviated_stop(nt) or "*" in codon_translate(nt, code):
+                    continue
+                if extend and not free_between(e0 if st == 1 else e0 - k, s0 + k if st == 1 else s0, st):
+                    continue
+                if best is None or reads > best[1]:
+                    best = (loc, reads, nt, "extended" if extend else "shortened")
+            if best:
+                move(f, name, best[0], best[2], best[1], at_end, best[3])
+                done = True
+            elif has_stop and len(nt0) % 3 == 0:                          # complete stop: a short 3' UTR
+                utr = [(k - L, reads) for k, reads in cand if END_WINDOW < k - L <= UTR_MAX and reads >= MIN_POLYA_READS
+                       and free_between(e0 if st == 1 else s0 - (k - L), e0 + (k - L) if st == 1 else s0, st)]
+                if utr:
+                    d, reads = max(utr, key=lambda t: t[1])
+                    notes.append(f"3' end confirmed by {reads} poly(A) RNA-seq reads{src}: the transcript ends {d} nt "
+                                 "after the stop codon")
+                    done = True
+        if f.type == "rRNA" and at_end < MIN_POLYA_READS:
+            near = [(k, reads) for k, reads in cand if abs(k - L) <= RRNA_MAX_NT and k > 0]
+            tot = sum(reads for _, reads in near)
+            if near:
+                k, reads = max(near, key=lambda t: t[1])
+                ok = reads >= CORRECT_MIN_READS and reads >= RRNA_SHARE * tot and \
+                    (k <= L or free_between(e0 if st == 1 else e0 - k, s0 + k if st == 1 else s0, st))
+                if ok and 0 < (s0 + k if st == 1 else e0 - k) < n:
+                    loc = FeatureLocation(s0, s0 + k, st) if st == 1 else FeatureLocation(e0 - k, e0, st)
+                    move(f, name, loc, str(loc.extract(rec.seq)), reads, at_end, "rRNA 3' end")
+                    done = True
+        if not done and at_end >= MIN_POLYA_READS:
             notes.append(f"3' end confirmed by {at_end} poly(A) RNA-seq reads{src}")
-        if not notes:
+        if not f.qualifiers.get("note"):
             f.qualifiers.pop("note", None)
     return out
 

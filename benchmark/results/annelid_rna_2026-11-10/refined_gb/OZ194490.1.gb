@@ -169,6 +169,9 @@ FEATURES             Location/Qualifiers
                      FTLSLGLTLWSTIILSSLLLNKKEFIAKLLPDGAPDWLNPFLVLIETVSIMVRPLTLSF
                      RLAANMSAGHIVLGLLGTYLSIALSTSILAATTLTLLSSAYILFEFAICLIQAYIFCLL
                      LSLYTDDHTSNH"
+                     /note="3' end confirmed by 492 poly(A) RNA-seq reads
+                     (ERR13999106): the transcript ends 11 nt after the stop
+                     codon"
      gene            5917..5977
                      /gene="trnR"
      tRNA            5917..5977
@@ -273,6 +276,8 @@ FEATURES             Location/Qualifiers
      rRNA            10905..11641
                      /gene="rrnS"
                      /product="12S ribosomal RNA"
+                     /note="3' end confirmed by 369 poly(A) RNA-seq reads
+                     (ERR13999106)"
      gene            11642..11702
                      /gene="trnV"
      tRNA            11642..11702
@@ -284,6 +289,8 @@ FEATURES             Location/Qualifiers
      rRNA            11703..12859
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 11213 poly(A) RNA-seq reads
+                     (ERR13999106)"
      gene            12860..12920
                      /gene="trnL1"
      tRNA            12860..12920

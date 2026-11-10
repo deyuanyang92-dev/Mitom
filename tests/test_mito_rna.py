@@ -110,3 +110,28 @@ def test_refine_moves_end_to_polya_site_with_incomplete_stop():
     assert int(nd6.location.end) == 95 and nd6.qualifiers["transl_except"] == ["(pos:94..95,aa:TERM)"]
     cox1 = next(f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"] == ["COX1"])
     assert any("confirmed by 5 poly(A)" in n for n in cox1.qualifiers["note"])
+
+
+def test_refine_utr_extension_and_duplication():
+    """Complete stop + site 20 nt beyond: confirmed (3' UTR). No stop + site beyond leaving an in-frame T: extended.
+    A gene present twice: duplicated, depth not measurable."""
+    import mito_rna
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    a = "ATG" + "GCTCGA" * 15 + "TAA"                       # 96 nt, complete stop
+    b = "ATG" + "GCCAGC" * 15 + "GTC"                       # 96 nt, no stop; then CCG CAT + T = incomplete stop
+    dupl = "ATGACCTTGGAGCAAGTCCTGAACGGTTCAGCGATCCATTGA"
+    seq = a + "C" * 40 + b + "CCGCATT" + "G" * 40 + dupl + "C" * 30 + dupl + "A" * 5
+    rec = SeqRecord(Seq(seq), id="t")
+    loc = {"A": (0, 96), "B": (136, 232), "D": (279, 279 + len(dupl))}
+    for name, (s, e) in loc.items():
+        q = {"gene": [name], "product": ["x"], "transl_table": ["5"], "codon_start": ["1"]}
+        rec.features.append(SeqFeature(FeatureLocation(s, e, 1), type="CDS", qualifiers=q))
+    sites = [{"position": "116", "strand": "+", "reads": "8", "internal_priming": ""},      # 20 nt after A's stop
+             {"position": "239", "strand": "+", "reads": "15", "internal_priming": ""}]     # B + CCGCATT
+    corr = mito_rna.refine(rec, [], sites, stranded=False)
+    assert [(c["gene"], c["kind"], c["new_end"], c["incomplete_stop"]) for c in corr] == [("B", "extended", 239, "T")]
+    f = {x.qualifiers["gene"][0]: x for x in rec.features}
+    assert any("ends 20 nt after the stop codon" in n for n in f["A"].qualifiers["note"])
+    assert any("occurs elsewhere" in n for n in f["D"].qualifiers["note"])

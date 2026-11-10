@@ -139,6 +139,8 @@ FEATURES             Location/Qualifiers
      rRNA            4195..5030
                      /gene="rrnS"
                      /product="12S ribosomal RNA"
+                     /note="3' end confirmed by 138 poly(A) RNA-seq reads
+                     (ERR14224601)"
      gene            5031..5094
                      /gene="trnV"
      tRNA            5031..5094
@@ -150,6 +152,8 @@ FEATURES             Location/Qualifiers
      rRNA            5095..6397
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 3171 poly(A) RNA-seq reads
+                     (ERR14224601)"
      gene            6398..6461
                      /gene="trnL1"
      tRNA            6398..6461
@@ -232,6 +236,10 @@ FEATURES             Location/Qualifiers
                      GMNQSSLRPLLAYSSVGHLGWMICTSTISSSSTIIYFISYILIITPIIILLASKNIFSN
                      MQMFSITKSKITFQISAAALFMSLGGLPPLFGFFPKWVAIQSLTSNNMIILPLILILGA
                      LMNLYFYLMLSFPMILNSLNFKKSHKTTNIPILILSSFTLAICPTSLFLI"
+                     /note="TAA stop codon is completed by the addition of 3' A
+                     residues to the mRNA"
+                     /note="3' end from 107 poly(A) RNA-seq reads (ERR14224601)
+                     (was 8136..9152)"
                      /transl_except=(pos:9129..9130,aa:TERM)
      gene            9130..10685
                      /gene="COX1"

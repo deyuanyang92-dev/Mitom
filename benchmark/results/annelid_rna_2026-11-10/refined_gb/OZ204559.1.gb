@@ -276,19 +276,21 @@ FEATURES             Location/Qualifiers
                      /gene="trnS2"
                      /product="tRNA-Ser"
                      /note="anticodon: UGA"
-     gene            9536..>9880
+     gene            9536..9882
                      /gene="ND3"
-     CDS             9536..>9880
+     CDS             9536..9882
                      /gene="ND3"
                      /product="NADH dehydrogenase subunit 3"
                      /codon_start=1
                      /transl_table=5
-                     /note="stop codon not determined"
-                     /note="3' end confirmed by 29 poly(A) RNA-seq reads
-                     (ERR14707602)"
+                     /note="TAA stop codon is completed by the addition of 3' A
+                     residues to the mRNA"
+                     /note="3' end from 29 poly(A) RNA-seq reads (ERR14707602)
+                     (was 9536..9880)"
                      /translation="MSFLSLMFFLAMVVCGAIFVGFNILSVKSVEGGGSSDPFECGFDP
                      LGGARVALSLRFFVLVVLFLVFDVEIVLILPFIIFEGFSGWYYFSVSLIFIILILGLGY
                      EWSEGSLSWCS"
+                     /transl_except=(pos:9881..9882,aa:TERM)
      gene            complement(9894..9954)
                      /gene="trnL2"
      tRNA            complement(9894..9954)
@@ -335,33 +337,41 @@ FEATURES             Location/Qualifiers
                      LMASIVMTVTYLFVALNIIPPMFSAPVSKYTAGSPIAAASIITLMLLIGPLLANI"
                      /note="3' end confirmed by 66 poly(A) RNA-seq reads
                      (ERR14707602)"
-     gene            complement(<12222..13121)
+     gene            complement(12206..13121)
                      /gene="ND1"
-     CDS             complement(<12222..13121)
+     CDS             complement(12206..13121)
                      /gene="ND1"
                      /product="NADH dehydrogenase subunit 1"
                      /codon_start=1
                      /transl_table=5
-                     /note="stop codon not determined"
+                     /note="TAA stop codon is completed by the addition of 3' A
+                     residues to the mRNA"
+                     /note="3' end from 17 poly(A) RNA-seq reads (ERR14707602)
+                     (was 12222..13121)"
                      /translation="MAQTMTNMLLALIFGLIAMALFTLLERRGLGLAQLRKGPNKAAIA
                      ALLLPLADALKLFSKASSPTMLLNKIPFTVAPFFALTCSILLWMMLPLFHPNFPIKNSL
                      VLILAISSLHVYAMLGMSWSSNSKYASIGMTRGLAQTISYEVSMALILIALLLPLKSLN
                      LELVNSNGFSLMIALPLIMPIWFMTCVAETHRTPFDIAEGESELVSGFNTEYLGGKFAV
                      IFMSEYLGILVMSTLTVMLFILPGTPNSSLMIKIMLMSLISMMFIAIRATLPRMRYDTL
-                     MWLAWGMILPMALAICIYV"
+                     MWLAWGMILPMALAICIYVSPMLT"
+                     /transl_except=(pos:complement(12206),aa:TERM)
      misc_feature    13122..13562
                      /note="non-coding region NCR2, 441 bp: no gene annotated
                      (MitoM)"
-     gene            complement(13563..14699)
+     gene            complement(13574..14699)
                      /gene="rrnL"
-     rRNA            complement(13563..14699)
+     rRNA            complement(13574..14699)
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end from 1978 poly(A) RNA-seq reads (ERR14707602)
+                     (was 13563..14699)"
      gene            complement(14700..15593)
                      /gene="rrnS"
      rRNA            complement(14700..15593)
                      /gene="rrnS"
                      /product="12S ribosomal RNA"
+                     /note="3' end confirmed by 9 poly(A) RNA-seq reads
+                     (ERR14707602)"
 ORIGIN
         1 attttctctc ggtggatatg gtctaggaat cacaaggata ttggaacttt gtattttatt
        61 ttgggtttgt gaggtgggct tgttggaact tctatgagaa ttttaattcg tttggagtta

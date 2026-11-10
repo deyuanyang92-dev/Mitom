@@ -243,6 +243,8 @@ FEATURES             Location/Qualifiers
      rRNA            8932..10033
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 246801 poly(A) RNA-seq reads
+                     (SRR30505187)"
      gene            10034..10100
                      /gene="trnM"
      tRNA            10034..10100
@@ -308,6 +310,8 @@ FEATURES             Location/Qualifiers
      rRNA            13575..14513
                      /gene="rrnS"
                      /product="12S ribosomal RNA"
+                     /note="3' end confirmed by 150 poly(A) RNA-seq reads
+                     (SRR30505187)"
      misc_feature    14514..18693
                      /note="non-coding region NCR7, 4,180 bp: no gene annotated
                      (MitoM); contains ORF 14517..15701 (+, 394 codons):
@@ -392,6 +396,9 @@ FEATURES             Location/Qualifiers
                      VLTIFCSWEVSQDSVWLNCLSHGLTASGLFGWCGLLFKYQASLNIACLGGQRYLQASLG
                      LLVFCLLCSNCSVPPFFSFWAETFSFSSLVSKWVGLYFFLIYLSVLCLAYNIILGVFIC
                      QQELAKGKGVVHSWGTVEGLGVGAHVLPGIFLFFAPLVLE"
+                     /note="3' end confirmed by 168 poly(A) RNA-seq reads
+                     (SRR30505187): the transcript ends 22 nt after the stop
+                     codon"
      misc_feature    22659..22809
                      /note="non-coding region NCR11, 151 bp: no gene annotated
                      (MitoM)"

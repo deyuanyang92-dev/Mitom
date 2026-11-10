@@ -274,6 +274,8 @@ FEATURES             Location/Qualifiers
      rRNA            11758..12952
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 278 poly(A) RNA-seq reads
+                     (ERR10123675)"
      gene            12953..13015
                      /gene="trnL1"
      tRNA            12953..13015

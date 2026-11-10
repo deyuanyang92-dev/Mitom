@@ -277,6 +277,8 @@ FEATURES             Location/Qualifiers
      rRNA            10872..11780
                      /gene="rrnS"
                      /product="12S ribosomal RNA"
+                     /note="3' end confirmed by 19 poly(A) RNA-seq reads
+                     (ERR12765137)"
      gene            11781..11851
                      /gene="trnV"
      tRNA            11781..11851
@@ -288,6 +290,8 @@ FEATURES             Location/Qualifiers
      rRNA            11852..13236
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 7920 poly(A) RNA-seq reads
+                     (ERR12765137)"
      gene            13237..13300
                      /gene="trnL1"
      tRNA            13237..13300

@@ -35,28 +35,43 @@ species); the two flagged pairs are earthworms of known species complexes.
 
 ## Results / 结果（52 对通过物种核对，52 种 / 52 pairs pass）
 
-| 建库 / library | 对数 / pairs | 蛋白基因 3′ 端被 poly(A) 确认 / PCG 3′ ends confirmed |
-|---|---|---|
-| PolyA | 47 | 467/608 |
-| RANDOM | 4 | 38/52 |
-| cDNA_oligo_dT | 1 | 5/13 |
-| 合计 / total | 52 | 510/673 |
+| 蛋白基因 3′ 端 / PCG 3′ ends (673) | 数目 / n |
+|---|---|
+| poly(A) 正好在注释末端（±10 nt）/ at the annotated end | 464 |
+| 完整终止密码子后 11–30 nt 结束（短 3′ UTR，中间无其他基因）/ after a complete stop (short 3′ UTR) | 15 |
+| 末端被修正 / end moved | 4 |
+| 序列在记录中重复，深度不可测 / duplicated in the record | 5 |
+| 无 poly(A) 证据 / no evidence | 185 |
 
-3′ 端修正（`--refine`；原注释末端无 poly(A)、内部有强位点、截断后留下框内不完整终止 T / TA）/ corrected 3′ ends:
+无证据最多的是 ND4L（52 种中 50 种）：ND4L 与 ND4 共用一个转录本，自己没有 poly(A)，这是正常的；其次 ATP8、ND6
+（表达低、短）。rRNA 3′ 端：104 个中 88 个被确认，1 个修正。
+Most unconfirmed ends are ND4L (shares its transcript with ND4) and short, weakly expressed genes.
 
-| 线粒体基因组 / mitogenome | 物种 / species | run | 基因 / gene | 密码子 / codons | poly(A) reads | 近缘同科中位长度 / family median (aa) |
-|---|---|---|---|---|---|---|
-| CM084515.1 | *Whitmania pigra*（同一标本 / same specimen） | SRR26513850 | ND6 | 177 → 152（原注释 "stop codon not determined"） | 18 | 152 |
-| OZ404008.1 | *Sclerolinum annulatum* | ERR14224601 | ND2 | 339 → 331 | 107 | 331 |
+修正 / corrections（`--refine`；每个都与同科已注释蛋白的中位长度一致）:
 
-- 规则如何得来：初版也把 *Travisia forbesii* COX3 截短 6 个密码子（内部位点 11 reads），会切掉保守的 C 端
-  …YWWGS；该基因原注释末端已有 3 条 poly(A) reads。于是加了“已被确认的末端不移动”，之后只剩上表 2 个，长度都等于
-  同科中位数。The first version also cut Travisia COX3 (losing the conserved ...YWWGS); a confirmed end is now never
-  moved.
-- 内部引发位点（基因组 A 串上的 oligo-dT）标出不计：52 对共 204 个。Internal-priming sites flagged: 204.
-- 表达：短基因测得少是建库长度偏差（ATP8 最短，相对深度最低），不说明注释错；判断短 ORF 要和 ATP8 / ND4L / ND3 比。
-  *Glycera fallax* OZ210882 的两个大 ORF 都有转录（`results.tsv` 的 `orfs` 列）。
-  Short genes get few reads (library length bias); ORFs of Glycera fallax are transcribed.
+| 线粒体基因组 / mitogenome | 物种 / species | 基因 / gene | 改动 / change | poly(A) reads | 同科中位 / family median (aa) |
+|---|---|---|---|---|---|
+| CM084515.1 | *Whitmania pigra*（同一标本） | ND6 | 177 → 152 codons，止于 TA | 18 | 152 |
+| OZ404008.1 | *Sclerolinum annulatum* | ND2 | 339 → 331，止于 TA | 107 | 331 |
+| OZ204559.1 | *Sabella spallanzanii* | ND1 | 300 → 305，延伸到 T | 17 | 305 |
+| OZ204559.1 | *Sabella spallanzanii* | ND3 | 115 + TA（原无终止密码子） | 29 | 115 |
+| OZ204559.1 | *Sabella spallanzanii* | rrnL | 3′ 端移 11 nt | 1,978 | — |
+
+*Sabella* 的 ND1、ND3 和 *W. pigra* 的 ND6，MitoM 原本都标为 "stop codon not determined"：转录组正好补上了 MitoM
+定不了的末端。MitoM had left three of these ends open ("stop codon not determined"); the RNA-seq closes them.
+
+## Outliers / 异常值分析（如何得到上面的规则）
+
+| 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
+|---|---|---|---|
+| 某基因几乎没有 reads（邻近基因很高） | *Themiste lageniformis* OZ077499 的 ATP8、ND6（各出现两次） | 序列在记录中重复（95–100 % 的 25-mer 出现两次），reads MAPQ 0 被过滤 | `duplicated_share` > 0.5：不判断表达，注释加说明 |
+| 其他低表达基因（ND6、ND3、ATP8、ND4L，7–226×） | *Pterobdella*、*Branchellion*、*Siboglinum* … | 无重复，真实低表达 + 短片段建库偏差 | 不是注释错误；短 ORF 要与短基因比 |
+| poly(A) 在注释末端后 11–30 nt | 27 个，全部有完整终止密码子 TAA / TAG | 短 3′ UTR | 中间无其他基因、≥ 3 reads：算确认 |
+| poly(A) 在注释末端之后、基因没有终止密码子 | *Sabella* ND1（GTT 结尾）、ND3 | MitoM 未定末端 | 延伸到留下框内 T / TA 的位点（中间无终止密码子、≥ 10 reads） |
+| poly(A) 在注释末端之内 | *Travisia* COX3（原末端已有 3 reads） | 降解 / 加工中间体 | 已确认的末端不移动 |
+| rRNA 内部强位点 | *Sabella* rrnL −11 nt（95 % reads）；*Protula*、*Arenicola* rrnL −190 至 −330 nt | 前者为真 3′ 端；后者不明 | 30 nt 内、占 ≥ 90 % 才移动；远处的只报告 |
+| 同科一致的高表达（如管栖须腕动物 ND2 17–34 倍） | *Lamellibrachia*、*Oasisia*、*Ridgeia* | 生物学（科内一致） | 不处理 |
+| 同项目 reads 差异 > 2 % | 两种蚯蚓 | 污染 / 标错 / 隐存种 | FLAG，不用 |
 
 ## Files / 文件
 

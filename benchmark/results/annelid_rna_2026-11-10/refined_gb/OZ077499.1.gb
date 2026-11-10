@@ -65,6 +65,9 @@ FEATURES             Location/Qualifiers
                      YWSYEYADYNQLSYDSYMLPSNELTQHRPFRLLEVDNRLLLPTNINIRLLITASDVMHS
                      WALPSFGVKADAIPGRLNQLSMFILSPGVYYGQCSEICGANHSFMPIAVEARSPNDFCS
                      IIMNSPQ"
+                     /note="RNA-seq (ERR13669974): 89% of this sequence occurs
+                     elsewhere in the record, reads there map ambiguously: depth
+                     not measurable"
      gene            2352..2413
                      /gene="trnD"
      tRNA            2352..2413
@@ -80,6 +83,9 @@ FEATURES             Location/Qualifiers
                      /transl_table=5
                      /translation="MPHLAPLSWLPIAVLFWATLISILSFTWWSHSPLFPASSIHSPKP
                      SPRHWNWN"
+                     /note="RNA-seq (ERR13669974): 100% of this sequence occurs
+                     elsewhere in the record, reads there map ambiguously: depth
+                     not measurable"
      gene            2577..2641
                      /gene="trnY"
      tRNA            2577..2641
@@ -103,6 +109,9 @@ FEATURES             Location/Qualifiers
                      SPWISMIMTLIYISGLNVLFAYFIATSPNHHLSSNKMHSVSLSLFFLILISLLLTPPFF
                      SLNFSPSSIHLITKFLASPSYPVLLTLALILFLALIAVVKIASRHYGPLRPFIYAKTPP
                      QIPPSN"
+                     /note="RNA-seq (ERR13669974): 98% of this sequence occurs
+                     elsewhere in the record, reads there map ambiguously: depth
+                     not measurable"
      misc_feature    3234..4794
                      /note="non-coding region NCR1, 1,561 bp: no gene annotated
                      (MitoM); contains ORF 3235..3408 (+, 57 codons):
@@ -123,6 +132,9 @@ FEATURES             Location/Qualifiers
                      /transl_table=5
                      /translation="MPHLAPLSWLPIAVLFWATLISILSFTWWSHSPLFPASSIHSPKP
                      SPRHWNWN"
+                     /note="RNA-seq (ERR13669974): 100% of this sequence occurs
+                     elsewhere in the record, reads there map ambiguously: depth
+                     not measurable"
      gene            5020..5084
                      /gene="trnY"
      tRNA            5020..5084
@@ -146,6 +158,9 @@ FEATURES             Location/Qualifiers
                      SPWISMIMTLIYISGLNVLFAYFIATSPNHHLSSNKMHSVSLSLFFLILISLLLTPPFF
                      SLNFSPSSIHLITKFLASPSYPVLLTLALILFLALIAVVKIASRHYGPLRPFIYAKTPP
                      QIPIPTFFSLFSHFFILT"
+                     /note="RNA-seq (ERR13669974): 95% of this sequence occurs
+                     elsewhere in the record, reads there map ambiguously: depth
+                     not measurable"
      misc_feature    5713..6526
                      /note="non-coding region NCR2, 814 bp: no gene annotated
                      (MitoM)"

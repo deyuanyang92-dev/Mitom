@@ -48,6 +48,9 @@ FEATURES             Location/Qualifiers
                      FSGVGIHERWAKAQFGLMFIGVNTTFFPQHFLGLAGMPRRYSDYPDAFMAWNVVSSIGS
                      MISIVGLLGFMFLLWEAFASQRKFLFSSSSSSSLEWVSVGYPLSFHSHEESPGAYTKSF
                      HTKKWIR"
+                     /note="3' end confirmed by 26 poly(A) RNA-seq reads
+                     (ERR12318605): the transcript ends 17 nt after the stop
+                     codon"
      gene            1593..1655
                      /gene="trnF"
      tRNA            1593..1655
@@ -338,6 +341,9 @@ FEATURES             Location/Qualifiers
                      FCRLADTALIATKSNVTASGAVLLATTLISMSGMPPFIGFGLKLVALNHLASFPLVIPT
                      TILLLVPSLMMTCLYLTISTMLLAPKKLDKRSLKIKALMMIPLSLIMPLMIIPAIGLAG
                      G"
+                     /note="3' end confirmed by 68 poly(A) RNA-seq reads
+                     (ERR12318605): the transcript ends 14 nt after the stop
+                     codon"
      gene            complement(13138..13204)
                      /gene="trnP"
      tRNA            complement(13138..13204)
@@ -349,6 +355,8 @@ FEATURES             Location/Qualifiers
      rRNA            complement(13205..14402)
                      /gene="rrnL"
                      /product="16S ribosomal RNA"
+                     /note="3' end confirmed by 925 poly(A) RNA-seq reads
+                     (ERR12318605)"
      gene            complement(14403..15345)
                      /gene="rrnS"
      rRNA            complement(14403..15345)

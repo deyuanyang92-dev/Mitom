@@ -57,8 +57,11 @@ def main():
         pcg = [f for f in feats if f["type"] == "CDS" and not f["feature"].lower().startswith("orf")]
         gb = o / "rna_refined.gb"
         if gb.exists():
-            txt = gb.read_text()
-            row["pcg_3prime_ends_confirmed"] = f"{txt.count('confirmed by')}/{len(pcg)}"
+            from Bio import SeqIO
+            cds = [f for f in SeqIO.read(gb, "genbank").features if f.type == "CDS"
+                   and not f.qualifiers.get("gene", [""])[0].lower().startswith("orf")]
+            conf = sum(any("confirmed by" in x for x in f.qualifiers.get("note", [])) for f in cds)
+            row["pcg_3prime_ends_confirmed"] = f"{conf}/{len(pcg)}"
         corr = list(csv.DictReader(open(o / "rna_end_corrections.tsv"), delimiter="\t")) \
             if (o / "rna_end_corrections.tsv").exists() else []
         row["end_corrections"] = "; ".join(f"{c['gene']} {c['old_aa']}->{c['new_aa']} codons ({c['site_reads']} reads)"
