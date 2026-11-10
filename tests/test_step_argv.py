@@ -53,3 +53,10 @@ def test_orf_step_failure_leaves_the_records(tmp_path, monkeypatch):
     monkeypatch.setattr(mitom_steps, "run_tool", lambda cmd, **kw: subprocess.CompletedProcess(cmd, 1, "", "boom"))
     r = mitom_steps.run_orf(argparse.Namespace(orf="yes", genetic_code=5, threads=1), gb, tmp_path)
     assert not r.ok and (gb / "a.gbf").read_text() == "LOCUS x\n//\n"
+
+
+def test_pcg_hmm_command_parses(tmp_path):
+    import mito_pcg_hmm
+    cmd = mitom_steps.pcg_hmm_cmd(tmp_path / "gb", tmp_path / "r.tsv", 4, "B")
+    a = mito_pcg_hmm.build_parser().parse_args(_script_args(cmd, "mito_pcg_hmm.py"))
+    assert a.cmd == "search" and a.genetic_code == 4 and a.report == str(tmp_path / "r.tsv") and a.bin == "B"

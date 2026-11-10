@@ -92,6 +92,8 @@ MAX_HOMOLOGS = 20           # homologs (best blastp E, distinct) joined in the s
 E_BLAST = 1e-5              # homolog: blastp E-value
 REPEAT_ID = 0.85            # tandem repeat: copies >= 85 % identical ...
 REPEAT_COPIES = 2           # ... over >= 2 periods (period 3-150 nt)
+REPEAT_MIN = 30             # ... and the array >= 30 nt: short exact repeats (CTT CTT CTT = Leu Leu Leu) are common
+                            # in real genes (hydrophobic atp8), only long arrays are slippage
 FREE = 0.9                  # share of a written ORF's codons in unannotated sequence (overlaps with a tRNA end)
 NOTE = "found by MitoM mito_orf"      # start of the /note of every gene this module writes
 EXON_TYPES = {"CDS", "rRNA", "tRNA"}
@@ -166,7 +168,7 @@ def orfs_stop_to_stop(seq: str, code: int, circular: bool, min_aa: int = MIN_AA)
 
 def tandem_mask(nt: str, max_period: int = 150) -> np.ndarray:
     """True at the bases of tandem repeats in nt: a stretch of >= REPEAT_COPIES + 1 copies of a 3-150 nt unit with
-    >= REPEAT_ID identity between neighbouring copies. Replication slippage builds such arrays in control regions; an
+    >= REPEAT_ID identity between neighbouring copies, >= REPEAT_MIN nt long. Replication slippage builds such arrays in control regions; an
     array of a stop-free unit is an ORF of any length and aligns with any other such array, so it is evidence of
     neither length beyond chance nor selection."""
     a = np.frombuffer(nt.encode(), dtype=np.uint8)
@@ -174,7 +176,7 @@ def tandem_mask(nt: str, max_period: int = 150) -> np.ndarray:
     mask = np.zeros(n, dtype=bool)
     for p in range(3, min(max_period, n // (REPEAT_COPIES + 1)) + 1):
         eq = (a[:-p] == a[p:]).astype(np.int32)
-        w = REPEAT_COPIES * p
+        w = max(REPEAT_COPIES * p, REPEAT_MIN - p)          # (window + period = the array, >= REPEAT_MIN)
         if len(eq) < w:
             break
         c = np.concatenate([[0], np.cumsum(eq)])
@@ -229,6 +231,7 @@ class Orf:
     shadow_of: str = ""
     runs_into: str = ""     # not writable: the features the reading frame runs on into (in frame with a CDS: named)
     trna_end: str = ""      # ends without a stop at this tRNA (tRNA punctuation): written with an open 3' end
+    seg: Tuple[int, int, int] = (0, 0, 0)   # the stop-to-stop stretch: start, end (plus strand), first codon of piece
 
     @property
     def codons(self) -> int:
@@ -304,10 +307,13 @@ def candidates(rec: SeqRecord, code: int, min_aa: int = MIN_AA) -> List[Orf]:
         f = freq if strand == 1 else rfreq
         e_len = 2 * F * codon_prob(starts, f) * (1 - codon_prob(table.stop_codons, f)) ** L
         ws, we = (s + a, s + b) if strand == 1 else (e - b, e - a)
+        if ws >= n:                                         # (the start codon lies beyond the origin)
+            ws, we = ws - n, we - n
         o = Orf(rec.id, ws, we, strand, piece, nt_all[3 * best[0]: 3 * best[1]],
                 "M" + prot[first + 1: (b - a) // 3 + first - (1 if b == 3 * k + 3 else 0)], nt_all[a:b], e_len,
                 writable and L >= min_aa)
         o.trna_end = trna_end
+        o.seg = (s, e, best[0])
         if not o.writable:
             rest = (s + b, e) if strand == 1 else (s, e - b)           # the frame beyond the ORF, to its stop
             o.runs_into = runs_into(rec, rest, strand, (s if strand == 1 else e) % 3, n)

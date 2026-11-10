@@ -227,3 +227,21 @@ def test_pfam_family_names_the_product():
     m.write_orf(rec, o, 4)
     cds = [f for f in rec.features if f.type == "CDS"][0]
     assert o.cls == "known_family" and cds.qualifiers["product"] == ["LAGLIDADG homing endonuclease"]
+
+
+def test_short_codon_repeats_of_real_genes_are_not_masked():
+    """CTT CTT CTT (Leu Leu Leu) and the like are common in real genes (serpulid atp8 PX957250.1): not masked."""
+    assert not m.tandem_mask("ATGCCAATGCAATTTCTTCTTCTTCCATACTGAATTCTTCTTCTAGTA").any()
+
+
+def test_orf_whose_start_codon_is_beyond_the_origin_gets_record_coordinates():
+    """Circular record: the stop-to-stop stretch starts before the origin, its first start codon after it
+    (OZ210882.1, 47,540 nt: start 47,750 crashed the writer)."""
+    body = orf_nt(90)
+    seq = "GCT" * 4 + body[3:] + filler(600, 13) + "TAA" + "GGC" * 10      # frame open across the origin, ATG after it
+    seq = seq[: len(seq)]
+    rec = record(seq)
+    rec.annotations["topology"] = "circular"
+    for o in m.candidates(rec, 5):
+        assert 0 <= o.start < len(seq) and o.end > o.start
+        m.location(o, len(seq))

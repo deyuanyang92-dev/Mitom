@@ -48,6 +48,7 @@ from mitom_steps import (
     run_intron_fix,
     run_ncr,
     run_orf,
+    run_pcg_hmm,
     run_plots,
     run_rescue,
     run_rrna_hmm,
@@ -453,10 +454,13 @@ def write_problem_lists(r: RunState) -> None:
 
 
 def stage_add_missing(r: RunState) -> Optional[int]:
-    """What the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns; re-oriented to the first exon."""
+    """What the core missed: MITOS2 rescue (optional), protein genes by profile HMM of the nearest relatives
+    (mito_pcg_hmm.py), 12S/16S by rRNA HMM, introns; re-oriented to the first exon."""
     args, steps = r.args, r.steps
-    steps.start("add_missing", "Add what the core missed: MITOS2 rescue (optional), 12S/16S by rRNA HMM, introns")
-    for name, step in (("rescue", run_rescue), ("rrna_hmm", run_rrna_hmm), ("introns", run_intron_fix)):
+    steps.start("add_missing", "Add what the core missed: MITOS2 rescue (optional), protein genes and 12S/16S by "
+                               "profile HMM, introns")
+    for name, step in (("rescue", run_rescue), ("pcg_hmm", run_pcg_hmm), ("rrna_hmm", run_rrna_hmm),
+                       ("introns", run_intron_fix)):
         steps.info(steps.part(name, step, args, r.final_dir, r.out_root).summary)
     n_rot = reorient_after_introns(args, r.final_dir, r.ctx.orient)
     if n_rot:

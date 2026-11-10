@@ -19,6 +19,7 @@
   "ncr_min_len": 100,
   "curate": "yes",
   "sbt": null,
+  "pcg_hmm": "yes",
   "rescue": "auto",
   "rrna_hmm": "auto",
   "rrna_hmm_lib": null,

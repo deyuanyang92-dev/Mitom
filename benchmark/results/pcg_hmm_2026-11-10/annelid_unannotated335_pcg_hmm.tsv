@@ -1,0 +1,75 @@
+record	gene	status	start	end	strand	codons	evalue	model_cover	references	nearest_reference	shared_lineage	prior	note
+CM150562.1	atp8	found	3762	3920	+	53	2.4e-08	0.75	100	PX970954.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=2e-08 (x 3 profiles tried), 75% of the model; check
+MT877101.1	atp8	found	13440	13592	+	51	4.5e-05	0.67	100	NC_011826.1	Sipunculidea;Golfingiida	29/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Sipunculidea;Golfingiida), hmmsearch E=5e-05 (x 3 profiles tried), 67% of the model; check
+MW143038.1	atp8	found	11611	11787	+	59	4.2e-06	0.76	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=4e-06 (x 3 profiles tried), 76% of the model; check
+MW143039.1	atp8	found	16821	17033	+	71	1.3e-05	0.80	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=1e-05 (x 3 profiles tried), 80% of the model; check; no stop codon before next gene: 3' end open
+MW143040.1	atp8	found	12938	13093	+	52	9.6e-07	0.73	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Sabellida;Serpulidae), hmmsearch E=1e-06 (x 3 profiles tried), 73% of the model; check; no stop codon before next gene: 3' end open
+MW143041.1	atp8	found	13643	13846	+	68	3.3e-03	0.64	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=3e-03 (x 3 profiles tried), 64% of the model; check
+MW143042.1	atp8	found	14939	15124	+	62	1.6e-07	0.86	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=2e-07 (x 3 profiles tried), 86% of the model; check
+MW143043.1	atp6	found	8876	9523	+	216	4.8e-55	0.98	100	MT919975.1	Serpulidae;Hydroides	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Serpulidae;Hydroides), hmmsearch E=5e-55 (x 3 profiles tried), 98% of the model; check
+MW143043.1	atp8	found	11971	12159	+	63	6.0e-06	0.78	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=6e-06 (x 3 profiles tried), 78% of the model; check
+MW143044.1	atp8	found	12789	12935	+	49	1.5e-06	0.73	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Sabellida;Serpulidae), hmmsearch E=2e-06 (x 3 profiles tried), 73% of the model; check; no stop codon before next gene: 3' end open
+MW143045.1	atp8	not found							100	PX957250.1	Sabellida;Serpulidae	23/30	best hmmsearch E=1e-02
+MW143046.1	atp8	found	17863	18048	+	62	4.2e-05	0.69	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Sabellida;Serpulidae), hmmsearch E=4e-05 (x 3 profiles tried), 69% of the model; check
+MW316633.1	atp8	found	1902	2072	+	57	3.0e-16	0.98	100	OQ078742.1	Spionidae;Polydora	26/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Spionidae;Polydora), hmmsearch E=3e-16 (x 3 profiles tried), 98% of the model; check; no stop codon before trnG: 3' end open
+MW316635.1	atp8	found	1898	2068	+	57	4.2e-15	0.98	100	OQ078742.1	Spionidae;Polydora	26/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Spionidae;Polydora), hmmsearch E=4e-15 (x 3 profiles tried), 98% of the model; check; no stop codon before trnG: 3' end open
+OQ729901.1	nad1	not found							100	NC_052721.1	Polychaeta;Polychaeta_incertae_sedis	30/30	best hmmsearch E=6e-01
+OQ729903.1	atp8	found	9108	9251	+	48	2.9e-04	0.81	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Serpulidae;Spirobranchus), hmmsearch E=3e-04 (x 3 profiles tried), 81% of the model; check
+OQ729904.1	atp8	found	5354	5488	+	45	1.6e-05	0.94	100	MG428625.1	Polychaeta;Polychaeta_incertae_sedis	29/30	found by MitoM mito_pcg_hmm: profile HMM of the 100 nearest references (Polychaeta;Polychaeta_incertae_sedis), hmmsearch E=2e-05 (x 3 profiles tried), 94% of the model; check; no stop codon before next gene: 3' end open
+OQ729905.1	atp6	not found							100	MG428625.1	Polychaeta_incertae_sedis;Dinophilidae	29/30	best hmmsearch E=2e-01
+OQ729905.1	nad5	not found							100	MG428625.1	Polychaeta_incertae_sedis;Dinophilidae	27/30	best hmmsearch E=1e+00
+OX457035.1	atp6	found	7664	8494	+	277	1.5e-23	0.78	100	PX168857.1	Sabellida;Serpulidae	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Sabellida;Serpulidae), hmmsearch E=1e-23 (x 3 profiles tried), 78% of the model; check
+OX457035.1	atp8	not found							100	PX970954.1	Sabellida;Serpulidae	23/30	best hmmsearch E=5e-02
+OZ077499.1	cob	not found							100	PX119664.1	Sipunculidea;Golfingiida	29/30	best hmmsearch E=4e-16
+OZ077499.1	cox3	not found							100	PX119664.1	Sipunculidea;Golfingiida	30/30	best hmmsearch E=7e-01
+OZ197803.1	atp8	not found							100	PX970954.1	Sabellida;Serpulidae	23/30	best hmmsearch E=1e-02
+OZ306403.1	atp8	found	15027	15251	+	75	9.9e-06	0.76	100	PX957250.1	Serpulidae;Serpula	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Serpulidae;Serpula), hmmsearch E=1e-05 (x 3 profiles tried), 76% of the model; check
+OZ317477.1	atp6	not found							100	NC_072606.1	Helobdella;Helobdella_europaea	30/30	best hmmsearch E=5e-03
+OZ317477.1	nad5	not found							100	NC_072606.1	Helobdella;Helobdella_europaea	30/30	best hmmsearch E=2e-01
+OZ409217.1	atp6	not found							100	NC_052721.1	Polychaeta;Polychaeta_incertae_sedis	29/30	best hmmsearch E=9e-02
+OZ409217.1	nad5	not found							100	NC_052721.1	Polychaeta;Polychaeta_incertae_sedis	27/30	best hmmsearch E=6e-02
+OZ484972.1	atp8	found	23538	23687	+	50	6.3e-07	0.98	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 100 nearest references (Serpulidae;Spirobranchus), hmmsearch E=6e-07 (x 3 profiles tried), 98% of the model; check
+OZ500875.1	atp6	not found							100	PX621373.1	Terebellida;Terebelliformia	29/30	best hmmsearch E=2e-01
+OZ500875.1	cob	not found							100	FJ976040.1	Terebelliformia;Pectinariidae	29/30	best hmmsearch E=1e-01
+OZ500875.1	cox3	not found							100	FJ976040.1	Terebelliformia;Pectinariidae	30/30	best hmmsearch E=6e-01
+OZ500875.1	nad5	not found							100	FJ976040.1	Terebelliformia;Pectinariidae	27/30	best hmmsearch E=3e-01
+OZ500875.1	nad6	not found							100	FJ976040.1	Terebelliformia;Pectinariidae	30/30	best hmmsearch E=2e-01
+OZ560281.1	nad4l	not found							100	PZ294308.1	Syllidae;Syllis	29/30	best hmmsearch E=1e+00
+OZ562232.1	atp8	found	5718	5882	+	55	1.0e-04	0.83	100	PX970954.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 100 nearest references (Sabellida;Serpulidae), hmmsearch E=1e-04 (x 3 profiles tried), 83% of the model; check
+PQ010758.1	atp8	found	7677	7805	+	43	1.1e-09	0.65	100	LC661358.1	Capitellidae;Notomastus	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Capitellidae;Notomastus), hmmsearch E=1e-09 (x 3 profiles tried), 65% of the model; check; no stop codon before next gene: 3' end open
+PV742346.1	atp8	found	4215	4379	+	55	5.4e-09	0.98	100	LC661358.1	Scolecida;Capitellidae	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Scolecida;Capitellidae), hmmsearch E=5e-09 (x 3 profiles tried), 98% of the model; check
+PV742346.1	cox1	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=1e+00
+PV742346.1	cox2	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=8e-01
+PV742346.1	cox3	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=6e-01
+PV742346.1	nad2	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=6e-03
+PV742346.1	nad6	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=9e-02
+PV742351.1	cox1	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=2e+00
+PV742351.1	cox2	not found							100	LC661358.1	Scolecida;Capitellidae	30/30	best hmmsearch E=2e+00
+PV742352.1	atp8	found	8714	8878	+	55	3.6e-07	0.58	100	LC661358.1	Scolecida;Capitellidae	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Scolecida;Capitellidae), hmmsearch E=4e-07 (x 3 profiles tried), 58% of the model; check
+PV742360.1	nad2	not found							100	PX119664.1	Sipunculidea;Golfingiida	29/30	best hmmsearch E=3e-28
+PV742373.1	atp6	not found							100	LC661359.1	Opheliidae;Armandia	29/30	best hmmsearch E=8e-01
+PV742373.1	atp8	not found							100	LC661359.1	Opheliidae;Armandia	30/30	best hmmsearch E=9e-02
+PV742373.1	cob	not found							100	LC661359.1	Opheliidae;Armandia	30/30	best hmmsearch E=4e-01
+PV742373.1	cox1	not found							100	LC661359.1	Opheliidae;Armandia	30/30	best hmmsearch E=1e+00
+PV742373.1	cox2	not found							100	LC661359.1	Opheliidae;Armandia	30/30	best hmmsearch E=8e-01
+PV742374.1	atp8	found	6657	6821	+	55	3.3e-07	0.58	100	LC661358.1	Scolecida;Capitellidae	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Scolecida;Capitellidae), hmmsearch E=3e-07 (x 3 profiles tried), 58% of the model; check
+PV742386.1	atp8	found	9288	9467	+	60	6.0e-06	0.72	100	LC661358.1	Scolecida;Capitellidae	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Scolecida;Capitellidae), hmmsearch E=6e-06 (x 3 profiles tried), 72% of the model; check
+PX092912.1	atp6	not found							100	OP694172.1	Maldane;Maldane_sarsi		no ORF
+PX092912.1	atp8	not found							100	OP694172.1	Maldane;Maldane_sarsi		no ORF
+PX092912.1	cob	not found							100	OP694172.1	Maldane;Maldane_sarsi		no ORF
+PX092912.1	cox2	not found							100	OP694172.1	Maldane;Maldane_sarsi		no ORF
+PX092912.1	cox3	not found							100	OP694172.1	Maldane;Maldane_sarsi		no ORF
+PX092912.1	nad6	not found							100	OP694172.1	Maldane;Maldane_sarsi		no ORF
+PX970955.1	atp8	not found							100	PX970954.1	Sabellida;Serpulidae	23/30	best hmmsearch E=4e-02
+PX970956.1	atp8	not found							100	PX970954.1	Sabellida;Serpulidae	23/30	best hmmsearch E=3e-01
+PX970957.1	atp8	not found							100	PX970954.1	Sabellida;Serpulidae	23/30	best hmmsearch E=9e-02
+PX970958.1	atp6	found	4692	5522	+	277	1.2e-23	0.78	100	PX168857.1	Sabellida;Serpulidae	30/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Sabellida;Serpulidae), hmmsearch E=1e-23 (x 3 profiles tried), 78% of the model; check
+PX970958.1	atp8	not found							100	PX970954.1	Sabellida;Serpulidae	23/30	best hmmsearch E=9e-02
+PX970960.1	atp8	found	10260	10436	+	59	3.9e-06	0.73	100	PX957250.1	Sabellida;Serpulidae	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 30 nearest references (Sabellida;Serpulidae), hmmsearch E=4e-06 (x 3 profiles tried), 73% of the model; check
+PX970960.1	cox2	not found							100	MT919975.1	Serpulidae;Hydroides	30/30	best hmmsearch E=1e+00
+PZ276768.1	atp8	found	19235	19384	+	50	1.6e-05	0.98	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 100 nearest references (Serpulidae;Spirobranchus), hmmsearch E=2e-05 (x 3 profiles tried), 98% of the model; check
+PZ276769.1	atp8	found	19235	19384	+	50	5.1e-06	1.00	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Serpulidae;Spirobranchus), hmmsearch E=5e-06 (x 3 profiles tried), 100% of the model; check
+PZ276770.1	atp8	found	19235	19384	+	50	5.1e-06	1.00	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Serpulidae;Spirobranchus), hmmsearch E=5e-06 (x 3 profiles tried), 100% of the model; check
+PZ276771.1	atp8	found	19235	19384	+	50	5.1e-06	1.00	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Serpulidae;Spirobranchus), hmmsearch E=5e-06 (x 3 profiles tried), 100% of the model; check
+PZ276772.1	atp8	found	19235	19384	+	50	5.1e-06	1.00	100	PX970954.1	Serpulidae;Spirobranchus	23/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Serpulidae;Spirobranchus), hmmsearch E=5e-06 (x 3 profiles tried), 100% of the model; check
+PZ842129.1	atp8	found	4240	4410	+	57	6.9e-17	0.98	100	OQ078742.1	Spionidae;Polydora	26/30	found by MitoM mito_pcg_hmm: profile HMM of the 10 nearest references (Spionidae;Polydora), hmmsearch E=7e-17 (x 3 profiles tried), 98% of the model; check; no stop codon before trnG: 3' end open

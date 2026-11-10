@@ -265,6 +265,32 @@ def run_rescue(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRe
     return StepResult(_rescue_line(args, gb_dir, out_root), ok=not failed)
 
 
+def pcg_hmm_cmd(gb_dir: Path, report: Path, code: int, bin_dir: Optional[str] = None) -> List[str]:
+    """The mito_pcg_hmm.py command of the protein-gene HMM step (a program: crash isolation)."""
+    here = Path(__file__).resolve().parent
+    return [sys.executable, "-W", "ignore", str(here / "mito_pcg_hmm.py"), "search", "-i", str(gb_dir),
+            "--genetic_code", str(int(code)), "--report", str(report), *(["--bin", str(bin_dir)] if bin_dir else [])]
+
+
+@optional_step("PCG_HMM")
+def run_pcg_hmm(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
+    """Protein genes still missing after the core and the MITOS2 rescue, searched with a profile HMM of the gene in
+    the record's nearest relatives (mito_pcg_hmm.py; --pcg_hmm no: off), in place; report pcg_hmm_report.tsv."""
+    if getattr(args, "pcg_hmm", "yes") == "no":
+        return StepResult("protein genes by HMM         : skipped (--pcg_hmm no)")
+    report = reports_dir(out_root) / "pcg_hmm_report.tsv"
+    p = run_tool(pcg_hmm_cmd(gb_dir, report, int(args.genetic_code), getattr(args, "intron_bin", None)))
+    if p.returncode:
+        logging.error(f"[PCG_HMM] failed (exit {p.returncode}): {p.stderr[-300:]} - records left as they were")
+        return StepResult("protein genes by HMM         : failed (see run.log)", ok=False)
+    found = count_rows(report, "status", "found")
+    for ln in (report.read_text(encoding="utf-8").splitlines()[1:] if report.exists() else []):
+        c = ln.split("\t")
+        if len(c) > 2 and c[2] == "found":
+            logging.warning(f"[PCG_HMM] {c[0]} {c[1]} added by profile HMM at {c[3]}..{c[4]} ({c[5]}), E={c[7]} - check")
+    return StepResult(f"protein genes by HMM         : {found} added ({where(args, 'reports/pcg_hmm_report.tsv')})")
+
+
 def _rrna_hmm_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
     return f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'reports' / 'rrna_hmm_report.tsv', 'status', 'added')}"
 

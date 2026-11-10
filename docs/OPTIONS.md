@@ -37,17 +37,17 @@ usage: mitom run [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_maxlen
                  [--which_gene_first WHICH_GENE_FIRST] [--fallback_genes FALLBACK_GENES] [--force_forward]
                  [--no_force_forward] [--debug] [--mitos_bin MITOS_BIN] [--refdir DIR] [--plot {yes,no}]
                  [--plot_style {circos,mitom}] [--ncr {yes,no}] [--orf {yes,all,report,no}] [--orf_ref GB]
-                 [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}]
-                 [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
-                 [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
-                 [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
-                 [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
-                 [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
-                 [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
-                 [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
-                 [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
-                 [--smk_extra FLAG] [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN]
-                 [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
+                 [--ncr_min_len NCR_MIN_LEN] [--curate {yes,no}] [--sbt SBT] [--pcg_hmm {yes,no}]
+                 [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB]
+                 [--rrna_method {hmm,cm}] [--phylum PHYLUM] [--intron_fix {auto,yes,no}]
+                 [--intron_rule {continuity,splice}] [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB]
+                 [--intron_ref_gb INTRON_REF_GB] [--output_layout {grouped,classic}]
+                 [--keep_intermediate {yes,no}] [--threads THREADS] [--jobs N] [--clade CLADE]
+                 [--genetic_code GENETIC_CODE] [--infq INFQ] [--fq_position {flat,sample_dir}]
+                 [--suffix_fq SUFFIX_FQ] [--scheduler_backend {auto,snakemake,threads}]
+                 [--snakemake_bin SNAKEMAKE_BIN] [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
+                 [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG] [--engine {native,mitoz,mitos2}]
+                 [--mitoz_bin MITOZ_BIN] [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
                  [--if_reannotation_2 {yes,auto,no}] [--preserve_phase1_metadata {yes,no}]
                  [--smart_metadata {yes,no}] [--auto_accept_metadata {yes,no}]
 
@@ -130,6 +130,11 @@ Annotation:
                         06.ncbi_submission/)
   --sbt SBT             NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template)
                         for the .sqn files
+  --pcg_hmm {yes,no}    yes (default): protein genes still missing after the core (and the MITOS2 rescue)
+                        are searched with a profile HMM built from the gene in the 30 nearest relatives
+                        (models/pcg_refs.faa.gz, MAFFT + HMMER; E <= 0.01 times the prior odds of the gene
+                        among the relatives), e.g. the divergent atp8 of tube worms; each search is a row of
+                        pcg_hmm_report.tsv (mito_pcg_hmm.py). no: off.
   --rescue {auto,yes,no}
                         Add protein genes / rRNAs the core missed from a MITOS2 annotation (mito_rescue.py;
                         nothing annotated is changed; needs the optional MITOS2 installation). auto
@@ -238,9 +243,9 @@ usage: mitom import [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_max
                     [--force_forward] [--no_force_forward] [--debug] [--mitos_bin MITOS_BIN] [--refdir DIR]
                     [--plot {yes,no}] [--plot_style {circos,mitom}] [--ncr {yes,no}]
                     [--orf {yes,all,report,no}] [--orf_ref GB] [--ncr_min_len NCR_MIN_LEN]
-                    [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
-                    [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
-                    [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                    [--curate {yes,no}] [--sbt SBT] [--pcg_hmm {yes,no}] [--rescue {auto,yes,no}]
+                    [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
+                    [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
                     [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                     [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                     [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
@@ -316,6 +321,11 @@ Annotation:
                         06.ncbi_submission/)
   --sbt SBT             NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template)
                         for the .sqn files
+  --pcg_hmm {yes,no}    yes (default): protein genes still missing after the core (and the MITOS2 rescue)
+                        are searched with a profile HMM built from the gene in the 30 nearest relatives
+                        (models/pcg_refs.faa.gz, MAFFT + HMMER; E <= 0.01 times the prior odds of the gene
+                        among the relatives), e.g. the divergent atp8 of tube worms; each search is a row of
+                        pcg_hmm_report.tsv (mito_pcg_hmm.py). no: off.
   --rescue {auto,yes,no}
                         Add protein genes / rRNAs the core missed from a MITOS2 annotation (mito_rescue.py;
                         nothing annotated is changed; needs the optional MITOS2 installation). auto
@@ -409,9 +419,9 @@ usage: mitom annotate [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_m
                       [--force_forward] [--no_force_forward] [--debug] [--mitos_bin MITOS_BIN]
                       [--refdir DIR] [--plot {yes,no}] [--plot_style {circos,mitom}] [--ncr {yes,no}]
                       [--orf {yes,all,report,no}] [--orf_ref GB] [--ncr_min_len NCR_MIN_LEN]
-                      [--curate {yes,no}] [--sbt SBT] [--rescue {auto,yes,no}] [--rrna_hmm {auto,yes,no}]
-                      [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}] [--phylum PHYLUM]
-                      [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
+                      [--curate {yes,no}] [--sbt SBT] [--pcg_hmm {yes,no}] [--rescue {auto,yes,no}]
+                      [--rrna_hmm {auto,yes,no}] [--rrna_hmm_lib RRNA_HMM_LIB] [--rrna_method {hmm,cm}]
+                      [--phylum PHYLUM] [--intron_fix {auto,yes,no}] [--intron_rule {continuity,splice}]
                       [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                       [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                       [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
@@ -489,6 +499,11 @@ Annotation:
                         06.ncbi_submission/)
   --sbt SBT             NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template)
                         for the .sqn files
+  --pcg_hmm {yes,no}    yes (default): protein genes still missing after the core (and the MITOS2 rescue)
+                        are searched with a profile HMM built from the gene in the 30 nearest relatives
+                        (models/pcg_refs.faa.gz, MAFFT + HMMER; E <= 0.01 times the prior odds of the gene
+                        among the relatives), e.g. the divergent atp8 of tube worms; each search is a row of
+                        pcg_hmm_report.tsv (mito_pcg_hmm.py). no: off.
   --rescue {auto,yes,no}
                         Add protein genes / rRNAs the core missed from a MITOS2 annotation (mito_rescue.py;
                         nothing annotated is changed; needs the optional MITOS2 installation). auto

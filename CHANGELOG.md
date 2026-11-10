@@ -5,6 +5,19 @@ installed one.
 
 ## Unreleased
 
+### Added (missing protein genes)
+- `mito_pcg_hmm.py`, part of step 6 (`--pcg_hmm yes`, default): protein genes still missing after the core are
+  searched with profile HMMs (MAFFT + HMMER) of the gene in the record's nearest relatives (models/pcg_refs.faa.gz,
+  140,824 proteins of RefSeq + NCBI annelid mitogenomes; `scripts/build_pcg_refs.py`), E <= 0.01 x the prior odds of
+  the gene among the relatives. Leave-genus-out: 2,412 of 2,448 genes found at the right place, atp8 187/189; 335
+  unannotated NCBI annelids: atp8 found in 29 of 38 records missing it (tube worms 19/26).
+  benchmark/results/pcg_hmm_2026-11-10/.
+
+### Fixed (ORFs)
+- A tandem repeat is masked only when the array is >= 30 nt (3 copies of CTT, Leu-Leu-Leu, were masked in real genes).
+- An ORF whose start codon lies beyond the origin of a circular record got a start past the record end and crashed the
+  ORF step (OZ210882.1, 47,540 nt).
+
 ### Changed (structure review of fb526c3)
 - ORFs and non-coding regions are their own step (`stage_orf_ncr`, step 8: `run` has 12 steps, `annotate` 8);
   `stage_curate` does the curation only.

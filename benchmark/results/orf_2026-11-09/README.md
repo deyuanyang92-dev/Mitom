@@ -25,7 +25,8 @@ finding by length (ORFfinder / Geneious style) and MITOS2. Method: docs/METHODS.
 | 只看长度 ≥ 150 密码子 / length >= 150 codons | 214 | — | 71 |
 | 第一版 / first version (f2e73e1) | 175 | 69 | 1 |
 | 第二版 / second version (d13f41c) | 228 | 47 | 5 |
-| **当前 / now**（tRNA 边界、Pfam、两项各 0.05 / tRNA ends, Pfam, both tests at 0.05） | **233** | **45** | **7** |
+| tRNA 边界、Pfam、两项各 0.05 / tRNA ends, Pfam, both tests at 0.05 (80adc30) | 233 | 45 | 7 |
+| **当前 / now**（串联重复阵列 ≥ 30 nt 才屏蔽、跨原点起点修复 / repeat arrays >= 30 nt, origin fix） | **232** | **46** | **8** |
 | MITOS2 | 0（不注释额外 ORF / no extra ORFs） | — | 0 |
 
 已知 ORF 按类别 / known ORFs by kind（写出 / WARNING / 漏 — written / WARNING / missed）：
@@ -39,7 +40,7 @@ Pfam 命名（真值中写出的）：MutS 123 个全部为 MutS_V（“MutS-lik
 endonucleases (LAGLIDADG_1), 3 polB (DNA_pol_B_2).
 
 其他数据 / other sets：才女虫科 46 条写出 12——Selifanova 等 2023（*Genome Biol Evol*，PMC10721130）报道的三个 *Polydora*
-ORFan 在 4 条记录中全部写出（下表）；无注释环节动物 335 条写出 30。
+ORFan 在 4 条记录中全部写出（下表）；无注释环节动物 335 条写出 34（修复跨原点起点后，原先使该步骤崩溃的 OZ210882.1 也能运行）。
 
 | Selifanova et al. 2023（*P.* cf. *ciliata*） | MitoM（OQ078742，单条运行 / run alone） | 结尾 / end |
 |---|---|---|

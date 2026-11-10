@@ -128,6 +128,12 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--sbt", default=None,
                        help="NCBI submitter template (template.sbt from submit.ncbi.nlm.nih.gov/genbank/template) "
                             "for the .sqn files")
+        g.add_argument("--pcg_hmm", choices=["yes", "no"], default="yes",
+                       help="yes (default): protein genes still missing after the core (and the MITOS2 rescue) are "
+                            "searched with a profile HMM built from the gene in the 30 nearest relatives "
+                            "(models/pcg_refs.faa.gz, MAFFT + HMMER; E <= 0.01 times the prior odds of the gene among "
+                            "the relatives), e.g. the divergent atp8 of tube worms; each search is a row of "
+                            "pcg_hmm_report.tsv (mito_pcg_hmm.py). no: off.")
         g.add_argument("--rescue", choices=["auto", "yes", "no"], default="auto",
                        help="Add protein genes / rRNAs the core missed from a MITOS2 annotation (mito_rescue.py; "
                             "nothing annotated is changed; needs the optional MITOS2 installation). auto (default) / "

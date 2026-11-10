@@ -111,6 +111,22 @@ mitom curate -i annotated_gb_dir -o curated_dir --genetic_code 5 [--rrna_bounds 
 
 剩余差异主要来自 tRNA 边界与 NCBI 不同（NCBI 的 T/TA 终止落在其 tRNA 前），以及 rRNA 写法惯例（NCBI 多为两侧填满；trim 模式按准则不扩展）。准则来自腹足类，此处在环节动物上验证，软体动物数据尚未测试。
 
+## 漏注的蛋白基因：近缘谱 HMM / Missing protein genes by profile HMM (mito_pcg_hmm.py)
+
+注释核心（blastx + exonerate，参考 refseq89m）对高度分化的短基因（atp8、atp6、nad4l、nad6）缺近缘参考时会漏注，如龙介虫科
+的 atp8。第 6 步补漏中（MITOS2 补漏之后，`--pcg_hmm yes` 默认），**只对仍缺的蛋白基因**：
+1. 从 `models/pcg_refs.faa.gz`（`scripts/build_pcg_refs.py`：RefSeq 与 NCBI 环节动物的 13 个基因蛋白，带分类谱系）选最近缘
+   的参考——谱系共享层级最长者优先，层级相同按记录自身 cox1（无则 cob ……）的 3-mer 相似度；
+2. 最近 10、30、100 条各建一个谱 HMM（MAFFT、hmmbuild），在没有外显子覆盖的 ORF 中 `hmmsearch --max`，E 值乘 3；
+3. 接受 E ≤ 0.01 × min(1, p/(1−p))，p 为最近 30 条已注释近缘记录中有该基因的比例（近缘普遍丢失的基因需要更强证据），
+   模型覆盖 ≥ 40 %；从最靠近比对起点的起始密码子到终止密码子（与下一基因重叠 ≤ 30 nt），起点再由校正调整。
+每次搜索在 `pcg_hmm_report.tsv` 一行（找到与否、E 值、所用参考与先验），找到的在日志中给 WARNING 提示核查。
+测试：`benchmark/results/pcg_hmm_2026-11-10/README.md`（留一属找回率、扁虫 / 线虫的误报、335 条环节动物）。
+
+Protein genes still missing after the core are searched with profile HMMs of the gene in the record's nearest
+relatives (lineage, then similarity of the record's cox1); E <= 0.01 x the prior odds of the gene among the 30
+nearest annotated relatives, three profile sizes tried with E x 3.
+
 ## 非编码区 / Non-coding regions (mito_ncr.py)
 
 每条记录中 ≥ `--ncr_min_len`（默认 100）nt、没有任何特征覆盖的区段写成 misc_feature `/note="non-coding region NCR<k>, <长度> bp: no gene annotated (MitoM)"`：按在记录中的顺序编号，跨原点的写成 join；带内含子的基因覆盖它的内含子；再次运行时替换旧的 NCR。这一步在校正之后（`run` / `annotate` / `import`；`--ncr no` 不写，圈图也不画）。未命名的控制区、可能含未识别基因的序列因此在 GenBank、NCBI 提交文件和圈图里都看得到。
