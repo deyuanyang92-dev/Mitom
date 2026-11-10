@@ -1346,7 +1346,7 @@ options:
 
 ```text
 usage: mito_rna.py [-h] -g GENBANK [-1 READS1] [-2 READS2] [--sam SAM] -o OUT [--threads THREADS]
-                   [--bin BIN]
+                   [--bin BIN] [--mapper {bwa,minimap2,bowtie2}]
 
 mito_rna.py - transcript evidence for an annotated mitochondrial genome from RNA-seq reads.
 
@@ -1356,10 +1356,14 @@ Coverage is therefore continuous (the precursors fill the gaps) and cannot show 
   - relative depth: the mean depth of a gene or ORF over the median of the 13 protein genes (Selifanova et al. 2023
     judged the Polydora ORFans transcribed by depth like nad4l / nad2's);
   - poly(A) sites: reads whose clipped 3' end begins with a run of A (or whose clipped 5' end on the reverse strand
-    ends with T): the 3' end of a mature transcript; sites at tRNA 3' ends are CCA tails and are not counted;
+    ends with T): the 3' end of a mature transcript; sites at tRNA 3' ends are CCA tails and are not counted; a site
+    whose last INTERNAL_WINDOW nt (transcript sense) hold an A-run >= INTERNAL_RUN or >= INTERNAL_A A's is oligo-dT
+    priming on a genomic A-run inside a transcript (internal priming), reported but not counted as a 3' end;
   - the library type: stranded or not, from how reads on the protein genes lie relative to the genes.
-Reads are mapped to this genome only (minimap2 -ax sr, else bwa mem), mapping quality >= MIN_MAPQ (nuclear copies of
-mitochondrial DNA map with low quality to both).
+Reads are mapped to this genome only, mapping quality >= MIN_MAPQ (nuclear copies of mitochondrial DNA map with low
+quality to both). Mapper (--mapper): bwa mem (default; best placement, poly(A) tails and depth when the RNA-seq
+individual differs from the assembled one), minimap2 -ax sr (the default before 2026-11-10; loses reads at a few %
+divergence), bowtie2 --very-sensitive-local. Measured: benchmark/results/rna_mappers_2026-11-10/README.md.
 
 Writes rna_features.tsv (one row per gene / ORF / non-coding region: mean depth, depth relative to the median of
 the 13 protein genes, the share of its positions transcribed at >= 10 % of that median - a partly transcribed ORF
@@ -1381,6 +1385,8 @@ options:
   -o OUT, --out OUT
   --threads THREADS
   --bin BIN
+  --mapper {bwa,minimap2,bowtie2}
+                        bwa mem (default), minimap2 -ax sr (the default before 2026-11-10), bowtie2 local
 ```
 
 ## mitom compare

@@ -57,3 +57,32 @@ def test_too_few_reads_give_no_expression_calls():
     rec = record()
     rows, sites, info = R.analyse(rec, [read("a", 10, 60, 16 | 64), read("b", 720, 60, 16 | 64)])
     assert info["pcg_median_depth"] < R.MIN_MEDIAN_DEPTH and all(r["transcribed_like_genes"] == "" for r in rows)
+
+
+def test_internal_priming_rule():
+    import mito_rna
+    g = "CCGTCGTCGG" + "AAAAAAAAAG" + "CCGTCGTCGGCGTCGT"     # site at the G after an A9 run (plus strand)
+    assert mito_rna.internal_priming(g, 19, 1)
+    assert not mito_rna.internal_priming(g, 9, 1)            # ends in CCGTCGTCGG: a real end
+    rc = g[::-1].translate(str.maketrans("ACGT", "TGCA"))     # the same site on the minus strand
+    assert mito_rna.internal_priming(rc, len(g) - 1 - 19, -1)
+
+
+def test_internal_priming_site_not_counted(tmp_path):
+    """A site on a genomic A-run is listed (internal_priming yes) but not counted for the feature."""
+    import mito_rna
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    body = "ACGTGCTAGCTAGGCTACGATCGATCGGCTAGCTAG" * 5 + "AAAAAAAAA"     # 189 nt ending on A9
+    rec = SeqRecord(Seq(body + "GCGCGCGCTTCCGG" * 10), id="t")
+    rec.features.append(SeqFeature(FeatureLocation(0, len(body)), type="CDS",
+                                   qualifiers={"gene": ["cox1"], "product": ["x"]}))
+    end = len(body)                         # the read aligns up to the A-run's end, then 20 clipped A's
+    read = body[end - 50:end] + "A" * 20
+    sam = ["@SQ\tSN:t\tLN:%d" % len(rec.seq)] + [
+        f"r{i}\t0\tt\t{end - 49}\t60\t50M20S\t*\t0\t0\t{read}\t*" for i in range(5)]
+    rows, sites, info = mito_rna.analyse(rec, sam)
+    assert info["polya_sites"] == 0 and info["internal_priming_sites"] == 1
+    assert sites[0]["internal_priming"] == "yes"
+    assert next(r for r in rows if r["feature"] == "cox1")["polya_reads_at_3prime_end"] == 0
