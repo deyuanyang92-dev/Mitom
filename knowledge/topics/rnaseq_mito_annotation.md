@@ -73,10 +73,29 @@
 4. rRNA 3′ 端：只移到 30 nt 内、占附近 poly(A) reads ≥ 90 % 的位点，原末端无 reads。
 5. 每个修正都用同科已注释蛋白的长度核对（目前 5 处全部一致）。
 
+## 9. 内含子：用剪接连接 reads 检验 / introns checked with junction reads
+
+方法：不用剪接比对软件（会报假内含子），只检验 MitoM 预测的内含子：在 reads 中直接数 30 nt 探针——剪接后的
+外显子|外显子，与未剪接的外显子|内含子、内含子|外显子（两条链）。数字见 annelid README 的内含子表。
+
+- 4 个 MitoM 内含子全部被证实、剪接位点精确：*Chaetopterus dewysee* COX1（320 nt，此前“未确证”）、*Glycera fallax*
+  COX1 两个、*Travisia forbesii* COX1；剪接后连接 reads 4,895–102,944 条，远多于未剪接的 (benchmark/results/annelid_rna_2026-11-10/README.md:93)
+- *Travisia* ATP8 的 "1 nt 内含子"（MitoM 用 join 跨过一个移码）：剪接连接 0 条、未剪接 533 / 677 条——RNA 保留了这个
+  碱基，不是内含子；该 ATP8 需人工核查（移码或位置不对） (benchmark/results/annelid_rna_2026-11-10/README.md:93)
+
+## 10. 外部资料核查 / checked claims from outside material (2026-11-11)
+
+- “MitoZ-RNA / MToolBox 用 poly(A) 定转录边界”：未找到依据；MitoZ 无 RNA-seq 输入，MToolBox 是人类变异注释 (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6582343/)
+- “MFannot 的 RNA-seq 模块（HISAT2 + StringTie）”：MFannot 论文说现有细胞器注释软件都不用 RNA 数据 (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10352661/)
+- PMGA 存在（植物线粒体注释网站），所称 AUES、AEWDG 算法查不到：未确证
+- HISAT2 + StringTie 用于动物线粒体：我们的比对评测中 HISAT2 最差，前体连续转录使 StringTie 拼不出基因断点 (benchmark/results/rna_mappers_2026-11-10/README.md:71)
+- 值得用的：剪接连接验证内含子（上节）；Iso-Seq 全长转录本（环节动物仅 3 个组装有，未确证其线粒体覆盖）；RNA 编辑在动物线粒体少见，零星编辑位点不影响 2 % 的物种核对：未确证
+
 ## 7. 未解决 / open
 
 - 终止密码子与下游 tRNA 重叠时由 poly(A) 决定末端：规律已学到（上表），规则尚未写入；计划先在 23 对干净数据上定参数， (mito_rna.py:301)
   再拿其余 29 对作独立检验。
+- *Travisia* ATP8 的 1 nt join 不被 RNA 支持，需人工核查 (benchmark/results/annelid_rna_2026-11-10/README.md:93)
 - *Protula*、*Arenicola* rrnL 内部 190–330 nt 处的强位点：原因不明。 (mito_rna.py:72)
 - rrnS 内部弱位点（≤ 70 reads）：可能是降解中间体，未使用。 (mito_rna.py:70)
 - 两种蚯蚓（5–8 %）与 *Themiste* 重复：需要分类学判断。 (mito_rna.py:74)

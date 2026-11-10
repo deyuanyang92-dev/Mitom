@@ -90,6 +90,16 @@ Clean pairs only: same specimen, < 1 % divergence, poly(A) library, depth >= 100
 RNA-seq is useful and clean; what it adds is the end the genome cannot decide: where a stop codon overlaps the next
 tRNA, the mRNA is cut before the tRNA (T / TA) about as often as it keeps the full stop.
 
+## Introns / 内含子（reads 中直接数 30 nt 探针，两条链，不用剪接比对）
+
+| 记录 / record | run | 基因 / gene | 内含子 / intron (nt) | 剪接连接 / spliced | 外显子\|内含子 | 内含子\|外显子 | 结论 / verdict |
+|---|---|---|---|---|---|---|---|
+| OZ352441.1 *Chaetopterus dewysee* | ERR12342473 | COX1 | 320 | 102,944 | 2,364 | 7,557 | 成立 / confirmed |
+| OZ210882.1 *Glycera fallax* | ERR13385673 | COX1 (1) | 2,468 | 4,895 | 361 | 395 | 成立 |
+| OZ210882.1 *Glycera fallax* | ERR13385673 | COX1 (2) | 2,346 | 12,769 | 481 | 6,587 | 成立 |
+| OZ479805.1 *Travisia forbesii* | ERR17229609 | COX1 | 1,252 | 83,887 | 44,024 | 60,269 | 成立（大量未剪接前体） |
+| OZ479805.1 *Travisia forbesii* | ERR17229609 | ATP8 "1 nt" | 1 | 0 | 533 | 677 | 不成立：RNA 保留该碱基 / not an intron |
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
