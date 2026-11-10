@@ -24,8 +24,15 @@ and rna_polya_sites.tsv (sites with >=
 MIN_POLYA_READS reads, the feature they end). A reverse-stranded library (dUTP, read 1 antisense) is recognised and
 read accordingly. Measured: benchmark/results/rnaseq_2026-11-10/README.md.
 
+Refinement (--refine, on a finished output folder; no mapping): rna_refined.gb and rna_end_corrections.tsv. A protein
+gene's 3' end is CONFIRMED by >= MIN_POLYA_READS poly(A) reads within END_WINDOW of it (note added). It is MOVED to a
+poly(A) site inside the gene's last CORRECT_MAX_NT nt when that site has >= CORRECT_MIN_READS reads, more than the
+annotated end, is not internal priming, and leaves an in-frame incomplete stop T / TA (completed by polyadenylation;
+/transl_except, translation and a note with the old end). ORFs get their expression as a note.
+
 Usage: python3 mito_rna.py -g annotated.gb -1 R1.fq.gz [-2 R2.fq.gz] -o outdir [--threads 8]
        python3 mito_rna.py -g annotated.gb --sam aligned.sam -o outdir          (reads already mapped to it)
+       python3 mito_rna.py -g annotated.gb -o outdir --refine [--run SRR...]    (evidence -> annotation)
 """
 from __future__ import annotations
 
@@ -43,7 +50,8 @@ import numpy as np
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from mito_common import cli_guard, run_tool, write_tsv
+from mito_common import (POLYA_NOTE, abbreviated_stop, cli_guard, codon_translate, run_tool, transl_except_term,
+                         write_gb, write_tsv)
 from mito_names import PCG, gene_name
 
 MIN_MAPQ = 20               # reads of nuclear copies (NUMTs) map with low quality
@@ -58,6 +66,10 @@ INTERNAL_WINDOW = 10        # internal priming: the last 10 nt before a poly(A) 
 INTERNAL_RUN = 7            # ... hold an A-run of >= 7 (true 3' ends of 67 annelid genomes: 1 of 1,047) ...
 INTERNAL_A = 9              # ... or >= 9 A's (none of the 1,047)
 MAPPERS = ("bwa", "minimap2", "bowtie2")
+CORRECT_MIN_READS = 10      # poly(A) reads for a site to move a gene's 3' end
+CORRECT_MAX_NT = 90         # ... lying inside the gene's last 90 nt
+CORRECTION_COLUMNS = ["record", "gene", "strand", "old_start", "old_end", "new_start", "new_end", "old_aa", "new_aa",
+                      "incomplete_stop", "site_reads", "reads_at_old_end"]
 DIVERGED = 0.02             # reads differ from the genome by more than this: another individual / population (or
                             # species); fast-evolving genes then get fewer reads - their low depth is not low expression
 POLYA_FEW = 1e-4            # poly(A) reads below this share of the reads: no 3'-end evidence in this library
@@ -253,6 +265,89 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
     return rows, srows, info
 
 
+def _site_reads(sites: List[dict], pos1: int, strand: str, stranded: bool, window: int) -> int:
+    return sum(int(x["reads"]) for x in sites if not x.get("internal_priming")
+               and (x["strand"] == strand or not stranded) and abs(int(x["position"]) - pos1) <= window)
+
+
+def refine(rec: SeqRecord, features: List[dict], sites: List[dict], stranded: bool, run: str = "") -> List[dict]:
+    """Write the RNA evidence into rec (in place): confirmed 3' ends, moved 3' ends, ORF expression. -> corrections."""
+    from Bio.SeqFeature import FeatureLocation
+    src = f" ({run})" if run else ""
+    expr = {(r["feature"], int(r["start"])): r for r in features}
+    out = []
+    genes = {f.qualifiers.get("gene", [""])[0]: f for f in rec.features if f.type == "gene"}
+    for f in rec.features:
+        if f.type != "CDS" or len(f.location.parts) > 1:
+            continue
+        name = f.qualifiers.get("gene", f.qualifiers.get("product", [""]))[0]
+        st = f.location.strand or 1
+        s0, e0 = int(f.location.start), int(f.location.end)
+        sign = "+" if st == 1 else "-"
+        end1 = e0 if st == 1 else s0 + 1                                  # 1-based 3'-end position
+        at_end = _site_reads(sites, end1, sign, stranded, END_WINDOW)
+        notes = f.qualifiers.setdefault("note", [])
+        r = expr.get((name, s0 + 1))
+        if name.lower().startswith("orf") and r and r["relative_depth"]:
+            notes.append(f"RNA-seq{src}: depth {r['relative_depth']} x the protein genes' median, "
+                         f"{float(r['covered_share']):.0%} of its length transcribed")
+        best = None
+        for x in sites:
+            if x.get("internal_priming") or (stranded and x["strand"] != sign):
+                continue
+            pos = int(x["position"])                                        # 1-based last base before the tail
+            k = pos - s0 if st == 1 else e0 - pos + 1                       # transcript length up to the site
+            reads = int(x["reads"])
+            if not (e0 - s0 - CORRECT_MAX_NT <= k <= e0 - s0 - 1) or reads < CORRECT_MIN_READS or reads <= at_end:
+                continue
+            loc = FeatureLocation(s0, s0 + k, st) if st == 1 else FeatureLocation(e0 - k, e0, st)
+            nt = str(loc.extract(rec.seq)).upper()
+            if not abbreviated_stop(nt):
+                continue
+            if best is None or reads > best[1]:
+                best = (loc, reads, nt)
+        if best:
+            loc, reads, nt = best
+            tail = len(nt) % 3
+            code = int(f.qualifiers.get("transl_table", ["5"])[0])
+            old = (s0 + 1, e0, (e0 - s0) // 3)
+            f.location = loc
+            if name in genes:
+                genes[name].location = loc
+            f.qualifiers["transl_except"] = [transl_except_term(int(loc.start) + 1, int(loc.end), st, tail)]
+            f.qualifiers["translation"] = [codon_translate(nt, code).rstrip("*")]
+            f.qualifiers["note"] = [n for n in notes if n != "stop codon not determined"] + [
+                POLYA_NOTE, f"3' end from {reads} poly(A) RNA-seq reads{src} (was {old[0]}..{old[1]}, "
+                f"{old[2]} codons)"]
+            out.append({"record": rec.id, "gene": name, "strand": sign, "old_start": old[0], "old_end": old[1],
+                        "new_start": int(loc.start) + 1, "new_end": int(loc.end), "old_aa": old[2],
+                        "new_aa": len(nt) // 3, "incomplete_stop": nt[-tail:], "site_reads": reads,
+                        "reads_at_old_end": at_end})
+        elif at_end >= MIN_POLYA_READS:
+            notes.append(f"3' end confirmed by {at_end} poly(A) RNA-seq reads{src}")
+        if not notes:
+            f.qualifiers.pop("note", None)
+    return out
+
+
+def main_refine(a) -> int:
+    import csv
+    rec = SeqIO.read(a.genbank, "genbank")
+    out = Path(a.out)
+    rd = lambda n: list(csv.DictReader(open(out / n), delimiter="\t"))
+    features, sites = rd("rna_features.tsv"), rd("rna_polya_sites.tsv")
+    stranded = any(r["sense_share"] for r in features)
+    corr = refine(rec, features, sites, stranded, a.run or "")
+    write_gb(rec, out / "rna_refined.gb")
+    write_tsv(out / "rna_end_corrections.tsv", CORRECTION_COLUMNS, corr)
+    conf = sum(1 for f in rec.features
+               if f.type == "CDS" and any("confirmed by" in n for n in f.qualifiers.get("note", [])))
+    print(f"[mito_rna] refine {rec.id}: {conf} protein-gene 3' ends confirmed, {len(corr)} moved "
+          + "; ".join(f"{c['gene']} {c['old_aa']}->{c['new_aa']} codons" for c in corr) + f" -> {out}/rna_refined.gb",
+          file=sys.stderr)
+    return 0
+
+
 def main(argv: Sequence[str] = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-g", "--genbank", required=True, help="annotated mitogenome (one record)")
@@ -262,9 +357,14 @@ def main(argv: Sequence[str] = None) -> int:
     p.add_argument("-o", "--out", required=True)
     p.add_argument("--threads", type=int, default=4)
     p.add_argument("--bin", default=None)
+    p.add_argument("--refine", action="store_true",
+                   help="write the evidence of a finished output folder (-o) into the annotation: rna_refined.gb")
+    p.add_argument("--run", default=None, help="run accession quoted in the notes (--refine)")
     p.add_argument("--mapper", choices=MAPPERS, default="bwa",
                    help="bwa mem (default), minimap2 -ax sr (the default before 2026-11-10), bowtie2 local")
     a = p.parse_args(argv)
+    if a.refine:
+        return main_refine(a)
     rec = SeqIO.read(a.genbank, "genbank")
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -290,8 +390,8 @@ def main(argv: Sequence[str] = None) -> int:
         else "unstranded"
     print(f"[mito_rna] {info['reads_used']} reads (MAPQ >= {MIN_MAPQ}; {info['reads_low_mapq']} below), {lib} "
           f"(sense share {info['sense_share_on_genes']:.2f}), protein-gene median depth "
-          f"{info['pcg_median_depth']:.1f}, edit rate {info['edit_rate']:.4f}, {info['polya_reads']} poly(A) reads, {info['polya_sites']} sites (+ {info['internal_priming_sites']} internal "
-          f"priming) -> {out}",
+          f"{info['pcg_median_depth']:.1f}, edit rate {info['edit_rate']:.4f}, {info['polya_reads']} poly(A) "
+          f"reads, {info['polya_sites']} sites (+ {info['internal_priming_sites']} internal priming) -> {out}",
           file=sys.stderr)
     if info["pcg_median_depth"] < MIN_MEDIAN_DEPTH:
         print(f"[mito_rna] WARNING protein-gene median depth {info['pcg_median_depth']:.1f} < {MIN_MEDIAN_DEPTH}: too "

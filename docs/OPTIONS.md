@@ -1346,7 +1346,7 @@ options:
 
 ```text
 usage: mito_rna.py [-h] -g GENBANK [-1 READS1] [-2 READS2] [--sam SAM] -o OUT [--threads THREADS]
-                   [--bin BIN] [--mapper {bwa,minimap2,bowtie2}]
+                   [--bin BIN] [--refine] [--run RUN] [--mapper {bwa,minimap2,bowtie2}]
 
 mito_rna.py - transcript evidence for an annotated mitochondrial genome from RNA-seq reads.
 
@@ -1368,12 +1368,20 @@ divergence), bowtie2 --very-sensitive-local. Measured: benchmark/results/rna_map
 Writes rna_features.tsv (one row per gene / ORF / non-coding region: mean depth, depth relative to the median of
 the 13 protein genes, the share of its positions transcribed at >= 10 % of that median - a partly transcribed ORF
 shows here -, "transcribed like the genes" when its depth is at least half that of the least-expressed protein gene,
-sense share for stranded libraries, poly(A) reads at its 3' end) and rna_polya_sites.tsv (sites with >=
+sense share for stranded libraries, poly(A) reads at its 3' end), rna_depth.tsv.gz (depth per position and strand)
+and rna_polya_sites.tsv (sites with >=
 MIN_POLYA_READS reads, the feature they end). A reverse-stranded library (dUTP, read 1 antisense) is recognised and
 read accordingly. Measured: benchmark/results/rnaseq_2026-11-10/README.md.
 
+Refinement (--refine, on a finished output folder; no mapping): rna_refined.gb and rna_end_corrections.tsv. A protein
+gene's 3' end is CONFIRMED by >= MIN_POLYA_READS poly(A) reads within END_WINDOW of it (note added). It is MOVED to a
+poly(A) site inside the gene's last CORRECT_MAX_NT nt when that site has >= CORRECT_MIN_READS reads, more than the
+annotated end, is not internal priming, and leaves an in-frame incomplete stop T / TA (completed by polyadenylation;
+/transl_except, translation and a note with the old end). ORFs get their expression as a note.
+
 Usage: python3 mito_rna.py -g annotated.gb -1 R1.fq.gz [-2 R2.fq.gz] -o outdir [--threads 8]
        python3 mito_rna.py -g annotated.gb --sam aligned.sam -o outdir          (reads already mapped to it)
+       python3 mito_rna.py -g annotated.gb -o outdir --refine [--run SRR...]    (evidence -> annotation)
 
 options:
   -h, --help            show this help message and exit
@@ -1385,6 +1393,9 @@ options:
   -o OUT, --out OUT
   --threads THREADS
   --bin BIN
+  --refine              write the evidence of a finished output folder (-o) into the annotation:
+                        rna_refined.gb
+  --run RUN             run accession quoted in the notes (--refine)
   --mapper {bwa,minimap2,bowtie2}
                         bwa mem (default), minimap2 -ax sr (the default before 2026-11-10), bowtie2 local
 ```

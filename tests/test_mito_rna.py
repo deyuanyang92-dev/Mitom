@@ -86,3 +86,27 @@ def test_internal_priming_site_not_counted(tmp_path):
     assert info["polya_sites"] == 0 and info["internal_priming_sites"] == 1
     assert sites[0]["internal_priming"] == "yes"
     assert next(r for r in rows if r["feature"] == "cox1")["polya_reads_at_3prime_end"] == 0
+
+
+def test_refine_moves_end_to_polya_site_with_incomplete_stop():
+    """A strong poly(A) site inside the gene's end, leaving an in-frame TA, moves the 3' end; a site at the
+    annotated end of another gene confirms it."""
+    import mito_rna
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    cds = "ATG" + "GCT" * 30 + "TA" + "GCCGCCGCCTAA"              # site after ...TA (95 nt); annotated end at TAA
+    seq = cds + "C" * 40 + "ATG" + "GCC" * 20 + "TAA" + "C" * 30
+    rec = SeqRecord(Seq(seq), id="t")
+    for name, s, e in (("ND6", 0, len(cds)), ("COX1", len(cds) + 40, len(cds) + 40 + 66)):
+        q = {"gene": [name], "product": ["x"], "transl_table": ["5"], "codon_start": ["1"]}
+        rec.features.append(SeqFeature(FeatureLocation(s, e, 1), type="gene", qualifiers={"gene": [name]}))
+        rec.features.append(SeqFeature(FeatureLocation(s, e, 1), type="CDS", qualifiers=q))
+    sites = [{"position": "95", "strand": "+", "reads": "20", "internal_priming": ""},
+             {"position": str(len(cds) + 40 + 66), "strand": "+", "reads": "5", "internal_priming": ""}]
+    corr = mito_rna.refine(rec, [], sites, stranded=False, run="SRR1")
+    assert [(c["gene"], c["new_end"], c["incomplete_stop"]) for c in corr] == [("ND6", 95, "TA")]
+    nd6 = next(f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"] == ["ND6"])
+    assert int(nd6.location.end) == 95 and nd6.qualifiers["transl_except"] == ["(pos:94..95,aa:TERM)"]
+    cox1 = next(f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"] == ["COX1"])
+    assert any("confirmed by 5 poly(A)" in n for n in cox1.qualifiers["note"])
