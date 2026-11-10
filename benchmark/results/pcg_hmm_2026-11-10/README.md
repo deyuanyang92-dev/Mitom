@@ -49,6 +49,58 @@ atp8 的 *Serpula uschakovi* 相同），*Spirobranchus corniculatus* 5 条都�
 - 335 unannotated annelids: atp8 found in 29 of 38 records missing it (tube worms 19/26), at the same gene neighbours
   within each genus as the one NCBI-annotated serpulid atp8.
 
+### atp8 / atp6 按门 / by phylum（`eval_atp.py`，`atp_by_phylum.tsv`；每门最多 15 条注释了该基因的记录，留一属）
+
+上表的抽样按 Metazoa 下一级分组（Spiralia 等），环节、纽形、腕足、苔藓动物几乎没有覆盖；这里按真正的门抽样，只测 atp8、atp6。
+The table above samples by the rank below Metazoa; here atp8 / atp6 are sampled by real phylum.
+
+| 类群 / group | atp8 正确 / correct | atp6 正确 / correct |
+|---|---|---|
+| Annelida | 15/15 | 15/15 |
+| Annelida: Sabellida | 14/15（not found 1） | 14/15（not found 1） |
+| Arthropoda | 15/15 | 15/15 |
+| Brachiopoda | 4/5（not found 1） | 6/6 |
+| Bryozoa | 8/8 | 9/9 |
+| Chordata | 15/15 | 15/15 |
+| Cnidaria | 15/15 | 15/15 |
+| Echinodermata | 14/15（not found 1） | 15/15 |
+| Entoprocta | 2/2 | 2/2 |
+| Gastrotricha | 1/1 | 1/1 |
+| Hemichordata | 6/6 | 6/6 |
+| Kinorhyncha | 2/2 | 3/3 |
+| Mollusca | 15/15 | 15/15 |
+| Nematoda | 13/15（not found 2） | 15/15 |
+| Nematomorpha | 2/2 | 2/2 |
+| Nemertea | 15/15 | 15/15 |
+| Onychophora | 4/4 | 4/4 |
+| Phoronida | 1/1 | 1/1 |
+| Placozoa | — | 3/3 |
+| Platyhelminthes | 0/3（not found 3） | 15/15 |
+| Porifera | 15/15 | 15/15 |
+| Priapulida | 2/2 | 2/2 |
+| Rotifera | — | 2/2 |
+| Tardigrada | 3/3 | 3/3 |
+| Xenacoelomorpha | 6/7（not found 1） | 10/10 |
+| **合计 / total** | **187/196** | **218/219** |
+
+未找到的 atp8 / atp8 missed：扁形动物 3 个（*Macrostomum*、*Stenostomum*、*Syndesmis*：少数有 atp8 的扁虫，近缘大多没有，
+先验使门槛变严）、线虫 2 个（旋毛虫 *Trichinella*、鞭虫 *Trichuris*，同理）；*Spirobranchus* sp.、*Lingula*、*Stichopus*、
+*Paratomella* 各 1 个。atp6 只漏 1 个（须腕动物 *Siboglinum ekmani*）。The misses are mostly the few flatworms / nematodes
+that keep atp8 while their relatives lost it: the prior is the price paid for the low false-positive rate.
+
+### 无注释环节动物中没找回的原因 / Why some annelid genes were not found
+
+335 条中 atp8 未找到 9 条、atp6 未找到 6 条，逐条核查（长度、线状 / 环状、N、其余基因）：
+
+| 原因 / reason | atp8 | atp6 | 记录 / records |
+|---|---|---|---|
+| 记录不完整或组装问题（线状短片段、UNVERIFIED、缺多个基因）：跳过 / incomplete record: skipped | 3 | 5 | *Lagis*、*Maldane*、*Trochonerilla*、*Trilobodrilus*、*Armandia*（13.7 kb 标 complete 但缺 cox1 / cox2 / cob）；*Hydroides dirampha*（线状、UNVERIFIED、有 N，ND3 与 ND4L 间只有 12 nt） |
+| 基因组完整，只缺这个基因，有弱命中（E 0.01–0.3）/ complete, only this gene missing, weak hits | 6 | 0 | 龙介虫 *Protula* 3 种、*Ficopomatus*、*Pileolaria*、*Marifugia*：基因排列与找回 atp8 的 *Hydroides* / *Spirobranchus* 不同，参考库中这些属都没有 atp8 注释（NCBI 的 *Ficopomatus enigmaticus* 也没有）——丢失还是太分化，现有数据定不了 |
+| 高度重排的基因组 / rearranged genome | 0 | 1 | 水蛭 *Helobdella europaea*（同时缺 nad5） |
+
+去掉不完整记录后：atp8 找回 29/35（龙介虫 19/25），atp6 3/4。Excluding incomplete records: atp8 29/35 (tube worms
+19/25), atp6 3/4. The 6 remaining tube worms need annotated atp8 of their genera (e.g. a colleague's verified genomes).
+
 ## How the rule was reached / 规则的由来（每处都由失败例找出）
 
 - v1 → v2：跨原点的命中坐标未折回（cox1 位置错 43 → 11）；加入近缘先验（阴性 3/80 → 1/200）。
@@ -59,5 +111,6 @@ atp8 的 *Serpula uschakovi* 相同），*Spirobranchus corniculatus* 5 条都�
 
 ## Files / 文件
 
-`eval_pcg_hmm.py`, `run.sh`; `leave_genus_out.tsv` (one row per search), `annelid_unannotated335_pcg_hmm.tsv`.
+`eval_pcg_hmm.py`, `eval_atp.py`, `run.sh`; `leave_genus_out.tsv` (one row per search), `atp_by_phylum.tsv`,
+`annelid_unannotated335_pcg_hmm.tsv`.
 Work data on cody: `/media/cody/18T_R1/yzz/_realtest/pcg_hmm_2026-11-10/`.

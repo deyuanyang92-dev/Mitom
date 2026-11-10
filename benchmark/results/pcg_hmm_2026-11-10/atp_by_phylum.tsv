@@ -1,0 +1,416 @@
+record	group	organism	gene	codons	class	evalue	prior	d_start	d_end
+NC_066969.1	Annelida	Leocrates chinensis	atp8	54	correct	4.2e-19	30/30	0	0
+LC726571.1	Annelida	Amynthas phaselus	atp8	53	correct	1.4e-34	29/30	0	20
+KP867019.1	Annelida	Goniada japonica	atp8	53	correct	2.8e-21	30/30	0	0
+NC_029870.1	Annelida	Amynthas pectiniferus	atp8	53	correct	1.6e-33	29/30	0	20
+OR935920.1	Annelida	Prionospio plumosa	atp8	54	correct	1.1e-19	26/30	0	0
+KM199288.1	Annelida	Drawida japonica	atp8	52	correct	1.8e-19	30/30	0	-1
+DQ517436.1	Annelida	Scoloplos cf. armiger CB-2006	atp8	52	correct	5.7e-20	30/30	0	0
+MZ052209.1	Annelida	Marphysa victori	atp8	54	correct	6.9e-17	29/30	0	0
+OR489164.1	Annelida	Eisenia altaica	atp8	53	correct	2.7e-24	29/30	0	20
+KY474378.1	Annelida	Pterobdella arugamensis	atp8	52	correct	5.4e-19	30/30	0	2
+MZ131647.1	Annelida	Arctonoe vittata	atp8	53	correct	5.7e-24	30/30	0	0
+PP003976.1	Annelida	Micropodarke fujianensis	atp8	53	correct	5.1e-20	30/30	0	0
+NC_087881.1	Annelida	Phyllodoce medipapillata	atp8	54	correct	1.1e-17	30/30	0	0
+PV083664.1	Annelida	Paralvinella sulfincola	atp8	52	correct	1.3e-17	27/30	0	0
+OM237314.1	Annelida	Maldane sarsi antarctica	atp8	55	correct	2.5e-20	30/30	0	0
+PX939017.1	Annelida: Sabellida	Branchiomma cingulatum cf. pererai	atp8	53	correct	2.2e-16	27/30	0	5
+PV535851.1	Annelida: Sabellida	Sabella spallanzanii	atp8	53	correct	1.2e-17	27/30	0	0
+PX939025.1	Annelida: Sabellida	Parasabella sp. 2 RZ-2026	atp8	60	correct	9.0e-16	27/30	0	0
+ON929991.1	Annelida: Sabellida	Lamellibrachia donwalshi	atp8	53	correct	3.6e-34	25/30	0	0
+NC_084115.1	Annelida: Sabellida	Siboglinum plumosum	atp8	51	correct	2.0e-18	25/30	0	0
+ON929996.1	Annelida: Sabellida	Escarpia spicata	atp8	53	correct	3.3e-35	25/30	0	0
+MG462707.1	Annelida: Sabellida	Paraescarpia echinospica	atp8	53	correct	3.9e-34	26/30	0	0
+KJ789167.1	Annelida: Sabellida	Sclerolinum brattstromi	atp8	53	correct	4.2e-23	25/30	0	0
+NC_027854.1	Annelida: Sabellida	Lamellibrachia satsuma	atp8	53	correct	5.4e-35	25/30	0	0
+PX939027.1	Annelida: Sabellida	Hypsicomus sp.	atp8	71	correct	3.9e-09	27/30	0	0
+LC726529.1	Annelida	Metaphire megascolidioides	atp6	232	correct	6.6e-149	30/30	0	0
+PZ062479.1	Annelida: Sabellida	Owenia sp. T76693-1	atp8	58	correct	1.9e-13	26/30	0	0
+NC_060816.1	Annelida	Chrysopetalum debile	atp6	233	correct	6.0e-109	30/30	0	-1
+NC_026856.1	Annelida: Sabellida	Escarpia spicata	atp8	53	correct	7.8e-34	25/30	0	0
+KJ789171.1	Annelida: Sabellida	Spirobrachia sp. YL-2014	atp8	52	correct	1.3e-19	26/30	0	0
+NC_034783.1	Annelida	Pontoscolex corethrurus	atp6	232	correct	1.1e-108	30/30	0	0
+KJ789162.1	Annelida: Sabellida	Galathealinum brachiosum	atp8	52	correct	6.0e-21	26/30	0	0
+LC726545.1	Annelida	Amynthas distichus	atp6	232	correct	9.9e-154	30/30	0	0
+PQ164793.1	Annelida	Metaphire guillelmi	atp6	231	correct	1.6e-150	30/30	0	-1
+NC_027699.1	Annelida	Ramisyllis multicaudata	atp6	229	correct	9.6e-80	30/30	0	0
+NC_012618.1	Annelida	Phascolosoma esculenta	atp6	232	correct	2.1e-93	29/30	0	0
+LC726521.1	Annelida	Amynthas tappensis	atp6	232	correct	8.4e-151	30/30	0	0
+OM687883.1	Annelida	Aporrectodea tuberculata	atp6	232	correct	1.4e-144	30/30	0	0
+PX970954.1	Annelida: Sabellida	Spirobranchus sp.	atp8	51	not found		24/30		
+KM199289.1	Annelida	Amynthas longisiphonus	atp6	231	correct	2.0e-144	30/30	0	14
+PZ294309.1	Annelida	Trypanosyllis sp.	atp6	230	correct	1.3e-71	30/30	0	0
+LC726568.1	Annelida	Amynthas corticis	atp6	231	correct	1.6e-149	30/30	0	0
+KT726958.1	Annelida	Chaetopterus variopedatus	atp6	237	correct	4.8e-80	29/30	0	0
+MK192098.1	Annelida	Paralvinella hessleri	atp6	238	correct	5.1e-101	29/30	0	0
+OR935933.1	Annelida	Aurospio banyulensis	atp6	225	correct	3.9e-103	29/30	0	55
+NC_085348.1	Annelida: Sabellida	Oligobrachia dogieli	atp6	227	correct	8.7e-98	30/30	0	0
+KJ789172.1	Annelida: Sabellida	Tevnia jerichonana	atp6	230	correct	7.8e-145	30/30	0	0
+MZ435261.1	Annelida: Sabellida	Sabella spallanzanii	atp6	232	correct	4.2e-89	30/30	0	0
+KJ789169.1	Annelida: Sabellida	Siboglinum ekmani	atp6	170	not found		30/30		
+NC_084115.1	Annelida: Sabellida	Siboglinum plumosum	atp6	228	correct	1.5e-95	30/30	0	0
+KT726960.1	Annelida: Sabellida	Owenia fusiformis	atp6	181	correct	8.1e-73	30/30	-165	0
+KJ789164.1	Annelida: Sabellida	Oasisia alvinae	atp6	230	correct	2.9e-145	30/30	0	0
+NC_082193.1	Annelida: Sabellida	Arcovestia ivanovi	atp6	229	correct	4.8e-146	30/30	0	0
+NC_023478.1	Arthropoda	Cherax robustus	atp8	53	correct	7.2e-24	30/30	0	0
+NC_014806.1	Arthropoda	Grapholita molesta	atp8	54	correct	1.0e-33	29/30	0	0
+NC_035408.1	Arthropoda	Typhlatya dzilamensis	atp8	53	correct	2.5e-24	29/30	0	0
+NC_056127.1	Arthropoda	Sogatella kolophon	atp8	34	correct	1.5e-18	30/30	0	0
+NC_049861.1	Arthropoda	Nylanderia flavipes	atp8	58	correct	2.7e-16	29/30	0	0
+NC_062161.1	Arthropoda	Haemaphysalis kitaokai	atp8	54	correct	3.3e-17	30/30	0	0
+OL681897.1	Annelida: Sabellida	Sclerolinum annulatum	atp6	232	correct	9.0e-117	30/30	0	0
+PZ062477.1	Annelida: Sabellida	Owenia sp. T76693-2	atp6	181	correct	4.2e-73	30/30	-165	0
+NC_021756.1	Arthropoda	Elophila interruptalis	atp8	54	correct	2.5e-26	30/30	0	0
+NC_003344.1	Arthropoda	Thyropygus sp. DVL-2001	atp8	52	correct	9.0e-19	30/30	0	0
+OR551480.1	Annelida: Sabellida	Siboglinum plumosum	atp6	228	correct	1.5e-95	30/30	0	0
+ON929999.1	Annelida: Sabellida	Alaysia sp. n. 2 MM-2023	atp6	229	correct	1.6e-143	30/30	0	0
+NC_082462.1	Arthropoda	Episymploce torchaceus	atp8	53	correct	1.2e-30	30/30	0	0
+PZ062476.1	Annelida: Sabellida	Owenia sp. T76693-2	atp6	181	correct	1.3e-72	30/30	-165	0
+ON929992.1	Annelida: Sabellida	Riftia pachyptila	atp6	229	correct	6.6e-145	30/30	0	0
+KJ789171.1	Annelida: Sabellida	Spirobrachia sp. YL-2014	atp6	231	correct	4.2e-102	30/30	0	0
+NC_046034.1	Arthropoda	Anchistus australis	atp8	53	correct	9.6e-19	29/30	0	0
+NC_080491.1	Arthropoda	Lopaphus sphalerus	atp8	53	correct	5.4e-24	30/30	0	0
+NC_047198.1	Arthropoda	Bruchidius uberatus	atp6	224	correct	1.6e-134	30/30	6	0
+NC_038117.1	Arthropoda	Palaemon annandalei	atp8	53	correct	1.1e-20	29/30	0	0
+NC_072646.1	Arthropoda	Phaenopsectra flavipes	atp8	58	correct	4.8e-26	30/30	0	0
+NC_023778.1	Arthropoda	Aleuroglyphus ovatus	atp8	53	correct	1.4e-24	30/30	12	0
+NC_073018.1	Arthropoda	Frontopsylla spadix	atp6	225	correct	2.4e-139	29/30	21	0
+NC_003086.1	Brachiopoda	Terebratalia transversa	atp8	51	correct	6.6e-13	28/30	0	35
+NC_039685.1	Brachiopoda	Laqueus japonicus	atp8	52	correct	4.2e-13	28/30	0	0
+NC_000941.1	Brachiopoda	Terebratulina retusa	atp8	60	correct	1.3e-06	28/30	0	0
+NC_038139.1	Arthropoda	Psylla alni	atp6	225	correct	3.3e-119	30/30	21	0
+NC_002322.1	Brachiopoda	Laqueus rubellus	atp8	52	correct	1.4e-14	28/30	0	0
+NC_053918.1	Arthropoda	Parazyginella tiani	atp8	48	correct	7.2e-24	30/30	0	0
+NC_022849.1	Arthropoda	Pristaulacus compressus	atp6	225	correct	1.1e-84	29/30	21	0
+NC_036679.1	Brachiopoda	Lingula anatina	atp8	59	not found		29/30		
+NC_052726.1	Arthropoda	Chionoecetes japonicus	atp6	225	correct	1.4e-136	30/30	21	0
+NC_038179.1	Arthropoda	Gaetice depressus	atp6	225	correct	1.8e-140	30/30	21	0
+NC_031162.1	Arthropoda	Reticulitermes flaviceps	atp6	226	correct	2.0e-141	30/30	18	0
+NC_008192.1	Bryozoa	Flustrellidra hispida	atp8	30	correct	3.6e-09	27/30	0	20
+NC_050907.1	Arthropoda	Lethe hayashii	atp6	226	correct	2.9e-144	30/30	21	0
+NC_030718.1	Arthropoda	Anopheles albitarsis F Brochero et al., 2007	atp6	227	correct	8.1e-144	30/30	9	0
+NC_085605.1	Arthropoda	Gastrolina depressa	atp6	224	correct	1.0e-123	30/30	9	2
+NC_041115.1	Arthropoda	Stenocatantops splendens	atp6	226	correct	1.9e-143	30/30	9	0
+NC_039530.1	Arthropoda	Colpocephalum griffoneae	atp6	217	correct	1.7e-81	30/30	21	0
+NC_016722.1	Bryozoa	Flustra foliacea	atp8	37	correct	2.1e-09	27/30	0	0
+NC_011820.2	Bryozoa	Watersipora subtorquata	atp8	32	correct	3.3e-09	27/30	0	0
+NC_038192.1	Bryozoa	Pectinatella magnifica	atp8	53	correct	5.7e-07	27/30	0	0
+NC_018344.1	Bryozoa	Celleporella hyalina	atp8	42	correct	1.0e-07	27/30	12	0
+NC_010197.1	Bryozoa	Bugula neritina	atp8	42	correct	6.0e-12	27/30	0	0
+NC_085486.1	Bryozoa	Membranipora villosa	atp8	23	correct	3.0e-06	28/30	0	2
+NC_018355.1	Bryozoa	Membranipora grandicella	atp8	37	correct	3.0e-05	28/30	0	0
+NC_068522.1	Arthropoda	Colossendeis brevirostris	atp6	222	correct	1.2e-92	29/30	21	8
+NC_071748.1	Arthropoda	Gonopsimorpha nigrosignata	atp6	225	correct	9.6e-124	30/30	9	0
+NC_067744.1	Arthropoda	Mycterothrips gongshanensis	atp6	231	correct	3.0e-113	30/30	0	0
+NC_042503.1	Chordata	Lateolabrax japonicus	atp8	56	correct	1.6e-30	29/30	0	0
+NC_015191.1	Chordata	Channa argus	atp8	56	correct	5.4e-30	29/30	0	0
+NC_035629.1	Chordata	Microcebus berthae	atp8	69	correct	4.8e-32	30/30	0	-48
+NC_024604.1	Chordata	Suncus murinus	atp8	68	correct	9.6e-32	29/30	0	-45
+NC_004023.1	Chordata	Arctocephalus forsteri	atp8	68	correct	7.5e-36	30/30	0	-45
+NC_028033.1	Chordata	Alticorpus geoffreyi	atp8	56	correct	2.3e-41	30/30	0	0
+NC_028082.1	Chordata	Pterorhinus poecilorhynchus	atp8	56	correct	2.7e-32	29/30	0	0
+NC_024937.1	Chordata	Zapteryx exasperata	atp8	56	correct	2.1e-32	29/30	0	0
+NC_044493.1	Chordata	Psettina iijimae	atp8	56	correct	1.2e-30	30/30	0	0
+NC_002322.1	Brachiopoda	Laqueus rubellus	atp6	227	correct	9.9e-71	29/30	0	0
+NC_031802.1	Chordata	Nothocricetulus migratorius	atp8	68	correct	3.3e-32	30/30	0	-45
+NC_039685.1	Brachiopoda	Laqueus japonicus	atp6	205	correct	2.5e-60	29/30	0	0
+NC_038192.1	Bryozoa	Pectinatella magnifica	atp6	233	correct	7.5e-70	29/30	0	0
+NC_018355.1	Bryozoa	Membranipora grandicella	atp6	218	correct	1.5e-72	29/30	0	0
+NC_003086.1	Brachiopoda	Terebratalia transversa	atp6	229	correct	2.4e-68	29/30	0	0
+NC_000941.1	Brachiopoda	Terebratulina retusa	atp6	229	correct	9.9e-70	29/30	0	-1
+NC_010197.1	Bryozoa	Bugula neritina	atp6	230	correct	1.0e-88	29/30	0	0
+NC_085486.1	Bryozoa	Membranipora villosa	atp6	177	correct	4.5e-75	29/30	-150	1
+NC_085563.1	Brachiopoda	Lingula reevei	atp6	245	correct	2.8e-35	29/30	90	0
+NC_011820.2	Bryozoa	Watersipora subtorquata	atp6	226	correct	1.2e-75	29/30	0	14
+NC_016722.1	Bryozoa	Flustra foliacea	atp6	227	correct	5.7e-85	29/30	0	0
+NC_085601.1	Chordata	Squalidus banarescui	atp8	55	correct	1.1e-40	30/30	0	0
+NC_083009.1	Chordata	Gastropsetta frontalis	atp6	228	correct	4.8e-126	30/30	27	0
+NC_025602.1	Chordata	Himatione sanguinea	atp8	56	correct	3.6e-38	29/30	0	0
+NC_018344.1	Bryozoa	Celleporella hyalina	atp6	227	correct	1.1e-74	29/30	0	59
+NC_015646.1	Bryozoa	Tubulipora flabellaris	atp6	211	correct	8.1e-25	29/30	0	0
+NC_036679.1	Brachiopoda	Lingula anatina	atp6	243	correct	1.1e-34	29/30	27	0
+NC_008192.1	Bryozoa	Flustrellidra hispida	atp6	207	correct	9.6e-62	29/30	9	0
+NC_030607.1	Chordata	Copadichromis quadrimaculatus	atp6	228	correct	2.0e-148	30/30	27	0
+NC_024183.1	Chordata	Culter compressocorpus	atp8	55	correct	1.4e-41	27/30	0	0
+NC_026900.1	Chordata	Abbottina obtusirostris	atp6	228	correct	2.1e-147	30/30	9	0
+NC_013880.1	Chordata	Cryptopsaras couesii	atp8	63	correct	2.5e-18	29/30	0	-33
+NC_009729.1	Chordata	Paleosuchus palpebrosus	atp6	228	correct	4.5e-114	30/30	30	0
+NC_056781.1	Chordata	Bario sanctaefilomenae	atp8	56	correct	2.1e-31	29/30	0	0
+NC_002471.1	Chordata	Typhlonectes natans	atp6	227	correct	9.9e-115	30/30	27	1
+NC_034731.1	Chordata	Lepilemur seali	atp6	227	correct	1.4e-118	29/30	48	0
+NC_039892.1	Chordata	Prodotiscus insignis	atp6	228	correct	1.6e-129	30/30	42	0
+NC_062697.1	Chordata	Stichaeopsis nevelskoi	atp6	227	correct	2.5e-146	30/30	27	1
+NC_027521.1	Chordata	Dipturus trachyderma	atp6	228	correct	2.0e-142	30/30	42	0
+NC_029387.1	Chordata	Squalidus multimaculatus	atp6	228	correct	1.1e-146	30/30	9	0
+NC_003193.1	Chordata	Mastacembelus favus	atp6	227	correct	1.6e-130	30/30	27	1
+NC_041195.1	Chordata	Paratrypauchen microcephalus	atp6	227	correct	4.5e-142	30/30	27	-2
+NC_013614.1	Chordata	Muraenesox bagio	atp6	227	correct	9.3e-133	30/30	27	1
+NC_035717.1	Chordata	Schismatogobius ampluvinculus	atp6	228	correct	1.3e-130	30/30	27	0
+NC_030365.1	Chordata	Bothus myriaster	atp6	228	correct	5.1e-120	30/30	36	0
+NC_062025.1	Cnidaria	Protodendron repens	atp8	72	correct	3.6e-52	28/30	0	0
+NC_062022.1	Cnidaria	Paralemnalia thyrsoides	atp8	84	correct	8.4e-51	28/30	36	0
+NC_072168.1	Cnidaria	Montipora vietnamensis	atp8	73	correct	8.1e-47	30/30	0	0
+NC_056128.1	Cnidaria	Turritopsis lata	atp8	68	correct	1.0e-18	16/30	0	0
+NC_068220.1	Cnidaria	Crispatotrochus rubescens	atp8	53	correct	2.0e-13	30/30	0	0
+NC_062003.1	Cnidaria	Ceeceenus quadrus	atp8	72	correct	1.8e-55	28/30	-3	0
+NC_071215.1	Cnidaria	Eleutherobia rubra	atp8	72	correct	7.5e-54	28/30	0	0
+NC_022809.1	Cnidaria	Dendronephthya suensoni	atp8	72	correct	1.8e-53	28/30	0	0
+NC_049868.1	Cnidaria	Spirocodon saltatrix	atp8	68	correct	8.1e-28	16/30	0	0
+NC_008159.1	Cnidaria	Ricordea florida	atp8	70	correct	1.2e-40	30/30	0	0
+NC_062035.1	Cnidaria	Virgularia schultzei	atp8	72	correct	2.1e-52	30/30	0	0
+NC_045931.1	Cnidaria	Goniopora djiboutiensis	atp8	72	correct	4.5e-48	30/30	0	0
+NC_060606.1	Cnidaria	Dendrophyllia minuscula	atp8	72	correct	2.0e-48	30/30	0	0
+NC_062020.1	Cnidaria	Nidalia simpsoni	atp8	84	correct	4.8e-51	28/30	36	0
+NC_080208.1	Cnidaria	Antipathozoanthus obscurus	atp8	73	correct	1.6e-52	29/30	0	0
+NC_061998.1	Cnidaria	Arula petunia	atp6	236	correct	1.9e-143	30/30	0	0
+NC_061990.1	Cnidaria	Acrophytum claviger	atp6	236	correct	1.7e-152	30/30	0	0
+NC_018378.1	Cnidaria	Renilla muelleri	atp6	236	correct	2.0e-154	30/30	0	0
+NC_061278.1	Cnidaria	Muriceopsis flavida	atp6	236	correct	1.1e-150	30/30	0	0
+NC_023770.1	Echinodermata	Loxechinus albus	atp8	55	correct	2.6e-28	29/30	0	0
+NC_054226.1	Echinodermata	Protoreaster nodosus	atp8	55	correct	3.3e-23	29/30	0	0
+NC_052742.1	Echinodermata	Ophiuroglypha kinbergi	atp8	54	correct	2.8e-22	30/30	0	0
+NC_082173.1	Echinodermata	Ophiothrix exigua	atp8	56	correct	9.3e-14	30/30	0	0
+NC_022826.1	Cnidaria	Acropora hyacinthus	atp6	233	correct	4.2e-150	30/30	0	0
+NC_085502.1	Echinodermata	Stegophiura sladeni	atp8	54	correct	4.2e-21	30/30	3	0
+NC_085630.1	Echinodermata	Xyloplax princealberti	atp8	55	correct	4.8e-18	29/30	0	0
+NC_060843.1	Echinodermata	Comanthus parvicirrus	atp8	58	correct	2.1e-25	30/30	0	0
+NC_027086.1	Echinodermata	Holothuria scabra	atp8	56	correct	1.8e-20	30/30	0	0
+NC_014452.2	Echinodermata	Stichopus sp. SF-2010	atp8	59	correct	2.9e-20	30/30	0	0
+NC_022825.1	Cnidaria	Acropora horrida	atp6	233	correct	4.2e-150	30/30	0	0
+NC_081341.1	Cnidaria	Acropora nana	atp6	233	correct	5.4e-150	30/30	0	0
+NC_057437.1	Echinodermata	Phyllophorella liuwutiensis	atp8	55	correct	5.4e-19	30/30	0	0
+NC_081188.1	Cnidaria	Acropora subulata	atp6	233	correct	5.7e-150	30/30	0	0
+NC_003522.1	Cnidaria	Acropora tenuis	atp6	233	correct	3.9e-150	30/30	0	0
+NC_080260.1	Cnidaria	Palythoa caribaeorum	atp6	233	correct	1.8e-153	30/30	0	0
+NC_082918.1	Cnidaria	Galaxea paucisepta	atp6	233	correct	1.1e-146	30/30	0	0
+NC_083272.1	Cnidaria	Acropora cervicornis	atp6	233	correct	1.1e-149	30/30	0	0
+NC_023771.1	Echinodermata	Hemicentrotus pulcherrimus	atp8	55	correct	1.4e-32	29/30	0	0
+NC_005930.1	Echinodermata	Ophiura luetkenii	atp8	56	correct	2.4e-19	29/30	0	0
+NC_034275.1	Cnidaria	Desmophyllum dianthus	atp6	233	correct	3.6e-138	30/30	0	0
+NC_080952.1	Cnidaria	Craseoa lathetica	atp6	236	correct	6.6e-85	30/30	0	0
+NC_052743.1	Echinodermata	Stichopus monotuberculatus	atp8	59	correct	4.8e-19	30/30	0	0
+NC_006664.1	Echinodermata	Luidia quinaria	atp8	56	correct	1.5e-19	29/30	0	0
+NC_071915.1	Cnidaria	Paracondylactis sinensis	atp6	233	correct	1.1e-151	30/30	9	0
+NC_020771.1	Echinodermata	Mesocentrotus nudus	atp6	230	correct	1.5e-149	30/30	12	0
+NC_010431.1	Entoprocta	Loxocorone allax	atp8	53	correct	2.6e-13	29/30	0	0
+NC_014454.1	Echinodermata	Stichopus horrens	atp8	59	not found		30/30		
+NC_010432.1	Entoprocta	Loxosomella aloxiata	atp8	55	correct	1.0e-16	29/30	0	0
+NC_026985.1	Gastrotricha	Lepidodermella squamata	atp8	39	correct	1.0e-05	29/30	0	0
+NC_069158.1	Echinodermata	Tripneustes kermadecensis	atp6	231	correct	2.6e-144	30/30	12	0
+NC_001887.1	Hemichordata	Balanoglossus carnosus	atp8	55	correct	1.5e-13	29/30	0	0
+NC_040151.1	Echinodermata	Ophiosteira antarctica	atp6	232	correct	6.6e-128	30/30	9	0
+NC_040109.1	Hemichordata	Glossobalanus marginatus	atp8	55	correct	1.4e-09	29/30	0	0
+NC_009941.1	Echinodermata	Strongylocentrotus pallidus	atp6	230	correct	2.5e-145	30/30	12	0
+NC_040108.1	Hemichordata	Schizocardium brasiliense	atp8	54	correct	4.5e-16	29/30	0	0
+NC_007438.1	Hemichordata	Saccoglossus kowalevskii	atp8	56	correct	4.2e-16	29/30	0	0
+NC_040107.1	Hemichordata	Stereobalanus canadensis	atp8	55	correct	7.5e-11	29/30	0	0
+NC_013878.1	Echinodermata	Astrospartus mediterraneus	atp6	231	correct	1.2e-114	30/30	15	0
+NC_083273.1	Echinodermata	Echinocrepis rostrata	atp6	230	correct	3.3e-136	30/30	12	0
+NC_042738.1	Echinodermata	Amphiura digitula	atp6	233	correct	1.7e-108	30/30	21	0
+NC_013877.1	Hemichordata	Balanoglossus clavigerus	atp8	56	correct	8.7e-15	29/30	0	0
+NC_031872.1	Kinorhyncha	Setaphyes kielensis	atp8	49	correct	3.6e-04	25/30	0	0
+NC_031873.1	Kinorhyncha	Echinoderes svetlanae	atp8	55	correct	1.2e-06	25/30	0	0
+NC_033528.1	Echinodermata	Salmacis sphaeroides	atp6	230	correct	4.2e-145	30/30	12	0
+NC_007690.1	Echinodermata	Phanogenia gracilis	atp6	230	correct	6.3e-133	30/30	9	0
+NC_054231.1	Echinodermata	Euretaster insignis	atp6	230	correct	5.7e-115	30/30	18	2
+NC_040146.1	Echinodermata	Astrotoma agassizii	atp6	230	correct	1.6e-114	30/30	9	0
+NC_050252.1	Echinodermata	Eucidaris tribuloides	atp6	230	correct	4.8e-136	30/30	12	0
+NC_025766.1	Echinodermata	Aphelasterias japonica	atp6	231	correct	2.2e-134	30/30	0	0
+NC_069919.1	Echinodermata	Zygometra comata	atp6	230	correct	2.3e-131	30/30	9	0
+NC_050273.1	Echinodermata	Stylocidaris reini	atp6	230	correct	5.7e-136	30/30	12	0
+NC_072232.1	Mollusca	Monetaria caputserpentis	atp8	53	correct	6.3e-37	30/30	0	0
+NC_029366.1	Mollusca	Bolma rugosa	atp8	60	correct	5.1e-30	29/30	0	0
+NC_016181.1	Mollusca	Peronia peronii	atp8	51	correct	3.3e-15	29/30	0	0
+NC_039922.1	Mollusca	Conus betulinus	atp8	54	correct	6.6e-28	30/30	0	0
+NC_035871.1	Mollusca	Maackia herderiana	atp8	53	correct	2.1e-35	30/30	0	0
+NC_063769.1	Mollusca	Conus ebraeus	atp8	54	correct	1.2e-28	30/30	0	0
+NC_077458.1	Mollusca	Talonostrea talonata	atp8	40	correct	1.8e-07	12/30	24	0
+NC_010432.1	Entoprocta	Loxosomella aloxiata	atp6	235	correct	8.1e-92	29/30	24	0
+NC_010431.1	Entoprocta	Loxocorone allax	atp6	234	correct	1.4e-85	29/30	24	0
+NC_027957.1	Mollusca	Conus tribblei	atp8	54	correct	6.6e-28	30/30	0	0
+NC_079625.1	Mollusca	Conus tessulatus	atp8	54	correct	4.5e-27	30/30	0	0
+NC_046519.1	Mollusca	Macoma balthica	atp8	43	correct	1.1e-13	16/30	0	0
+NC_016891.1	Mollusca	Paratapes undulatus	atp8	38	correct	1.3e-23	24/30	-12	0
+NC_061024.1	Mollusca	Turbo cornutus	atp8	60	correct	3.0e-32	29/30	0	0
+NC_001887.1	Hemichordata	Balanoglossus carnosus	atp6	228	correct	6.0e-92	29/30	12	0
+NC_035586.1	Mollusca	Margarya oxytropoides	atp8	57	correct	8.4e-27	30/30	0	0
+NC_040108.1	Hemichordata	Schizocardium brasiliense	atp6	232	correct	1.4e-104	29/30	42	0
+NC_026985.1	Gastrotricha	Lepidodermella squamata	atp6	156	correct	4.5e-52	29/30	-207	0
+NC_007438.1	Hemichordata	Saccoglossus kowalevskii	atp6	229	correct	8.7e-99	29/30	0	0
+NC_013877.1	Hemichordata	Balanoglossus clavigerus	atp6	230	correct	1.1e-91	29/30	18	0
+NC_035733.1	Mollusca	Viviparus chui	atp8	57	correct	1.1e-26	30/30	0	0
+NC_040107.1	Hemichordata	Stereobalanus canadensis	atp6	234	correct	5.1e-86	29/30	0	0
+NC_086642.1	Mollusca	Austropeplea brazieri	atp8	50	correct	2.4e-17	30/30	0	13
+NC_031405.1	Mollusca	Menathais tuberosa	atp6	232	correct	2.1e-149	30/30	0	0
+NC_040109.1	Hemichordata	Glossobalanus marginatus	atp6	228	correct	6.3e-105	29/30	12	0
+NC_031872.1	Kinorhyncha	Setaphyes kielensis	atp6	216	correct	6.6e-50	29/30	0	0
+NC_007781.1	Mollusca	Ilyanassa obsoleta	atp6	232	correct	9.0e-151	30/30	0	0
+NC_031873.1	Kinorhyncha	Echinoderes svetlanae	atp6	230	correct	8.7e-53	29/30	-12	0
+NC_045069.1	Kinorhyncha	Semnoderes armiger	atp6	226	correct	2.9e-50	29/30	0	0
+NC_062608.1	Mollusca	Monodonta labio	atp6	234	correct	2.5e-143	30/30	0	0
+NC_041247.1	Mollusca	Helix pomatia	atp6	217	correct	3.0e-83	30/30	3	-1
+NC_034292.1	Mollusca	Ellobium chinense	atp6	214	correct	1.7e-117	30/30	0	-2
+NC_018597.1	Nematoda	Trichuris ovis	atp8	57	correct	1.6e-03	4/30	27	0
+NC_063567.1	Mollusca	Cerion watlingense	atp6	217	correct	2.1e-80	30/30	0	0
+NC_056391.1	Nematoda	Eucoleus annulatus	atp8	47	correct	5.4e-09	5/30	-6	0
+NC_025752.1	Nematoda	Trichinella nativa	atp8	42	correct	3.3e-06	4/30	18	0
+NC_084421.1	Mollusca	Polypylis sp. TS-2018	atp6	211	correct	9.0e-105	30/30	0	20
+NC_053786.1	Mollusca	Laevistrombus canarium	atp6	232	correct	3.9e-152	30/30	0	0
+NC_025750.1	Nematoda	Trichinella britovi	atp8	42	correct	7.2e-04	4/30	18	0
+NC_018596.1	Nematoda	Trichuris discolor	atp8	57	correct	4.5e-04	4/30	30	0
+NC_025755.1	Nematoda	Trichinella zimbabwensis	atp8	43	correct	8.4e-05	4/30	18	0
+NC_025753.1	Nematoda	Trichinella nelsoni	atp8	42	not found		4/30		
+NC_071371.1	Nematoda	Aonchotheca putorii	atp8	49	correct	1.6e-09	5/30	0	0
+NC_025751.1	Nematoda	Trichinella murrelli	atp8	42	correct	4.8e-06	4/30	18	0
+NC_017747.1	Nematoda	Trichuris suis	atp8	57	not found		4/30		
+NC_011518.2	Mollusca	Magallana hongkongensis	atp6	228	correct	6.0e-131	30/30	0	0
+NC_002681.1	Nematoda	Trichinella spiralis	atp8	42	correct	6.0e-04	4/30	0	0
+NC_022701.1	Mollusca	Sinosolenaia oleivora	atp6	236	correct	1.2e-141	30/30	0	0
+NC_058306.1	Mollusca	Nipponacmea fuscoviridis	atp6	213	correct	7.2e-70	30/30	-162	0
+NC_025754.1	Nematoda	Trichinella papuae	atp8	43	correct	1.0e-03	4/30	18	0
+NC_028621.1	Nematoda	Trichuris muris	atp8	47	correct	1.5e-06	4/30	0	0
+NC_037431.1	Mollusca	Prolasmidonta heterodon	atp6	234	correct	1.5e-141	30/30	0	0
+NC_025749.1	Nematoda	Trichinella pseudospiralis	atp8	43	correct	9.0e-04	4/30	18	0
+NC_017750.1	Nematoda	Trichuris trichiura	atp8	55	correct	8.1e-05	4/30	15	0
+NC_085460.1	Nematoda	Cylicocyclus ultrajectinus	atp6	200	correct	3.9e-126	30/30	0	0
+NC_044095.1	Nematomorpha	Gordionus alpestris	atp8	33	correct	2.8e-04	26/30	0	0
+NC_059707.1	Mollusca	Gigantidas childressi	atp6	239	correct	3.9e-97	30/30	0	0
+NC_039926.1	Nematoda	Steinernema abbasi	atp6	200	correct	7.2e-98	30/30	0	0
+NC_067627.1	Nematoda	Zoniolaimus dendrolagi	atp6	200	correct	3.3e-125	30/30	9	0
+NC_008452.1	Mollusca	Acanthocardia tuberculata	atp6	237	correct	3.3e-87	30/30	0	92
+NC_028622.1	Nematoda	Strongyloides papillosus	atp6	199	correct	6.6e-57	30/30	0	0
+NC_035005.1	Nematoda	Poteriostomum imparidentatum	atp6	200	correct	9.3e-129	30/30	0	0
+NC_032073.1	Nematoda	Gnathostoma doloresi	atp6	171	correct	3.9e-97	29/30	-84	0
+NC_023262.1	Nematoda	Protostrongylus rufescens	atp6	200	correct	1.5e-91	30/30	0	0
+NC_085569.1	Nematomorpha	Parachordodes pustulosus	atp8	40	correct	1.7e-05	26/30	0	0
+NC_003416.2	Nematoda	Necator americanus	atp6	199	correct	6.6e-123	30/30	0	-1
+NC_056772.1	Nematoda	Meloidogyne graminicola	atp6	179	correct	1.3e-03	30/30	21	0
+NC_028724.1	Mollusca	Turneroconcha magnifica	atp6	238	correct	1.2e-103	29/30	0	0
+NC_035244.1	Nematoda	Caenorhabditis brenneri	atp6	200	correct	3.6e-116	30/30	24	0
+NC_018597.1	Nematoda	Trichuris ovis	atp6	275	correct	9.3e-54	30/30	93	0
+NC_027696.1	Nematoda	Litoditis aff. marina PmIII	atp6	200	correct	2.5e-119	30/30	0	0
+NC_036669.1	Nematoda	Ortleppascaris sinensis	atp6	199	correct	7.5e-118	29/30	18	-1
+NC_008231.1	Nematoda	Agamermis sp. BH-2006	atp6	175	correct	2.8e-50	30/30	9	0
+NC_031647.1	Nematoda	Contracaecum ogmorhini sensu lato Australia	atp6	200	correct	1.0e-118	30/30	0	0
+NC_017877.1	Nemertea	Zygeupolia rubens	atp8	53	correct	1.3e-14	29/30	0	0
+NC_042687.1	Nemertea	Notospermus geniculatus	atp8	55	correct	6.3e-16	29/30	0	0
+NC_026874.1	Nemertea	Micrura ignea	atp8	53	correct	9.9e-17	29/30	0	0
+NC_014865.1	Nemertea	Paranemertes cf. peregrina SCS-2010	atp8	57	correct	2.4e-15	29/30	0	0
+NC_024822.1	Nemertea	Gononemertes parasita	atp8	57	correct	1.3e-13	29/30	0	0
+NC_024823.1	Nemertea	Nemertopsis tetraclitophila	atp8	56	correct	9.9e-17	29/30	0	0
+NC_057068.1	Nemertea	Yininemertes pratensis	atp8	53	correct	2.2e-14	29/30	0	0
+NC_014869.1	Nemertea	Cephalothrix sp. SCS-2010	atp8	53	correct	6.9e-08	29/30	23	-2
+NC_018356.1	Nemertea	Kulikovia alborostrata	atp8	53	correct	8.7e-18	29/30	0	0
+NC_023930.1	Nemertea	Nipponnemertes punctatula	atp8	56	correct	6.9e-17	29/30	0	0
+NC_016952.1	Nemertea	Emplectonema gracile	atp8	58	correct	6.9e-19	29/30	0	0
+NC_023931.1	Nemertea	Prosadenoporus spectaculum	atp8	60	correct	6.9e-11	29/30	0	0
+NC_012821.1	Nemertea	Cephalothrix simula	atp8	53	correct	1.3e-17	29/30	0	0
+NC_027727.1	Nemertea	Micrura bella	atp8	57	correct	1.1e-18	29/30	0	0
+NC_061541.1	Nemertea	Quasilineus sinicus	atp8	56	correct	1.2e-17	29/30	0	0
+NC_009082.1	Onychophora	Epiperipatus biolleyi	atp8	53	correct	3.6e-13	26/30	0	0
+NC_014273.1	Onychophora	Opisthopatus cinctipes	atp8	52	correct	2.3e-11	26/30	0	0
+NC_010961.1	Onychophora	Metaperipatus inae	atp8	52	correct	7.5e-08	26/30	0	0
+NC_015890.1	Onychophora	Oroperipatus sp. DVL-2011	atp8	55	correct	3.3e-14	26/30	0	0
+NC_018761.1	Phoronida	Phoronopsis harmeri	atp8	53	correct	6.6e-12	29/30	0	0
+NC_044095.1	Nematomorpha	Gordionus alpestris	atp6	229	correct	5.7e-50	29/30	0	0
+NC_085569.1	Nematomorpha	Parachordodes pustulosus	atp6	228	correct	6.0e-53	29/30	0	0
+NC_012889.1	Nemertea	Lineus viridis	atp6	231	correct	1.6e-115	29/30	0	0
+NC_023929.1	Nemertea	Amphiporus formidabilis	atp6	230	correct	1.4e-120	29/30	12	-1
+NC_016952.1	Nemertea	Emplectonema gracile	atp6	227	correct	3.9e-117	29/30	0	23
+NC_023523.1	Nemertea	Iwatanemertes piperata	atp6	231	correct	3.0e-120	29/30	0	0
+NC_027727.1	Nemertea	Micrura bella	atp6	231	correct	1.1e-115	29/30	0	0
+NC_017877.1	Nemertea	Zygeupolia rubens	atp6	231	correct	1.3e-116	29/30	0	0
+NC_023930.1	Nemertea	Nipponnemertes punctatula	atp6	230	correct	2.2e-110	29/30	0	1
+NC_018356.1	Nemertea	Kulikovia alborostrata	atp6	231	correct	1.4e-110	29/30	0	0
+NC_014869.1	Nemertea	Cephalothrix sp. SCS-2010	atp6	213	correct	1.4e-79	29/30	0	0
+NC_061541.1	Nemertea	Quasilineus sinicus	atp6	231	correct	5.4e-122	29/30	0	0
+NC_023931.1	Nemertea	Prosadenoporus spectaculum	atp6	230	correct	6.0e-117	29/30	0	-1
+NC_042687.1	Nemertea	Notospermus geniculatus	atp6	231	correct	2.0e-106	29/30	0	0
+NC_012821.1	Nemertea	Cephalothrix simula	atp6	213	correct	7.5e-79	29/30	0	0
+NC_024670.1	Nemertea	Tetrastemma olgarum	atp6	230	correct	2.8e-114	29/30	0	1
+NC_057068.1	Nemertea	Yininemertes pratensis	atp6	231	correct	3.3e-117	29/30	0	0
+NC_035255.1	Platyhelminthes	Macrostomum lignano	atp8	56	not found		0/30		
+NC_035256.1	Platyhelminthes	Stenostomum sthenum	atp8	43	not found		0/30		
+NC_010961.1	Onychophora	Metaperipatus inae	atp6	226	correct	1.3e-101	29/30	21	0
+NC_050392.1	Platyhelminthes	Syndesmis echinorum	atp8	55	not found		0/30		
+NC_072063.1	Platyhelminthes	Plagiorchis multiglandularis	atp6	171	correct	1.6e-75	30/30	0	0
+NC_009082.1	Onychophora	Epiperipatus biolleyi	atp6	226	correct	1.6e-103	29/30	12	0
+NC_030529.1	Platyhelminthes	Fischoederius cobboldi	atp6	172	correct	1.1e-100	30/30	6	0
+NC_056186.1	Platyhelminthes	Scutogyrus longicornis	atp6	170	correct	1.1e-74	30/30	0	0
+NC_014273.1	Onychophora	Opisthopatus cinctipes	atp6	225	correct	2.3e-101	29/30	21	0
+NC_046757.1	Platyhelminthes	Tetraonchus monenteron	atp6	172	correct	3.3e-63	30/30	0	0
+NC_015890.1	Onychophora	Oroperipatus sp. DVL-2011	atp6	226	correct	1.9e-97	29/30	9	0
+NC_082221.1	Platyhelminthes	Megalobenedenia derzhavini	atp6	170	correct	9.6e-76	30/30	0	0
+NC_021139.1	Platyhelminthes	Taenia madoquae	atp6	172	correct	3.3e-79	30/30	0	0
+NC_028425.1	Platyhelminthes	Anoplocephala perfoliata	atp6	172	correct	8.4e-82	30/30	0	0
+NC_009462.1	Platyhelminthes	Echinococcus vogeli	atp6	171	correct	3.3e-77	30/30	0	0
+NC_030518.1	Platyhelminthes	Echinochasmus japonicus	atp6	173	correct	4.8e-85	30/30	0	0
+NC_059797.1	Platyhelminthes	Notocotylus intestinalis	atp6	172	correct	2.4e-81	30/30	0	0
+NC_059570.1	Platyhelminthes	Apharyngostrigea pipientis	atp6	173	correct	1.8e-65	30/30	0	0
+NC_018761.1	Phoronida	Phoronopsis harmeri	atp6	231	correct	1.9e-81	29/30	0	0
+NC_030050.1	Platyhelminthes	Gyrodactylus kobayashii	atp6	171	correct	8.4e-63	30/30	0	0
+NC_034800.1	Platyhelminthes	Khawia sinensis	atp6	172	correct	3.9e-74	30/30	0	0
+NC_062638.1	Platyhelminthes	Capsala katsuwoni	atp6	168	correct	1.6e-75	30/30	-6	0
+NC_014886.1	Porifera	Oscarella malakhovi	atp8	67	correct	9.0e-25	29/30	0	0
+NC_073001.1	Platyhelminthes	Tristoma integrum	atp6	170	correct	9.9e-75	30/30	0	0
+NC_006990.1	Porifera	Geodia neptuni	atp8	64	correct	2.1e-33	30/30	0	0
+NC_041549.1	Placozoa	Polyplacotoma mediterranea	atp6	258	correct	3.3e-94	29/30	0	0
+NC_014876.1	Porifera	Halisarca harmelini	atp8	74	correct	9.3e-31	30/30	0	0
+NC_053937.1	Porifera	Aplysina gerardogreeni	atp8	78	correct	1.1e-26	30/30	0	0
+NC_008944.1	Porifera	Amphimedon queenslandica	atp8	74	correct	1.1e-14	30/30	18	0
+NC_006894.1	Porifera	Axinella corrugata	atp8	91	correct	5.1e-27	30/30	0	0
+NC_010210.1	Porifera	Ectyoplasia ferox	atp8	67	correct	3.3e-26	30/30	0	0
+NC_010208.1	Porifera	Chondrilla aff. nucula CHOND	atp8	78	correct	1.1e-32	30/30	0	0
+NC_035983.1	Porifera	Oscarella pearsei	atp8	67	correct	8.4e-27	29/30	0	0
+NC_022450.1	Porifera	Hymeniacidon sinapium	atp8	73	correct	8.1e-39	30/30	0	0
+NC_014860.1	Porifera	Plakina jani	atp8	65	correct	1.3e-31	29/30	0	0
+NC_014856.1	Porifera	Oscarella viridis	atp8	67	correct	2.2e-26	29/30	0	0
+NC_010216.1	Porifera	Igernella notabilis	atp8	68	correct	3.9e-20	30/30	0	0
+NC_020030.1	Priapulida	Halicryptus spinulosus	atp8	53	correct	2.1e-12	25/30	0	0
+NC_014863.1	Porifera	Oscarella lobularis	atp8	67	correct	5.7e-26	29/30	0	0
+NC_008557.1	Priapulida	Priapulus caudatus	atp8	56	correct	1.5e-09	25/30	9	0
+NC_018343.1	Porifera	Baikalospongia intermedia profundalis	atp8	85	correct	1.5e-41	30/30	0	0
+NC_015309.1	Placozoa	Placozoan sp. 'Shirahama'	atp6	253	correct	4.8e-114	29/30	0	0
+NC_008151.3	Placozoa	Trichoplax adhaerens	atp6	258	correct	1.1e-113	29/30	0	0
+NC_031407.1	Tardigrada	Ramazzottius varieornatus	atp8	53	correct	6.3e-07	26/30	0	0
+NC_014848.1	Tardigrada	Hypsibius dujardini	atp8	52	correct	1.7e-08	26/30	0	5
+NC_010217.1	Porifera	Plakinastrella cf. onkodes DVL-2011	atp6	248	correct	8.4e-137	30/30	0	0
+NC_015829.1	Tardigrada	Thulinius sp. DVL-2010	atp8	52	correct	2.5e-11	26/30	0	0
+NC_014868.1	Porifera	Plakortis simplex	atp6	248	correct	2.9e-137	30/30	0	0
+NC_010208.1	Porifera	Chondrilla aff. nucula CHOND	atp6	245	correct	3.6e-142	30/30	33	0
+NC_029220.1	Xenacoelomorpha	Xenoturbella profunda	atp8	54	correct	1.8e-09	26/30	0	0
+NC_037391.1	Porifera	Halichondria okadai	atp6	245	correct	2.4e-142	30/30	0	0
+NC_029218.1	Xenacoelomorpha	Xenoturbella hollandorum	atp8	54	correct	8.1e-08	26/30	0	0
+NC_036763.1	Xenacoelomorpha	Xenoturbella japonica	atp8	56	correct	1.5e-08	26/30	0	0
+NC_006991.1	Porifera	Tethya actinia	atp6	245	correct	1.7e-134	30/30	0	0
+NC_029219.1	Xenacoelomorpha	Xenoturbella monstrosa	atp8	54	correct	1.1e-08	26/30	0	0
+NC_016431.1	Porifera	Eunapius subterraneus	atp6	245	correct	5.1e-153	30/30	0	0
+NC_034946.1	Xenacoelomorpha	Paratomella rubra	atp8	59	not found		26/30		
+NC_072601.1	Porifera	Caulophacus iocasicus	atp6	243	correct	2.7e-97	30/30	0	0
+NC_010203.1	Porifera	Aplysina fulva	atp6	245	correct	1.2e-126	30/30	30	0
+NC_065020.1	Porifera	Terpios hoshinota	atp6	245	correct	2.1e-146	30/30	0	0
+NC_023834.1	Porifera	Polymastia littoralis	atp6	245	correct	3.0e-146	30/30	0	0
+NC_010201.1	Porifera	Amphimedon compressa	atp6	242	correct	2.4e-136	30/30	0	0
+NC_010218.1	Porifera	Vaceletia sp. GW948	atp6	236	correct	5.7e-110	30/30	0	0
+NC_029217.1	Xenacoelomorpha	Xenoturbella churro	atp8	54	correct	2.9e-08	26/30	0	0
+NC_085825.1	Porifera	Corvomeyenia everetti	atp6	245	correct	3.0e-152	30/30	0	0
+NC_008557.1	Priapulida	Priapulus caudatus	atp6	225	correct	6.3e-94	29/30	12	0
+NC_008556.1	Xenacoelomorpha	Xenoturbella bocki	atp8	54	correct	4.8e-08	26/30	0	0
+NC_018343.1	Porifera	Baikalospongia intermedia profundalis	atp6	245	correct	4.2e-154	30/30	0	0
+NC_020030.1	Priapulida	Halicryptus spinulosus	atp6	225	correct	1.5e-90	29/30	21	0
+NC_014885.1	Porifera	Plakina crypta	atp6	243	correct	1.1e-131	30/30	0	0
+NC_031407.1	Tardigrada	Ramazzottius varieornatus	atp6	220	correct	1.7e-76	29/30	33	0
+NC_015829.1	Tardigrada	Thulinius sp. DVL-2010	atp6	220	correct	6.3e-70	29/30	9	0
+NC_013568.1	Rotifera	Rotaria rotatoria	atp6	199	correct	2.1e-21	24/30	-9	0
+NC_014848.1	Tardigrada	Hypsibius dujardini	atp6	219	correct	9.6e-81	29/30	0	-1
+NC_008556.1	Xenacoelomorpha	Xenoturbella bocki	atp6	234	correct	2.0e-70	29/30	21	0
+NC_029219.1	Xenacoelomorpha	Xenoturbella monstrosa	atp6	234	correct	1.8e-68	29/30	54	0
+NC_029217.1	Xenacoelomorpha	Xenoturbella churro	atp6	234	correct	9.9e-70	29/30	54	0
+NC_029220.1	Xenacoelomorpha	Xenoturbella profunda	atp6	234	correct	3.6e-70	29/30	54	0
+NC_010472.1	Rotifera	Brachionus plicatilis	atp6	203	correct	2.3e-35	24/30	24	-1
+NC_029218.1	Xenacoelomorpha	Xenoturbella hollandorum	atp6	234	correct	1.4e-70	29/30	21	0
+NC_034947.1	Xenacoelomorpha	Baltalimania ylvae	atp6	235	correct	2.3e-50	29/30	39	0
+NC_036763.1	Xenacoelomorpha	Xenoturbella japonica	atp6	228	correct	7.8e-70	29/30	3	0
+NC_034948.1	Xenacoelomorpha	Isodiametra pulchra	atp6	228	correct	1.8e-45	29/30	81	0
+NC_034946.1	Xenacoelomorpha	Paratomella rubra	atp6	199	correct	6.6e-31	29/30	45	10
+NC_014578.1	Xenacoelomorpha	Symsagittifera roscoffensis	atp6	234	correct	5.1e-44	29/30	48	0
