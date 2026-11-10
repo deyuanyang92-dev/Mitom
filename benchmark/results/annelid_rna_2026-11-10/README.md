@@ -60,6 +60,36 @@ Most unconfirmed ends are ND4L (shares its transcript with ND4) and short, weakl
 *Sabella* 的 ND1、ND3 和 *W. pigra* 的 ND6，MitoM 原本都标为 "stop codon not determined"：转录组正好补上了 MitoM
 定不了的末端。MitoM had left three of these ends open ("stop codon not determined"); the RNA-seq closes them.
 
+## What clean data teach / 干净数据学到什么（`clean_pairs.txt`，23 对）
+
+先只用不会误导的数据：同一标本、reads 差异 < 1 %、PolyA 建库、蛋白基因深度 ≥ 100×、poly(A) reads ≥ 1,000、
+13 个蛋白基因齐全、无重复序列（排除 31 对：不同标本 24、poly(A) 太少 8、非 PolyA 5 …）。
+Clean pairs only: same specimen, < 1 % divergence, poly(A) library, depth >= 100x, >= 1,000 poly(A) reads, 13 genes.
+
+| 问题 / question | 结果 / result |
+|---|---|
+| poly(A) reads（非内部引发）停在哪里 / where poly(A) reads end | 蛋白基因 3′ 端 41.1 %，rRNA 3′ 端 47.4 %，tRNA 0.1 %，其他 11.4 % |
+| MitoM 注释为不完整终止 T / TA 的基因 / genes annotated with T / TA | 63 / 63 的最强位点就在注释末端（0–2 nt） |
+| 有自己 poly(A) 末端的比例 / genes with their own poly(A) end | ND1、CYTB 23/23 … ATP8 18/22；ND4L 3/23（17 种与 ND4 重叠，同一转录本） |
+| 表达排序在物种间的一致性 / expression ranking between species | Spearman 中位数 0.82（COX1–3 > ATP6、CYTB > ND 基因 > ATP8） |
+
+完整终止密码子附近的 146 个强位点（≥ 10 reads）/ the 146 strong sites at complete stop codons:
+
+| 情况 / case | 位点 / sites | 转录本末端 / transcript end |
+|---|---|---|
+| 不与下游重叠 / no overlap | 71 | 终止密码子后几个 nt（短 3′ UTR） |
+| 不与下游重叠 / no overlap | 14 | 正好在终止密码子 |
+| 与下游 tRNA 重叠 / overlaps a tRNA | 27 | 在 tRNA 起点切开，留 T / TA |
+| 与下游 tRNA 重叠 / overlaps a tRNA | 23 | 保留完整终止密码子 |
+| 与下游蛋白基因重叠 / overlaps a protein gene | 8 | 在下游基因起点切开，留 T / TA |
+| 其他 / other | 3 | — |
+
+结论：转录组有用，且信号干净——注释与 poly(A) 大多一致，MitoM 的不完整终止全部被证实，表达排序可重复（可用来
+判断 ORF）。转录组真正能补上的是基因组本身定不了的末端：终止密码子与下游 tRNA 重叠时，转录本是在 tRNA 前切开
+（T / TA）还是保留完整终止密码子，两种都常见，只有 poly(A) 位点能逐个确定。
+RNA-seq is useful and clean; what it adds is the end the genome cannot decide: where a stop codon overlaps the next
+tRNA, the mRNA is cut before the tRNA (T / TA) about as often as it keeps the full stop.
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
