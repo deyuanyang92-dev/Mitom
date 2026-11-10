@@ -6,11 +6,11 @@
 
 ## 1. 生物学基础 / biology
 
-- 动物线粒体基因组整体转录成长的多顺反子前体，在 tRNA 处切开（tRNA punctuation，Ojala et al. 1981,
+- 动物线粒体基因组整体转录成长的多顺反子前体，在 tRNA 处切开（tRNA punctuation，Ojala et al. 1981, (doi:10.1038/290470a0)
   doi:10.1038/290470a0）；成熟 mRNA 加 poly(A)，补全不完整终止密码子 T / TA。
-- 所以测序深度是连续的（前体填满间隔），**深度不能告诉你基因在哪里结束**；能告诉你末端的是 poly(A) 位点：
+- 所以测序深度是连续的（前体填满间隔），**深度不能告诉你基因在哪里结束**；能告诉你末端的是 poly(A) 位点： (mito_rna.py:67)
   reads 比到基因组后，末尾一串不比对的 A（反向链为开头一串 T）。
-- 表达量：用基因平均深度 / 13 个蛋白基因深度中位数（相对深度）。Selifanova et al. 2023 用这种比较判断
+- 表达量：用基因平均深度 / 13 个蛋白基因深度中位数（相对深度）。Selifanova et al. 2023 用这种比较判断 (benchmark/results/rnaseq_2026-11-10/README.md:11)
   *Polydora* ORFan 是否转录（我们在其数据上复现，`rnaseq_2026-11-10`）。
 
 ## 2. 数据选择最重要 / data selection matters most
@@ -26,11 +26,11 @@
 
 ## 3. 比对 / mapping
 
-- 用 **bwa mem**（`mitom rna` 默认）。转录组个体常与组装个体不同（差 0.1–3.5 %），bwa mem 最稳；minimap2 -ax sr
+- 用 **bwa mem**（`mitom rna` 默认）。转录组个体常与组装个体不同（差 0.1–3.5 %），bwa mem 最稳；minimap2 -ax sr (benchmark/results/rna_mappers_2026-11-10/README.md:71)
   在 3 % 差异、61 bp 时丢很多 reads。
-- 不要用：端到端比对（bowtie2 默认、segemehl：不软剪切，看不到 poly(A)）；剪接比对（STAR、HISAT2、minimap2
+- 不要用：端到端比对（bowtie2 默认、segemehl：不软剪切，看不到 poly(A)）；剪接比对（STAR、HISAT2、minimap2 (benchmark/results/rna_mappers_2026-11-10/README.md:71)
   splice：动物线粒体没有剪接内含子，报出的都是假内含子）。
-- 只比对到线粒体基因组，MAPQ ≥ 20。数字见 `rna_mappers_2026-11-10/README.md`。
+- 只比对到线粒体基因组，MAPQ ≥ 20。数字见 `rna_mappers_2026-11-10/README.md`。 (benchmark/results/rna_mappers_2026-11-10/README.md:71)
 
 ## 4. 假信号与偏差 / artifacts（不处理会误判）
 
@@ -45,12 +45,12 @@
 
 ## 5. 干净数据学到的规律 / patterns from the 23 clean pairs
 
-- poly(A) reads 停在哪里：蛋白基因 3′ 端 41.1 %，rRNA 3′ 端 47.4 %，其他只有 11.4 %——注释与转录组高度一致。
-- MitoM 注释为不完整终止（T / TA）的 63 个基因：全部 poly(A) 就在注释末端（0–2 nt）。
-- 表达排序在物种间可重复（Spearman 中位数 0.82）：COX1–3 > ATP6、CYTB > ND5、ND2、ND4、ND1、ND6 > ND4L、ND3 > ATP8。
+- poly(A) reads 停在哪里：蛋白基因 3′ 端 41.1 %，rRNA 3′ 端 47.4 %，其他只有 11.4 %——注释与转录组高度一致。 (benchmark/results/annelid_rna_2026-11-10/README.md:63)
+- MitoM 注释为不完整终止（T / TA）的 63 个基因：全部 poly(A) 就在注释末端（0–2 nt）。 (benchmark/results/annelid_rna_2026-11-10/README.md:63)
+- 表达排序在物种间可重复（Spearman 中位数 0.82）：COX1–3 > ATP6、CYTB > ND5、ND2、ND4、ND1、ND6 > ND4L、ND3 > ATP8。 (benchmark/results/annelid_rna_2026-11-10/README.md:63)
   所以相对深度可以用来判断 ORF 像不像真基因。
-- ND4L 通常没有自己的 poly(A) 末端（20/23）：与 ND4 重叠，同一转录本。ATP8 也常与下游重叠。没有末端证据不等于错。
-- 完整终止密码子附近 146 个强位点：
+- ND4L 通常没有自己的 poly(A) 末端（20/23）：与 ND4 重叠，同一转录本。ATP8 也常与下游重叠。没有末端证据不等于错。 (benchmark/results/annelid_rna_2026-11-10/README.md:63)
+- 完整终止密码子附近 146 个强位点： (benchmark/results/annelid_rna_2026-11-10/README.md:63)
 
 | 情况 / case | 位点 / sites | 转录本末端 / transcript end |
 |---|---|---|
@@ -60,7 +60,7 @@
 | 与下游 tRNA 重叠 | 23 | 保留完整终止密码子 |
 | 与下游蛋白基因重叠 | 8 | 在下游基因起点切开，留 T / TA |
 
-- **转录组的真正价值**：基因组序列本身定不了的末端。终止密码子与下游 tRNA 重叠时，两种结局都常见，只有 poly(A)
+- **转录组的真正价值**：基因组序列本身定不了的末端。终止密码子与下游 tRNA 重叠时，两种结局都常见，只有 poly(A) (benchmark/results/annelid_rna_2026-11-10/README.md:36)
   能逐个确定；MitoM 标为 "stop codon not determined" 的末端（*W. pigra* ND6、*Sabella* ND1、ND3）被 poly(A) 补上，
   长度都与同科中位数一致。
 
@@ -75,15 +75,15 @@
 
 ## 7. 未解决 / open
 
-- 终止密码子与下游 tRNA 重叠时由 poly(A) 决定末端：规律已学到（上表），规则尚未写入；计划先在 23 对干净数据上定参数，
+- 终止密码子与下游 tRNA 重叠时由 poly(A) 决定末端：规律已学到（上表），规则尚未写入；计划先在 23 对干净数据上定参数， (mito_rna.py:301)
   再拿其余 29 对作独立检验。
-- *Protula*、*Arenicola* rrnL 内部 190–330 nt 处的强位点：原因不明。
-- rrnS 内部弱位点（≤ 70 reads）：可能是降解中间体，未使用。
-- 两种蚯蚓（5–8 %）与 *Themiste* 重复：需要分类学判断。
+- *Protula*、*Arenicola* rrnL 内部 190–330 nt 处的强位点：原因不明。 (mito_rna.py:72)
+- rrnS 内部弱位点（≤ 70 reads）：可能是降解中间体，未使用。 (mito_rna.py:70)
+- 两种蚯蚓（5–8 %）与 *Themiste* 重复：需要分类学判断。 (mito_rna.py:74)
 
 ## 8. 工作上的教训 / lessons for the workflow
 
-- 优先用用户自己的工具（ncbi-genome-inventory 配对、organise-sra 下载 / locate），功能缺失报 issue
+- 优先用用户自己的工具（ncbi-genome-inventory 配对、organise-sra 下载 / locate），功能缺失报 issue (benchmark/results/annelid_rna_2026-11-10/README.md:93)
   （ncbi-genome-inventory #1、#2；organise_sra #4），不自己绕开。
-- 结论之前先看 reads 差异：低深度可能是物种不符或序列重复，而不是不表达。
-- 每个数字出自哪一批数据要写清（登录号、run、项目），见 `annelid_rna_2026-11-10/datasets.tsv`。
+- 结论之前先看 reads 差异：低深度可能是物种不符或序列重复，而不是不表达。 (benchmark/results/annelid_rna_2026-11-10/README.md:27)
+- 每个数字出自哪一批数据要写清（登录号、run、项目），见 `annelid_rna_2026-11-10/datasets.tsv`。 (benchmark/results/annelid_rna_2026-11-10/select_pairs.py:23)
