@@ -1,0 +1,222 @@
+accession	phylum	genus	status	found	missing	by_hmm	project_genes	project_only	mitom_only
+OZ484008.1	Annelida	Acromegalomma	ok	13			0		
+OX457054.1	Annelida	Lumbricus	ok	13			0		
+OZ374353.1	Annelida	Eulalia	ok	13			0		
+OZ077499.1	Annelida	Themiste	ok	11	cob,cox3		0		
+OZ287762.1	Annelida	Bispira	ok	13			0		
+OZ415943.1	Annelida	Melinna	ok	13			0		
+OZ306403.1	Annelida	Serpula	ok	12	atp8		0		
+OZ512324.1	Annelida	Tubificoides	ok	13			0		
+OZ337134.1	Annelida	Phyllodoce	ok	13			0		
+OZ024941.1	Annelida	Sabellastarte	ok	13			0		
+OZ201049.1	Annelida	Bimastos	ok	13			0		
+OZ479805.1	Annelida	Travisia	ok	13			0		
+OZ483948.1	Annelida	Spirobrachia	ok	13			0		
+LR992058.1	Annelida	Olavius	ok	13			0		
+OX465594.1	Annelida	Alentia	ok	13			0		
+OZ022248.1	Annelida	Erpobdella	ok	13			0		
+OW387151.1	Annelida	Lepidonotus	ok	13			0		
+OZ511436.1	Annelida	Maea	ok	13			0		
+OZ197803.1	Annelida	Marifugia	ok	12	atp8		0		
+OX381722.1	Annelida	Harmothoe	ok	13			0		
+OX457035.1	Annelida	Protula	ok	13		atp6,atp8	0		
+OZ218097.1	Annelida	Lamellibrachia	ok	13			0		
+OZ374031.1	Annelida	Aporrectodea	ok	13			0		
+OZ038328.1	Annelida	Pterobdella	ok	13			0		
+OZ237793.1	Annelida	Hirudo	ok	13			0		
+OZ207832.1	Arthropoda	Ribautiana	ok	13			0		
+OU426992.1	Arthropoda	Chrysotoxum	ok	13			0		
+OZ335038.1	Arthropoda	Odontosia	ok	13			0		
+OZ454186.1	Arthropoda	Bourletiella	ok	13			0		
+OZ531890.1	Arthropoda	Epirrhoe	ok	13			0		
+OZ360166.1	Arthropoda	Stenocarus	ok	13			0		
+OZ488041.1	Arthropoda	Urocerus	ok	13			0		
+OZ218300.1	Arthropoda	Prionychus	ok	13			0		
+OZ208380.1	Arthropoda	Zygaena	ok	13			0		
+FR990065.1	Arthropoda	Glaucopsyche	ok	13			0		
+OZ125854.1	Arthropoda	Asellus	ok	13			0		
+OZ204470.1	Arthropoda	Eudonia	ok	13			0		
+OZ493524.1	Arthropoda	Acrodactyla	ok	13			0		
+OZ458249.1	Arthropoda	Heterogaster	ok	13			0		
+OZ501270.1	Arthropoda	Pandemis	ok	13			0		
+OZ374106.1	Arthropoda	Elachista	ok	13			0		
+OZ219181.1	Arthropoda	Dalopius	ok	13			0		
+OX376310.1	Arthropoda	Cantharis	ok	13			0		
+OW203752.1	Arthropoda	Yponomeuta	ok	13			0		
+OX387987.1	Arthropoda	Eugnorisma	ok	13			0		
+OY783224.1	Arthropoda	Panorpa	ok	13			0		
+OZ414062.1	Arthropoda	Collyria	ok	13			0		
+OU343046.1	Arthropoda	Ectemnius	ok	13			0		
+OZ555467.1	Arthropoda	Pelochrista	ok	13			0		
+OZ493361.1	Arthropoda	Plodia	ok	13			0		
+OU612076.1	Bryozoa	Membranipora	ok	13			0		
+OZ372520.1	Bryozoa	Parasmittina	ok	13		atp8	0		
+OX183142.1	Bryozoa	Cryptosula	ok	13		atp8	0		
+OY755169.1	Bryozoa	Watersipora	ok	13			0		
+OZ037774.1	Bryozoa	Bugula	ok	13			0		
+OZ492912.1	Bryozoa	Alcyonidium	ok	13		atp8	0		
+OW285198.1	Bryozoa	Bugulina	ok	13			0		
+OZ256471.1	Bryozoa	Schizoporella	ok	13		atp8	0		
+OZ555972.1	Chordata	Pristipomoides	ok	13			13		
+OZ541194.1	Chordata	Ranzania	ok	13			13		
+OZ001290.1	Chordata	Protomyctophum	ok	13			0		
+LS997785.1	Chordata	Homo	ok	13			0		
+OZ304724.1	Chordata	Ascidiella	ok	13			0		
+OZ541388.1	Chordata	Gnathanodon	ok	13			13		
+OZ541367.1	Chordata	Variola	ok	13			13		
+OV754669.1	Chordata	Acipenser	ok	13			0		
+OZ571035.1	Chordata	Jynx	ok	13			0		
+OX465241.1	Chordata	Borostomias	ok	13			0		
+OZ500225.1	Chordata	Riparia	ok	13			0		
+OY755015.1	Chordata	Limanda	ok	13			0		
+OZ556191.1	Chordata	Lutjanus	ok	13			13		
+OZ541342.1	Chordata	Nebrius	ok	13			13		
+OZ538908.1	Chordata	Maylandia	ok	13			0		
+OX438740.1	Chordata	Platichthys	ok	13			0		
+OZ556043.1	Chordata	Bodianus	ok	13			13		
+OZ556126.1	Chordata	Rhabdosargus	ok	13			13		
+OZ556007.1	Chordata	Decapterus	ok	13			13		
+OX596333.1	Chordata	Tetrao	ok	13			0		
+OZ565369.1	Chordata	Tyto	ok	13			0		
+OZ405034.1	Chordata	Epidalea	ok	13			0		
+OZ556087.1	Chordata	Albula	ok	13			13		
+OZ555966.1	Chordata	Chaetodon	ok	13			13		
+OZ077850.1	Chordata	Calonectris	ok	13			0		
+OZ221307.1	Cnidaria	Acropora	ok	13			0		
+OZ376738.1	Cnidaria	Rhizostoma	ok	13			0		
+OZ025225.1	Cnidaria	Anthopleura	ok	13			0		
+OZ201031.1	Cnidaria	Montipora	ok	13			0		
+OX393575.1	Cnidaria	Blastomussa	ok	13			0		
+OZ123468.1	Cnidaria	Turbinaria	ok	13			0		
+OU974085.1	Cnidaria	Diadumene	ok	13			0		
+OZ210521.1	Cnidaria	Madracis	ok	13			0		
+OZ575193.1	Cnidaria	Dipsastraea	ok	13			0		
+OZ353813.1	Cnidaria	Pavona	ok	13			0		
+OZ219147.1	Cnidaria	Stephanocoenia	ok	13			0		
+OZ362861.1	Cnidaria	Briareum	ok	13			0		
+OZ567717.1	Cnidaria	Virgularia	ok	13			0		
+OW052000.1	Cnidaria	Nematostella	ok	13			0		
+OZ179961.1	Cnidaria	Eunicella	ok	13			0		
+OZ118745.1	Cnidaria	Echinopora	ok	13			0		
+OZ123639.1	Cnidaria	Stylophora	ok	13			0		
+OZ026610.1	Cnidaria	Micromussa	ok	13			0		
+OZ511313.1	Cnidaria	Cylista	ok	13			0		
+OZ034980.1	Cnidaria	Siderastrea	ok	13			0		
+OZ306287.1	Cnidaria	Actinia	ok	13			0		
+OZ177640.1	Cnidaria	Duncanopsammia	ok	13			0		
+OY855917.1	Cnidaria	Meandrina	ok	13			0		
+OZ199841.1	Cnidaria	Kudoa	ok	8	atp6,atp8,cox3,nad2,nad4		0		
+OZ482497.1	Cnidaria	Sibopathes	ok	13			0		
+OZ352296.1	Ctenophora	Bolinopsis	ok	13			0		
+OZ318085.1	Ctenophora	Bolinopsis	ok	13			0		
+LR745847.1	Echinodermata	Asterias	ok	13			0		
+OX465123.1	Echinodermata	Luidia	ok	13			0		
+OZ020266.1	Echinodermata	Astropecten	ok	13			0		
+OZ221963.1	Echinodermata	Ophiocomina	ok	13			0		
+OZ478964.1	Echinodermata	Dytaster	ok	13			0		
+OU452241.1	Echinodermata	Marthasterias	ok	13			0		
+OZ282494.1	Echinodermata	Asterina	ok	13			0		
+OZ222537.1	Echinodermata	Anseropoda	ok	13			0		
+OZ485177.1	Echinodermata	Ophiothrix	ok	13		atp8	0		
+OZ022575.1	Echinodermata	Arbacia	ok	13			0		
+OY727104.1	Echinodermata	Antedon	ok	13			0		
+OZ286335.1	Echinodermata	Echinocardium	ok	13			0		
+OZ324043.1	Echinodermata	Echinus	ok	13			0		
+OZ313344.1	Echinodermata	Acrocnida	ok	13			0		
+OZ546795.1	Echinodermata	Holothuria	ok	13			0		
+OZ171474.1	Echinodermata	Asterina	ok	13			0		
+OZ405236.1	Hemichordata	Saccoglossus	ok	13			0		
+OZ455081.1	Mollusca	Xenostrobus	ok	13		atp8	0		
+OZ375793.1	Mollusca	Ruditapes	ok	13			0		
+OY723432.1	Mollusca	Tridacna	ok	13			0		
+OZ495041.1	Mollusca	Sepia	ok	13			0		
+OZ410865.1	Mollusca	Phragmomphalina	ok	13			0		
+OZ222674.1	Mollusca	Sepietta	ok	13			0		
+LR777651.1	Mollusca	Acanthosepion	ok	13			13		
+OZ320957.1	Mollusca	Enteroxenos	ok	13			0		
+OZ282196.1	Mollusca	Uroteuthis	ok	13			0		
+OZ022541.4	Mollusca	Helminthope	ok	12	atp8		0		
+OZ249810.1	Mollusca	Phorcus	ok	13			0		
+OZ374605.1	Mollusca	Loripes	ok	13			0		
+OU744738.1	Mollusca	Steromphala	ok	13			0		
+OY804591.1	Mollusca	Bathymodiolus	ok	13			0		
+OZ263159.1	Mollusca	Mytilus	ok	13			0		
+OZ488755.1	Mollusca	Pholadidea	ok	13		atp8	0		
+OZ491268.1	Mollusca	Facelina	ok	13			0		
+OZ246040.1	Mollusca	Limaria	ok	12	atp8		0		
+OZ022487.1	Mollusca	Cerastoderma	ok	13			0		
+OZ377330.1	Mollusca	Acanthocardia	ok	13			0		
+OY993140.1	Mollusca	Physella	ok	13		atp8	0		
+OZ476777.1	Mollusca	Lunulicardia	ok	13			0		
+OY783233.1	Mollusca	Patella	ok	13			0		
+OZ485825.1	Mollusca	Janolus	ok	13			0		
+OZ388131.1	Mollusca	Kellia	ok	13			0		
+OZ038421.1	Nematoda	Caenorhabditis	ok	12	atp8		0		
+OZ181893.1	Nematoda	Auanema	ok	12	atp8		0		
+OZ057410.1	Nematoda	Allodiplogaster	ok	7	atp8,cob,cox2,nad1,nad2,nad3		0		
+OZ176700.1	Nematoda	Echinomermella	ok	12	atp8		0		
+OZ308410.1	Nematoda	Oesophagostomum	ok	12	atp8		0		
+OZ038432.1	Nematoda	Heterorhabditis	ok	12	atp8		0		
+OX375871.1	Nematoda	Heligmosomoides	ok	12	atp8		0		
+OZ060912.1	Nematoda	Propanagrolaimus	ok	12	atp8		0		
+OZ076388.1	Nematoda	Dictyocaulus	ok	12	atp8		0		
+OZ176142.1	Nematoda	Panagrolaimus	ok	12	atp8		0		
+OZ418192.1	Nematoda	Romanomermis	ok	12	atp8		0		
+OZ178482.1	Nematoda	Oscheius	ok	13			0		
+OZ222513.1	Nematoda	Spirocerca	ok	12	atp8		0		
+OZ570950.1	Nematoda	Dirofilaria	ok	12	atp8		0		
+OZ038461.1	Nematoda	Sphaerolaimus	ok	12	atp8		0		
+OZ271851.1	Nematoda	Trichuris	ok	13			0		
+OZ022262.1	Nematoda	Trichostrongylus	ok	12	atp8		0		
+OZ483363.1	Nematoda	Diplolaimella	ok	12	atp8		0		
+OZ038441.1	Nematoda	Litoditis	ok	12	atp8		0		
+OZ173927.1	Nematoda	Sphaerularia	ok	12	atp8		0		
+OZ125705.1	Nematoda	Acrobeloides	ok	12	atp8		0		
+OZ239434.1	Nematoda	Thelazia	ok	12	atp8		0		
+OZ476189.1	Nematoda	Acanthocheilonema	ok	13			0		
+OZ562635.1	Nematoda	Theristus	ok	12	atp8		0		
+OZ306388.1	Nematoda	Nematodirus	ok	12	atp8		0		
+OZ193908.1	Nematomorpha	Paragordius	ok	13		atp8	0		
+OX940686.1	Nematomorpha	Gordionus	ok	12	atp8		0		
+OZ038534.1	Nematomorpha	Gordius	ok	12	atp8		0		
+OZ176061.1	Nematomorpha	Paragordius	ok	13		atp8	0		
+OZ560157.1	Nematomorpha	Gordius	ok	12	atp8		0		
+OZ193919.1	Nematomorpha	Gordius	ok	12	atp8		0		
+OU343011.1	Nemertea	Lineus	ok	13			0		
+OZ368068.1	Nemertea	Leucocephalonemertes	ok	13			0		
+OZ470225.1	Nemertea	Parborlasia	ok	13			0		
+OZ479997.1	Nemertea	Lineus	ok	13			0		
+OX421840.1	Platyhelminthes	Sparganum	ok	12	atp8		12		
+OZ570379.1	Platyhelminthes	Eubothrium	ok	12	atp8		0		
+OZ482122.1	Platyhelminthes	Diversibipalium	ok	12	atp8		0		
+OX421841.1	Platyhelminthes	Spirometra	ok	12	atp8		12		
+OZ171481.1	Platyhelminthes	Opisthorchis	ok	12	atp8		0		
+NC_071928.1	Platyhelminthes	Sparganum	ok	12	atp8		12		
+OZ194986.1	Porifera	Haliclona	ok	13			0		
+OZ286059.1	Porifera	Aplysina	ok	13			0		
+OZ465199.1	Porifera	Murus	ok	13			0		
+OX422206.1	Porifera	Agelas	ok	13			0		
+OZ364656.1	Porifera	Ephydatia	ok	13			0		
+OZ204154.1	Porifera	Thenea	ok	13			0		
+OZ256945.1	Porifera	Pleroma	ok	13			0		
+OZ390394.1	Porifera	Cliona	ok	13			0		
+OZ563265.1	Porifera	Ircinia	ok	13			0		
+OX359203.1	Porifera	Chondrosia	ok	13			0		
+OZ017794.1	Porifera	Lycopodina	ok	12	nad4l		0		
+OZ194383.1	Porifera	Phakellia	ok	13			0		
+OZ181715.1	Porifera	Pachastrella	ok	13			0		
+OZ318138.1	Porifera	Craniella	ok	13			0		
+OY848932.1	Porifera	Xestospongia	ok	13			0		
+OX442438.1	Porifera	Spongilla	ok	13			0		
+OZ404874.1	Porifera	Geodia	ok	13			0		
+OZ026571.1	Porifera	Chondrilla	ok	13			0		
+OZ005756.1	Porifera	Spongia	ok	13			0		
+OZ579820.1	Porifera	Cliothosa	ok	13			0		
+OZ294092.1	Porifera	Biemna	ok	13			0		
+OZ404895.1	Porifera	Acanthascus	ok	13			0		
+OZ375630.1	Porifera	Lendenfeldia	ok	13			0		
+OZ463644.1	Porifera	Pione	ok	13			0		
+OZ495856.1	Porifera	Callyspongia	ok	13			0		
+OY783244.1	Xenacoelomorpha	Symsagittifera	ok	12	atp8		0		
+OZ296660.1	Xenacoelomorpha	Haplodiscus	ok	13		atp8	0		
+OZ076422.1	Xenacoelomorpha	Amphiscolops	ok	12	atp8		0		

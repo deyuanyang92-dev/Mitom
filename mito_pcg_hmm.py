@@ -337,8 +337,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--genetic_code", type=int, default=5, help="for records without /transl_table (default 5)")
     s.add_argument("--k", type=int, default=K, help=f"references per profile (default {K})")
     s.add_argument("--genes", default="", help="comma-separated genes to search (default: the missing ones)")
-    s.add_argument("--exclude_acc", default="", help="accessions left out of the references (benchmarks)")
-    s.add_argument("--exclude_genus", default="", help="genera left out of the references (benchmarks)")
+    s.add_argument("--exclude_acc", default="", help="accessions left out of the references (benchmarks; also "
+                   "$MITOM_EXCLUDE_REF)")
+    s.add_argument("--exclude_genus", default="", help="genera left out of the references (benchmarks; also "
+                   "$MITOM_EXCLUDE_GENUS)")
     s.add_argument("--report", default=None, help="report TSV (default <input folder>/pcg_hmm_report.tsv)")
     s.add_argument("--bin", default=None, help="folder with mafft, hmmbuild, hmmsearch")
     return p
@@ -350,8 +352,9 @@ def main(argv: Sequence[str] = None) -> int:
     files = [src] if src.is_file() else iter_gb_files(src)
     refs = load_refs(Path(a.refs))
     genes = [g for g in a.genes.split(",") if g] or None
-    ex_acc = {x for x in a.exclude_acc.split(",") if x}
-    ex_gen = {x for x in a.exclude_genus.split(",") if x}
+    import os                                       # (benchmarks: the record and its genus left out of the references)
+    ex_acc = {x for x in (a.exclude_acc + "," + os.environ.get("MITOM_EXCLUDE_REF", "")).split(",") if x}
+    ex_gen = {x for x in (a.exclude_genus + "," + os.environ.get("MITOM_EXCLUDE_GENUS", "")).split(",") if x}
     rows = []
     for f in files:
         recs = list(SeqIO.parse(str(f), "genbank"))

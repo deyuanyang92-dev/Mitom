@@ -1,0 +1,222 @@
+accession	source_accession	phylum	class	order	family	genus	species	genetic_code	code_assumed	topology	length	evidence_tier	annotation_method	refseq_created	structure_flags	mitoz_clade	split	retrieved
+OZ484008.1		Annelida			Sabellidae	Acromegalomma		5		circular	18181					Annelida-segmented-worms	test	2026-11-10
+OX457054.1		Annelida			Lumbricidae	Lumbricus		5		circular	15933					Annelida-segmented-worms	test	2026-11-10
+OZ374353.1		Annelida			Phyllodocidae	Eulalia		5		circular	16773					Annelida-segmented-worms	test	2026-11-10
+OZ077499.1		Annelida			Themistidae	Themiste		5		circular	15999					Annelida-segmented-worms	test	2026-11-10
+OZ287762.1		Annelida			Sabellidae	Bispira		5		circular	15503					Annelida-segmented-worms	test	2026-11-10
+OZ415943.1		Annelida			Melinnidae	Melinna		5		circular	16003					Annelida-segmented-worms	test	2026-11-10
+OZ306403.1		Annelida			Serpulidae	Serpula		5		circular	35292					Annelida-segmented-worms	test	2026-11-10
+OZ512324.1		Annelida			Naididae	Tubificoides		5		circular	17882					Annelida-segmented-worms	test	2026-11-10
+OZ337134.1		Annelida			Phyllodocidae	Phyllodoce		5		circular	17527					Annelida-segmented-worms	test	2026-11-10
+OZ024941.1		Annelida			Sabellidae	Sabellastarte		5		circular	15345					Annelida-segmented-worms	test	2026-11-10
+OZ201049.1		Annelida			Lumbricidae	Bimastos		5		circular	16574					Annelida-segmented-worms	test	2026-11-10
+OZ479805.1		Annelida			Opheliidae	Travisia		5		circular	17034					Annelida-segmented-worms	test	2026-11-10
+OZ483948.1		Annelida			Siboglinidae	Spirobrachia		5		circular	15218					Annelida-segmented-worms	test	2026-11-10
+LR992058.1		Annelida			Naididae	Olavius		5		circular	15730					Annelida-segmented-worms	test	2026-11-10
+OX465594.1		Annelida			Polynoidae	Alentia		5		circular	15368					Annelida-segmented-worms	test	2026-11-10
+OZ022248.1		Annelida			Erpobdellidae	Erpobdella		5		circular	19123					Annelida-segmented-worms	test	2026-11-10
+OW387151.1		Annelida			Polynoidae	Lepidonotus		5		circular	15577					Annelida-segmented-worms	test	2026-11-10
+OZ511436.1		Annelida			Magelonidae	Maea		5		circular	15412					Annelida-segmented-worms	test	2026-11-10
+OZ197803.1		Annelida			Serpulidae	Marifugia		5		circular	19138					Annelida-segmented-worms	test	2026-11-10
+OX381722.1		Annelida			Polynoidae	Harmothoe		5		circular	15367					Annelida-segmented-worms	test	2026-11-10
+OX457035.1		Annelida			Serpulidae	Protula		5		circular	21318					Annelida-segmented-worms	test	2026-11-10
+OZ218097.1		Annelida			Siboglinidae	Lamellibrachia		5		circular	15552					Annelida-segmented-worms	test	2026-11-10
+OZ374031.1		Annelida			Lumbricidae	Aporrectodea		5		circular	15382					Annelida-segmented-worms	test	2026-11-10
+OZ038328.1		Annelida			Piscicolidae	Pterobdella		5		circular	17551					Annelida-segmented-worms	test	2026-11-10
+OZ237793.1		Annelida			Hirudinidae	Hirudo		5		circular	18667					Annelida-segmented-worms	test	2026-11-10
+OZ207832.1		Arthropoda			Cicadellidae	Ribautiana		5		circular	17462					Arthropoda	test	2026-11-10
+OU426992.1		Arthropoda			Syrphidae	Chrysotoxum		5		circular	19366					Arthropoda	test	2026-11-10
+OZ335038.1		Arthropoda			Notodontidae	Odontosia		5		circular	17676					Arthropoda	test	2026-11-10
+OZ454186.1		Arthropoda			Bourletiellidae	Bourletiella		5		circular	14628					Arthropoda	test	2026-11-10
+OZ531890.1		Arthropoda			Geometridae	Epirrhoe		5		circular	17693					Arthropoda	test	2026-11-10
+OZ360166.1		Arthropoda			Curculionidae	Stenocarus		5		circular	20385					Arthropoda	test	2026-11-10
+OZ488041.1		Arthropoda			Siricidae	Urocerus		5		circular	19982					Arthropoda	test	2026-11-10
+OZ218300.1		Arthropoda			Tenebrionidae	Prionychus		5		circular	16258					Arthropoda	test	2026-11-10
+OZ208380.1		Arthropoda			Zygaenidae	Zygaena		5		circular	15444					Arthropoda	test	2026-11-10
+FR990065.1		Arthropoda			Lycaenidae	Glaucopsyche		5		circular	15228					Arthropoda	test	2026-11-10
+OZ125854.1		Arthropoda			Asellidae	Asellus		5		circular	16529					Arthropoda	test	2026-11-10
+OZ204470.1		Arthropoda			Crambidae	Eudonia		5		circular	15286					Arthropoda	test	2026-11-10
+OZ493524.1		Arthropoda			Ichneumonidae	Acrodactyla		5		circular	31431					Arthropoda	test	2026-11-10
+OZ458249.1		Arthropoda			Heterogastridae	Heterogaster		5		circular	17597					Arthropoda	test	2026-11-10
+OZ501270.1		Arthropoda			Tortricidae	Pandemis		5		circular	15777					Arthropoda	test	2026-11-10
+OZ374106.1		Arthropoda			Elachistidae	Elachista		5		circular	15460					Arthropoda	test	2026-11-10
+OZ219181.1		Arthropoda			Elateridae	Dalopius		5		circular	16128					Arthropoda	test	2026-11-10
+OX376310.1		Arthropoda			Cantharidae	Cantharis		5		circular	17342					Arthropoda	test	2026-11-10
+OW203752.1		Arthropoda			Yponomeutidae	Yponomeuta		5		circular	16390					Arthropoda	test	2026-11-10
+OX387987.1		Arthropoda			Noctuidae	Eugnorisma		5		circular	15391					Arthropoda	test	2026-11-10
+OY783224.1		Arthropoda			Panorpidae	Panorpa		5		circular	16386					Arthropoda	test	2026-11-10
+OZ414062.1		Arthropoda			Ichneumonidae	Collyria		5		circular	36748					Arthropoda	test	2026-11-10
+OU343046.1		Arthropoda			Crabronidae	Ectemnius		5		circular	29669					Arthropoda	test	2026-11-10
+OZ555467.1		Arthropoda			Tortricidae	Pelochrista		5		circular	16895					Arthropoda	test	2026-11-10
+OZ493361.1		Arthropoda			Pyralidae	Plodia		5		circular	15266					Arthropoda	test	2026-11-10
+OU612076.1		Bryozoa			Membraniporidae	Membranipora		5		circular	14741					Bryozoa	test	2026-11-10
+OZ372520.1		Bryozoa			Smittinidae	Parasmittina		5		circular	14224					Bryozoa	test	2026-11-10
+OX183142.1		Bryozoa			Cryptosulidae	Cryptosula		5		circular	16131					Bryozoa	test	2026-11-10
+OY755169.1		Bryozoa			Watersiporidae	Watersipora		5		circular	14144					Bryozoa	test	2026-11-10
+OZ037774.1		Bryozoa			Bugulidae	Bugula		5		circular	15248					Bryozoa	test	2026-11-10
+OZ492912.1		Bryozoa			Alcyonidiidae	Alcyonidium		5		circular	55780					Bryozoa	test	2026-11-10
+OW285198.1		Bryozoa			Bugulidae	Bugulina		5		circular	14440					Bryozoa	test	2026-11-10
+OZ256471.1		Bryozoa			Schizoporellidae	Schizoporella		5		circular	18454					Bryozoa	test	2026-11-10
+OZ555972.1		Chordata			Lutjanidae	Pristipomoides		2		circular	16525					Chordata	test	2026-11-10
+OZ541194.1		Chordata			Molidae	Ranzania		2		circular	16479					Chordata	test	2026-11-10
+OZ001290.1		Chordata			Myctophidae	Protomyctophum		2		circular	18161					Chordata	test	2026-11-10
+LS997785.1		Chordata			Hominidae	Homo		2		circular	16569					Chordata	test	2026-11-10
+OZ304724.1		Chordata			Ascidiidae	Ascidiella		2		circular	19367					Chordata	test	2026-11-10
+OZ541388.1		Chordata			Carangidae	Gnathanodon		2		circular	16556					Chordata	test	2026-11-10
+OZ541367.1		Chordata			Serranidae	Variola		2		circular	16775					Chordata	test	2026-11-10
+OV754669.1		Chordata			Acipenseridae	Acipenser		2		circular	16488					Chordata	test	2026-11-10
+OZ571035.1		Chordata			Picidae	Jynx		2		circular	16832					Chordata	test	2026-11-10
+OX465241.1		Chordata			Stomiidae	Borostomias		2		circular	17771					Chordata	test	2026-11-10
+OZ500225.1		Chordata			Hirundinidae	Riparia		2		circular	18011					Chordata	test	2026-11-10
+OY755015.1		Chordata			Pleuronectidae	Limanda		2		circular	17193					Chordata	test	2026-11-10
+OZ556191.1		Chordata			Lutjanidae	Lutjanus		2		circular	16537					Chordata	test	2026-11-10
+OZ541342.1		Chordata			Ginglymostomatidae	Nebrius		2		circular	16692					Chordata	test	2026-11-10
+OZ538908.1		Chordata			Cichlidae	Maylandia		2		circular	16582					Chordata	test	2026-11-10
+OX438740.1		Chordata			Pleuronectidae	Platichthys		2		circular	17525					Chordata	test	2026-11-10
+OZ556043.1		Chordata			Labridae	Bodianus		2		circular	16503					Chordata	test	2026-11-10
+OZ556126.1		Chordata			Sparidae	Rhabdosargus		2		circular	16655					Chordata	test	2026-11-10
+OZ556007.1		Chordata			Carangidae	Decapterus		2		circular	16540					Chordata	test	2026-11-10
+OX596333.1		Chordata			Phasianidae	Tetrao		2		circular	16682					Chordata	test	2026-11-10
+OZ565369.1		Chordata			Tytonidae	Tyto		2		circular	18688					Chordata	test	2026-11-10
+OZ405034.1		Chordata			Bufonidae	Epidalea		2		circular	17583					Chordata	test	2026-11-10
+OZ556087.1		Chordata			Albulidae	Albula		2		circular	16378					Chordata	test	2026-11-10
+OZ555966.1		Chordata			Chaetodontidae	Chaetodon		2		circular	16490					Chordata	test	2026-11-10
+OZ077850.1		Chordata			Procellariidae	Calonectris		2		circular	19945					Chordata	test	2026-11-10
+OZ221307.1		Cnidaria			Acroporidae	Acropora		4		circular	18480						test	2026-11-10
+OZ376738.1		Cnidaria			Rhizostomatidae	Rhizostoma		4		circular	15960						test	2026-11-10
+OZ025225.1		Cnidaria			Actiniidae	Anthopleura		4		circular	20039						test	2026-11-10
+OZ201031.1		Cnidaria			Acroporidae	Montipora		4		circular	17858						test	2026-11-10
+OX393575.1		Cnidaria			Plerogyridae	Blastomussa		4		circular	17380						test	2026-11-10
+OZ123468.1		Cnidaria			Dendrophylliidae	Turbinaria		4		circular	18879						test	2026-11-10
+OU974085.1		Cnidaria			Diadumenidae	Diadumene		4		circular	17552						test	2026-11-10
+OZ210521.1		Cnidaria			Pocilloporidae	Madracis		4		circular	17081						test	2026-11-10
+OZ575193.1		Cnidaria			Merulinidae	Dipsastraea		4		circular	16867						test	2026-11-10
+OZ353813.1		Cnidaria			Agariciidae	Pavona		4		circular	18377						test	2026-11-10
+OZ219147.1		Cnidaria			Astrocoeniidae	Stephanocoenia		4		circular	19461						test	2026-11-10
+OZ362861.1		Cnidaria			Briareidae	Briareum		4		circular	18996						test	2026-11-10
+OZ567717.1		Cnidaria			Virgulariidae	Virgularia		4		circular	18761						test	2026-11-10
+OW052000.1		Cnidaria			Edwardsiidae	Nematostella		4		circular	16385						test	2026-11-10
+OZ179961.1		Cnidaria			Eunicellidae	Eunicella		4		circular	19264						test	2026-11-10
+OZ118745.1		Cnidaria			Merulinidae	Echinopora		4		circular	18274						test	2026-11-10
+OZ123639.1		Cnidaria			Pocilloporidae	Stylophora		4		circular	16880						test	2026-11-10
+OZ026610.1		Cnidaria			Lobophylliidae	Micromussa		4		circular	18247						test	2026-11-10
+OZ511313.1		Cnidaria			Sagartiidae	Cylista		4		circular	17448						test	2026-11-10
+OZ034980.1		Cnidaria			Rhizangiidae	Siderastrea		4		circular	19387						test	2026-11-10
+OZ306287.1		Cnidaria			Actiniidae	Actinia		4		circular	20692						test	2026-11-10
+OZ177640.1		Cnidaria			Dendrophylliidae	Duncanopsammia		4		circular	18967						test	2026-11-10
+OY855917.1		Cnidaria			Meandrinidae	Meandrina		4		circular	17196						test	2026-11-10
+OZ199841.1		Cnidaria			Kudoidae	Kudoa		4		circular	18219						test	2026-11-10
+OZ482497.1		Cnidaria			Cladopathidae	Sibopathes		4		circular	17734						test	2026-11-10
+OZ352296.1		Ctenophora			Bolinopsidae	Bolinopsis		4		circular	14818						test	2026-11-10
+OZ318085.1		Ctenophora			Bolinopsidae	Bolinopsis		4		circular	14455						test	2026-11-10
+LR745847.1		Echinodermata			Asteriidae	Asterias		9		circular	16418					Echinodermata	test	2026-11-10
+OX465123.1		Echinodermata			Luidiidae	Luidia		9		circular	16429					Echinodermata	test	2026-11-10
+OZ020266.1		Echinodermata			Astropectinidae	Astropecten		9		circular	16335					Echinodermata	test	2026-11-10
+OZ221963.1		Echinodermata			Ophiocomidae	Ophiocomina		9		circular	17903					Echinodermata	test	2026-11-10
+OZ478964.1		Echinodermata			Astropectinidae	Dytaster		9		circular	16259					Echinodermata	test	2026-11-10
+OU452241.1		Echinodermata			Asteriidae	Marthasterias		9		circular	16168					Echinodermata	test	2026-11-10
+OZ282494.1		Echinodermata			Asterinidae	Asterina		9		circular	16412					Echinodermata	test	2026-11-10
+OZ222537.1		Echinodermata			Asterinidae	Anseropoda		9		circular	16421					Echinodermata	test	2026-11-10
+OZ485177.1		Echinodermata			Ophiotrichidae	Ophiothrix		9		circular	16125					Echinodermata	test	2026-11-10
+OZ022575.1		Echinodermata			Arbaciidae	Arbacia		9		circular	15740					Echinodermata	test	2026-11-10
+OY727104.1		Echinodermata			Antedonidae	Antedon		9		circular	15844					Echinodermata	test	2026-11-10
+OZ286335.1		Echinodermata			Loveniidae	Echinocardium		9		circular	15767					Echinodermata	test	2026-11-10
+OZ324043.1		Echinodermata			Echinidae	Echinus		9		circular	15718					Echinodermata	test	2026-11-10
+OZ313344.1		Echinodermata			Amphiuridae	Acrocnida		9		circular	16531					Echinodermata	test	2026-11-10
+OZ546795.1		Echinodermata			Holothuriidae	Holothuria		9		circular	15835					Echinodermata	test	2026-11-10
+OZ171474.1		Echinodermata			Asterinidae	Asterina		9		circular	16457					Echinodermata	test	2026-11-10
+OZ405236.1		Hemichordata			Harrimaniidae	Saccoglossus		9		circular	21195						test	2026-11-10
+OZ455081.1		Mollusca			Modiolidae	Xenostrobus		5		circular	14450					Mollusca	test	2026-11-10
+OZ375793.1		Mollusca			Veneridae	Ruditapes		5		circular	21209					Mollusca	test	2026-11-10
+OY723432.1		Mollusca			Cardiidae	Tridacna		5		circular	24955					Mollusca	test	2026-11-10
+OZ495041.1		Mollusca			Sepiidae	Sepia		5		circular	16145					Mollusca	test	2026-11-10
+OZ410865.1		Mollusca			Solariellidae	Phragmomphalina		5		circular	17041					Mollusca	test	2026-11-10
+OZ222674.1		Mollusca			Sepiolidae	Sepietta		5		circular	18722					Mollusca	test	2026-11-10
+LR777651.1		Mollusca			Sepiidae	Acanthosepion		5		circular	16208					Mollusca	test	2026-11-10
+OZ320957.1		Mollusca			Eulimidae	Enteroxenos		5		circular	78945					Mollusca	test	2026-11-10
+OZ282196.1		Mollusca			Loliginidae	Uroteuthis		5		circular	17406					Mollusca	test	2026-11-10
+OZ022541.4		Mollusca			Rhodopidae	Helminthope		5		circular	32436					Mollusca	test	2026-11-10
+OZ249810.1		Mollusca			Trochidae	Phorcus		5		circular	17345					Mollusca	test	2026-11-10
+OZ374605.1		Mollusca			Lucinidae	Loripes		5		circular	17311					Mollusca	test	2026-11-10
+OU744738.1		Mollusca			Trochidae	Steromphala		5		circular	19173					Mollusca	test	2026-11-10
+OY804591.1		Mollusca			Modiolidae	Bathymodiolus		5		circular	17611					Mollusca	test	2026-11-10
+OZ263159.1		Mollusca			Mytilidae	Mytilus		5		circular	16744					Mollusca	test	2026-11-10
+OZ488755.1		Mollusca			Pholadidae	Pholadidea		5		circular	17897					Mollusca	test	2026-11-10
+OZ491268.1		Mollusca			Facelinidae	Facelina		5		circular	14779					Mollusca	test	2026-11-10
+OZ246040.1		Mollusca			Limidae	Limaria		5		circular	42170					Mollusca	test	2026-11-10
+OZ022487.1		Mollusca			Cardiidae	Cerastoderma		5		circular	14944					Mollusca	test	2026-11-10
+OZ377330.1		Mollusca			Cardiidae	Acanthocardia		5		circular	16788					Mollusca	test	2026-11-10
+OY993140.1		Mollusca			Physidae	Physella		5		circular	15356					Mollusca	test	2026-11-10
+OZ476777.1		Mollusca			Cardiidae	Lunulicardia		5		circular	35394					Mollusca	test	2026-11-10
+OY783233.1		Mollusca			Patellidae	Patella		5		circular	14935					Mollusca	test	2026-11-10
+OZ485825.1		Mollusca			Zephyrinidae	Janolus		5		circular	17633					Mollusca	test	2026-11-10
+OZ388131.1		Mollusca			Lasaeidae	Kellia		5		circular	28396					Mollusca	test	2026-11-10
+OZ038421.1		Nematoda			Rhabditidae	Caenorhabditis		5		circular	14268					Nematoda	test	2026-11-10
+OZ181893.1		Nematoda			Rhabditidae	Auanema		5		circular	17484					Nematoda	test	2026-11-10
+OZ057410.1		Nematoda			Diplogasteridae	Allodiplogaster		5		circular	14666					Nematoda	test	2026-11-10
+OZ176700.1		Nematoda			Benthimermithidae	Echinomermella		5		circular	21978					Nematoda	test	2026-11-10
+OZ308410.1		Nematoda			Strongylidae	Oesophagostomum		5		circular	13650					Nematoda	test	2026-11-10
+OZ038432.1		Nematoda			Heterorhabditidae	Heterorhabditis		5		circular	18681					Nematoda	test	2026-11-10
+OX375871.1		Nematoda			Heligmosomidae	Heligmosomoides		5		circular	13666					Nematoda	test	2026-11-10
+OZ060912.1		Nematoda			Panagrolaimidae	Propanagrolaimus		5		circular	14792					Nematoda	test	2026-11-10
+OZ076388.1		Nematoda			Metastrongylidae	Dictyocaulus		5		circular	13300					Nematoda	test	2026-11-10
+OZ176142.1		Nematoda			Panagrolaimidae	Panagrolaimus		5		circular	15356					Nematoda	test	2026-11-10
+OZ418192.1		Nematoda			Mermithidae	Romanomermis		5		circular	15546					Nematoda	test	2026-11-10
+OZ178482.1		Nematoda			Rhabditidae	Oscheius		5		circular	47492					Nematoda	test	2026-11-10
+OZ222513.1		Nematoda			Thelaziidae	Spirocerca		5		circular	13807					Nematoda	test	2026-11-10
+OZ570950.1		Nematoda			Onchocercidae	Dirofilaria		5		circular	13813					Nematoda	test	2026-11-10
+OZ038461.1		Nematoda			Sphaerolaimidae	Sphaerolaimus		5		circular	14754					Nematoda	test	2026-11-10
+OZ271851.1		Nematoda			Trichuridae	Trichuris		5		circular	14288					Nematoda	test	2026-11-10
+OZ022262.1		Nematoda			Trichostrongylidae	Trichostrongylus		5		circular	13693					Nematoda	test	2026-11-10
+OZ483363.1		Nematoda			Monhysteridae	Diplolaimella		5		circular	12860					Nematoda	test	2026-11-10
+OZ038441.1		Nematoda			Rhabditidae	Litoditis		5		circular	14511					Nematoda	test	2026-11-10
+OZ173927.1		Nematoda			Sphaerulariidae	Sphaerularia		5		circular	16467					Nematoda	test	2026-11-10
+OZ125705.1		Nematoda			Cephalobidae	Acrobeloides		5		circular	37708					Nematoda	test	2026-11-10
+OZ239434.1		Nematoda			Thelaziidae	Thelazia		5		circular	13662					Nematoda	test	2026-11-10
+OZ476189.1		Nematoda			Onchocercidae	Acanthocheilonema		5		circular	13727					Nematoda	test	2026-11-10
+OZ562635.1		Nematoda			Xyalidae	Theristus		5		circular	22976					Nematoda	test	2026-11-10
+OZ306388.1		Nematoda			Molineidae	Nematodirus		5		circular	13659					Nematoda	test	2026-11-10
+OZ193908.1		Nematomorpha			Gordiidae	Paragordius		5		circular	15693						test	2026-11-10
+OX940686.1		Nematomorpha			Parachordodidae	Gordionus		5		circular	15085						test	2026-11-10
+OZ038534.1		Nematomorpha			Gordiidae	Gordius		5		circular	14798						test	2026-11-10
+OZ176061.1		Nematomorpha			Gordiidae	Paragordius		5		circular	15693						test	2026-11-10
+OZ560157.1		Nematomorpha			Gordiidae	Gordius		5		circular	14871						test	2026-11-10
+OZ193919.1		Nematomorpha			Gordiidae	Gordius		5		circular	14411						test	2026-11-10
+OU343011.1		Nemertea			Lineidae	Lineus		5		circular	15284					Nemertea-ribbon-worms	test	2026-11-10
+OZ368068.1		Nemertea			Lineidae	Leucocephalonemertes		5		circular	16760					Nemertea-ribbon-worms	test	2026-11-10
+OZ470225.1		Nemertea			Lineidae	Parborlasia		5		circular	16391					Nemertea-ribbon-worms	test	2026-11-10
+OZ479997.1		Nemertea			Lineidae	Lineus		5		circular	15318					Nemertea-ribbon-worms	test	2026-11-10
+OX421840.1		Platyhelminthes			Diphyllobothriidae	Sparganum		9		circular	13617						test	2026-11-10
+OZ570379.1		Platyhelminthes			Triaenophoridae	Eubothrium		9		circular	14234						test	2026-11-10
+OZ482122.1		Platyhelminthes			Geoplanidae	Diversibipalium		9		circular	16802						test	2026-11-10
+OX421841.1		Platyhelminthes			Diphyllobothriidae	Spirometra		9		circular	13642						test	2026-11-10
+OZ171481.1		Platyhelminthes			Opisthorchiidae	Opisthorchis		9		circular	18035						test	2026-11-10
+NC_071928.1		Platyhelminthes			Diphyllobothriidae	Sparganum		9		circular	13617						test	2026-11-10
+OZ194986.1		Porifera			Chalinidae	Haliclona		4		circular	18449					Porifera-sponges	test	2026-11-10
+OZ286059.1		Porifera			Aplysinidae	Aplysina		4		circular	19620					Porifera-sponges	test	2026-11-10
+OZ465199.1		Porifera			Vilesidae	Murus		4		circular	19925					Porifera-sponges	test	2026-11-10
+OX422206.1		Porifera			Agelasidae	Agelas		4		circular	22436					Porifera-sponges	test	2026-11-10
+OZ364656.1		Porifera			Spongillidae	Ephydatia		4		circular	23944					Porifera-sponges	test	2026-11-10
+OZ204154.1		Porifera			Theneidae	Thenea		4		circular	18540					Porifera-sponges	test	2026-11-10
+OZ256945.1		Porifera			Pleromidae	Pleroma		4		circular	18114					Porifera-sponges	test	2026-11-10
+OZ390394.1		Porifera			Clionaidae	Cliona		4		circular	22755					Porifera-sponges	test	2026-11-10
+OZ563265.1		Porifera			Irciniidae	Ircinia		4		circular	16779					Porifera-sponges	test	2026-11-10
+OX359203.1		Porifera			Chondrillidae	Chondrosia		4		circular	17451					Porifera-sponges	test	2026-11-10
+OZ017794.1		Porifera			Cladorhizidae	Lycopodina		4		circular	31099					Porifera-sponges	test	2026-11-10
+OZ194383.1		Porifera			Axinellidae	Phakellia		4		circular	24360					Porifera-sponges	test	2026-11-10
+OZ181715.1		Porifera			Pachastrellidae	Pachastrella		4		circular	19351					Porifera-sponges	test	2026-11-10
+OZ318138.1		Porifera			Tetillidae	Craniella		4		circular	18285					Porifera-sponges	test	2026-11-10
+OY848932.1		Porifera			Petrosiidae	Xestospongia		4		circular	18990					Porifera-sponges	test	2026-11-10
+OX442438.1		Porifera			Spongillidae	Spongilla		4		circular	28044					Porifera-sponges	test	2026-11-10
+OZ404874.1		Porifera			Geodiidae	Geodia		4		circular	17945					Porifera-sponges	test	2026-11-10
+OZ026571.1		Porifera			Chondrillidae	Chondrilla		4		circular	19283					Porifera-sponges	test	2026-11-10
+OZ005756.1		Porifera			Spongiidae	Spongia		4		circular	16669					Porifera-sponges	test	2026-11-10
+OZ579820.1		Porifera			Clionaidae	Cliothosa		4		circular	19860					Porifera-sponges	test	2026-11-10
+OZ294092.1		Porifera			Biemnidae	Biemna		4		circular	19021					Porifera-sponges	test	2026-11-10
+OZ404895.1		Porifera			Rossellidae	Acanthascus		4		circular	19628					Porifera-sponges	test	2026-11-10
+OZ375630.1		Porifera			Thorectidae	Lendenfeldia		4		circular	16779					Porifera-sponges	test	2026-11-10
+OZ463644.1		Porifera			Clionaidae	Pione		4		circular	19505					Porifera-sponges	test	2026-11-10
+OZ495856.1		Porifera			Callyspongiidae	Callyspongia		4		circular	20762					Porifera-sponges	test	2026-11-10
+OY783244.1		Xenacoelomorpha			Convolutidae	Symsagittifera		5		circular	14873						test	2026-11-10
+OZ296660.1		Xenacoelomorpha			Convolutidae	Haplodiscus		5		circular	19701						test	2026-11-10
+OZ076422.1		Xenacoelomorpha			Convolutidae	Amphiscolops		5		circular	14704						test	2026-11-10

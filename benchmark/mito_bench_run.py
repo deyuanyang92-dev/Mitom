@@ -59,7 +59,8 @@ TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_nati
 # runs/mitos2 of the same root) through `mitom import` with curation only (no rRNA HMM, introns, rescue)
 # mitom_prein = mitom_lo with --intron_fix no and the intermediates kept: raw/work/04.final_gb/ is the input of the intron
 # step (to rerun mito_intron.py alone while working on it)
-# mitom_lo = mitom_native without the record's own proteins among the core's references (refseq89m holds the proteins of
+# mitom_lo = mitom_native without the record's own proteins among the core's references (and, for the protein-gene
+# HMM step, without the references of its genus: $MITOM_EXCLUDE_GENUS) (refseq89m holds the proteins of
 # 8,012 RefSeq records, MITOS2 uses the same set): the leave-out accuracy a new genome can expect
 MITOFINDER: Dict[str, str] = {}          # {"script": ..., "py2": ...} from the command line
 REF_POOL: List[dict] = []                # --ref_pool records: {acc, organism, lineage, record}
@@ -100,7 +101,8 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
                  "--threads", str(threads), "--jobs", "1"]]           # in.fa: '>acc' + sequence, no taxonomy / topology
     if tool in ("mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitom_nocur", "mitom_prein"):   # annotation, MitoM steps, curation
         clade = row["mitoz_clade"] or EXTRA_CLADE.get(row.get("phylum", ""), "Animal")
-        return [[*(["env", f"MITOM_EXCLUDE_REF={acc}"] if tool in ("mitom_lo", "mitom_prein") else []),
+        return [[*(["env", f"MITOM_EXCLUDE_REF={acc}", f"MITOM_EXCLUDE_GENUS={row.get('genus') or ''}"]
+                   if tool in ("mitom_lo", "mitom_prein") else []),
                  sys.executable, str(PIPE / "mitom_pipeline.py"), "run", "-i", str(bare), "-o", str(out / "raw"),
                  "--clade", clade, "--genetic_code", code, "--threads", str(threads), "--max_tasks", "1",
                  *(["--if_reannotation_2", "auto"] if tool == "mitom_auto" else []),
