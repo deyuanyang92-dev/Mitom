@@ -29,6 +29,7 @@
 
 | 文件 | 范围 |
 |---|---|
+| topics/rnaseq_mito_annotation.md | RNA-seq 用于线粒体注释：数据选择（同项目 / 同标本、edit rate）、比对（bwa mem）、假信号（内部引发、重复序列、短基因偏差）、干净数据学到的末端规律、`mitom rna --refine` 规则、未解决问题 |
 | topics/genetic_codes_start_stop.md | 线粒体遗传密码表（2/4/5/9/13/14/21/24/33）、起止密码子、T/TA 不完整终止与 transl_except |
 | topics/trna_naming_anticodon.md | tRNA 命名：L1/L2、S1/S2 编号在 RefSeq 与 MITOS 中相反 → 只能按反密码子比较；/anticodon 常缺失 |
 | topics/ncbi_mito_submission_rules.md | NCBI 线粒体提交规则、RefSeq REVIEWED/PROVISIONAL 含义 |
