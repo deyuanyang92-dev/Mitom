@@ -1,0 +1,2 @@
+sample_name	length	label	label_from	topology	changed	reason
+NC_000931_shift	15619	circular	FASTA header text 'circular'	circular	no	nad6 runs across the sequence ends (its reference protein aligns 194 nt before and 262 nt after the junction)

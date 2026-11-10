@@ -1,0 +1,2 @@
+record	file	source	phylum	clade	genetic_code	code_from	support	codon_check	closest	group	note
+NC_000931_shift	NC_000931_shift.fasta	blastx (mito_classify)	Annelida	Annelida-segmented-worms	5	closest reference genomes	1.0	consistent	NC_000931 Platynereis dumerilii	Annelida_gc5	

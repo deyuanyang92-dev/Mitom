@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1256" viewBox="0 0 980 1256" role="img" aria-label="MitoM 工作流程（mitom run）">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1356" viewBox="0 0 980 1356" role="img" aria-label="MitoM 工作流程（mitom run）">
 <defs>
 <style>
 text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
@@ -15,7 +15,7 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 </defs>
 <rect x="0" y="0" width="980" height="100%" fill="#ffffff" />
 <text class="title" x="490" y="42" font-size="26" text-anchor="middle">MitoM 工作流程（mitom run）</text>
-<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">11 步，与终端的 [Step k/11] 一致</text>
+<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">12 步，与终端的 [Step k/12] 一致</text>
 <rect class="node-accent" x="140" y="112" width="700" height="72" />
 <text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">1 读入与去重</tspan><tspan x="490" dy="1.35em">同一基因组只留一条；qc/dedup_report.tsv</tspan></text>
 <path class="arrow" d="M 490 189 L 490 206" />
@@ -35,17 +35,20 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 <text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">6 补漏</tspan><tspan x="490" dy="1.35em">12S / 16S（rRNA HMM）、内含子；--rescue 时 MITOS2</tspan></text>
 <path class="arrow" d="M 490 689 L 490 706" />
 <rect class="node" x="140" y="712" width="700" height="72" />
-<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">7 校正</tspan><tspan x="490" dy="1.35em">按 NCBI 规范修整端点和基因名；标出非编码区</tspan></text>
+<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">7 校正</tspan><tspan x="490" dy="1.35em">按 NCBI 规范修整端点和基因名</tspan></text>
 <path class="arrow" d="M 490 789 L 490 806" />
 <rect class="node" x="140" y="812" width="700" height="72" />
-<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">8 NCBI 检查与提交文件</tspan><tspan x="490" dy="1.35em">table2asn → submission/</tspan></text>
+<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">8 未知 ORF 与非编码区</tspan><tspan x="490" dy="1.35em">受选择的 ORF 写成 CDS（qc/orf_report.tsv）；标出非编码区</tspan></text>
 <path class="arrow" d="M 490 889 L 490 906" />
 <rect class="node" x="140" y="912" width="700" height="72" />
-<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">9 与原注释比较</tspan><tspan x="490" dy="1.35em">qc/original_vs_mitom.tsv（GenBank 输入）</tspan></text>
+<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">9 NCBI 检查与提交文件</tspan><tspan x="490" dy="1.35em">table2asn → submission/</tspan></text>
 <path class="arrow" d="M 490 989 L 490 1006" />
 <rect class="node" x="140" y="1012" width="700" height="72" />
-<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">10 基因组圈图</tspan><tspan x="490" dy="1.35em">annotation/plots/</tspan></text>
+<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">10 与原注释比较</tspan><tspan x="490" dy="1.35em">qc/original_vs_mitom.tsv（GenBank 输入）</tspan></text>
 <path class="arrow" d="M 490 1089 L 490 1106" />
-<rect class="node-accent" x="140" y="1112" width="700" height="72" />
-<text x="490" y="1140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">11 整理输出</tspan><tspan x="490" dy="1.35em">summary.tsv、annotation/、submission/、qc/、input/、logs/</tspan></text>
+<rect class="node" x="140" y="1112" width="700" height="72" />
+<text x="490" y="1140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">11 基因组圈图</tspan><tspan x="490" dy="1.35em">annotation/plots/</tspan></text>
+<path class="arrow" d="M 490 1189 L 490 1206" />
+<rect class="node-accent" x="140" y="1212" width="700" height="72" />
+<text x="490" y="1240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">12 整理输出</tspan><tspan x="490" dy="1.35em">summary.tsv、annotation/、submission/、qc/、input/、logs/</tspan></text>
 </svg>

@@ -5,6 +5,15 @@ installed one.
 
 ## Unreleased
 
+### Changed (structure review of fb526c3)
+- ORFs and non-coding regions are their own step (`stage_orf_ncr`, step 8: `run` has 12 steps, `annotate` 8);
+  `stage_curate` does the curation only.
+- The ORF step runs `mito_orf.py` as a program, like the curation and the introns (crash isolation; when it fails the
+  records stay as they were); `tests/test_step_argv.py` checks its arguments. METHODS states which steps run as
+  programs and which in process (NCR, write-back, maps: light, pure Python, exceptions logged and skipped).
+- Golden case `annotate_rotated`: `annotate` on NC_000931 with its start moved 5,000 nt locks the rotation back to
+  cox1 (the existing `annotate_gb` input already starts at cox1).
+
 ### Changed (ORFs, after a literature / GitHub survey)
 - A frame that runs into a tRNA without a stop ends before the tRNA (tRNA punctuation; open 3' end when the tail is
   not T / TA), as Selifanova et al. 2023 define the Polydora ORFans: all three (ORFan-544 / -1060 / -427) are now

@@ -466,16 +466,24 @@ def stage_add_missing(r: RunState) -> Optional[int]:
 
 
 def stage_curate(r: RunState) -> Optional[int]:
-    """Boundary rules and NCBI gene names (mito_curate.py -> 05.curated/), ORFs of unknown function, non-coding
-    regions."""
+    """Boundary rules and NCBI gene names (mito_curate.py -> 05.curated/)."""
     steps = r.steps
     steps.start("curate", "Boundary rules for protein genes and rRNAs, NCBI gene names")
     r.curated = run_curate(r.args, r.final_dir, r.out_root)
     r.merge_dir = r.curated.gb_dir
+    steps.done(r.curated.summary, r.curated.ok)
+    return None
+
+
+def stage_orf_ncr(r: RunState) -> Optional[int]:
+    """Features of the sequence no gene covers, on the curated records in place: ORFs of unknown function
+    (mito_orf.py), then the non-coding regions (mito_ncr.py; an NCR names the ORFs reported but not written)."""
+    steps = r.steps
+    steps.start("orf_ncr", "ORFs of unknown function and non-coding regions")
     orf = run_orf(r.args, r.merge_dir, r.out_root)
     steps.info(f"unknown ORFs       : {orf.summary}")
-    steps.info(f"non-coding regions : {run_ncr(r.args, r.merge_dir, r.out_root, getattr(orf, 'notes', None)).summary}")
-    steps.done(r.curated.summary, r.curated.ok)
+    ncr = run_ncr(r.args, r.merge_dir, r.out_root, getattr(orf, "notes", None))
+    steps.done(f"non-coding regions: {ncr.summary}", orf.ok and ncr.ok)
     return None
 
 
@@ -557,10 +565,10 @@ def run_exit_code(r: RunState) -> int:
 
 # `mitom run` / `import` in order; one numbered step each on the terminal (run_stages: Steps(len(stages)))
 RUN_STAGES = (stage_input, stage_round1, stage_reorient, stage_round2, stage_write_final, stage_add_missing,
-              stage_curate, stage_ncbi, stage_compare, stage_maps, stage_output)
+              stage_curate, stage_orf_ncr, stage_ncbi, stage_compare, stage_maps, stage_output)
 # `mitom annotate`: one round, the steps after it as in `run`, the work layout (no comparison, no output layout)
-ANNOTATE_STAGES = (stage_input, stage_round1, stage_write_final, stage_add_missing, stage_curate, stage_ncbi,
-                   stage_maps)
+ANNOTATE_STAGES = (stage_input, stage_round1, stage_write_final, stage_add_missing, stage_curate, stage_orf_ncr,
+                   stage_ncbi, stage_maps)
 
 
 def workflow_groups(args: argparse.Namespace, ctx: RunContext) -> int:

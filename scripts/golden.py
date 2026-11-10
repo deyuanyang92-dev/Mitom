@@ -41,6 +41,9 @@ CASES: Dict[str, List[str]] = {
     # issues #7 / #8 / #9 (NCBI MZ052209.1, OZ287881.1, OZ346613.1), the default grouped layout
     "run_issues": ["mitom_pipeline.py", "run", "-i", "{DATA}/issues", "-o", "{OUT}", *COMMON],
     "annotate_gb": ["mitom_pipeline.py", "annotate", "-i", "{DATA}/NC_000931.gb", "-o", "{OUT}", *COMMON],
+    # annotate on a sequence whose start is moved 5,000 nt from cox1: locks the rotation `annotate` does without the
+    # round-2 check of `run` (review 2026-11-10)
+    "annotate_rotated": ["mitom_pipeline.py", "annotate", "-i", "{IN}/NC_000931_shift.fasta", "-o", "{OUT}", *COMMON],
     "curate_mitoz": ["mito_curate.py", "-i", "{DATA}/OW387151_mitoz.gbf", "-o", "{OUT}"],
 }
 SKIP_SUFFIX = (".pdf", ".png", ".sqn")
@@ -54,6 +57,9 @@ def make_inputs(d: Path) -> None:
         shutil.copy(DATA / f"{acc}.gb", d / "two" / f"{acc}.gb")
     rec = SeqIO.read(str(DATA / "NC_010217.gb"), "genbank")
     (d / "NC_010217.fasta").write_text(f">NC_010217\n{rec.seq}\n")
+    ann = SeqIO.read(str(DATA / "NC_000931.gb"), "genbank")         # circular, starts at cox1
+    seq = str(ann.seq)
+    (d / "NC_000931_shift.fasta").write_text(f">NC_000931_shift circular\n{seq[5000:] + seq[:5000]}\n")
 
 
 def keep(rel: str) -> bool:

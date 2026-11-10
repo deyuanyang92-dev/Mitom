@@ -114,38 +114,50 @@ class OrfResult(StepResult):
     notes: Optional[dict] = None
 
 
+def orf_cmd(gb_dir: Path, out: Path, code: int, mode: str, threads: int = 1, bin_dir: Optional[str] = None,
+            refs: Optional[List[str]] = None) -> List[str]:
+    """The mito_orf.py command of the ORF step (a program, like the curation and the introns: crash isolation)."""
+    here = Path(__file__).resolve().parent
+    return [sys.executable, "-W", "ignore", str(here / "mito_orf.py"), "-i", str(gb_dir), "-o", str(out),
+            "--genetic_code", str(int(code)), "--orf", mode, "--threads", str(int(threads)),
+            *(["--bin", str(bin_dir)] if bin_dir else []), *[x for r in (refs or []) for x in ("--ref", str(r))]]
+
+
 @optional_step("ORF")
 def run_orf(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
-    """mito_orf.annotate on all final records in gb_dir together, in place: ORFs of unknown function in the sequence
-    no gene covers - written as CDS orf<codons> "hypothetical protein" when a homolog shows selection (--orf yes,
-    default), reported in orf_report.tsv and as WARNINGs when not (--orf no: none)."""
+    """mito_orf.py on all final records in gb_dir together (each record's ORFs are homologs for the others), in
+    place: ORFs of unknown function in the sequence no exon covers - written as CDS when homologs show selection or a
+    known family names them (--orf yes, default), reported in orf_report.tsv and as WARNINGs when not (--orf no:
+    none). Runs as a program; when it fails the records stay as they were."""
     mode = getattr(args, "orf", "yes")
     if mode == "no":
         return StepResult("skipped (--orf no)")
-    import mito_orf
     files = sorted(gb_dir.rglob("*.gbf"))
-    recs_by = {f: list(SeqIO.parse(str(f), "genbank")) for f in files}
-    recs = [r for rs in recs_by.values() for r in rs]
-    if not recs:
+    if not files:
         return StepResult("no records")
-    from mito_common import iter_gb_files
-    refs = [r for x in (getattr(args, "orf_ref", None) or [])
-            for f in ([Path(x)] if Path(x).is_file() else iter_gb_files(Path(x))) for r in SeqIO.parse(str(f), "genbank")]
-    orfs = mito_orf.annotate(recs, int(args.genetic_code), mode, threads=int(getattr(args, "threads", 1) or 1),
-                             bin_dir=getattr(args, "intron_bin", None), refs=refs)
-    for f, rs in recs_by.items():
-        write_gb(rs, f)
+    work = out_root / "05.orf"
+    shutil.rmtree(work, ignore_errors=True)
+    p = run_tool(orf_cmd(gb_dir, work, int(args.genetic_code), mode, int(getattr(args, "threads", 1) or 1),
+                         getattr(args, "intron_bin", None), getattr(args, "orf_ref", None)))
+    if p.returncode:
+        logging.error(f"[ORF] failed (exit {p.returncode}): {p.stderr[-300:]} - records left without ORFs")
+        return StepResult("failed (see run.log): records left without ORFs", ok=False)
+    for f in files:                                    # mito_orf.py writes each input file to the same relative path
+        new = work / f.relative_to(gb_dir)
+        if new.exists():
+            shutil.move(str(new), str(f))
     report = reports_dir(out_root) / "orf_report.tsv"
-    from mito_common import write_tsv
-    write_tsv(report, mito_orf.COLUMNS, mito_orf.report_rows(orfs))
-    for o in orfs:                       # (a WARNING, not record_event: the record did not fail)
-        if not o.written:
-            logging.warning(f"[ORF] {o.record} {o.start + 1}..{o.end} ({o.codons} codons) not written: {o.cls}: "
-                            f"{mito_orf.evidence(o)}")
-    n_w = sum(o.written for o in orfs)
-    return OrfResult(f"{n_w} written as hypothetical protein, {len(orfs) - n_w} to check (WARNING), in "
-                     f"{len(recs)} records; evidence in {where(args, 'reports/orf_report.tsv')}",
-                     notes=mito_orf.ncr_notes(orfs))
+    shutil.move(str(work / "orf_report.tsv"), str(report))
+    shutil.rmtree(work, ignore_errors=True)
+    for ln in p.stderr.splitlines():                   # (a WARNING, not record_event: the record did not fail)
+        if ln.startswith("[mito_orf] WARNING "):
+            logging.warning("[ORF] " + ln[len("[mito_orf] WARNING "):])
+    import csv
+    import mito_orf
+    rows = list(csv.DictReader(open(report, encoding="utf-8"), delimiter="\t"))
+    n_w = sum(r["written"] == "yes" for r in rows)
+    return OrfResult(f"{n_w} written, {len(rows) - n_w} to check (WARNING), in {len(files)} file(s); evidence in "
+                     f"{where(args, 'reports/orf_report.tsv')}", notes=mito_orf.notes_from_report(rows))
 
 
 @optional_step("NCR")

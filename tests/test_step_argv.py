@@ -1,4 +1,4 @@
-"""The pipeline starts mito_curate.py / mito_intron.py / mito_intron_ref.py as programs (crash isolation, captured
+"""The pipeline starts mito_curate.py / mito_intron.py / mito_intron_ref.py / mito_orf.py as programs (crash isolation, captured
 stderr summary lines, fork pools in the child). These tests keep the argument lists the pipeline builds in step with
 the scripts' own parsers: an option renamed or retyped in a script fails here, not in a user's run (review 2026-11-08)."""
 import argparse
@@ -9,6 +9,7 @@ import pytest
 import mito_curate
 import mito_intron
 import mito_intron_ref
+import mito_orf
 import mitom_steps
 
 
@@ -36,3 +37,19 @@ def test_intron_commands_parse(tmp_path):
     ref = mitom_steps.intron_ref_cmd(gb, gb, 4, 3, "B", "Eukaryota;Metazoa;Cnidaria")
     b = mito_intron_ref.build_parser().parse_args(_script_args(ref, "mito_intron_ref.py"))
     assert b.cmd == "annotate" and b.genetic_code == 4 and b.jobs == 3 and b.lineage == "Eukaryota;Metazoa;Cnidaria"
+
+
+def test_orf_command_parses(tmp_path):
+    cmd = mitom_steps.orf_cmd(tmp_path / "gb", tmp_path / "o", 4, "all", 3, "B", ["r1.gb", "r2"])
+    a = mito_orf.build_parser().parse_args(_script_args(cmd, "mito_orf.py"))
+    assert a.genetic_code == 4 and a.orf == "all" and a.threads == 3 and a.bin == "B" and a.ref == ["r1.gb", "r2"]
+
+
+def test_orf_step_failure_leaves_the_records(tmp_path, monkeypatch):
+    """mito_orf.py exits non-zero: the step reports it, the records are untouched, the run goes on."""
+    gb = tmp_path / "gb"
+    gb.mkdir()
+    (gb / "a.gbf").write_text("LOCUS x\n//\n")
+    monkeypatch.setattr(mitom_steps, "run_tool", lambda cmd, **kw: subprocess.CompletedProcess(cmd, 1, "", "boom"))
+    r = mitom_steps.run_orf(argparse.Namespace(orf="yes", genetic_code=5, threads=1), gb, tmp_path)
+    assert not r.ok and (gb / "a.gbf").read_text() == "LOCUS x\n//\n"

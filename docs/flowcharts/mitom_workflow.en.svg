@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1256" viewBox="0 0 980 1256" role="img" aria-label="MitoM workflow (mitom run)">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1356" viewBox="0 0 980 1356" role="img" aria-label="MitoM workflow (mitom run)">
 <defs>
 <style>
 text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
@@ -15,7 +15,7 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 </defs>
 <rect x="0" y="0" width="980" height="100%" fill="#ffffff" />
 <text class="title" x="490" y="42" font-size="26" text-anchor="middle">MitoM workflow (mitom run)</text>
-<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">11 steps, as [Step k/11] on the terminal</text>
+<text class="subtitle" x="490" y="72" font-size="15" text-anchor="middle">12 steps, as [Step k/12] on the terminal</text>
 <rect class="node-accent" x="140" y="112" width="700" height="72" />
 <text x="490" y="140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">1 Read input, remove duplicates</tspan><tspan x="490" dy="1.35em">one record per genome; qc/dedup_report.tsv</tspan></text>
 <path class="arrow" d="M 490 189 L 490 206" />
@@ -35,17 +35,20 @@ text { font-family: Arial, Helvetica, sans-serif; fill: #17202a; }
 <text x="490" y="640" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">6 Add what the core missed</tspan><tspan x="490" dy="1.35em">12S / 16S (rRNA HMM), introns; MITOS2 with --rescue</tspan></text>
 <path class="arrow" d="M 490 689 L 490 706" />
 <rect class="node" x="140" y="712" width="700" height="72" />
-<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">7 Curate</tspan><tspan x="490" dy="1.35em">gene ends and names to NCBI rules; non-coding regions</tspan></text>
+<text x="490" y="740" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">7 Curate</tspan><tspan x="490" dy="1.35em">gene ends and names to NCBI rules</tspan></text>
 <path class="arrow" d="M 490 789 L 490 806" />
 <rect class="node" x="140" y="812" width="700" height="72" />
-<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">8 NCBI check and submission files</tspan><tspan x="490" dy="1.35em">table2asn -&gt; submission/</tspan></text>
+<text x="490" y="840" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">8 ORFs of unknown function, non-coding regions</tspan><tspan x="490" dy="1.35em">ORFs under selection as CDS (qc/orf_report.tsv); NCRs</tspan></text>
 <path class="arrow" d="M 490 889 L 490 906" />
 <rect class="node" x="140" y="912" width="700" height="72" />
-<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">9 Compare with the original annotation</tspan><tspan x="490" dy="1.35em">qc/original_vs_mitom.tsv (GenBank input)</tspan></text>
+<text x="490" y="940" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">9 NCBI check and submission files</tspan><tspan x="490" dy="1.35em">table2asn -&gt; submission/</tspan></text>
 <path class="arrow" d="M 490 989 L 490 1006" />
 <rect class="node" x="140" y="1012" width="700" height="72" />
-<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">10 Genome maps</tspan><tspan x="490" dy="1.35em">annotation/plots/</tspan></text>
+<text x="490" y="1040" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">10 Compare with the original annotation</tspan><tspan x="490" dy="1.35em">qc/original_vs_mitom.tsv (GenBank input)</tspan></text>
 <path class="arrow" d="M 490 1089 L 490 1106" />
-<rect class="node-accent" x="140" y="1112" width="700" height="72" />
-<text x="490" y="1140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">11 Organise the output</tspan><tspan x="490" dy="1.35em">summary.tsv, annotation/, submission/, qc/, input/, logs/</tspan></text>
+<rect class="node" x="140" y="1112" width="700" height="72" />
+<text x="490" y="1140" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">11 Genome maps</tspan><tspan x="490" dy="1.35em">annotation/plots/</tspan></text>
+<path class="arrow" d="M 490 1189 L 490 1206" />
+<rect class="node-accent" x="140" y="1212" width="700" height="72" />
+<text x="490" y="1240" font-size="16" text-anchor="middle" dominant-baseline="middle"><tspan x="490" dy="0">12 Organise the output</tspan><tspan x="490" dy="1.35em">summary.tsv, annotation/, submission/, qc/, input/, logs/</tspan></text>
 </svg>

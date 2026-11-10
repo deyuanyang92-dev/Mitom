@@ -786,7 +786,18 @@ def ncr_notes(orfs: Sequence[Orf]) -> Dict[str, List[Tuple[int, int, str]]]:
     return out
 
 
-def main(argv: Sequence[str] = None) -> int:
+def notes_from_report(rows: Iterable[dict]) -> Dict[str, List[Tuple[int, int, str]]]:
+    """ncr_notes from the rows of orf_report.tsv (the pipeline runs this module as a program)."""
+    out: Dict[str, List[Tuple[int, int, str]]] = {}
+    for r in rows:
+        if r.get("written") == "no":
+            s, e = int(r["start"]) - 1, int(r["end"])
+            out.setdefault(r["record"], []).append(
+                (s, e, f"contains ORF {s + 1}..{e} ({r['strand']}, {r['codons']} codons): {r['class']}, check"))
+    return out
+
+
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-i", "--input", required=True, help="GenBank file or folder")
     p.add_argument("-o", "--out", required=True, help="output folder (GenBank files, orf_report.tsv)")
@@ -799,8 +810,12 @@ def main(argv: Sequence[str] = None) -> int:
                    help="GenBank file or folder of relatives (repeat): their ORFs are homologs too (a genome whose "
                         "relatives are not in RefSeq)")
     p.add_argument("--threads", type=int, default=1)
-    p.add_argument("--bin", default=None, help="folder with blastp and makeblastdb")
-    a = p.parse_args(argv)
+    p.add_argument("--bin", default=None, help="folder with blastp, makeblastdb and hmmsearch")
+    return p
+
+
+def main(argv: Sequence[str] = None) -> int:
+    a = build_parser().parse_args(argv)
     src, out = require_path(a.input), Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     files = [src] if src.is_file() else iter_gb_files(src)

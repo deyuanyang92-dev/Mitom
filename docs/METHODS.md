@@ -7,14 +7,14 @@ MitoM 各模块的方法、设计依据和历次评测（2026-10）。使用方�
 `mitom run` 做哪些步骤见 [README](../README.md) 第 3 节；本节只说代码在哪里。
 What `mitom run` does step by step: [README](../README.md) section 3. This section says where the code is.
 
-命令 `mitom` → `mitom_main.py`（检查环境，启动子命令）→ `mitom_pipeline.main`（只分发命令）→ `mitom_run.RUN_STAGES`（`run` / `import` 的 11 步）。
-`mitom` → `mitom_main.py` (environment check, starts the subcommand) → `mitom_pipeline.main` (dispatch only) → `mitom_run.RUN_STAGES` (the 11 steps of `run` / `import`).
+命令 `mitom` → `mitom_main.py`（检查环境，启动子命令）→ `mitom_pipeline.main`（只分发命令）→ `mitom_run.RUN_STAGES`（`run` / `import` 的 12 步）。
+`mitom` → `mitom_main.py` (environment check, starts the subcommand) → `mitom_pipeline.main` (dispatch only) → `mitom_run.RUN_STAGES` (the 12 steps of `run` / `import`).
 
 | 文件 / file | 内容 / contents |
 |---|---|
 | `mitom_cli.py` | 命令行参数 / command-line options |
 | `mitom_prepare.py` | 环境检查、工具路径、`--clade auto`、输出目录锁 / environment, tools, clade plan, output lock |
-| `mitom_run.py` | `run` / `import` 的 11 步，共享 `RunState` / the 11 stages |
+| `mitom_run.py` | `run` / `import` 的 12 步，共享 `RunState` / the 12 stages |
 | `mitom_steps.py` | 校正、内含子、未知 ORF、NCR、NCBI 文件等步骤 / curation, introns, ORFs, NCR, submission steps |
 | `mito_orf.py` | 未知功能的 ORF（同源证明受选择才写）/ ORFs of unknown function |
 | `mitom_groups.py` | 多个门或遗传密码时分组运行 / one run per phylum / genetic code group |
@@ -31,7 +31,7 @@ Group I / II splice sites are judged in three places with different jobs (de nov
 `mitom annotate` 用同一套阶段函数（`mitom_run.ANNOTATE_STAGES`：不做第二轮、对比和输出整理），后处理只有一份代码。
 `mitom annotate` runs the same stage functions (`ANNOTATE_STAGES`: no round 2, comparison or output layout), so the steps after annotation exist once.
 
-校正和内含子以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`），出错时只影响这一步；`tests/test_step_argv.py` 检查流水线给它们的参数。旧名 `batch_mitoz.py` 仍可用。
+校正、内含子和未知 ORF 以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`、`mito_orf.py`：调用外部程序、内存较大，进程崩溃只影响这一步），NCR、写回、圈图等纯 Python 的轻量步骤在主进程内运行、异常由 `optional_step` 记录后跳过；`tests/test_step_argv.py` 检查流水线给子进程的参数。旧名 `batch_mitoz.py` 仍可用。
 Curation and introns run as separate processes, so a crash affects only that step; `tests/test_step_argv.py` checks the arguments the pipeline passes them. The old name `batch_mitoz.py` still works.
 
 
@@ -482,8 +482,8 @@ NCBI 提交校验（table2asn 1.28 `-V vb -Z`，2026-10-25）：多鳞虫 + 沙�
 
 ## 流程图 / Flowcharts
 
-`mitom run` 的 11 步（与 README 第 3 节的步骤表、终端的 `[Step k/11]` 一致；`mitom annotate` 不做第 3、4、9、11 步）。
-The 11 steps of `mitom run` (as the step table in README section 3; `mitom annotate` skips steps 3, 4, 9 and 11):
+`mitom run` 的 12 步（与 README 第 3 节的步骤表、终端的 `[Step k/12]` 一致；`mitom annotate` 不做第 3、4、10、12 步）。
+The 12 steps of `mitom run` (as the step table in README section 3; `mitom annotate` skips steps 3, 4, 10 and 12):
 [中文 SVG](flowcharts/mitom_workflow.zh.svg) · [English SVG](flowcharts/mitom_workflow.en.svg) ·
 [中文 Mermaid](flowcharts/mitom_workflow.zh.mmd) · [English Mermaid](flowcharts/mitom_workflow.en.mmd)。
 重新生成 / regenerate：`python3 scripts/render_workflow_diagrams.py`

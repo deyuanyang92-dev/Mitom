@@ -313,7 +313,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 
 ### `mitom annotate`：注释，但不整理输出目录
 
-- **做什么**：一轮注释，之后与 `run` 相同的写 GenBank、补漏、校正、NCBI 文件、作图（共 7 步）；不做第二轮、不与原注释比较，保留工作目录结构（日志为 `run.log`），给脚本或集群流程调用。最终记录仍按 `--which_gene_first` 旋转，但没有 `run` 第 4 步的转动后核查（受转动影响的基因不重注）；需要核查时用 `run`。
+- **做什么**：一轮注释，之后与 `run` 相同的写 GenBank、补漏、校正、未知 ORF 与非编码区、NCBI 文件、作图（共 8 步）；不做第二轮、不与原注释比较，保留工作目录结构（日志为 `run.log`），给脚本或集群流程调用。最终记录仍按 `--which_gene_first` 旋转，但没有 `run` 第 4 步的转动后核查（受转动影响的基因不重注）；需要核查时用 `run`。
 - **示例**：`mitom annotate -i contigs.fasta -o out --clade Mollusca --genetic_code 5`
 
 ### `mitom check`：检查已有注释
@@ -468,7 +468,7 @@ mitom debug out              # out = 输出目录（或直接给 run.log 的路�
 | 部分 | 内容 |
 |---|---|
 | 状态 | 正常结束（退出码）/ 出错停止（哪一步、traceback 的末尾）/ 没有结束（被中断） |
-| Steps | 11 步各自的耗时和结果；第 6 步再分为补漏、rRNA HMM、内含子 |
+| Steps | 12 步各自的耗时和结果；第 6 步再分为补漏、rRNA HMM、内含子 |
 | 失败的记录 | 每条失败或被跳过的记录，以及它自己日志里的第一条错误 |
 | Failed programs | 每个失败的外部程序：退出码、耗时、运行目录、错误输出的最后几行 |
 | Missing programs | 缺少的程序，以及安装它的命令 |
@@ -496,7 +496,7 @@ mitom debug out
 | 行 | 含义 |
 |---|---|
 | `[ENV] ...` | 版本、命令、Python、机器等（开头几行） |
-| `[STEP 6/11 add_missing] start: ...` / `done 9.2s: ...` / `failed ...` | 每一步的开始、结束、耗时和结果（k/n：`run` 共 11 步，`annotate` 共 7 步） |
+| `[STEP 6/12 add_missing] start: ...` / `done 9.2s: ...` / `failed ...` | 每一步的开始、结束、耗时和结果（k/n：`run` 共 12 步，`annotate` 共 8 步） |
 | `[CMD rc=1 12.3s] <命令>  (in <目录>)` | 每个外部程序：退出码、耗时、完整命令；失败时下面以 `    | ` 开头列出错误输出的末尾 |
 | `[RECORD <名称>] ...` | 失败、被跳过或有 NCBI ERROR 的记录 |
 | `[ERROR] ...` | 运行出错停止时的完整 traceback |
@@ -997,7 +997,7 @@ The generated Snakefile declares real per-job `threads` and memory resources.
 
 ### 输出目录 / Output Layout
 
-`run` / `import` 的输出目录见[第 7 节](#7-输出)（终端第 11 步逐项打印，目录里的 `README.txt` 有同样的说明）。
+`run` / `import` 的输出目录见[第 7 节](#7-输出)（终端第 12 步逐项打印，目录里的 `README.txt` 有同样的说明）。
 
 主要文件：
 

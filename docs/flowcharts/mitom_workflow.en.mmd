@@ -5,10 +5,11 @@ flowchart TD
     D["4 Check after re-orientation (round 2)<br/>--if_reannotation_2 auto: only records the shift broke"]
     E["5 Write GenBank<br/>original header (organism, references, voucher) copied back"]
     F["6 Add what the core missed<br/>12S / 16S (rRNA HMM), introns; MITOS2 with --rescue"]
-    G["7 Curate<br/>gene ends and names to NCBI rules; non-coding regions"]
-    H["8 NCBI check and submission files<br/>table2asn -> submission/"]
-    I["9 Compare with the original annotation<br/>qc/original_vs_mitom.tsv (GenBank input)"]
-    J["10 Genome maps<br/>annotation/plots/"]
-    K["11 Organise the output<br/>summary.tsv, annotation/, submission/, qc/, input/, logs/"]
+    G["7 Curate<br/>gene ends and names to NCBI rules"]
+    H["8 ORFs of unknown function, non-coding regions<br/>ORFs under selection as CDS (qc/orf_report.tsv); NCRs"]
+    I["9 NCBI check and submission files<br/>table2asn -> submission/"]
+    J["10 Compare with the original annotation<br/>qc/original_vs_mitom.tsv (GenBank input)"]
+    K["11 Genome maps<br/>annotation/plots/"]
+    L["12 Organise the output<br/>summary.tsv, annotation/, submission/, qc/, input/, logs/"]
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L

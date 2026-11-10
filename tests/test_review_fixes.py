@@ -110,7 +110,7 @@ def test_run_returns_nonzero_when_every_record_failed(tmp_path, monkeypatch):
     assert mitom_run.workflow_run(a) != 0
     log = (tmp_path / "out" / "logs" / "run.log").read_text()
     assert "[RECORD rec1] annotation failed (round-1 annotation, exit 3)" in log and "[FAIL] every record failed" in log
-    assert "[STEP 2/11 annotate] start: Round-1 annotation" in log and "[STEP 11/11 output] done " in log
+    assert "[STEP 2/12 annotate] start: Round-1 annotation" in log and "[STEP 12/12 output] done " in log
     assert "[DONE]" not in log                     # main() writes the exit line ([DONE] exit=1)
 
 

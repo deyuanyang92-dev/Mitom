@@ -85,7 +85,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 **3. 运行过程与结果 / What you see and what you get**
 
-**`mitom run` 的 11 步 / The 11 steps of `mitom run`**（与终端的 `[Step k/11]` 一致；每步的细节和报告文件见 [使用手册第 4 节](docs/USAGE_zh.md#4-mitom-run-的流程)）
+**`mitom run` 的 12 步 / The 12 steps of `mitom run`**（与终端的 `[Step k/12]` 一致；每步的细节和报告文件见 [使用手册第 4 节](docs/USAGE_zh.md#4-mitom-run-的流程)）
 
 | 步 / step | 终端显示 / terminal | 做什么 |
 |---|---|---|
@@ -95,28 +95,29 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | 4 | Check the annotation after re-orientation (round 2) | 转动后受影响的记录再注释一次 |
 | 5 | Write the annotation; copy the original GenBank header back | 写 GenBank，写回物种、文献、标本信息 |
 | 6 | Add what the core missed | 补 12S / 16S、内含子；`--rescue yes` 时用 MITOS2 补基因 |
-| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名；注释受选择的未知 ORF（`--orf`）；标出非编码区（NCR，`--ncr no` 不标） |
-| 8 | NCBI check (table2asn) and submission files | 生成 `submission/` |
-| 9 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） |
-| 10 | Genome maps | 每条一张圈图（`annotation/plots/`） |
-| 11 | Organise the output | 整理成下面的目录结构 |
+| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名 |
+| 8 | ORFs of unknown function and non-coding regions | 注释受选择的未知 ORF（`--orf`，`qc/orf_report.tsv`）；标出非编码区（NCR，`--ncr no` 不标） |
+| 9 | NCBI check (table2asn) and submission files | 生成 `submission/` |
+| 10 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） |
+| 11 | Genome maps | 每条一张圈图（`annotation/plots/`） |
+| 12 | Organise the output | 整理成下面的目录结构 |
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `logs/run.log`：
 
 ```text
-[Step 1/11] Read input and remove duplicate records
+[Step 1/12] Read input and remove duplicate records
     GenBank records read: 802
     removed 166: GenBank record that a RefSeq NC_ record was made from (NC_ kept)
     -> 636 records to annotate; reasons per record: qc/dedup_report.tsv  (5 s)
-[Step 2/11] Round-1 annotation (protein genes, rRNAs, tRNAs)
+[Step 2/12] Round-1 annotation (protein genes, rRNAs, tRNAs)
     round-1 annotation: 120/636 (18%), 6 min 02 s so far, about 26 min left
 ...
-[Step 4/11] Check the annotation after re-orientation; annotate again where it is offset (round 2)
+[Step 4/12] Check the annotation after re-orientation; annotate again where it is offset (round 2)
     checked 636: 41 need round 2 (...); 595 keep the shifted round-1 annotation
 ...
-[Step 9/11] Compare with the original annotation
+[Step 10/12] Compare with the original annotation
 ...
-[Step 10/11] Genome maps (circular plots)
+[Step 11/12] Genome maps (circular plots)
 ```
 
 输出目录（`out/README.txt` 逐项说明；`--output_layout classic` 用 2026-11-09 以前的布局）：

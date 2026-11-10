@@ -88,7 +88,7 @@ def render_svg(title: str, subtitle: str, nodes: Iterable[Node], out_path: Path)
     out_path.write_text("\n".join(parts) + "\n", encoding="utf-8")
 
 
-# The 11 stages of `mitom run` (mitom_run.RUN_STAGES; `mitom annotate` skips 3, 4, 9, 11). Keep in step with the
+# The 12 stages of `mitom run` (mitom_run.RUN_STAGES; `mitom annotate` skips 3, 4, 10, 12). Keep in step with the
 # step table of README.md section 3.
 ZH_NODES: List[Node] = [
     ("input", ["1 读入与去重", "同一基因组只留一条；qc/dedup_report.tsv"]),
@@ -97,11 +97,12 @@ ZH_NODES: List[Node] = [
     ("round2", ["4 转动后核查，必要时第二轮注释", "--if_reannotation_2 auto：只重注受转动影响的记录"]),
     ("write", ["5 写 GenBank", "写回原记录的物种、文献、标本信息"]),
     ("add_missing", ["6 补漏", "12S / 16S（rRNA HMM）、内含子；--rescue 时 MITOS2"]),
-    ("curate", ["7 校正", "按 NCBI 规范修整端点和基因名；标出非编码区"]),
-    ("ncbi", ["8 NCBI 检查与提交文件", "table2asn → submission/"]),
-    ("compare", ["9 与原注释比较", "qc/original_vs_mitom.tsv（GenBank 输入）"]),
-    ("maps", ["10 基因组圈图", "annotation/plots/"]),
-    ("output", ["11 整理输出", "summary.tsv、annotation/、submission/、qc/、input/、logs/"]),
+    ("curate", ["7 校正", "按 NCBI 规范修整端点和基因名"]),
+    ("orf_ncr", ["8 未知 ORF 与非编码区", "受选择的 ORF 写成 CDS（qc/orf_report.tsv）；标出非编码区"]),
+    ("ncbi", ["9 NCBI 检查与提交文件", "table2asn → submission/"]),
+    ("compare", ["10 与原注释比较", "qc/original_vs_mitom.tsv（GenBank 输入）"]),
+    ("maps", ["11 基因组圈图", "annotation/plots/"]),
+    ("output", ["12 整理输出", "summary.tsv、annotation/、submission/、qc/、input/、logs/"]),
 ]
 EN_NODES: List[Node] = [
     ("input", ["1 Read input, remove duplicates", "one record per genome; qc/dedup_report.tsv"]),
@@ -110,11 +111,12 @@ EN_NODES: List[Node] = [
     ("round2", ["4 Check after re-orientation (round 2)", "--if_reannotation_2 auto: only records the shift broke"]),
     ("write", ["5 Write GenBank", "original header (organism, references, voucher) copied back"]),
     ("add_missing", ["6 Add what the core missed", "12S / 16S (rRNA HMM), introns; MITOS2 with --rescue"]),
-    ("curate", ["7 Curate", "gene ends and names to NCBI rules; non-coding regions"]),
-    ("ncbi", ["8 NCBI check and submission files", "table2asn -> submission/"]),
-    ("compare", ["9 Compare with the original annotation", "qc/original_vs_mitom.tsv (GenBank input)"]),
-    ("maps", ["10 Genome maps", "annotation/plots/"]),
-    ("output", ["11 Organise the output", "summary.tsv, annotation/, submission/, qc/, input/, logs/"]),
+    ("curate", ["7 Curate", "gene ends and names to NCBI rules"]),
+    ("orf_ncr", ["8 ORFs of unknown function, non-coding regions", "ORFs under selection as CDS (qc/orf_report.tsv); NCRs"]),
+    ("ncbi", ["9 NCBI check and submission files", "table2asn -> submission/"]),
+    ("compare", ["10 Compare with the original annotation", "qc/original_vs_mitom.tsv (GenBank input)"]),
+    ("maps", ["11 Genome maps", "annotation/plots/"]),
+    ("output", ["12 Organise the output", "summary.tsv, annotation/, submission/, qc/, input/, logs/"]),
 ]
 
 
@@ -126,9 +128,9 @@ def write_mermaid(nodes: Sequence[Node], out_path: Path) -> None:
 
 
 def main() -> int:
-    render_svg("MitoM 工作流程（mitom run）", "11 步，与终端的 [Step k/11] 一致", ZH_NODES,
+    render_svg("MitoM 工作流程（mitom run）", "12 步，与终端的 [Step k/12] 一致", ZH_NODES,
                OUT_DIR / "mitom_workflow.zh.svg")
-    render_svg("MitoM workflow (mitom run)", "11 steps, as [Step k/11] on the terminal", EN_NODES,
+    render_svg("MitoM workflow (mitom run)", "12 steps, as [Step k/12] on the terminal", EN_NODES,
                OUT_DIR / "mitom_workflow.en.svg")
     write_mermaid(ZH_NODES, OUT_DIR / "mitom_workflow.zh.mmd")
     write_mermaid(EN_NODES, OUT_DIR / "mitom_workflow.en.mmd")

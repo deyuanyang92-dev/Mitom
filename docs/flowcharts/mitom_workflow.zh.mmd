@@ -5,10 +5,11 @@ flowchart TD
     D["4 转动后核查，必要时第二轮注释<br/>--if_reannotation_2 auto：只重注受转动影响的记录"]
     E["5 写 GenBank<br/>写回原记录的物种、文献、标本信息"]
     F["6 补漏<br/>12S / 16S（rRNA HMM）、内含子；--rescue 时 MITOS2"]
-    G["7 校正<br/>按 NCBI 规范修整端点和基因名；标出非编码区"]
-    H["8 NCBI 检查与提交文件<br/>table2asn → submission/"]
-    I["9 与原注释比较<br/>qc/original_vs_mitom.tsv（GenBank 输入）"]
-    J["10 基因组圈图<br/>annotation/plots/"]
-    K["11 整理输出<br/>summary.tsv、annotation/、submission/、qc/、input/、logs/"]
+    G["7 校正<br/>按 NCBI 规范修整端点和基因名"]
+    H["8 未知 ORF 与非编码区<br/>受选择的 ORF 写成 CDS（qc/orf_report.tsv）；标出非编码区"]
+    I["9 NCBI 检查与提交文件<br/>table2asn → submission/"]
+    J["10 与原注释比较<br/>qc/original_vs_mitom.tsv（GenBank 输入）"]
+    K["11 基因组圈图<br/>annotation/plots/"]
+    L["12 整理输出<br/>summary.tsv、annotation/、submission/、qc/、input/、logs/"]
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L

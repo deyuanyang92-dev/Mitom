@@ -261,7 +261,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Auto-accept best fuzzy match (requires --smart_metadata yes).")
 
     # ── annotate ──────────────────────────────────────────────────────────
-    a = sub.add_parser("annotate", help="One round of annotation, then the same write / add-missing / curate / NCBI / map steps as run "
+    a = sub.add_parser("annotate", help="One round of annotation, then the same write / add-missing / curate / ORF-NCR / NCBI / map steps as run "
                                         "(no round 2, no comparison; work layout 04.final_gb/ ...). The final "
                                         "records are rotated to --which_gene_first without the round-2 check.")
     add_common(a)
