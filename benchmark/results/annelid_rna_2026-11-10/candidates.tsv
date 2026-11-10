@@ -1,0 +1,64 @@
+mito	run	assembly	link	link_level	specimen	library_selection	bases_Gb
+OZ484008.1	ERR17229661	GCA_985198475.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	7.18
+OZ482183.1	ERR16650985	GCA_984799185.1	sibling_project	same_project_other_specimen	different specimen: ToLID wtAmpMida4 vs wtAmpMida1	PolyA	7.903
+OZ479805.1	ERR17229609	GCA_984661695.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	17.748
+OZ461320.1	ERR13731903	GCA_982518235.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	15.443
+OZ452597.1	ERR16650974	GCA_982303585.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	15.178
+OZ415943.1	ERR16650976	GCA_982090105.1	sibling_project	same_project_other_specimen	different specimen: ToLID wtMelPalm3 vs wtMelPalm2	PolyA	16.782
+OZ374031.1	ERR13621440	GCA_977118385.1	sibling_project	same_project_other_specimen	different specimen: ToLID wcApoCali2 vs wcApoCali1	PolyA	5.383
+OZ370504.1	ERR13493957	GCA_977066635.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	20.603
+OZ352441.1	ERR12342473	GCA_977014815.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	11.57
+OZ337134.1	ERR15381756	GCA_976987375.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	10.294
+OZ201049.1	ERR13317845	GCA_964330305.1	sibling_project	same_project_other_specimen	different specimen: ToLID whBimRubi1 vs whBimRubi4	PolyA	8.842
+OZ077499.1	ERR13669974	GCA_964194385.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	1.744
+OZ038328.1	ERR13669977	GCA_964035795.1	sibling_project	same_project_other_specimen	different specimen: ToLID wcPteSpea1 vs wcPteSpea6	PolyA	15.118
+OZ026631.1	ERR12765162	GCA_964020975.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	10.254
+OZ024941.1	ERR12318605	GCA_964017235.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	11.408
+OX465594.1	ERR11242532	GCA_950022655.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	8.053
+OX457035.1	ERR11641122	GCA_949752745.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	12.28
+OX424571.1	ERR12765137	GCA_949152475.1	sibling_project	same_project_other_specimen	different specimen: ToLID wtTerLapi3 vs wtTerLapi1	PolyA	10.299
+OW804103.1	ERR10123685	GCA_942159475.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	8.183
+OW387151.1	ERR10123672	GCA_936440205.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	9.513
+CM150562.1	SRR30505187	GCA_056362285.1	bioproject	same_project_specimen_unknown	unknown	cDNA_oligo_dT	0.917
+CM150562.1	SRR30505186	GCA_056362285.1	bioproject	same_project_specimen_unknown	unknown	cDNA_oligo_dT	0.0
+OZ404008.1	ERR14224601	GCA_978021825.2	sibling_project	same_project_other_specimen	different specimen: ToLID wsSclAnnu2 vs wsSclAnnu1	PolyA	7.337
+OZ414225.1	ERR15416183	GCA_981280645.1	sibling_project	same_project_other_specimen	different specimen: ToLID wpGesJame3 vs wpGesJame1	RANDOM	5.546
+OZ414225.1	ERR15416181	GCA_981280645.1	sibling_project	same_project_other_specimen	different specimen: ToLID wpGesJame3 vs wpGesJame1	RANDOM	5.386
+OZ414225.1	ERR15416182	GCA_981280645.1	sibling_project	same_project_other_specimen	different specimen: ToLID wpGesJame3 vs wpGesJame1	RANDOM	5.514
+OZ414225.1	ERR15416180	GCA_981280645.1	sibling_project	same_project_other_specimen	different specimen: ToLID wpGesJame3 vs wpGesJame1	RANDOM	5.423
+OZ409217.1	ERR14986735	GCA_978898905.1	sibling_project	same_project_other_specimen	different specimen: ToLID wuTroSpea7 vs wuTroSpea1	PolyA	1.64
+OZ319703.1	ERR14782878	GCA_975705955.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	10.799
+OZ253330.1	ERR14224645	GCA_965260885.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsSibFior3 vs wsSibFior1	PolyA	9.259
+OZ249454.1	ERR14837241	GCA_965235115.1	biosample	same_specimen	same specimen: same BioSample	PolyA	14.674
+OZ220396.1	ERR14707600	GCA_965113345.1	biosample	same_specimen	same specimen: same BioSample	PolyA	17.129
+OZ210882.1	ERR13385673	GCA_964657245.1	biosample	same_specimen	same specimen: same BioSample	PolyA	14.939
+OZ210059.1	ERR13947512	GCA_964656415.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsSclBrat9 vs wsSclBrat1	PolyA	16.86
+CM084263.1	SRR27841062	GCA_041381225.1	bioproject	same_project_specimen_unknown	unknown	RANDOM	12.727
+CM084263.1	SRR27841061	GCA_041381225.1	bioproject	same_project_specimen_unknown	unknown	RANDOM	11.882
+CM084263.1	SRR27841060	GCA_041381225.1	bioproject	same_project_specimen_unknown	unknown	RANDOM	14.125
+OZ025247.1	ERR12653963	GCA_964019155.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	5.091
+CM067563.1	SRR26151944	GCA_034509925.1	biosample	same_specimen	same specimen: same BioSample	RANDOM	9.523
+OX439013.1	ERR13093628	GCA_949316495.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	24.308
+OX439013.1	ERR11641125	GCA_949316495.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	8.405
+OZ483948.1	ERR14986734	GCA_985198455.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	18.504
+OZ378018.1	ERR13301064	GCA_977964375.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	9.149
+OZ218097.1	ERR11837551	GCA_965112235.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsLamBarh4 vs wsLamBarh1	PolyA	10.126
+OZ197803.1	ERR13093675	GCA_964291435.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsMarCava3 vs wsMarCava1	PolyA	9.252
+OZ194490.1	ERR13999106	GCA_964276725.1	sibling_project	same_project_other_specimen	different specimen: ToLID wrPlaCost3 vs wrPlaCost1	PolyA	12.401
+OZ025266.1	ERR12542998	GCA_964019135.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	5.185
+OZ024919.1	ERR13962508	GCA_964017125.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	16.607
+OZ024868.1	ERR13669969	GCA_964017155.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsOasSpea4 vs wsOasSpea1	PolyA	13.096
+OZ012702.1	ERR13093652	GCA_963942565.1	sibling_project	same_project_other_specimen	different specimen: ToLID wdMagJohn15 vs wdMagJohn1	PolyA	27.106
+OY759276.1	ERR12245607	GCA_963662155.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	10.271
+OX457054.1	ERR12642427	GCA_949752735.1	sibling_project	same_project_other_specimen	different specimen: ToLID wcLumTerr6 vs wcLumTerr1	PolyA	8.922
+OX457054.1	ERR10851549	GCA_949752735.1	sibling_project	same_project_other_specimen	different specimen: ToLID wcLumTerr2 vs wcLumTerr1	PolyA	5.612
+OX387263.1	ERR12708735	GCA_947562095.1	sibling_project	same_project_other_specimen	different specimen: ToLID wcBraLoba5 vs wcBraLoba9	PolyA	8.957
+OX381722.1	ERR10378012	GCA_947462335.1	sibling_project	same_project_other_specimen	different specimen: ToLID wpHarImpa6 vs wpHarImpa5	PolyA	9.729
+OX381722.1	ERR10378013	GCA_947462335.1	sibling_project	same_project_other_specimen	different specimen: ToLID wpHarImpa6 vs wpHarImpa5	PolyA	8.383
+OX243829.1	ERR9837136	GCA_945859605.1	sibling_project	same_project_other_specimen	different specimen: ToLID wcLumRube2 vs wcLumRube1	PolyA	8.851
+OW028587.1	ERR10123675	GCA_932294295.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	9.625
+OZ484039.1	ERR13925928	GCA_985198635.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsSclCont10 vs wsSclCont1	PolyA	13.463
+OZ210096.1	ERR12653962	GCA_964656445.1	sibling_project	same_specimen	same specimen: BioSample relation	PolyA	10.179
+OZ204559.1	ERR14707602	GCA_964340945.1	biosample	same_specimen	same specimen: same BioSample	PolyA	15.415
+CM084515.1	SRR26513850	GCA_041430665.1	biosample	same_specimen	same specimen: same BioSample	RANDOM	9.313
+OZ023219.1	ERR12737310	GCA_963995525.1	sibling_project	same_project_other_specimen	different specimen: ToLID wsEscSpic4 vs wsEscSpic3	PolyA	2.146
