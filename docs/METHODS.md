@@ -127,6 +127,17 @@ Protein genes still missing after the core are searched with profile HMMs of the
 relatives (lineage, then similarity of the record's cox1); E <= 0.01 x the prior odds of the gene among the 30
 nearest annotated relatives, three profile sizes tried with E x 3.
 
+## 转录组证据 / Transcript evidence (mito_rna.py, `mitom rna`)
+
+RNA-seq reads 只比对到该线粒体基因组（minimap2 `-ax sr`，否则 bwa mem；MAPQ ≥ 20）。动物线粒体多顺反子转录、在 tRNA 处切开，
+覆盖连续，边界不能由覆盖定；给出的证据是：每个基因 / ORF / NCR 的深度相对 13 个蛋白基因中位数之比，深度 ≥ 中位数 10 % 的位置
+比例（部分转录），“像基因一样表达”（不低于表达最低蛋白基因的一半；中位深度 < 10 时不判）；文库方向（含反向链特异自动翻转）；
+polyA 3′ 端（SAM 中按参考正向书写：比对后截去的 A 串为正链转录本 3′ 端，比对前截去的 T 串为负链；tRNA 3′ 端 CCA 尾不计）。
+验证：*Polydora* 公开转录组复现 Selifanova 等 2023 对三个 ORFan 与 ND3 下游区段的结论（`benchmark/results/rnaseq_2026-11-10/`）。
+
+RNA-seq mapped to the mitogenome only gives, per gene / ORF / region, depth relative to the 13 genes, the share
+transcribed, an expressed-like-the-genes call, the library strand and poly(A) 3' ends.
+
 ## 多分体线粒体基因组 / Parts of one genome (mito_multipart.py)
 
 有的线粒体基因组由几个分子组成（海绵 *Lycopodina hypogea* 3 条染色体，nad4l 单独在 291 bp 的小环上；线虫 *Allodiplogaster

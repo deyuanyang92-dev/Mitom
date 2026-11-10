@@ -177,6 +177,7 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 | MitoZ 的结果（`.gbf`）或任何已注释的 GenBank | 保留它原来的基因，只做 MitoM 的整理（统一起点、修整边界和名称、NCBI 文件、作图） | `mitom import -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
 | MITOS2 的结果目录 | 同上 | `mitom import -i mitos2_dir/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5` |
 | GenBank（`.gb`、`.gbf` 都行） | 转成 FASTA | `mitom gb2fasta -i sample.gbf -o fasta_out` |
+| 已注释的线粒体基因组 + RNA-seq reads | 每个基因 / ORF 的转录证据、文库方向、polyA 3′ 端 | `mitom rna -g X.gb -1 R1.fq.gz -2 R2.fq.gz -o rna` |
 | 一个或一批已注释的 GenBank / EMBL（`.gb`、`.gbf`、`.embl` 都行） | NCBI 提交用的特征表 `.tbl` + `.fsa`（可合并、可分开） | `mitom gb2tbl -i annotation/ -o ncbi`（加 `--validate` 生成 `.sqn` 并检查） |
 | 一批 GenBank 或 FASTA，可能有重复 | 去掉重复，每个基因组留一条 | `mitom dedup -i in_dir/ -o dedup_out` |
 
@@ -255,6 +256,21 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
   mitom gb2fasta -i sample.gbf -o fasta_out
   mitom gb2fasta -i fetch_out/Annelida.gb -o fasta_out --split
   ```
+
+### `mitom rna`：转录组证据（RNA-seq）
+
+- **做什么**：把 RNA-seq reads 只比对到这个线粒体基因组（minimap2，没有时用 bwa；比对质量 ≥ 20，减少核基因组中线粒体假基因的干扰），给出每个基因、ORF、非编码区的转录证据。动物线粒体是多顺反子转录、在 tRNA 处切开，前体把基因间的空隙填满，所以覆盖图是连续的、看不出断点（Geneious 里看到的就是这样）；能说明问题的是：
+  - **相对深度**：与 13 个蛋白基因深度中位数之比；`transcribed_like_genes` = 深度不低于表达最低的蛋白基因的一半（ORF 是否像基因一样表达）；`covered_share` = 深度 ≥ 中位数 10 % 的位置比例（只有部分转录的 ORF 由此可见）；蛋白基因中位深度 < 10 时不下表达结论；
+  - **文库方向**：自动判断非链特异、链特异或反向链特异（dUTP，read1 反义）；
+  - **polyA 3′ 端**：reads 末端被截掉的一串 A（负链为 T），即成熟转录本的 3′ 端、补全 T / TA 不完整终止的位置；tRNA 3′ 端（CCA 尾）不计。polyA reads 太少时（随机引物总 RNA、短 reads、清洗时剪掉）提示没有 3′ 端证据。
+- **清洗**：只去接头即可，也可直接给原始 reads；**不要**用 fastp `-x` / `--trim_poly_x`（剪掉 polyA）、`-y`（低复杂度过滤会丢掉 polyA reads）、`-D` / `--dedup`（压平深度）。
+- **输出**：`rna_features.tsv`（每个特征一行）、`rna_polya_sites.tsv`（≥ 3 条 reads 的 polyA 位点及其结束的特征）。
+- **验证**（`benchmark/results/rnaseq_2026-11-10/`）：*Polydora* cf. *ciliata* 公开转录组（SRR26830859）复现 Selifanova 等 2023 的结论。
+
+```bash
+mitom rna -g annotation/OQ078742.1.gb -1 R1.fq.gz -2 R2.fq.gz -o rna --threads 8
+mitom rna -g annotation/X.gb --sam mapped_to_X.sam -o rna          # 已比对到该序列的 SAM（'-' = 标准输入）
+```
 
 ### `mitom gb2tbl`：GenBank / EMBL 转 NCBI 提交文件（`.tbl` + `.fsa`）
 

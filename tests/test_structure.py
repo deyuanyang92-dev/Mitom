@@ -9,7 +9,9 @@ MODULES = {p.name: p.read_text() for p in sorted(REPO.glob("*.py"))}
 # subprocess used directly: run_tool itself; version / git / Python probes; mito_plot's read-mapping pipes (Popen);
 # the Snakemake worker script (a template run outside MitoM's modules)
 RAW_SUBPROCESS = {"mito_common.py", "mito_env.py", "mitom_prepare.py", "mitom_main.py", "mito_plot.py",
-                  "mitom_snakemake.py"}
+                  "mitom_snakemake.py",
+                  "mito_rna.py"}        # (mito_plot / mito_rna: the mapper's SAM is read as a stream, hundreds of
+                                        # millions of reads - run_tool would hold it in memory)
 
 
 def code_lines(text: str):

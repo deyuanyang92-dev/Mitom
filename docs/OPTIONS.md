@@ -25,6 +25,7 @@ Generated from each command's `-h` by `scripts/make_options_doc.py`; usage, exam
 | [`mitom gb2tbl`](#mitom-gb2tbl) | `mito_tbl.py` |
 | [`mitom fetch`](#mitom-fetch) | `mito_fetch.py` |
 | [`mitom check`](#mitom-check) | `mito_check.py` |
+| [`mitom rna`](#mitom-rna) | `mito_rna.py` |
 | [`mitom compare`](#mitom-compare) | `mito_compare.py` |
 | [`mitom plot`](#mitom-plot) | `mito_plot.py` |
 | [`mitom nuc`](#mitom-nuc) | `mito_nuc.py` |
@@ -1339,6 +1340,47 @@ options:
   --genetic_code GENETIC_CODE
                         Translation table for CDS without /transl_table (default: the record's own tables).
   --min_trna MIN_TRNA   Fewer tRNAs than this is an ERROR (default 22; 0 = off).
+```
+
+## mitom rna
+
+```text
+usage: mito_rna.py [-h] -g GENBANK [-1 READS1] [-2 READS2] [--sam SAM] -o OUT [--threads THREADS]
+                   [--bin BIN]
+
+mito_rna.py - transcript evidence for an annotated mitochondrial genome from RNA-seq reads.
+
+Animal mitochondrial genomes are transcribed as long polycistronic precursors that are cut at the tRNAs (tRNA
+punctuation, Ojala et al. 1981); mature mRNAs get poly(A) tails, which complete the incomplete stop codons T / TA.
+Coverage is therefore continuous (the precursors fill the gaps) and cannot show where genes end. What can:
+  - relative depth: the mean depth of a gene or ORF over the median of the 13 protein genes (Selifanova et al. 2023
+    judged the Polydora ORFans transcribed by depth like nad4l / nad2's);
+  - poly(A) sites: reads whose clipped 3' end begins with a run of A (or whose clipped 5' end on the reverse strand
+    ends with T): the 3' end of a mature transcript; sites at tRNA 3' ends are CCA tails and are not counted;
+  - the library type: stranded or not, from how reads on the protein genes lie relative to the genes.
+Reads are mapped to this genome only (minimap2 -ax sr, else bwa mem), mapping quality >= MIN_MAPQ (nuclear copies of
+mitochondrial DNA map with low quality to both).
+
+Writes rna_features.tsv (one row per gene / ORF / non-coding region: mean depth, depth relative to the median of
+the 13 protein genes, the share of its positions transcribed at >= 10 % of that median - a partly transcribed ORF
+shows here -, "transcribed like the genes" when its depth is at least half that of the least-expressed protein gene,
+sense share for stranded libraries, poly(A) reads at its 3' end) and rna_polya_sites.tsv (sites with >=
+MIN_POLYA_READS reads, the feature they end). A reverse-stranded library (dUTP, read 1 antisense) is recognised and
+read accordingly. Measured: benchmark/results/rnaseq_2026-11-10/README.md.
+
+Usage: python3 mito_rna.py -g annotated.gb -1 R1.fq.gz [-2 R2.fq.gz] -o outdir [--threads 8]
+       python3 mito_rna.py -g annotated.gb --sam aligned.sam -o outdir          (reads already mapped to it)
+
+options:
+  -h, --help            show this help message and exit
+  -g GENBANK, --genbank GENBANK
+                        annotated mitogenome (one record)
+  -1 READS1, --reads1 READS1
+  -2 READS2, --reads2 READS2
+  --sam SAM             SAM of reads already mapped to this record ('-' = stdin)
+  -o OUT, --out OUT
+  --threads THREADS
+  --bin BIN
 ```
 
 ## mitom compare

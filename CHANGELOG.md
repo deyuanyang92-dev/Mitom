@@ -5,6 +5,13 @@ installed one.
 
 ## Unreleased
 
+### Added (RNA-seq)
+- `mitom rna` (`mito_rna.py`): RNA-seq mapped to the mitogenome only; per gene / ORF / non-coding region the depth
+  relative to the 13 genes, the share transcribed, an expressed-like-the-genes call, the library strand (reverse
+  stranded recognised) and poly(A) 3' ends; few poly(A) reads or too little depth are reported, not silent. On the
+  Polydora RNA-seq of Selifanova et al. 2023 it reproduces all three ORFan conclusions.
+  benchmark/results/rnaseq_2026-11-10/.
+
 ### Added (parts of one genome)
 - `mito_multipart.py`, in step 9: records of one assembly (COMMENT) or BioSample (DBLINK) whose protein genes are
   complete only together are reported as parts of one genome (multipartite mtDNA or pieces) in

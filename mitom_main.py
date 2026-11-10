@@ -30,6 +30,8 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
   validate           NCBI table2asn validation and submission files                   = ncbi_validate.py
   fetch              download complete mitogenomes from NCBI by taxon / query          = mito_fetch.py
   check              audit existing GenBank annotation; lists records to re-annotate   = mito_check.py
+  rna                RNA-seq evidence for an annotated mitogenome: depth of each gene / ORF relative to the
+                     13 genes, partly transcribed ORFs, library strand, poly(A) 3' ends   = mito_rna.py
   compare            original annotation vs MitoM, gene by gene                       = mito_compare.py
   plot               circular genome maps (--style circos / mitom): genes, GC content; read depth with --fq1 / --fq2
                                                                                        = mito_plot.py
@@ -67,6 +69,7 @@ COMMANDS = {
     "gb2tbl": ("mito_tbl.py", []),
     "fetch": ("mito_fetch.py", []),
     "check": ("mito_check.py", []),
+    "rna": ("mito_rna.py", []),
     "compare": ("mito_compare.py", []),
     "plot": ("mito_plot.py", []),
     "nuc": ("mito_nuc.py", []),

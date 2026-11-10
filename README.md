@@ -194,6 +194,8 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 | 环状 / 线状核对（`mitom_topology.py`、`mito_core.py --check_ends`：两端的基因跨接点再比对；跨接点的内含子用 protein2genome） | MitoM 自有步骤 |
 | 非编码区（`mito_ncr.py`：≥ 100 nt 无注释的区段写成 NCR misc_feature） | MitoM 自有步骤 |
 | 未知功能的 ORF（`mito_orf.py`：同源证明受选择才写，其余给 WARNING；`benchmark/results/orf_2026-11-09/`） | MitoM 自有步骤（MITOS2 不注释） |
+| 转录组证据（`mito_rna.py`，`mitom rna`：相对深度、部分转录、文库方向、polyA 3′ 端；`benchmark/results/rnaseq_2026-11-10/`） | MitoM 自有步骤（minimap2 / bwa） |
+| 多分体线粒体基因组（`mito_multipart.py`：同一组装 / BioSample 的记录合起来才完整；`benchmark/results/ebp_mito_2026-11-10/`） | MitoM 自有步骤 |
 | 漏注的蛋白基因（`mito_pcg_hmm.py`：近缘谱 HMM 补找 atp8 等分化基因；`benchmark/results/pcg_hmm_2026-11-10/`） | MitoM 自有步骤（HMMER、MAFFT） |
 | 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
 | 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度，内含子画斜线、非编码区画浅灰；默认样式借鉴 mitoPlotR） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
