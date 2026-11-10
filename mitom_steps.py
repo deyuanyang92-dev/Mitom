@@ -291,6 +291,25 @@ def run_pcg_hmm(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepR
     return StepResult(f"protein genes by HMM         : {found} added ({where(args, 'reports/pcg_hmm_report.tsv')})")
 
 
+@optional_step("MULTIPART")
+def run_multipart(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
+    """Records that are parts of one mitochondrial genome (same assembly / BioSample; mito_multipart.py): a
+    multipartite genome or one genome in pieces, whose genes are complete only together. Report multipart_report.tsv
+    (groups of >= 2 records), a WARNING per such group."""
+    import mito_multipart
+    recs = [r for f in sorted(gb_dir.rglob("*.gbf")) for r in SeqIO.parse(str(f), "genbank")]
+    rows = mito_multipart.analyse(recs)
+    report = reports_dir(out_root) / "multipart_report.tsv"
+    from mito_common import write_tsv
+    write_tsv(report, mito_multipart.COLUMNS, rows)
+    parts = [r for r in rows if r["verdict"].startswith("parts of one genome")]
+    for r in parts:
+        logging.warning(f"[MULTIPART] {r['basis']} {r['group']} ({r['records']}): {r['verdict']}; together "
+                        f"{r['together']} of 13 protein genes")
+    return StepResult(f"{len(parts)} group(s) of records that are parts of one genome "
+                      f"({where(args, 'reports/multipart_report.tsv')})")
+
+
 def _rrna_hmm_line(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> str:
     return f"rRNAs added by rRNA HMM      : {count_rows(out_root / 'reports' / 'rrna_hmm_report.tsv', 'status', 'added')}"
 

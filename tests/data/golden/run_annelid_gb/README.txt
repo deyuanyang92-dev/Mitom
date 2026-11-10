@@ -18,6 +18,7 @@ reports/
   topology_decision.tsv        circular or linear: each record's label, where it came from, the topology annotated, why
   reannotation_decision.tsv    after re-orientation: round 2 or not, and why
   curation_report.tsv          every boundary / name change: rule, old and new location, reason
+  multipart_report.tsv         records of one assembly / BioSample: parts of one genome (multipartite mtDNA) or copies
   pcg_hmm_report.tsv           missing protein genes searched with a profile HMM of the nearest relatives: found or not, E-value
   rrna_hmm_report.tsv          rRNAs searched / added by the per-phylum rRNA HMMs
   intron_report.tsv            introns found

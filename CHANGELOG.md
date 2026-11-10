@@ -5,6 +5,18 @@ installed one.
 
 ## Unreleased
 
+### Added (parts of one genome)
+- `mito_multipart.py`, in step 9: records of one assembly (COMMENT) or BioSample (DBLINK) whose protein genes are
+  complete only together are reported as parts of one genome (multipartite mtDNA or pieces) in
+  multipart_report.tsv with a WARNING; copies of one sequence are counted once. On 16 multi-record genome-project
+  assemblies: 6 groups found (earwig, millipede and nematode two-circle mtDNA; three butterflies in two pieces).
+  benchmark/results/ebp_mito_2026-11-10/.
+- Benchmark on 221 complete genome-project (DToL / ERGA / VGP) mitogenomes; the unexpected missing genes are a
+  three-chromosome sponge, a two-circle nematode and a myxozoan gene loss (MitoM right).
+
+### Fixed (benchmark)
+- `benchmark/mito_sample.write_bare` kept no DBLINK (record slicing drops dbxrefs).
+
 ### Added (missing protein genes)
 - `mito_pcg_hmm.py`, part of step 6 (`--pcg_hmm yes`, default): protein genes still missing after the core are
   searched with profile HMMs (MAFFT + HMMER) of the gene in the record's nearest relatives (models/pcg_refs.faa.gz,

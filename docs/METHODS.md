@@ -127,6 +127,17 @@ Protein genes still missing after the core are searched with profile HMMs of the
 relatives (lineage, then similarity of the record's cox1); E <= 0.01 x the prior odds of the gene among the 30
 nearest annotated relatives, three profile sizes tried with E x 3.
 
+## 多分体线粒体基因组 / Parts of one genome (mito_multipart.py)
+
+有的线粒体基因组由几个分子组成（海绵 *Lycopodina hypogea* 3 条染色体，nad4l 单独在 291 bp 的小环上；线虫 *Allodiplogaster
+pararmata* 一个 HiFi 组装两个环，基因互补）。逐条看会“缺”基因。第 9 步把同一组装（COMMENT “The assembly …”）或同一
+BioSample（DBLINK）的记录放在一起：序列相同的只算一次（21-mer ≥ 99 % 相同）；各自缺蛋白基因、合起来 ≥ 12 个的报告为
+“parts of one genome”（多分体，或一个基因组的几段），`multipart_report.tsv` 一组一行，日志给 WARNING；长度不足常见长度一半的
+基因记为片段。测试：`benchmark/results/ebp_mito_2026-11-10/README.md`。
+
+Records of one assembly / BioSample whose genes are complete only together are reported as parts of one genome
+(multipartite mtDNA or pieces), copies counted once.
+
 ## 非编码区 / Non-coding regions (mito_ncr.py)
 
 每条记录中 ≥ `--ncr_min_len`（默认 100）nt、没有任何特征覆盖的区段写成 misc_feature `/note="non-coding region NCR<k>, <长度> bp: no gene annotated (MitoM)"`：按在记录中的顺序编号，跨原点的写成 join；带内含子的基因覆盖它的内含子；再次运行时替换旧的 NCR。这一步在校正之后（`run` / `annotate` / `import`；`--ncr no` 不写，圈图也不画）。未命名的控制区、可能含未识别基因的序列因此在 GenBank、NCBI 提交文件和圈图里都看得到。

@@ -54,8 +54,28 @@ All 6,309 NCBI records; most have no annotation at all. Test set: up to 25 circu
 Of the four records missing protein genes other than atp8, three are biology (two multipartite mitochondrial
 genomes, one gene loss shared by the genus) and MitoM is right; one (*Themiste*) is unresolved.
 
+## Parts of one genome / 多分体线粒体基因组（`mito_multipart.py`，`mitom run` 第 9 步）
+
+上面两个例子（*Lycopodina*、*Allodiplogaster*）说明：逐条看会“缺”基因，其实是一个基因组的几个分子。`mito_multipart.py`
+把同一组装（COMMENT “The assembly …”）或同一 BioSample（DBLINK）的记录放在一起：各自缺基因、合起来 ≥ 12 个蛋白基因的，报告为
+“parts of one genome”（多分体，或一个基因组的几段）；序列相同的（INSDC 与 RefSeq 拷贝）只算一次。
+检验：6,309 条中 70 个组装提交了 ≥ 2 条线粒体记录，多数是 INSDC + RefSeq 同一序列；长度不同的 16 组（37 条，`multipart_groups.tsv`）
+用 `mitom run` 注释后分析（`multipart_report.tsv`）：
+
+| 判定 / verdict | 组 / groups | 物种 / species |
+|---|---|---|
+| 合起来才完整 / complete only together | 6 | 蠼螋 *Labia minor*（7 + 6 个基因）、千足虫 *Choneiulus palmatus*（9 + 4）、线虫 *Allodiplogaster pararmata*（5 + 10，缺 atp8 为色矛纲常态）——各两个环；凤蝶 *Troides* 3 种——各两条线状片段（一个基因组分两段） |
+| 一条已全，其余为额外拷贝或片段 / one record complete | 6 | 蚜虫 *Sitobion fragariae*（13 + 5）、蜈蚣 *Scolopendra cretica*（13 + 8 + 5）、小蜂 *Ixodiphagus* 等 |
+| 同一序列 / copies | 1 | 甲虫 *Dendarus foraminosus* |
+| 合起来也不完整 / incomplete together | 2 | *Lagis koreni*（两条线状片段，8 个基因）；海绵 *Mycale flammula*（4 个小环 6 个基因：atp6、cox2、cox3、nad3 在序列中 tblastn 找不到同源，cob / nad4 只有与 ND2 / ND5 的交叉相似——组装缺环） |
+
+A group whose records each lack genes but hold >= 12 of the 13 together is reported as parts of one genome: 6 of the
+16 multi-record genome-project assemblies (two-circle mtDNA of an earwig, a millipede and a nematode; three
+butterflies assembled in two pieces). The benchmark helper `write_bare` lost DBLINK (BioSample) when it copied a
+record; fixed (MitoM itself keeps it: golden run_issues).
+
 ## Files / 文件
 
 `fetch.py`, `make_set.py`, `summarise.py`; `records.tsv` (all 6,309), `set.tsv` (the 221), `per_record.tsv`;
-`check/`: the second *Allodiplogaster* circle (OZ057411.1, `mitom run`) and the three *Lycopodina* chromosomes (PP657140-PP657142).
+`multipart_groups.tsv`, `multipart_report.tsv`; `check/`: the second *Allodiplogaster* circle (OZ057411.1, `mitom run`) and the three *Lycopodina* chromosomes (PP657140-PP657142).
 Work data on cody: `/media/cody/18T_R1/yzz/_realtest/ebp_mito_2026-11-10/`.

@@ -205,6 +205,7 @@ def write_bare(rec: SeqRecord, bare_dir: Path) -> None:
     d.mkdir(parents=True, exist_ok=True)
     b = rec[:]
     b.annotations = dict(rec.annotations)
+    b.dbxrefs = list(rec.dbxrefs)          # (DBLINK BioProject / BioSample: slicing drops it; mito_multipart groups by it)
     b.features = [f for f in rec.features if f.type == "source"]
     SeqIO.write(b, str(d / f"{rec.id}.gbf"), "genbank")
 

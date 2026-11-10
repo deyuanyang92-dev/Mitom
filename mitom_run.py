@@ -49,6 +49,7 @@ from mitom_steps import (
     run_ncr,
     run_orf,
     run_pcg_hmm,
+    run_multipart,
     run_plots,
     run_rescue,
     run_rrna_hmm,
@@ -492,10 +493,12 @@ def stage_orf_ncr(r: RunState) -> Optional[int]:
 
 
 def stage_ncbi(r: RunState) -> Optional[int]:
-    """NCBI check (table2asn) and submission files; summary.tsv; all records in one GenBank file."""
+    """NCBI check (table2asn) and submission files; records that are parts of one genome (mito_multipart.py);
+    summary.tsv; all records in one GenBank file."""
     args, out_root, steps, merge_dir = r.args, r.out_root, r.steps, r.merge_dir
     steps.start("ncbi", "NCBI check (table2asn) and submission files")
     submitted = run_submission(args, merge_dir, out_root) if r.curated.curated else r.curated   # (not curated: no files)
+    steps.info(f"parts of one genome : {run_multipart(args, merge_dir, out_root).summary}")
     steps.done(submitted.summary, submitted.ok)
     refresh_summary(out_root, merge_dir)
     r.all_final_gbs = sorted(                    # rglob: the no_<gene>_gene/ records are merged too

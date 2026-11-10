@@ -1,0 +1,16 @@
+group	basis	records	distinct	genes_each	together	missing_together	verdict	fragments
+SAMEA112751340	BioSample	OZ181345.1,OZ224578.1,OZ224579.1	1	OZ181345.1:13	13		copies of one sequence	
+SAMEA112751358	BioSample	OZ306303.1,OZ306304.1,OZ306305.1	3	OZ306303.1:8; OZ306304.1:5; OZ306305.1:13	13		one record holds all genes; the others are extra copies or pieces	atp6 (OZ306304.1), nad4 (OZ306304.1), nad5 (OZ306303.1)
+SAMEA114301896	BioSample	OY735385.1,OY735386.1	2	OY735385.1:5; OY735386.1:8	13		parts of one genome: the genes are complete only together (multipartite mitochondrial genome, or one genome in pieces)	atp6 (OY735385.1)
+SAMEA114301898	BioSample	OY735312.1,OY735313.1	2	OY735312.1:6; OY735313.1:7	13		parts of one genome: the genes are complete only together (multipartite mitochondrial genome, or one genome in pieces)	
+SAMEA114301899	BioSample	OY735361.1,OY735362.1	2	OY735361.1:5; OY735362.1:9	13		parts of one genome: the genes are complete only together (multipartite mitochondrial genome, or one genome in pieces)	
+SAMEA115861783	BioSample	OZ194975.1,OZ194976.1	2	OZ194975.1:13; OZ194976.1:13	13		one record holds all genes; the others are extra copies or pieces	
+SAMEA117079308	BioSample	OZ313624.1,OZ406042.1	2	OZ313624.1:13; OZ406042.1:13	13		one record holds all genes; the others are extra copies or pieces	
+SAMEA117501632	BioSample	OZ224438.1,OZ224439.1	2	OZ224438.1:13; OZ224439.1:13	13		one record holds all genes; the others are extra copies or pieces	
+SAMEA118212305	BioSample	OZ258157.1,OZ453040.1	2	OZ258157.1:13; OZ453040.1:13	13		one record holds all genes; the others are extra copies or pieces	
+SAMEA122995121	BioSample	OZ500874.1,OZ500875.1	2	OZ500874.1:1; OZ500875.1:7	8	atp6,cob,cox3,nad4l,nad6	incomplete even together	
+igLabMino1.1	assembly	OY720351.1,OY720352.1	2	OY720351.1:7; OY720352.1:6	13		parts of one genome: the genes are complete only together (multipartite mitochondrial genome, or one genome in pieces)	
+ihSitFrag1.hap1.1	assembly	OZ483740.1,OZ483741.1	2	OZ483740.1:13; OZ483741.1:5	13		one record holds all genes; the others are extra copies or pieces	atp6 (OZ483741.1), nad1 (OZ483741.1)
+nxAllPara2.1	assembly	OZ057410.1,OZ057411.1	2	OZ057410.1:5; OZ057411.1:10	12	atp8	parts of one genome: the genes are complete only together (multipartite mitochondrial genome, or one genome in pieces)	atp6 (OZ057410.1), nad5 (OZ057410.1)
+odCalManu1.1	assembly	OZ218373.1,OZ218374.1,OZ218375.1,OZ218376.1,OZ218377.1	4	OZ218373.1:0; OZ218374.1:1; OZ218375.1:1; OZ218376.1:4	6	atp6,atp8,cob,cox2,cox3,nad3,nad4	incomplete even together	
+qdChoPalm2.1	assembly	OZ256960.1,OZ256961.1	2	OZ256960.1:9; OZ256961.1:4	13		parts of one genome: the genes are complete only together (multipartite mitochondrial genome, or one genome in pieces)	
