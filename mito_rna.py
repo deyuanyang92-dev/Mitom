@@ -19,7 +19,8 @@ divergence), bowtie2 --very-sensitive-local. Measured: benchmark/results/rna_map
 Writes rna_features.tsv (one row per gene / ORF / non-coding region: mean depth, depth relative to the median of
 the 13 protein genes, the share of its positions transcribed at >= 10 % of that median - a partly transcribed ORF
 shows here -, "transcribed like the genes" when its depth is at least half that of the least-expressed protein gene,
-sense share for stranded libraries, poly(A) reads at its 3' end) and rna_polya_sites.tsv (sites with >=
+sense share for stranded libraries, poly(A) reads at its 3' end), rna_depth.tsv.gz (depth per position and strand)
+and rna_polya_sites.tsv (sites with >=
 MIN_POLYA_READS reads, the feature they end). A reverse-stranded library (dUTP, read 1 antisense) is recognised and
 read accordingly. Measured: benchmark/results/rnaseq_2026-11-10/README.md.
 
@@ -29,6 +30,7 @@ Usage: python3 mito_rna.py -g annotated.gb -1 R1.fq.gz [-2 R2.fq.gz] -o outdir [
 from __future__ import annotations
 
 import argparse
+import gzip
 import re
 import statistics
 import subprocess
@@ -56,6 +58,8 @@ INTERNAL_WINDOW = 10        # internal priming: the last 10 nt before a poly(A) 
 INTERNAL_RUN = 7            # ... hold an A-run of >= 7 (true 3' ends of 67 annelid genomes: 1 of 1,047) ...
 INTERNAL_A = 9              # ... or >= 9 A's (none of the 1,047)
 MAPPERS = ("bwa", "minimap2", "bowtie2")
+DIVERGED = 0.02             # reads differ from the genome by more than this: another individual / population (or
+                            # species); fast-evolving genes then get fewer reads - their low depth is not low expression
 POLYA_FEW = 1e-4            # poly(A) reads below this share of the reads: no 3'-end evidence in this library
 FEATURE_COLUMNS = ["record", "feature", "type", "start", "end", "strand", "length", "mean_depth", "relative_depth",
                    "covered_share", "transcribed_like_genes", "sense_share", "polya_reads_at_3prime_end"]
@@ -116,6 +120,7 @@ def parse_sam(lines: Iterable[str], n: int) -> dict:
     depth = {1: np.zeros(n, dtype=np.int64), -1: np.zeros(n, dtype=np.int64)}
     polya: Counter = Counter()
     used = low = 0
+    edits = aligned = 0
     for ln in lines:
         if ln.startswith("@"):
             continue
@@ -127,6 +132,10 @@ def parse_sam(lines: Iterable[str], n: int) -> dict:
             low += 1
             continue
         used += 1
+        nm = re.search(r"\tNM:i:(\d+)", ln)
+        if nm:
+            edits += int(nm.group(1))
+            aligned += sum(int(k) for k, op in CIGAR.findall(c[5]) if op in "MI=X")
         pos = int(c[3]) - 1
         rev = bool(flag & 0x10)
         frag_strand = (-1 if rev else 1) * (-1 if flag & 0x80 else 1)
@@ -152,7 +161,8 @@ def parse_sam(lines: Iterable[str], n: int) -> dict:
             polya[((ref - 1) % n, 1)] += 1
         if ops and ops[0][1] == "S" and seq[: int(ops[0][0])].endswith("T" * POLYA_MIN):
             polya[(pos % n, -1)] += 1
-    return {"depth": depth, "polya": polya, "used": used, "low_mapq": low}
+    return {"depth": depth, "polya": polya, "used": used, "low_mapq": low,
+            "edit_rate": edits / aligned if aligned else 0.0}
 
 
 def features_of(rec: SeqRecord) -> List[Tuple[str, str, int, int, int]]:
@@ -238,7 +248,8 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
             "sense_share_on_genes": sense, "stranded": stranded, "reverse": reverse,
             "polya_sites": sum(1 for r in srows if not r["internal_priming"]),
             "internal_priming_sites": sum(1 for r in srows if r["internal_priming"]),
-            "polya_reads": sum(res["polya"].values())}
+            "polya_reads": sum(res["polya"].values()), "edit_rate": res["edit_rate"],
+            "depth": res["depth"]}
     return rows, srows, info
 
 
@@ -270,16 +281,25 @@ def main(argv: Sequence[str] = None) -> int:
         proc.wait()
     write_tsv(out / "rna_features.tsv", FEATURE_COLUMNS, rows)
     write_tsv(out / "rna_polya_sites.tsv", SITE_COLUMNS, sites)
+    with gzip.open(out / "rna_depth.tsv.gz", "wt") as fh:             # per position, transcript strand when stranded
+        fh.write("position\tplus\tminus\n")
+        d = info["depth"]
+        for i in range(len(rec.seq)):
+            fh.write(f"{i + 1}\t{d[1][i]}\t{d[-1][i]}\n")
     lib = ("reverse-stranded (read 1 antisense)" if info["reverse"] else "stranded") if info["stranded"] \
         else "unstranded"
     print(f"[mito_rna] {info['reads_used']} reads (MAPQ >= {MIN_MAPQ}; {info['reads_low_mapq']} below), {lib} "
           f"(sense share {info['sense_share_on_genes']:.2f}), protein-gene median depth "
-          f"{info['pcg_median_depth']:.1f}, {info['polya_reads']} poly(A) reads, {info['polya_sites']} sites (+ {info['internal_priming_sites']} internal "
+          f"{info['pcg_median_depth']:.1f}, edit rate {info['edit_rate']:.4f}, {info['polya_reads']} poly(A) reads, {info['polya_sites']} sites (+ {info['internal_priming_sites']} internal "
           f"priming) -> {out}",
           file=sys.stderr)
     if info["pcg_median_depth"] < MIN_MEDIAN_DEPTH:
         print(f"[mito_rna] WARNING protein-gene median depth {info['pcg_median_depth']:.1f} < {MIN_MEDIAN_DEPTH}: too "
               "few reads for expression calls (transcribed_like_genes left empty)", file=sys.stderr)
+    if info["edit_rate"] > DIVERGED:
+        print(f"[mito_rna] WARNING the reads differ from this genome by {100 * info['edit_rate']:.1f} % (another "
+              "individual, population or species): fast-evolving genes get fewer reads, so their low relative depth "
+              "does not show low expression", file=sys.stderr)
     if info["polya_reads"] < POLYA_FEW * max(1, info["reads_used"]):
         print(f"[mito_rna] WARNING {info['polya_reads']} poly(A) reads: no 3'-end evidence in this library (random "
               "primers / total RNA, short reads, or tails trimmed, e.g. fastp --trim_poly_x)", file=sys.stderr)
