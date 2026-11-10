@@ -80,8 +80,8 @@
 
 - 4 个 MitoM 内含子全部被证实、剪接位点精确：*Chaetopterus dewysee* COX1（320 nt，此前“未确证”）、*Glycera fallax*
   COX1 两个、*Travisia forbesii* COX1；剪接后连接 reads 4,895–102,944 条，远多于未剪接的 (benchmark/results/annelid_rna_2026-11-10/README.md:93)
-- *Travisia* ATP8 的 "1 nt 内含子"（MitoM 用 join 跨过一个移码）：剪接连接 0 条、未剪接 533 / 677 条——RNA 保留了这个
-  碱基，不是内含子；该 ATP8 需人工核查（移码或位置不对） (benchmark/results/annelid_rna_2026-11-10/README.md:93)
+- *Travisia* ATP8 的 "1 nt 内含子"（MitoM 用 join 跨过一个移码） (benchmark/results/annelid_rna_2026-11-10/README.md:93)：剪接连接 0 条、未剪接 533 / 677 条——RNA 保留了这个
+  碱基，不是内含子；该 ATP8 需人工核查（移码或位置不对）
 
 ## 10. 外部资料核查 / checked claims from outside material (2026-11-11)
 
