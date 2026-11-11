@@ -100,6 +100,21 @@ tRNA, the mRNA is cut before the tRNA (T / TA) about as often as it keeps the fu
 | OZ479805.1 *Travisia forbesii* | ERR17229609 | COX1 | 1,252 | 83,887 | 44,024 | 60,269 | 成立（大量未剪接前体） |
 | OZ479805.1 *Travisia forbesii* | ERR17229609 | ATP8 "1 nt" | 1 | 0 | 533 | 677 | 不成立：RNA 保留该碱基 / not an intron |
 
+### 怎么用转录组判断剪接 / how to judge splicing from RNA-seq
+
+![COX1 splicing, Travisia forbesii](figures/travisia_cox1_splicing.png)
+
+- 直接比对时，内含子区域也有覆盖：未剪接的前体 RNA 覆盖整个内含子，所以**覆盖度不能说明是否剪接**（上图 RNA 面板，
+  内含子深度约 5,000×）。Coverage alone cannot show splicing: precursors cover the intron.
+- 判断剪接看**跨剪接点的 reads**：read 的序列从外显子 1 最后一个碱基直接接到外显子 2 第一个碱基（图中蓝色 read）。
+  这种 read 只能来自剪接过的 RNA。数法：在 reads 里直接找外显子|外显子的 30 nt 序列（两条链），不依赖比对软件
+  （剪接比对软件会报假内含子）；同时数外显子|内含子、内含子|外显子作对照（`travisia_dna_check.py`）。
+  Splicing = junction reads (exact exon|exon sequence in the reads), counted without a spliced aligner.
+- 用同一个体的 DNA 作阴性对照：DNA 中外显子|外显子必须为 0，否则可能是 DNA 本身有缺失型变异（异质性），不是剪接。
+  DNA of the same specimen must have no exon|exon reads; otherwise a deletion variant in the DNA could explain them.
+- 本例：RNA 5,799 条外显子|外显子（前 400 万对；整个 run 83,887 条），DNA 0 条 → 内含子在 DNA 中、在 RNA 中被剪掉；
+  同时仍有约 3,000–4,000 条未剪接 reads，即部分转录本尚未剪接。重画：`python3 figures/make_travisia_cox1_splicing.py`。
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
