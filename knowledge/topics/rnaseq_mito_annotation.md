@@ -96,12 +96,13 @@
 数据：*T. forbesii* OZ479805（DToL wuTraForb1），同一标本的转录组 ERR17229609；用户自己的青岛 *Travisia* HiFi 组装
 （线粒体为 hifiasm 环状 contig ptg001027c，17,228 bp，未发表）；文献 *T. sanrikuensis* LC677172。
 
-- 没有新的 RNA 编辑：RNA 与基因组不同（≥ 20 % reads）的位点只有 6 个，对照 *Arenicola marina* 3 个；tRNA 末端的 T>A 两种都有 (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8924214/)
+- 没有新的 RNA 编辑：RNA 与基因组不同（≥ 20 % reads）的位点只有 6 个，对照 *Arenicola marina* 3 个；tRNA 末端的 T>A 两种都有：未确证（本节数据，未单独成表）
 - COX1 内含子是真的：退化的 II 型内含子，*Travisia* 多个种同一位置（Kobayashi et al. 2022, doi:10.1038/s41598-022-08103-5）；青岛种也在同一位置（1,143 nt，Rfam E = 9.5e-12）；*T. forbesii* 转录组中剪接连接 reads 83,887 条——它被剪接 (benchmark/results/annelid_rna_2026-11-10/README.md:93)
 - ATP8 的 "1 nt 内含子" 是 MitoM 的错误（P9，mito_curate_pcg.py:348）：核心把 ATP8 放在 0 号框（MTSK…，3651..3812），P7 / P8 只在起点和终点的框里找单框修复，找不到，P9 就跨一个“移码”拼接；真正的 ATP8 是 1 号框完整 ORF `MPHLSPLSWALAP…`，与 *T. sanrikuensis*（53 aa）和青岛种（`MPHLSPLMWALAP…`，53 aa，无移码）一致；转录组也保留该碱基、无剪接 (mito_curate_pcg.py:328)
 - 修正方向：P9 之前在其他两个框里找覆盖注释长度 ≥ 85 % 的单框 ORF（起点在 max_start_shift 内、终点在 FRAMESHIFT_WINDOW 内），有就不拼接；需用 2026-10 的鸟、龟 nad3 回归（它们的另一框只有一半，不受影响）：未确证
 - 另两个移码拼接（*Sabellastarte* ND3、*Spirobrachia* ND6）：RNA 保留多出的碱基，单框 ORF 只覆盖 83 % / 64 %，近缘种序列太分化定不了是否共有：未确证
-- *T. forbesii* COX3 4227 处 6 个 T：32 % 的 RNA reads 是 7 个 T。可能是 DNA 异质性或转录滑动；需同一标本的 DNA reads（DToL HiFi 不在本地，EBI 直连太慢，2 万条 HiFi 中只有 1 条线粒体 reads）：未确证
+- *T. forbesii* COX3 第 101 密码子处 6 个 T（4228–4233）：已解决（2026-11-11，下载同一标本 DNA：HiFi ERR17229040、10x Illumina ERR17229605，organise-sra 直连）。DNA 均一为 6 T（HiFi 287/297、Illumina 102/104），RNA 35 % 为 7 T——不是异质性，是 RNA 层面的“+1”。只发生在这个位点（124 个同聚物中位数 0 %，次高为 COX1 内含子中的长 A 串 15–20 %）。7 T 使 COX3 移码、在第 147 密码子终止；6 T 编码的保守区 …WAFFHSSLAPTPELG… 与 *T. sanrikuensis*、青岛种完全相同。所以不是恢复功能的编辑，而是聚合酶在 T 串上的滑动（转录或建库反转录，现有数据分不开；需要直接 RNA 测序或第二个文库）。青岛种同处也是 6 T，*T. sanrikuensis* 被 C 打断 (benchmark/results/annelid_rna_2026-11-10/travisia_dna_check.py:1)
+- DNA 也证实：ATP8 3706 的碱基在 DNA 中（HiFi 277、Illumina 92 条，无缺失）——MitoM 的 P9 拼接是错的；COX1 内含子在 DNA 中完整（无剪接连接），RNA 的剪接是真剪接 (benchmark/results/annelid_rna_2026-11-10/travisia_dna_check.py:1)
 
 ## 7. 未解决 / open
 
