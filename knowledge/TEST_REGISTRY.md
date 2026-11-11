@@ -130,6 +130,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 2026-11-11 | cody | 同上 52 对的异常值分析（基因深度 robust z、未确认末端、孤立 poly(A) 位点、rRNA 末端） | 同上 | mito_rna --refine（本提交：重复序列、3′ UTR 确认、无终止密码子时延伸、rRNA 3′ 端） | 蛋白基因 3′ 端：末端 464、3′ UTR 15、修正 4、重复 5、无证据 185（ND4L 50）/673；rRNA 确认 88、修正 1 /104；新修正 Sabella ND1 300→305、ND3 +TA、rrnL −11 nt；Themiste ATP8/ND6 序列重复。更正：上一行 510/673 含 rRNA 注释，实为 464 | 本提交 | benchmark/results/annelid_rna_2026-11-10/README.md |
 | 2026-11-11 | cody | 独立模块 mito_rnaseq_annot.py（学到的转录组规则做成算法）在 54 对上：学习集 23 对 / 测试集 31 对 | 同上（ncbi-genome-inventory 配对） | mito_rnaseq_annot.py（本提交），bwa mem | 内含子确认 4、移码拼接标记 3、未注释连接噪声 0（规则：≥ 20 % 侧翼深度）；重叠终止修正 8 / 8，3′ 端修正 3 / 1；所有可核对修正与同科中位长度差 ≤ 2 aa（10/10、8/8）；同标本蛋白基因内 ≥ 80 % RNA 插入缺失 12 处待 DNA 核实 | 本提交 | benchmark/results/annelid_rna_2026-11-10/README.md |
 | 2026-11-11 | cody | MITOS2 vs MitoM vs MitoM + 转录组（mito_rnaseq_annot）在同 52 条环节动物基因组项目线粒体上 | 同上（学习 23 / 测试 29） | MITOS2 2.1.9（mito_bench_run，refseq89m）；MitoM（mitom_out）；mito_rnaseq_annot | 蛋白长度与同科中位数 ≤ 2 aa：测试集 175/292、231/295、233/295；3′ 端 poly(A) 支持 183、252、254；已证实内含子精确 0/4、4/4、4/4 | 本提交 | benchmark/results/annelid_rna_2026-11-10/README.md |
+| 2026-11-11 | cody | MITOS2 经 MitoM 修正（mitos2_cur）/ 全部步骤（mitos2_full，本提交新增工具）后是否等于 MitoM | 同上 52 条 | mito_bench_run.py mitos2_cur、mitos2_full | 测试集蛋白 ≤ 2 aa：175 → 193 → 193，MitoM 231；3′ 端 poly(A)：183 → 212 → 212，MitoM 252；内含子 0 → 0 → 1，MitoM 4/4；差距在核心的 ND2、COX1、ND4、ND5 边界 | 修正补不回核心差距 | benchmark/results/annelid_rna_2026-11-10/README.md |
 
 ## 9. 核标记 / mitom nuc
 

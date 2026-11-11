@@ -187,6 +187,20 @@ computed instead of observed cut. Next: check the 12 near-all coding indels with
 | | 测试 | 183 | 252 | 254 |
 | 已证实内含子坐标精确 / RNA-proven introns with exact ends | 学习 (4) | 0 | 4 | 4 |
 
+**MITOS2 加上 MitoM 的修正是否就一样？/ is MITOS2 equal once MitoM's curation is applied?** 不一样。
+`mito_bench_run.py --tools mitos2_cur`（MITOS2 结果经 `mitom import` 边界修正；内含子、补漏、rRNA HMM 关闭）和
+`mitos2_full`（`mitom import` 默认：MitoM 之后的全部步骤）：
+
+| 测试集 / test (29) | MITOS2 | + 修正 / + curation | + 全部步骤 / + all steps | MitoM |
+|---|---|---|---|---|
+| 蛋白与同科中位数 ≤ 2 aa / within 2 aa | 175 / 292 | 193 / 295 | 193 / 295 | 231 / 295 |
+| 3′ 端有 poly(A) / 3′ end with poly(A) | 183 | 212 | 212 | 252 |
+| 已证实内含子（学习集 4 个）/ RNA-proven introns (learning, 4) | 0 | 0 | 1 | 4 |
+
+差距在注释核心给出的基因边界，修正步骤补不回来：ND2（同科中位 ±2 aa：MitoM 22 / 43，MITOS2 + 全部步骤 7 / 43）、
+COX1（31 / 17）、ND4（29 / 19）、ND5（31 / 22）；MitoM 对而 MITOS2 + 全部步骤错的基因中，3′ 端不同 59 个、起点不同 34 个。
+The gap is in the core's gene boundaries (ND2, COX1, ND4, ND5), which curation does not repair.
+
 转录组模块在 MitoM 之上的增量小，因为 MitoM 的末端大多已对：它的价值是给每个末端、内含子以直接证据，并改正少数
 基因组定不了的末端（20 处，均与同科中位长度一致），以及标出 MitoM 的移码拼接错误和 RNA 与基因组不一致处。
 The RNA-seq module adds little to MitoM's counts because MitoM's ends are mostly right already; its value is direct

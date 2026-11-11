@@ -52,9 +52,11 @@ MITOM_GB = "raw/annotation/*.gb|raw/final_annotation/*.gb"
 MIN_REF_PCG = 12                          # a MitoFinder reference must carry (nearly) all genes with standard names
 
 TOOLS = ("ours", "mitoz", "mitos2", "mitos1", "mitom", "mitom_auto", "mitom_native", "mitom_lo", "mitofinder",
-         "mitom_nocur", "mitoz_cur", "mitos2_cur", "mitom_blind", "mitom_prein")
+         "mitom_nocur", "mitoz_cur", "mitos2_cur", "mitos2_full", "mitom_blind", "mitom_prein")
 # mitom_blind = `mitom run` on in.fa (sequence only) with no --clade / --genetic_code (--clade auto decides both, as a user
 # with a new assembly would run it; the other MitoM tools are given the NCBI record's clade and code);
+# mitos2_full = the record's MITOS2 output through every later MitoM step (mitom import defaults: introns, rescue,
+# rRNA HMM, curation) - MITOS2 as the core of the MitoM workflow.
 # mitom_nocur = mitom_native with --curate no; mitoz_cur / mitos2_cur = the record's MitoZ / MITOS2 output (runs/mitoz,
 # runs/mitos2 of the same root) through `mitom import` with curation only (no rRNA HMM, introns, rescue)
 # mitom_prein = mitom_lo with --intron_fix no and the intermediates kept: raw/work/04.final_gb/ is the input of the intron
@@ -85,6 +87,12 @@ def build_cmd(tool: str, row: dict, bare: Path, out: Path, threads: int) -> Opti
     acc, code = row["accession"], str(row["genetic_code"])
     if tool in ("ours", "mitoz") and not row["mitoz_clade"]:
         return None
+    if tool == "mitos2_full":
+        src = out.parent.parent / "mitos2" / acc
+        clade = row["mitoz_clade"] or EXTRA_CLADE.get(row.get("phylum", ""), "Animal")
+        return [[sys.executable, str(PIPE / "mitom_pipeline.py"), "import", "-i", str(src / "mitos"),
+                 "-o", str(out / "raw"), "--clade", clade, "--genetic_code", code, "--threads", str(threads),
+                 "--max_tasks", "1", "--plot", "no", "--fasta", str(src / "in.fa")]]
     if tool in ("mitoz_cur", "mitos2_cur"):
         src = out.parent.parent / tool[:-4] / acc
         if tool == "mitoz_cur" and not row["mitoz_clade"]:

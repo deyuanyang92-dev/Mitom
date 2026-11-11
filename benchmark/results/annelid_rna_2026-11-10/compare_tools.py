@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""MITOS2 vs MitoM vs MitoM + RNA-seq (mito_rnaseq_annot.py) on the annelid genome-project pairs.
+"""MITOS2 (raw and + MitoM curation) vs MitoM vs MitoM + RNA-seq (mito_rnaseq_annot.py) on the annelid pairs.
 
-Same records for all three: MITOS2 = tools_root/runs/mitos2/<acc>/final.gbf (mito_bench_run.py, NCBI coordinates);
+Same records for all: MITOS2 = tools_root/runs/mitos2/<acc>/final.gbf, MITOS2+cur = runs/mitos2_cur (mito_bench_run.py
+`mitom import` with boundary curation; intron fix, rescue, rRNA HMM off), MITOS2+all = runs/mitos2_full (`mitom
+import` defaults: every later MitoM step); NCBI coordinates;
 MitoM = mitom_out/annotation/<acc>.gb; MitoM + RNA = rnaseq_annot/<acc>/rnaseq_annotated.gb (both in MitoM's rotated
 coordinates; MITOS2 features are mapped onto them by rotation / strand). Pairs whose species check failed are left out.
 
@@ -30,7 +32,7 @@ H = Path(__file__).resolve()
 sys.path.insert(0, str(H.parents[3]))
 from mito_names import PCG, gene_name  # noqa: E402
 
-TOOLS = ("MITOS2", "MitoM", "MitoM+RNA")
+TOOLS = ("MITOS2", "MITOS2+cur", "MITOS2+all", "MitoM", "MitoM+RNA")
 GENE_REF = {"atp6": "atp6", "atp8": "atp8", "cox1": "cox1", "cox2": "cox2", "cox3": "cox3", "cob": "cob",
             "nad1": "nad1", "nad2": "nad2", "nad3": "nad3", "nad4": "nad4", "nad4l": "nad4l", "nad5": "nad5",
             "nad6": "nad6"}
@@ -99,10 +101,11 @@ def main():
         mm = SeqIO.read(w / f"mitom_out/annotation/{mito}.gb", "genbank")
         recs = {"MitoM": (mm, None), "MitoM+RNA": (SeqIO.read(w / f"rnaseq_annot/{acc}/rnaseq_annotated.gb",
                                                                "genbank"), None)}
-        m2 = w / f"tools_root/runs/mitos2/{mito}/final.gbf"
-        if m2.exists():
-            mr = SeqIO.read(m2, "genbank")
-            recs["MITOS2"] = (mr, mapper(str(mr.seq).upper(), str(mm.seq).upper()))
+        for tool, run in (("MITOS2", "mitos2"), ("MITOS2+cur", "mitos2_cur"), ("MITOS2+all", "mitos2_full")):
+            m2 = w / f"tools_root/runs/{run}/{mito}/final.gbf"
+            if m2.exists():
+                mr = SeqIO.read(m2, "genbank")
+                recs[tool] = (mr, mapper(str(mr.seq).upper(), str(mm.seq).upper()))
         sites = [(int(s["position"]), s["strand"], int(s["reads"])) for s in csv.DictReader(
             open(w / f"rna_out/{acc}/rna_polya_sites.tsv"), delimiter="\t") if not s["internal_priming"]]
         unstr = "unstranded" in r["library"]
@@ -114,7 +117,7 @@ def main():
                 introns.append((gname, i0 - 1, i1))
         f_ = fam.get(r["organism"], "")
         for tool in TOOLS:
-            if tool not in recs or (tool == "MITOS2" and recs[tool][1] is None):
+            if tool not in recs or (tool.startswith("MITOS2") and recs[tool][1] is None):
                 continue
             rec, mp = recs[tool]
             gs = genes(rec, mp)
