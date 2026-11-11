@@ -129,6 +129,47 @@ tRNA, the mRNA is cut before the tRNA (T / TA) about as often as it keeps the fu
 方法：分段 reads 取 bwa mem 的主比对 + 补充比对（SA 标签，同链，MAPQ ≥ 20），记录两段之间跳过的基因组区间并计数；
 不需要剪接比对软件，也不需要任何注释。Split reads (primary + supplementary, same strand, MAPQ >= 20), gap tallied.
 
+## mito_rnaseq_annot.py：把学到的经验做成一个算法 / the learned rules as one algorithm (2026-11-11)
+
+独立模块（不改 `mitom run`，也不改 `mitom rna`）：输入已注释的线粒体基因组 + 同一标本的转录组，输出
+`rnaseq_evidence.tsv`（每个判断一行：步骤、基因、结论 confirmed / corrected / flagged / not_testable、依据）和
+`rnaseq_annotated.gb`。A separate module: annotated mitogenome + RNA-seq of the same specimen -> evidence table and
+revised GenBank; every decision labelled.
+
+```bash
+python3 mito_rnaseq_annot.py -g annotated.gb -1 R1.fq.gz -2 R2.fq.gz -o out --run SRR... --threads 16
+```
+
+| 步骤 / step | 规则（来自哪批数据）/ rule (learned from) |
+|---|---|
+| 0 质控 / QC | reads 差异 > 2 % 停止（同标本 ≤ 1.08 %）；poly(A) reads < 100 不判 3′ 端；序列重复的基因不判表达 |
+| 1 内含子 / introns | 分段 reads 全基因组盲找；未注释的连接需 ≥ 10 reads 且 ≥ 20 % 侧翼深度（4 个真内含子 0.66–1.38，311 个噪声中 305 个 < 1 %）；跨环状原点的 join 不算；1 nt 的 join = 移码拼接：查 RNA 是否保留该碱基，并找另一读码框的完整 ORF |
+| 2 重叠终止 / overlapping stop | 终止密码子与下游基因重叠 ≥ 3 nt 时，poly(A) 位点（观察到的位置）决定在下游基因前切开（T / TA）还是保留完整终止 |
+| 3 3′ 端 / 3′ ends | `mito_rna.refine`：确认、3′ UTR、截短、延伸、rRNA |
+| 4 RNA 与基因组不一致 / RNA ≠ genome | 插入 / 缺失 ≥ 20 %：20–79 % 为部分转录本（滑动 / 异质性），≥ 80 % 为组装碱基错误或多态；只标记，不改序列 |
+| 5 表达 / expression | ORF 与短基因（ATP8 / ND4L / ND3）比，不与 13 基因中位数比 |
+
+结果（54 对；学习集 = `clean_pairs.txt` 的 23 对，测试集 = 其余 31 对）/ results:
+
+| 步骤 / step | 结论 / verdict | 学习集 / learning | 测试集 / test |
+|---|---|---|---|
+| 0 | 物种核对 / species check flagged | 0 | 2 |
+| 0 | 序列重复 / duplicated: not testable | 0 | 5 |
+| 1 | 内含子确认 / intron confirmed | 4 | 0 |
+| 1 | 移码拼接 / frameshift join flagged | 3 | 0 |
+| 2 | 重叠终止修正 / overlap cut corrected | 8 | 8 |
+| 3 | 3′ 端修正 / 3′ end corrected | 3 | 1 |
+| 4 | RNA 插入缺失 ≥ 80 %（蛋白基因内）/ near-all indel in a protein gene | 12 | 3 |
+| 4 | RNA 插入缺失 20–79 %（蛋白基因内）/ partial indel in a protein gene | 4 | 10 |
+| — | 修正后蛋白与同科中位长度相差 ≤ 2 aa / corrected protein within 2 aa of the family median | 10 / 10 | 8 / 8 |
+
+每条判断：`rnaseq_annot_summary.tsv`（修正与标记，含同科中位长度）。迭代：v1 未注释连接 314 个几乎全是噪声
+（→ 侧翼深度比例）；v2 深文库被误判“无 poly(A)”（Sabella 3,878 / 4,050 万 reads → 改为绝对数）、跨原点 join 被当作
+内含子、重叠切点用了计算位置而非观察位置（Sclerolinum ND2 差 1 nt）。下一步：步骤 4 中同标本 ≥ 80 % 的蛋白基因内
+插入缺失（12 处）用 DNA reads 核实是否为组装错误。
+Iterations: v1 314 junction calls, nearly all noise; v2 deep libraries judged without poly(A), origin joins as introns,
+computed instead of observed cut. Next: check the 12 near-all coding indels with DNA reads (assembly errors?).
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
