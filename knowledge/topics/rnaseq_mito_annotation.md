@@ -91,6 +91,18 @@
 - HISAT2 + StringTie 用于动物线粒体：我们的比对评测中 HISAT2 最差，前体连续转录使 StringTie 拼不出基因断点 (benchmark/results/rna_mappers_2026-11-10/README.md:71)
 - 值得用的：剪接连接验证内含子（上节）；Iso-Seq 全长转录本（环节动物仅 3 个组装有，未确证其线粒体覆盖）；RNA 编辑在动物线粒体少见，零星编辑位点不影响 2 % 的物种核对：未确证
 
+## 11. 臭海蛹 Travisia：编辑、内含子、移码 / Travisia: editing, intron, frameshift (2026-11-11)
+
+数据：*T. forbesii* OZ479805（DToL wuTraForb1），同一标本的转录组 ERR17229609；用户自己的青岛 *Travisia* HiFi 组装
+（线粒体为 hifiasm 环状 contig ptg001027c，17,228 bp，未发表）；文献 *T. sanrikuensis* LC677172。
+
+- 没有新的 RNA 编辑：RNA 与基因组不同（≥ 20 % reads）的位点只有 6 个，对照 *Arenicola marina* 3 个；tRNA 末端的 T>A 两种都有 (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8924214/)
+- COX1 内含子是真的：退化的 II 型内含子，*Travisia* 多个种同一位置（Kobayashi et al. 2022, doi:10.1038/s41598-022-08103-5）；青岛种也在同一位置（1,143 nt，Rfam E = 9.5e-12）；*T. forbesii* 转录组中剪接连接 reads 83,887 条——它被剪接 (benchmark/results/annelid_rna_2026-11-10/README.md:93)
+- ATP8 的 "1 nt 内含子" 是 MitoM 的错误（P9，mito_curate_pcg.py:348）：核心把 ATP8 放在 0 号框（MTSK…，3651..3812），P7 / P8 只在起点和终点的框里找单框修复，找不到，P9 就跨一个“移码”拼接；真正的 ATP8 是 1 号框完整 ORF `MPHLSPLSWALAP…`，与 *T. sanrikuensis*（53 aa）和青岛种（`MPHLSPLMWALAP…`，53 aa，无移码）一致；转录组也保留该碱基、无剪接 (mito_curate_pcg.py:328)
+- 修正方向：P9 之前在其他两个框里找覆盖注释长度 ≥ 85 % 的单框 ORF（起点在 max_start_shift 内、终点在 FRAMESHIFT_WINDOW 内），有就不拼接；需用 2026-10 的鸟、龟 nad3 回归（它们的另一框只有一半，不受影响）：未确证
+- 另两个移码拼接（*Sabellastarte* ND3、*Spirobrachia* ND6）：RNA 保留多出的碱基，单框 ORF 只覆盖 83 % / 64 %，近缘种序列太分化定不了是否共有：未确证
+- *T. forbesii* COX3 4227 处 6 个 T：32 % 的 RNA reads 是 7 个 T。可能是 DNA 异质性或转录滑动；需同一标本的 DNA reads（DToL HiFi 不在本地，EBI 直连太慢，2 万条 HiFi 中只有 1 条线粒体 reads）：未确证
+
 ## 7. 未解决 / open
 
 - 终止密码子与下游 tRNA 重叠时由 poly(A) 决定末端：规律已学到（上表），规则尚未写入；计划先在 23 对干净数据上定参数， (mito_rna.py:301)
