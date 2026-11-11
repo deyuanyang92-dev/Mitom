@@ -115,6 +115,20 @@ tRNA, the mRNA is cut before the tRNA (T / TA) about as often as it keeps the fu
 - 本例：RNA 5,799 条外显子|外显子（前 400 万对；整个 run 83,887 条），DNA 0 条 → 内含子在 DNA 中、在 RNA 中被剪掉；
   同时仍有约 3,000–4,000 条未剪接 reads，即部分转录本尚未剪接。重画：`python3 figures/make_travisia_cox1_splicing.py`。
 
+**只用转录组、不用注释，如何证明有内含子 / proving an intron from RNA-seq alone, without any annotation**
+
+| 证据 / evidence | 本例 / here | 说明 / meaning |
+|---|---|---|
+| 分段 reads（split reads）都跳过同一段基因组 | RNA 中 4,883 条分段 reads，4,825 条（98.8 %）精确跳过 274..1525（1,252 nt）；其余只差 1–5 nt | 决定性：许多独立 reads 在同一对碱基处断开、接上 = 内含子及其精确边界 |
+| 同一个体 DNA 的分段 reads | 48 条，零散，无一在此处 | 排除 DNA 本身有缺失（异质性） |
+| 剪接后是否得到完整蛋白 | 外显子 1 + 外显子 2：515 aa，无内部终止 | 剪接产物有功能意义 |
+| 边界序列 | 5′ `GCGCGC…`（非典型 GUGYG），3′ `…AT`（符合 AY） | 与“退化的 II 型内含子”一致（Kobayashi et al. 2022） |
+| 内含子内的读码框 | 从外显子 1 读进内含子，508 个密码子无终止 | 内含子带一个与外显子 1 同框的 ORF（可能是成熟酶 ORF）：未剪接转录本会翻译成融合蛋白 |
+| 切下的内含子（环 / 套索） | 0 条 | PolyA 文库不富集切下的内含子，预期如此 |
+
+方法：分段 reads 取 bwa mem 的主比对 + 补充比对（SA 标签，同链，MAPQ ≥ 20），记录两段之间跳过的基因组区间并计数；
+不需要剪接比对软件，也不需要任何注释。Split reads (primary + supplementary, same strand, MAPQ >= 20), gap tallied.
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
