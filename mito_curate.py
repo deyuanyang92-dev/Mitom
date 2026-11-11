@@ -84,6 +84,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import os
 import re
 import sys
 from pathlib import Path
@@ -402,6 +403,8 @@ def run(a: argparse.Namespace) -> int:
     a.no_validate). a: build_parser() or options(input=..., out=...). Returns the exit code."""
     from Bio import SeqIO
     src, out = Path(prepare_input(a.input)), Path(a.out)
+    if os.environ.get("MITOM_START_MODEL", "").strip().lower() == "no":   # benchmarks: equal-data runs
+        a.start_model = "no"
     a.start_model_obj = None if a.start_model == "no" else mito_start.load(None if a.start_model == "auto" else a.start_model)
     if a.start_model not in ("auto", "no") and a.start_model_obj is None:
         raise InputError(f"--start_model {a.start_model}: no such model")

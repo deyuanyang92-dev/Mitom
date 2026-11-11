@@ -593,11 +593,21 @@ def _annotate_file(f: Path) -> List[dict]:
     return rows
 
 
+class _ExcludeAll:
+    """Excludes every library record (MITOM_EXCLUDE_LEVEL=all)."""
+
+    def __call__(self, g) -> bool:
+        return True
+
+
 def env_exclude(lib: List[RefGene], rec) -> Optional[Exclude]:
     """Leave-out benchmarks (mitom_lo): MITOM_EXCLUDE_REF=<acc> leaves that record and its RefSeq / INSDC copy out of
     the library; MITOM_EXCLUDE_LEVEL=species|genus also every record of its species / genus (the organism of the
-    excluded record in the library, else the query's). Unset: the whole library."""
+    excluded record in the library, else the query's); MITOM_EXCLUDE_LEVEL=all leaves the whole library out (equal-data
+    benchmarks: de novo introns only). Unset: the whole library."""
     import os
+    if os.environ.get("MITOM_EXCLUDE_LEVEL", "").strip().lower() == "all":
+        return _ExcludeAll()
     acc = os.environ.get("MITOM_EXCLUDE_REF", "").strip()
     if not acc:
         return None

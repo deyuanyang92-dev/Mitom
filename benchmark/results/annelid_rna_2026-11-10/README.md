@@ -201,6 +201,29 @@ computed instead of observed cut. Next: check the 12 near-all coding indels with
 COX1（31 / 17）、ND4（29 / 19）、ND5（31 / 22）；MitoM 对而 MITOS2 + 全部步骤错的基因中，3′ 端不同 59 个、起点不同 34 个。
 The gap is in the core's gene boundaries (ND2, COX1, ND4, ND5), which curation does not repair.
 
+**算法本身还是数据？/ algorithm or data?** MitoM 的注释核心与 MITOS2 用同一参考（refseq89m，2018）；后续步骤用到新数据
+（pcg_hmm 蛋白库、ORF 库、rRNA HMM、内含子位点库、训练的起始密码子模型）。全部关掉再跑（`--pcg_hmm no --orf no
+--rrna_hmm no`，`MITOM_START_MODEL=no`，`MITOM_EXCLUDE_LEVEL=all`，本提交新增的两个基准开关），结果几乎不变：
+
+| 测试集 / test (29) | MITOS2 | MitoM 同 MITOS2 数据 / MitoM, MITOS2's data only | MitoM 完整 / full |
+|---|---|---|---|
+| 蛋白与同科中位数 ≤ 2 aa / within 2 aa | 175 / 292 | 230 / 294 | 231 / 295 |
+| 3′ 端有 poly(A) / 3′ end with poly(A) | 183 | 252 | 252 |
+| 已证实内含子（学习集 4 个）/ RNA-proven introns (learning) | 0 | 4（从头预测 / de novo） | 4 |
+
+优势来自算法，不是数据。The advantage is the algorithm, not the newer data.
+
+**还能提高吗？/ can accuracy go further?** 偏离同科中位数 > 2 aa 的 118 个蛋白中，99 个是近缘本身长度不一或仍在近缘
+范围内（“± 2 aa”过严）；近缘一致而 MitoM 超出范围的 19 个里，7 个严重截短的基因正好有 ≥ 80 % RNA reads 的插入缺失——
+组装碱基错误使读码框断开。*Hermodice carunculata* OZ026631：按转录组共识改 10 处（3 插入、7 缺失）后重新注释，COX3
+135 → 259 aa（同科中位 259）、CYTB 无翻译 → 366（376）、ND4 353 → 450、ND6 151 → 158（159），其余 9 个基因不变。
+8 条记录有此情况（同标本 5 条：Hermodice、Sabellastarte、Spirobrachia、Lepidonotus、Ridgeia）；Spirobrachia ND6、
+Sabellastarte ND3 的“移码拼接”也落在这类位点上。下一步：用同一标本 DNA reads 核实（排除 RNA 编辑），再把“转录组
+共识校正序列”作为 mito_rnaseq_annot 的可选步骤。
+Of 118 proteins > 2 aa from the median, 99 sit where relatives vary; 7 severe truncations sit on near-all RNA indels
+(assembly errors breaking the frame). Hermodice re-annotated after 10 RNA-consensus edits: COX3, CYTB, ND4, ND6 become
+full length. Next: confirm with DNA reads, then an optional RNA-consensus sequence correction.
+
 转录组模块在 MitoM 之上的增量小，因为 MitoM 的末端大多已对：它的价值是给每个末端、内含子以直接证据，并改正少数
 基因组定不了的末端（20 处，均与同科中位长度一致），以及标出 MitoM 的移码拼接错误和 RNA 与基因组不一致处。
 The RNA-seq module adds little to MitoM's counts because MitoM's ends are mostly right already; its value is direct

@@ -3,7 +3,8 @@
 
 Same records for all: MITOS2 = tools_root/runs/mitos2/<acc>/final.gbf, MITOS2+cur = runs/mitos2_cur (mito_bench_run.py
 `mitom import` with boundary curation; intron fix, rescue, rRNA HMM off), MITOS2+all = runs/mitos2_full (`mitom
-import` defaults: every later MitoM step); NCBI coordinates;
+import` defaults: every later MitoM step); NCBI coordinates; MitoM(equal) = mitom_equaldata (MitoM with only the
+MITOS2 data: refseq89m core, --pcg_hmm no --orf no --rrna_hmm no, MITOM_START_MODEL=no, MITOM_EXCLUDE_LEVEL=all);
 MitoM = mitom_out/annotation/<acc>.gb; MitoM + RNA = rnaseq_annot/<acc>/rnaseq_annotated.gb (both in MitoM's rotated
 coordinates; MITOS2 features are mapped onto them by rotation / strand). Pairs whose species check failed are left out.
 
@@ -32,7 +33,7 @@ H = Path(__file__).resolve()
 sys.path.insert(0, str(H.parents[3]))
 from mito_names import PCG, gene_name  # noqa: E402
 
-TOOLS = ("MITOS2", "MITOS2+cur", "MITOS2+all", "MitoM", "MitoM+RNA")
+TOOLS = ("MITOS2", "MITOS2+cur", "MITOS2+all", "MitoM(equal)", "MitoM", "MitoM+RNA")
 GENE_REF = {"atp6": "atp6", "atp8": "atp8", "cox1": "cox1", "cox2": "cox2", "cox3": "cox3", "cob": "cob",
             "nad1": "nad1", "nad2": "nad2", "nad3": "nad3", "nad4": "nad4", "nad4l": "nad4l", "nad5": "nad5",
             "nad6": "nad6"}
@@ -101,6 +102,10 @@ def main():
         mm = SeqIO.read(w / f"mitom_out/annotation/{mito}.gb", "genbank")
         recs = {"MitoM": (mm, None), "MitoM+RNA": (SeqIO.read(w / f"rnaseq_annot/{acc}/rnaseq_annotated.gb",
                                                                "genbank"), None)}
+        eq = w / f"mitom_equaldata/annotation/{mito}.gb"
+        if eq.exists():
+            er = SeqIO.read(eq, "genbank")
+            recs["MitoM(equal)"] = (er, mapper(str(er.seq).upper(), str(mm.seq).upper()))
         for tool, run in (("MITOS2", "mitos2"), ("MITOS2+cur", "mitos2_cur"), ("MITOS2+all", "mitos2_full")):
             m2 = w / f"tools_root/runs/{run}/{mito}/final.gbf"
             if m2.exists():
@@ -117,7 +122,7 @@ def main():
                 introns.append((gname, i0 - 1, i1))
         f_ = fam.get(r["organism"], "")
         for tool in TOOLS:
-            if tool not in recs or (tool.startswith("MITOS2") and recs[tool][1] is None):
+            if tool not in recs or (tool not in ("MitoM", "MitoM+RNA") and recs[tool][1] is None):
                 continue
             rec, mp = recs[tool]
             gs = genes(rec, mp)
