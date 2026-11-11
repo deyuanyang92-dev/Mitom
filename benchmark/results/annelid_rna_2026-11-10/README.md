@@ -170,6 +170,28 @@ python3 mito_rnaseq_annot.py -g annotated.gb -1 R1.fq.gz -2 R2.fq.gz -o out --ru
 Iterations: v1 314 junction calls, nearly all noise; v2 deep libraries judged without poly(A), origin joins as introns,
 computed instead of observed cut. Next: check the 12 near-all coding indels with DNA reads (assembly errors?).
 
+### 与 MITOS2、MitoM 比较 / compared with MITOS2 and MitoM (2026-11-11)
+
+同一批 52 条（物种核对通过；学习集 23、测试集 29）；MITOS2 2.1.9 由 `mito_bench_run.py --tools mitos2`（refseq89m）
+注释，坐标映射到 MitoM 的旋转后坐标；评价标准不依赖被评方法（蛋白长度与同科中位数、内含子用分段 reads 证实的坐标），
+3′ 端 poly(A) 支持对 MITOS2、MitoM 是独立检验，对 MitoM + 转录组部分循环（它把末端移到 poly(A) 处）。
+`compare_tools.py`，每条记录：`tool_compare.tsv`。Same 52 records; MITOS2 mapped to MitoM coordinates.
+
+| 指标 / measure | 集合 / set | MITOS2 | MitoM | MitoM + 转录组 / + RNA-seq |
+|---|---|---|---|---|
+| 找到的蛋白基因 / protein genes found | 学习 / learning (23) | 298 | 299 | 299 |
+| | 测试 / test (29) | 368 | 372 | 372 |
+| 蛋白与同科中位数相差 ≤ 2 aa / within 2 aa of the family median | 学习 | 167 / 259 | 202 / 260 | 204 / 260 |
+| | 测试 | 175 / 292 | 231 / 295 | 233 / 295 |
+| 3′ 端有 poly(A)（≥ 3 reads，末端 −10 至 +30 nt）/ 3′ end with poly(A) | 学习 | 189 | 253 | 253 |
+| | 测试 | 183 | 252 | 254 |
+| 已证实内含子坐标精确 / RNA-proven introns with exact ends | 学习 (4) | 0 | 4 | 4 |
+
+转录组模块在 MitoM 之上的增量小，因为 MitoM 的末端大多已对：它的价值是给每个末端、内含子以直接证据，并改正少数
+基因组定不了的末端（20 处，均与同科中位长度一致），以及标出 MitoM 的移码拼接错误和 RNA 与基因组不一致处。
+The RNA-seq module adds little to MitoM's counts because MitoM's ends are mostly right already; its value is direct
+evidence for every end and intron, the 20 ends the genome alone cannot decide, and the flags.
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |
