@@ -258,6 +258,16 @@ Same-specimen HiFi; for each site the genome's and the RNA's version are counted
   30 条中 4 条（Hermodice、Sabellastarte、Spirobrachia、Lepidonotus）有此类错误，其余未见；多数 MitoHiFi 组装没问题，
   少数有几处，就足以打断蛋白基因。All MitoHiFi assemblies, sequences identical to NCBI; the errors are length errors in
   homopolymers / short repeats; 4 of 30 same-specimen records affected.
+- 用 MitoHiFi 复现（2026-11-12；本机 ~/mybiosofts/MitoHiFi 3.2.1，hifiasm 0.19.5，reads 模式，同一个 HiFi run
+  ERR12760787）：`findMitoReference.py` 选的近缘 *Notopygos ornata* PP999651 太远，0 条 reads 被招募、无法组装；以
+  OZ026631 自身作招募参考时，hifiasm 组出环状 contig，MitoHiFi 环化检查得 15,861 bp（登录 15,870 bp）。10 个位点
+  全部是 reads 的（正确）版本；与登录序列共差 18 个插入缺失、1 个错配（`compare_mitohifi.py`）。登录序列的错误
+  用当前 MitoHiFi 复现不出来——来自不同版本、参数或流程（如在全基因组 contig 中挑线粒体），公开数据无法再现。
+  MitoHiFi 3.2.1 本身在此记录上于 MitoFinder 注释处中断（contig 为两份拷贝 31.7 kb，超出大小上限；参考未注释时
+  取不到 tRNA），序列在环化后已定。
+  Reproduced with MitoHiFi 3.2.1 / hifiasm 0.19.5 on the same HiFi run: the related reference it fetched recruits no
+  reads; with OZ026631 as the recruiting reference the circular assembly (15,861 bp) carries the reads' version at all
+  10 sites and differs from the deposited sequence by 18 indels - the deposited errors are not reproduced.
 
 ## Outliers / 异常值分析（如何得到上面的规则）
 
