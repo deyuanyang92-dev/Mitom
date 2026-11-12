@@ -17,15 +17,17 @@ genomes, orients them, curates gene ends and names to NCBI rules, and writes NCB
 
 **特色 / Highlights**：一条命令到可提交文件；多门混合自动分组；NCBI 规则校正；内含子两步 + 未知 ORF；`mitom nuc` 独立做核标记。见 [USAGE § 特色](docs/USAGE_zh.md#1-特色)。
 
+Highlights: one command to submission-ready files; mixed phyla grouped automatically; NCBI-rule curation; two-step introns plus unknown ORFs; `mitom nuc` for nuclear markers alone. See [USAGE § highlights](docs/USAGE_zh.md#1-特色).
+
 **精度 / Accuracy**（开发期基准，非论文冻结评测；详表 [BENCHMARK.md](docs/BENCHMARK.md)、[METHODS.md](docs/METHODS.md)）：
 
-| 指标 | 结果 |
+| 指标 / Metric | 结果 / Result |
 |---|---|
-| 蛋白基因两端与 NCBI 完全一致 | 1,050 条多类群 RefSeq：24 个门全部高于 MITOS2 |
-| NCBI table2asn ERROR | 2,497 条基准记录：**0**（此前 199） |
-| tRNA（未参与训练的科） | 召回高于 MITOS2，精确率持平或更高 |
-| 内含子 | 默认金标准 309/309；留一 299/309；无假阳性 |
-| 核 rDNA / 组蛋白 | 见 METHODS 核基因节 |
+| 蛋白基因两端与 NCBI 完全一致 / Protein-gene ends identical to NCBI | 1,050 条多类群 RefSeq：24 个门全部高于 MITOS2 / multi-phylum RefSeq records: all phyla above MITOS2 |
+| NCBI table2asn ERROR | 2,497 条基准记录：**0**（此前 199） / benchmark records |
+| tRNA（未参与训练的科） / tRNA (families not in training) | 召回高于 MITOS2，精确率持平或更高 / recall above MITOS2, precision equal or higher |
+| 内含子 / Introns | 默认金标准 309/309；留一 299/309；无假阳性 / default gold standard, leave-one-out, no false positives |
+| 核 rDNA / 组蛋白 / Nuclear rDNA / histones | 见 METHODS 核基因节 / see METHODS nuclear section |
 
 ## 快速上手 / Quick start
 
@@ -52,13 +54,17 @@ Docker：`docker build -t mitom . && docker run --rm -v "$PWD":/data mitom mitom
 
 | 软件 / tool | 下载 / download | 安装后 / installed | conda 包 / packages |
 |---|---|---|---|
-| MitoM | 0.48 GB | 1.8 GB（首次运行再解压 0.19 GB tRNA 模型） | 157 |
+| MitoM | 0.48 GB | 1.8 GB（首次运行再解压 0.19 GB tRNA 模型 / tRNA models unpacked on first run） | 157 |
 | MITOS2 2.1.10 | 0.75 GB | 2.9 GB | 185 |
 | MitoZ 3.6 | 1.37 GB | 4.5 GB | 380 |
 
 MitoM 用电脑上已有的 Java（MiTFi 用，任何 ≥ 8 的版本）；没有时 install.sh 另装 openjdk 8（下载约 0.09 GB）。MITOS2 一行含它的参考数据 refseq89m，MitoZ 一行只是它的 conda 环境。conda 下载的安装包缓存可用 `mamba clean -t` 删除。
 
+MitoM uses the Java already on the computer (for MiTFi, any version >= 8); if there is none, install.sh adds openjdk 8. The MITOS2 row includes its reference data refseq89m; the MitoZ row is only its conda environment. The conda package cache can be removed with `mamba clean -t`.
+
 MitoZ、MITOS2 不随 MitoM 安装；装了它们时，MitoM 可以调用它们注释或导入它们的结果（见下）。
+
+MitoZ and MITOS2 are not installed with MitoM; when they are installed, MitoM can call them to annotate or import their results (see below).
 
 **2. 运行 / Run**
 
@@ -89,26 +95,30 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 （`Animal` = 全动物蛋白库，用于其他门）。常用：`--threads 8 --jobs 4`（每个任务线程数 / 同时任务数）、
 `--sbt template.sbt`（NCBI 提交者模板）。`--threads` 默认 `min(8, CPU 数)`，`--jobs` 默认 `CPU 数 // threads`。`--clade auto`（默认）逐条判断：GenBank 记录用自己的分类信息和 CDS 的 `transl_table`；FASTA 和没有分类信息的记录用 blastx 比对 refseq89m 的 8 个保守蛋白，取最近参考基因组的门和遗传密码，再用 AGR / ATA / AAA / TGA 等密码子核验（没有近亲时按 `Animal` 和密码子判断的遗传密码）。一次输入含多个门或多个遗传密码时，`run` 按组分别注释再合并到同一个输出目录；每条记录的判断和依据见 `qc/clade_decision.tsv`。
 
+`--clade` choices are listed above (`Animal` = all-animal protein library, for other phyla). Common options: `--threads` (threads per job), `--jobs` (jobs at the same time), `--sbt template.sbt` (NCBI submitter template). Defaults: `--threads` is the smaller of 8 and the CPU count; `--jobs` is the CPU count divided by `--threads`. `--clade auto` (default) decides per record: GenBank records use their own taxonomy and the CDS `transl_table`; FASTA records and records without taxonomy are blasted (blastx) against 8 conserved proteins of refseq89m, take the phylum and genetic code of the nearest reference genome, then check it with codons such as AGR / ATA / AAA / TGA (with no close relative: `Animal` and the codon-based code). If one input holds several phyla or genetic codes, `run` annotates each group and merges them into one output folder; the decision and its evidence per record are in `qc/clade_decision.tsv`.
+
 **3. 运行过程与结果 / What you see and what you get**
 
 **`mitom run` 的 12 步 / The 12 steps of `mitom run`**（与终端的 `[Step k/12]` 一致；报告文件见 [使用手册 § 5.12](docs/USAGE_zh.md#512-mitom-run-的-12-步)）
 
-| 步 / step | 终端显示 / terminal | 做什么 |
+| 步 / step | 终端显示 / terminal | 做什么 / what it does |
 |---|---|---|
-| 1 | Read input and remove duplicate records | 读入；同一个基因组只留一条（优先 `NC_`、新版本） |
-| 2 | Round-1 annotation | 13 个蛋白基因、2 个 rRNA、22 个 tRNA；核对环状 / 线状 |
-| 3 | Re-orient | 环状记录转到正链，从 cox1 开始 |
-| 4 | Check the annotation after re-orientation (round 2) | 转动后受影响的记录再注释一次 |
-| 5 | Write the annotation; copy the original GenBank header back | 写 GenBank，写回物种、文献、标本信息 |
-| 6 | Add what the core missed | 补漏注的蛋白基因（近缘谱 HMM，`--pcg_hmm`）、12S / 16S、内含子；`--rescue yes` 时用 MITOS2 补基因 |
-| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名 |
-| 8 | ORFs of unknown function and non-coding regions | 注释受选择的未知 ORF（`--orf`，`qc/orf_report.tsv`）；标出非编码区（NCR，`--ncr no` 不标） |
-| 9 | NCBI check (table2asn) and submission files | 生成 `submission/` |
-| 10 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） |
-| 11 | Genome maps | 每条一张圈图（`annotation/plots/`） |
-| 12 | Organise the output | 整理成下面的目录结构 |
+| 1 | Read input and remove duplicate records | 读入；同一个基因组只留一条（优先 `NC_`、新版本） / read input; keep one record per genome (prefer `NC_`, newer version) |
+| 2 | Round-1 annotation | 13 个蛋白基因、2 个 rRNA、22 个 tRNA；核对环状 / 线状 / 13 protein genes, 2 rRNAs, 22 tRNAs; check circular / linear |
+| 3 | Re-orient | 环状记录转到正链，从 cox1 开始 / circular records to the plus strand, starting at cox1 |
+| 4 | Check the annotation after re-orientation (round 2) | 转动后受影响的记录再注释一次 / annotate again the records affected by the rotation |
+| 5 | Write the annotation; copy the original GenBank header back | 写 GenBank，写回物种、文献、标本信息 / write GenBank; restore species, reference, specimen info |
+| 6 | Add what the core missed | 补漏注的蛋白基因（近缘谱 HMM，`--pcg_hmm`）、12S / 16S、内含子；`--rescue yes` 时用 MITOS2 补基因 / add missed protein genes (relative-profile HMM, `--pcg_hmm`), 12S / 16S, introns; MITOS2 fills genes with `--rescue yes` |
+| 7 | Boundary rules for protein genes and rRNAs, NCBI gene names | 按 NCBI 规范修整端点和基因名 / fix ends and gene names to NCBI rules |
+| 8 | ORFs of unknown function and non-coding regions | 注释受选择的未知 ORF（`--orf`，`qc/orf_report.tsv`）；标出非编码区（NCR，`--ncr no` 不标） / annotate selected unknown ORFs (`--orf`, `qc/orf_report.tsv`); mark non-coding regions (NCR; `--ncr no` skips) |
+| 9 | NCBI check (table2asn) and submission files | 生成 `submission/` / make `submission/` |
+| 10 | Compare with the original annotation | 逐基因对比原注释（GenBank 输入） / gene-by-gene comparison with the original annotation (GenBank input) |
+| 11 | Genome maps | 每条一张圈图（`annotation/plots/`） / one circular map per record (`annotation/plots/`) |
+| 12 | Organise the output | 整理成下面的目录结构 / arrange the folders below |
 
 运行时终端按步骤显示（每步：做什么、多少条、结果、用时、结果文件；注释阶段每 30 秒报告进度），完整细节在 `logs/run.log`：
+
+The terminal shows each step (what it does, how many records, result, time, result files; the annotation stage reports progress every 30 seconds); full details are in `logs/run.log`.
 
 ```text
 [Step 1/12] Read input and remove duplicate records
@@ -129,48 +139,54 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 输出目录（`out/README.txt` 逐项说明；`--output_layout classic` 用 2026-11-09 以前的布局）：
 
+Output folder (`out/README.txt` explains each item; `--output_layout classic` gives the layout used before 2026-11-09):
+
 | 文件 / 目录 / file / folder | 内容 / contents |
 |---|---|
-| `summary.tsv` | 每条记录一行：基因数、cox1 起始、用了第几轮注释、是否迁回原 header、NCBI ERROR 数（先看这个） |
-| `annotation/<登录号>.gb` | MitoM 最终注释，每条一个文件（cox1 起始、正链、校正、NCBI 命名） |
-| `annotation/all_records.gb` | 同上，合并成一个文件 |
-| `annotation/genes.fna`、`proteins.faa` | 蛋白基因和 rRNA 的核苷酸序列、蛋白序列；序列名 `登录号\|基因\|物种`，可直接比对、建树 |
-| `annotation/plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：每条链一个环道（正链在外、负链在内），基因按类别着色、名字沿圆弧书写，向内依次为坐标轴、GC 含量；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot_style mitom` 用原来的样式（另有 GC skew 环），`--plot no` 不画 |
-| `submission/<登录号>/` | 每条的 NCBI 提交文件 `.fsa/.tbl/.sqn` 与 table2asn 结果 `.val`；`submission/submission_summary.tsv` ERROR 为 0 的可直接提交 |
-| `qc/` | 核对与判断：`original_vs_mitom.tsv`（原注释 vs MitoM，每个基因一行）、`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 |
-| `input/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与 `annotation/` 对应，便于前后对比 |
-| `logs/` | `run.log`（全部过程与调用的命令）、`run_params.json`（全部参数）、`intron_fix.log`、出错记录的日志 |
+| `summary.tsv` | 每条记录一行：基因数、cox1 起始、用了第几轮注释、是否迁回原 header、NCBI ERROR 数（先看这个） / one row per record: gene count, cox1 start, annotation round used, header restored, NCBI ERROR count (look here first) |
+| `annotation/<登录号>.gb` | MitoM 最终注释，每条一个文件（cox1 起始、正链、校正、NCBI 命名） / final MitoM annotation, one file per record (cox1 start, plus strand, curated, NCBI names) |
+| `annotation/all_records.gb` | 同上，合并成一个文件 / same, merged into one file |
+| `annotation/genes.fna`、`proteins.faa` | 蛋白基因和 rRNA 的核苷酸序列、蛋白序列；序列名 `登录号\|基因\|物种`，可直接比对、建树 / nucleotide and protein sequences of protein genes and rRNAs; names `accession|gene|species`, ready for alignment and trees |
+| `annotation/plots/<登录号>.png`、`.pdf` | 基因组圈图（`mito_plot.py`，matplotlib）：每条链一个环道（正链在外、负链在内），基因按类别着色、名字沿圆弧书写，向内依次为坐标轴、GC 含量；给出 `--infq` 时再加一圈测序深度（装有 minimap2 时用它，否则用 bwa mem）；`--plot_style mitom` 用原来的样式（另有 GC skew 环），`--plot no` 不画 / circular genome maps (`mito_plot.py`, matplotlib): one lane per strand (plus outside, minus inside), genes coloured by class with names along the arc, then axis and GC content inward; with `--infq` a read-depth ring is added (minimap2 if installed, else bwa mem); `--plot_style mitom` gives the old style (with a GC-skew ring), `--plot no` draws none |
+| `submission/<登录号>/` | 每条的 NCBI 提交文件 `.fsa/.tbl/.sqn` 与 table2asn 结果 `.val`；`submission/submission_summary.tsv` ERROR 为 0 的可直接提交 / NCBI files `.fsa/.tbl/.sqn` per record and the table2asn result `.val`; records with ERROR 0 in `submission/submission_summary.tsv` can be submitted as they are |
+| `qc/` | 核对与判断：`original_vs_mitom.tsv`（原注释 vs MitoM，每个基因一行）、`dedup_report.tsv`（去重依据）、`reannotation_decision.tsv`（第二轮与否及原因）、`curation_report.tsv`（每处校正）等 / checks and decisions: `original_vs_mitom.tsv` (original vs MitoM, one row per gene), `dedup_report.tsv`, `reannotation_decision.tsv` (round 2 or not, and why), `curation_report.tsv` (every correction), etc. |
+| `input/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与 `annotation/` 对应，便于前后对比 / input records unchanged (with the NCBI annotation), named as in `annotation/`, for before / after comparison |
+| `logs/` | `run.log`（全部过程与调用的命令）、`run_params.json`（全部参数）、`intron_fix.log`、出错记录的日志 / `run.log` (whole process and commands called), `run_params.json` (all parameters), `intron_fix.log`, logs of failed records |
 
 **4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；输入 / 输出见 [使用手册 § 5](docs/USAGE_zh.md#5-每个命令输入--命令--输出)，怎么选命令见 [§ 4](docs/USAGE_zh.md#4-怎么选命令)）
 
+Add `-h` to any command to see its options, e.g. `mitom run -h`; all options are collected in [docs/OPTIONS.md](docs/OPTIONS.md); input / output: [USAGE § 5](docs/USAGE_zh.md#5-每个命令输入--命令--输出); choosing a command: [§ 4](docs/USAGE_zh.md#4-怎么选命令).
+
 | 命令 / command | 作用 / purpose |
 |---|---|
-| `mitom run` | 完整流程，最常用：从序列到最终注释、NCBI 提交文件和基因组图 |
-| `mitom import` | 已有 MitoZ / MITOS2 结果或已注释的 GenBank：不重新注释，只做后面的整理（统一起点、修整、NCBI 文件、作图） |
-| `mitom fetch` | 从 NCBI 下载某个类群的线粒体全基因组（GenBank 格式；加 `--fasta` 同时生成 FASTA） |
-| `mitom dedup` | 只做“去重”：同一个基因组的多条记录只留一条（说明见第 3 点）；GenBank、FASTA 都可以 |
-| `mitom gb2fasta` | GenBank（`.gb`、`.gbf` 都行）转 FASTA，表头带 `topology=`，可直接给 `mitom run` 用 |
-| `mitom gb2tbl` | GenBank / EMBL 转 NCBI 提交用的特征表 `.tbl` + `.fsa`：多个文件 / 目录，全部合并、每个文件一对或每条记录一对；`--source_table` 批量填来源信息，缺的产物名自动补；`--validate` 用 table2asn 生成 `.sqn` 并检查 |
-| `mitom reorient` | 只统一方向和起点（转到同一条链，从 cox1 开始） |
-| `mitom annotate` | 与 `run` 相同，但不整理输出目录（给脚本或集群流程调用） |
-| `mitom check` | 检查已有注释有没有问题，只出报告、不改文件 |
-| `mitom compare` | 逐个基因比较原注释和 MitoM 的注释 |
-| `mitom curate` | 只修整基因起止和基因名（NCBI 规范） |
-| `mitom intron` | 只加内含子 |
-| `mitom trna` | 用多种方法注释 tRNA 并相互比较 |
-| `mitom rrna-hmm` | 补搜缺失的 12S / 16S rRNA |
-| `mitom rescue` | 用 MITOS2 补回漏掉的基因（需另装 MITOS2） |
-| `mitom validate` | 用 NCBI 的 table2asn 检查，生成提交文件 |
-| `mitom plot` | 画环状基因组图（`--style circos` 默认，或 `--style mitom`） |
-| `mitom nuc` | 在全基因组组装中注释核 rDNA（18S–28S）和组蛋白基因 |
-| `mitom debug` | 出问题时读日志，告诉你哪一步、哪条记录、哪个程序出错 |
-| `mitom transfer_metadata` / `replace_organism` | 把原记录的物种、文献等信息复制到新注释 / 修正物种名 |
-| `mitom setup` / `mitom doctor` | 下载参考数据（安装时已自动运行）/ 检查需要的程序是否都装好 |
+| `mitom run` | 完整流程，最常用：从序列到最终注释、NCBI 提交文件和基因组图 / full workflow, most used: from sequence to final annotation, NCBI files and genome maps |
+| `mitom import` | 已有 MitoZ / MITOS2 结果或已注释的 GenBank：不重新注释，只做后面的整理（统一起点、修整、NCBI 文件、作图） / existing MitoZ / MITOS2 results or annotated GenBank: no re-annotation, only the later tidy-up (orientation, curation, NCBI files, maps) |
+| `mitom fetch` | 从 NCBI 下载某个类群的线粒体全基因组（GenBank 格式；加 `--fasta` 同时生成 FASTA） / download mitogenomes of a clade from NCBI (GenBank; `--fasta` also writes FASTA) |
+| `mitom dedup` | 只做“去重”：同一个基因组的多条记录只留一条（说明见第 3 点）；GenBank、FASTA 都可以 / deduplication only: keep one record per genome (see step 1); GenBank or FASTA |
+| `mitom gb2fasta` | GenBank（`.gb`、`.gbf` 都行）转 FASTA，表头带 `topology=`，可直接给 `mitom run` 用 / GenBank (`.gb`, `.gbf`) to FASTA with `topology=` in the header, ready for `mitom run` |
+| `mitom gb2tbl` | GenBank / EMBL 转 NCBI 提交用的特征表 `.tbl` + `.fsa`：多个文件 / 目录，全部合并、每个文件一对或每条记录一对；`--source_table` 批量填来源信息，缺的产物名自动补；`--validate` 用 table2asn 生成 `.sqn` 并检查 / GenBank / EMBL to NCBI feature table `.tbl` + `.fsa`: several files / folders, merged or one pair per file or per record; `--source_table` fills source info in bulk, missing product names are added; `--validate` makes `.sqn` with table2asn and checks it |
+| `mitom reorient` | 只统一方向和起点（转到同一条链，从 cox1 开始） / orientation and start only (same strand, start at cox1) |
+| `mitom annotate` | 与 `run` 相同，但不整理输出目录（给脚本或集群流程调用） / same as `run` but does not tidy the output folder (for scripts or clusters) |
+| `mitom check` | 检查已有注释有没有问题，只出报告、不改文件 / check an existing annotation; report only, no file changed |
+| `mitom compare` | 逐个基因比较原注释和 MitoM 的注释 / compare the original and MitoM annotation gene by gene |
+| `mitom curate` | 只修整基因起止和基因名（NCBI 规范） / fix gene ends and names only (NCBI rules) |
+| `mitom intron` | 只加内含子 / add introns only |
+| `mitom trna` | 用多种方法注释 tRNA 并相互比较 / annotate tRNAs with several methods and compare them |
+| `mitom rrna-hmm` | 补搜缺失的 12S / 16S rRNA / search for missing 12S / 16S rRNAs |
+| `mitom rescue` | 用 MITOS2 补回漏掉的基因（需另装 MITOS2） / fill genes missed, using MITOS2 (MITOS2 must be installed) |
+| `mitom validate` | 用 NCBI 的 table2asn 检查，生成提交文件 / check with NCBI table2asn and make submission files |
+| `mitom plot` | 画环状基因组图（`--style circos` 默认，或 `--style mitom`） / draw circular genome maps (`--style circos` default, or `--style mitom`) |
+| `mitom nuc` | 在全基因组组装中注释核 rDNA（18S–28S）和组蛋白基因 / annotate nuclear rDNA (18S-28S) and histone genes in whole-genome assemblies |
+| `mitom debug` | 出问题时读日志，告诉你哪一步、哪条记录、哪个程序出错 / read the logs after a failure: which step, record and program failed |
+| `mitom transfer_metadata` / `replace_organism` | 把原记录的物种、文献等信息复制到新注释 / 修正物种名 / copy species, references etc. from the original record to the new annotation / fix the species name |
+| `mitom setup` / `mitom doctor` | 下载参考数据（安装时已自动运行）/ 检查需要的程序是否都装好 / download reference data (run automatically at install) / check that the needed programs are installed |
 
 **注释审核报告 / Annotation audit report**：`mitom check -i genomes.gb -o check_out` 审核已有注释（只出报告，不改文件；
 可用于查看 NCBI 下载记录的原注释问题，或检查最终结果），`check_report.tsv` 每条一行（ok / flagged），`check_details.tsv` 列出每个问题。ERROR（触发重注）：无注释、缺蛋白基因或
 rRNA、基因重复、内部终止子、长度非 3 倍数且无 transl_except、基因长度异常、基因重叠 > 100 nt、tRNA 少于 22（`--min_trna`）；
 WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。
+
+`mitom check -i genomes.gb -o check_out` audits existing annotations (report only, no file changed; useful for the problems in NCBI records as downloaded, or for checking final results). `check_report.tsv` has one row per record (ok / flagged), `check_details.tsv` lists every problem. ERROR (triggers re-annotation): no annotation, missing protein gene or rRNA, duplicated gene, internal stop, length not a multiple of 3 without transl_except, abnormal gene length, gene overlap > 100 nt, fewer than 22 tRNAs (`--min_trna`). WARNING: start / stop codon, cox1 orientation, tRNA types, non-standard CDS.
 
 **5. 出问题时 / When something goes wrong**
 
@@ -189,25 +205,25 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 
 | 环节 / part | 来源 / origin |
 |---|---|
-| NCBI 下载（`mito_fetch.py`，按类群 / 检索式）、GenBank 输入去重（保留 RefSeq）、注释审核报告（`mito_check.py`）、内部短 ID、批量与并行 | MitoM 自有步骤 |
-| 方向调整（cox1 起始、统一正链，cox1 缺失时依次用 cox2/cox3/cob/nad1） | MitoM 自有步骤 |
-| 方向调整后第二轮注释 | MitoM 自有步骤 |
-| 元数据迁回（原 GenBank header）、`/organism` 修复 | MitoM 自有步骤 |
-| 内含子（`mito_intron.py` 按 MFannot 方法从头识别 + `mito_intron_ref.py` 近缘位点迁移） | MitoM 自有步骤（从头识别方法来自 MFannot；位点库由 193 条核实的 NCBI 记录构建） |
-| 漏注基因从 MITOS2 救回（`mito_rescue.py`，可选：`--rescue yes`，需另装 MITOS2） | MitoM 自有步骤 |
-| 仍缺的 12S/16S 用按门建立的 rRNA HMM 补搜（`mito_rrna_hmm.py`，库 `models/rrna_hmm/`，nhmmer；只在常规方法找不到时启用） | MitoM 自有步骤（思路参考 EMMA 的 nhmmer rRNA 模型） |
-| 蛋白基因与 rRNA 端点校正（`mito_curate.py`；起始密码子另由从 NCBI 记录学习的模型挑选，规则 P11）、NCBI table2asn 校验 | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） |
-| 环状 / 线状核对（`mitom_topology.py`、`mito_core.py --check_ends`：两端的基因跨接点再比对；跨接点的内含子用 protein2genome） | MitoM 自有步骤 |
-| 非编码区（`mito_ncr.py`：≥ 100 nt 无注释的区段写成 NCR misc_feature） | MitoM 自有步骤 |
-| 未知功能的 ORF（`mito_orf.py`：同源证明受选择才写，其余给 WARNING；`benchmark/results/orf_2026-11-09/`） | MitoM 自有步骤（MITOS2 不注释） |
-| 转录组证据（`mito_rna.py`，`mitom rna`：相对深度、部分转录、文库方向、polyA 3′ 端；`benchmark/results/rnaseq_2026-11-10/`） | MitoM 自有步骤（minimap2 / bwa） |
-| 多分体线粒体基因组（`mito_multipart.py`：同一组装 / BioSample 的记录合起来才完整；`benchmark/results/ebp_mito_2026-11-10/`） | MitoM 自有步骤 |
-| 漏注的蛋白基因（`mito_pcg_hmm.py`：近缘谱 HMM 补找 atp8 等分化基因；`benchmark/results/pcg_hmm_2026-11-10/`） | MitoM 自有步骤（HMMER、MAFFT） |
-| 多方法 tRNA 比对（`mito_trna.py`） | MitoM 自有步骤 |
-| 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度，内含子画斜线、非编码区画浅灰；默认样式借鉴 mitoPlotR） | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） |
-| GenBank / EMBL 转 NCBI 提交文件（`mito_tbl.py`，`mitom gb2tbl`） | MitoM 自有步骤（来源信息表、产物名表的做法借鉴 GB2sequin；管道输入、定义行借鉴 NCBI gbf2tbl / gbf2fsa） |
-| 用 MitoZ / MITOS2 注释（`--engine mitoz\|mitos2`）或导入它们已有的结果（`mitom import`；`mito_engines.py`） | 可选：MitoZ、MITOS2 需自己安装 |
-| 蛋白基因、rRNA、tRNA 识别 | 注释核心 `mito_core.py`（blastx + exonerate 蛋白基因，按门 rRNA profile HMM，MitoM-ML tRNA：分支协方差模型 + 学习的判别器与端点，未调用的 tRNA 家族由 MiTFi 补，脊椎动物取 MiTFi 端点） |
+| NCBI 下载（`mito_fetch.py`，按类群 / 检索式）、GenBank 输入去重（保留 RefSeq）、注释审核报告（`mito_check.py`）、内部短 ID、批量与并行 / NCBI download (by clade / query), GenBank input deduplication (keep RefSeq), annotation audit, internal short IDs, batch and parallel runs | MitoM 自有步骤 / MitoM's own step |
+| 方向调整（cox1 起始、统一正链，cox1 缺失时依次用 cox2/cox3/cob/nad1） / reorientation (cox1 start, plus strand; cox2/cox3/cob/nad1 in turn when cox1 is missing) | MitoM 自有步骤 / MitoM's own step |
+| 方向调整后第二轮注释 / round-2 annotation after reorientation | MitoM 自有步骤 / MitoM's own step |
+| 元数据迁回（原 GenBank header）、`/organism` 修复 / metadata transfer (original GenBank header), `/organism` repair | MitoM 自有步骤 / MitoM's own step |
+| 内含子（`mito_intron.py` 按 MFannot 方法从头识别 + `mito_intron_ref.py` 近缘位点迁移） / introns (de novo by the MFannot method + site transfer from relatives) | MitoM 自有步骤（从头识别方法来自 MFannot；位点库由 193 条核实的 NCBI 记录构建） / MitoM's own step (de novo method from MFannot; site library built from verified NCBI records) |
+| 漏注基因从 MITOS2 救回（`mito_rescue.py`，可选：`--rescue yes`，需另装 MITOS2） / rescue of missed genes from MITOS2 (optional, `--rescue yes`, needs MITOS2) | MitoM 自有步骤 / MitoM's own step |
+| 仍缺的 12S/16S 用按门建立的 rRNA HMM 补搜（`mito_rrna_hmm.py`，库 `models/rrna_hmm/`，nhmmer；只在常规方法找不到时启用） / still-missing 12S/16S searched with per-phylum rRNA HMMs (nhmmer; only when usual methods fail) | MitoM 自有步骤（思路参考 EMMA 的 nhmmer rRNA 模型） / MitoM's own step (idea from the EMMA nhmmer rRNA models) |
+| 蛋白基因与 rRNA 端点校正（`mito_curate.py`；起始密码子另由从 NCBI 记录学习的模型挑选，规则 P11）、NCBI table2asn 校验 / protein-gene and rRNA end curation (start codon chosen by a model learned from NCBI records, rule P11), NCBI table2asn validation | MitoM 自有步骤（规则依据 Fourdrilis 2018、Ghiselli 2021） / MitoM's own step (rules from Fourdrilis 2018, Ghiselli 2021) |
+| 环状 / 线状核对（`mitom_topology.py`、`mito_core.py --check_ends`：两端的基因跨接点再比对；跨接点的内含子用 protein2genome） / circular / linear check (re-align genes across the junction; protein2genome for introns across it) | MitoM 自有步骤 / MitoM's own step |
+| 非编码区（`mito_ncr.py`：≥ 100 nt 无注释的区段写成 NCR misc_feature） / non-coding regions (unannotated stretches >= 100 nt written as NCR misc_feature) | MitoM 自有步骤 / MitoM's own step |
+| 未知功能的 ORF（`mito_orf.py`：同源证明受选择才写，其余给 WARNING；`benchmark/results/orf_2026-11-09/`） / unknown-function ORFs (written only with homology evidence, otherwise WARNING) | MitoM 自有步骤（MITOS2 不注释） / MitoM's own step (MITOS2 does not annotate these) |
+| 转录组证据（`mito_rna.py`，`mitom rna`：相对深度、部分转录、文库方向、polyA 3′ 端；`benchmark/results/rnaseq_2026-11-10/`） / transcriptome evidence (relative depth, partial transcription, library strand, polyA 3' end) | MitoM 自有步骤（minimap2 / bwa） / MitoM's own step (minimap2 / bwa) |
+| 多分体线粒体基因组（`mito_multipart.py`：同一组装 / BioSample 的记录合起来才完整；`benchmark/results/ebp_mito_2026-11-10/`） / multipart mitogenomes (records of one assembly / BioSample are complete only together) | MitoM 自有步骤 / MitoM's own step |
+| 漏注的蛋白基因（`mito_pcg_hmm.py`：近缘谱 HMM 补找 atp8 等分化基因；`benchmark/results/pcg_hmm_2026-11-10/`） / missed protein genes (relative-profile HMM finds divergent genes such as atp8) | MitoM 自有步骤（HMMER、MAFFT） / MitoM's own step (HMMER, MAFFT) |
+| 多方法 tRNA 比对（`mito_trna.py`） / multi-method tRNA comparison | MitoM 自有步骤 / MitoM's own step |
+| 基因组圈图（`mito_plot.py`：基因、GC 含量，可选测序深度，内含子画斜线、非编码区画浅灰；默认样式借鉴 mitoPlotR） / genome maps (genes, GC content, optional depth; introns slanted, non-coding light grey; default style after mitoPlotR) | MitoM 自有步骤（取代 MitoZ 的 circos 圈图） / MitoM's own step (replaces the MitoZ circos map) |
+| GenBank / EMBL 转 NCBI 提交文件（`mito_tbl.py`，`mitom gb2tbl`） / GenBank / EMBL to NCBI submission files (`mitom gb2tbl`) | MitoM 自有步骤（来源信息表、产物名表的做法借鉴 GB2sequin；管道输入、定义行借鉴 NCBI gbf2tbl / gbf2fsa） / MitoM's own step (source / product tables after GB2sequin; piped input and definition lines after NCBI gbf2tbl / gbf2fsa) |
+| 用 MitoZ / MITOS2 注释（`--engine mitoz\|mitos2`）或导入它们已有的结果（`mitom import`；`mito_engines.py`） / annotate with MitoZ / MITOS2 (`--engine`) or import their results (`mitom import`) | 可选：MitoZ、MITOS2 需自己安装 / optional: MitoZ and MITOS2 are installed by you |
+| 蛋白基因、rRNA、tRNA 识别 / protein gene, rRNA and tRNA finding | 注释核心 `mito_core.py`（blastx + exonerate 蛋白基因，按门 rRNA profile HMM，MitoM-ML tRNA：分支协方差模型 + 学习的判别器与端点，未调用的 tRNA 家族由 MiTFi 补，脊椎动物取 MiTFi 端点） / annotation core `mito_core.py` (see the paragraph below) |
 
 `mito_core.py` = MitoM 自己的核心（blastx 定位 + exonerate 定蛋白基因边界，参考蛋白来自 MITOS2 的 refseq89m，起始密码子按 MitoZ 的规则取比对上游最近的一个（比对缺少较多残基时取最接近预期位置的）；rRNA 用按门的 profile HMM（`--rrna_method cm` 改用 MITOS2 的协方差模型）；tRNA 用 MitoM-ML（MITOS2 tRNA 模型 + 220 个分支的协方差模型，ARWEN/ARAGORN 作证据，梯度提升判别器与端点模型；它未调用的家族用 MiTFi 补，脊椎动物取 MiTFi 端点；无 scikit-learn 时整个改用 MiTFi）），只需一个 conda 环境（每条用时见下文用时表）。
 
@@ -281,7 +297,7 @@ Bare sequences, compared gene by gene with the NCBI annotation and checked with 
 | MitoZ | 249 s | 492 MB | 719 MB |
 | MITOS2 | 385 s | 953 MB | 1929 MB |
 | MitoFinder | 204 s | 238 MB | 283 MB |
-| MITOS1 | 约 41 min | 775 MB | |
+| MITOS1 | 约 41 min / about 41 min | 775 MB | |
 
 留一与失败 / leave-out and failures:
 
@@ -365,6 +381,8 @@ Bare sequences, compared with the NCBI annotation. A clear error = missing gene,
 
 一条命令安装全部依赖：`bash install.sh`（见"快速上手"）；`mitom doctor` 检查。全部在一个 conda 环境 `mitotools`（`env/mitotools.yml`）：
 
+Install everything with one command, `bash install.sh` (see Quick start); `mitom doctor` checks it.
+
 - Python 3.11 及 Biopython、numpy、scikit-learn 1.7.2（MitoM-ML tRNA 判别器按此版本训练）、matplotlib（圈图）
 - 注释核心与后续步骤：exonerate、BLAST、Infernal、HMMER、table2asn、ARAGORN、tRNAscan-SE、MAFFT + MITOS2 参考数据 refseq89m（`mitom setup`）
 - Java（MiTFi 用，任何 ≥ 8 的版本）：用电脑上已有的；没有时 install.sh 往环境里加 openjdk 8
@@ -373,7 +391,7 @@ Bare sequences, compared with the NCBI annotation. A clear error = missing gene,
 
 Everything is in one conda environment, `mitotools` (`env/mitotools.yml`): Python 3.11 with Biopython, numpy, scikit-learn 1.7.2 and matplotlib; the programs of the core and the later steps; the MITOS2 reference data via `mitom setup`. Java for MiTFi (any version >= 8): the computer's own; install.sh adds openjdk 8 to the environment only when there is none. Optional, installed by you: MITOS2 (`--engine mitos2`, `--rescue yes`), MitoZ (`--engine mitoz`), Snakemake, minimap2 (faster depth ring).
 
-检查帮助：
+检查帮助 / Help:
 
 ```bash
 mitom -h
