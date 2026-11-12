@@ -48,6 +48,8 @@ to automatic annotation (MitoM's core, or another annotator's GenBank such as MI
   P9  one untranslated extra nucleotide (bird / turtle nad3 at position 174, Mindell et al. 1998; rarely other genes):
       join(start..p-1,p+1..end) as NCBI writes it, with its note, when no single-frame repair keeps 85 % of the gene
       and a start / stop codon within 30 nt of the annotated ends make an open frame over one skipped nucleotide.
+      Before joining: one uninterrupted ORF in another frame covering >= FRAMESHIFT_MAX_TRIM of the CDS is taken
+      instead (the core's frame was wrong - Travisia forbesii ATP8; a real extra nucleotide leaves no such ORF).
   P10 a CDS that still has internal stops is written /pseudo (gene and CDS, not translated; table2asn InternalStop).
   O2  a join across the origin of a circular record written by the core with <= 300 nt past the origin is cut back to
       the sequence end; P1 / P3 / O1 place its end again (annelid nad2 before cox1 ended without a stop: NoStop).

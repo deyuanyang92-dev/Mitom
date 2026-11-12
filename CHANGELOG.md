@@ -5,6 +5,13 @@ installed one.
 
 ## Unreleased
 
+### Fixed (frameshift joins)
+- Curation P9: before joining a protein gene over a "frameshift", an uninterrupted ORF in another frame covering
+  >= 85 % of the gene is taken instead - the core had put the gene in the wrong frame. Travisia forbesii ATP8
+  (OZ479805): 49-aa join -> 53-aa single ORF as in T. sanrikuensis and another Travisia (RNA-seq and HiFi keep the
+  'skipped' base). Real frameshifts unchanged (turtle nad3 joined at position 174); 1 of 873 protein genes of 67
+  annelid genome-project mitogenomes changed. benchmark/results/annelid_rna_2026-11-10/README.md.
+
 ### Added (RNA-seq)
 - `mitom rna` (`mito_rna.py`): RNA-seq mapped to the mitogenome only; per gene / ORF / non-coding region the depth
   relative to the 13 genes, the share transcribed, an expressed-like-the-genes call, the library strand (reverse

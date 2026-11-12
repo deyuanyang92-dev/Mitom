@@ -3,7 +3,7 @@
 Code moved verbatim from mito_curate.py; the methods use the Curator helpers (self.log, self.tx, ...)."""
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import (
@@ -345,6 +345,28 @@ class PcgRules:
                 out.append((best, b))
         return out
 
+    def other_frame_orf(self, f: SeqFeature, s: str, a: int, b: int) -> Optional[Tuple[int, int]]:
+        """(start, end) in transcript coordinates of one uninterrupted ORF, in a frame other than the annotated start's,
+        that covers >= FRAMESHIFT_MAX_TRIM of the annotated CDS: start codon from max_start_shift codons upstream of a
+        (not into the preceding gene) to FRAMESHIFT_WINDOW nt after it, complete stop codon within FRAMESHIFT_WINDOW nt
+        of b; the start nearest a. A real extra nucleotide (bird / turtle nad3) leaves no such ORF - each frame holds
+        only part of the gene."""
+        n, L = b - a + 1, len(s)
+        lo = max(1, self.upstream_end(f) + 1, a - 3 * self.a.max_start_shift)
+        best = None
+        for c in range(lo, min(L - 2, a + FRAMESHIFT_WINDOW) + 1):
+            if (c - a) % 3 == 0 or s[c - 1:c + 2] not in self.starts:
+                continue
+            q = next((x for x in range(c + 3, L - 1, 3) if s[x - 1:x + 2] in self.stops), None)
+            if q is None:
+                continue
+            e = q + 2                                  # last base of the stop codon
+            if abs(e - b) > FRAMESHIFT_WINDOW or min(e, b) - max(c, a) + 1 < FRAMESHIFT_MAX_TRIM * n:
+                continue
+            if best is None or abs(c - a) < abs(best[0] - a):
+                best = (c, e)
+        return best
+
     def frameshift(self, f: SeqFeature) -> None:
         """P9: a gene with one untranslated extra nucleotide - bird / turtle nad3 at position 174 (Mindell et al. 1998),
         sometimes other genes (NC_010095.1 grebe nad1, NC_017607.1 turtle nad4, NC_010769.1 sponge cox3 / nad6) - is
@@ -362,6 +384,18 @@ class PcgRules:
             return
         n = b - a + 1
         if any(nb - na + 1 >= FRAMESHIFT_MAX_TRIM * n for na, nb in self.single_frame_repairs(s, a, b)):
+            return
+        alt = self.other_frame_orf(f, s, a, b)
+        if alt:                                        # the core's frame was wrong: no frameshift (Travisia ATP8)
+            S, E = alt
+            old = span(f)
+            gs, ge = self.from_tx(f, S, E)
+            f.location = FeatureLocation(gs - 1, ge, f.location.strand)
+            g = gene_feature(self.rec, f)
+            if g is not None:
+                g.location = FeatureLocation(gs - 1, ge, f.location.strand)
+            self.log(f, "P9", old, span(f), f"no frameshift: one uninterrupted ORF in another frame covers "
+                     f"{(min(E, b) - max(S, a) + 1) / n:.0%} of the CDS")
             return
         name = PCG_SYN.get(key(f.qualifiers.get("gene", [""])[0]), "")
         L = len(s)

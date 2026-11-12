@@ -1301,3 +1301,20 @@ def test_internal_transl_except_kept_and_used_in_the_translation(tmp_path):
     got = sorted(f.qualifiers.get("translation", [""])[0] for f in b.features if f.type == "CDS")
     assert got == want
     assert sum("aa:Trp" in q for f in b.features for q in f.qualifiers.get("transl_except", [])) == 3
+
+
+def test_p9_other_frame_orf_instead_of_frameshift_join():
+    """Travisia forbesii ATP8 (OZ479805, 2026-11-11): the core put the gene in the wrong frame (start and end in one
+    frame, internal stops); the real gene is one uninterrupted ORF in another frame (as in T. sanrikuensis and the
+    user's Qingdao Travisia; RNA-seq and HiFi keep every base). P9 must take that ORF, not join over a 'frameshift'."""
+    from Bio.SeqFeature import FeatureLocation
+    orf = "ATG" + "ATAGCC" * 25 + "TAA"                     # true gene, 156 nt; frame +1 reads ...TAG CC... (stops)
+    seq = "C" * 100 + orf + "CTATAAC" + "C" * 100
+    s0 = 101                                                 # core start 1 nt inside, in frame +1
+    e0 = s0 + 3 * ((100 + len(orf) + 6 - s0) // 3)           # core end in the same frame, at/after the true stop
+    rec = _mkrec(seq, [("CDS", FeatureLocation(s0, e0, 1), "ATP8", {"transl_table": ["5"]})])
+    rows = _curate_rec(rec, genetic_code=5)
+    cds = _by(rec, "CDS", "ATP8")
+    assert len(cds.location.parts) == 1, rows                          # no join
+    assert (int(cds.location.start), int(cds.location.end)) == (100, 100 + len(orf)), rows
+    assert _mc().FRAMESHIFT_NOTE not in cds.qualifiers.get("note", [])
