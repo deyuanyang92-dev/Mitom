@@ -1,0 +1,5 @@
+position	kind	bases	feature	rna_share	hifi_genome	hifi_rna_version	rna_genome	rna_rna_version	verdict
+7570	insertion	A	ND5	0.95	0	0	0	7265	too few HiFi reads
+14287	insertion	A	ND3	0.21	0	0	6219	1706	too few HiFi reads
+6987	insertion	TCTCTATTT	ND2 intron	0.97	0	0	0	5184	too few HiFi reads
+8385	deletion	AACCTCTCATCTACT	ND5	0.71	0	0	0	7876	too few HiFi reads

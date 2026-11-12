@@ -1,0 +1,2 @@
+position	kind	bases	feature	rna_share	hifi_genome	hifi_rna_version	rna_genome	rna_rna_version	verdict
+271	deletion	GC	COX1	0.90	0	412	0	3690	assembly error (DNA = RNA)

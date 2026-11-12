@@ -104,6 +104,13 @@
 - *T. forbesii* COX3 第 101 密码子处 6 个 T（4228–4233）：已解决（2026-11-11，下载同一标本 DNA：HiFi ERR17229040、10x Illumina ERR17229605，organise-sra 直连）。DNA 均一为 6 T（HiFi 287/297、Illumina 102/104），RNA 35 % 为 7 T——不是异质性，是 RNA 层面的“+1”。只发生在这个位点（124 个同聚物中位数 0 %，次高为 COX1 内含子中的长 A 串 15–20 %）。7 T 使 COX3 移码、在第 147 密码子终止；6 T 编码的保守区 …WAFFHSSLAPTPELG… 与 *T. sanrikuensis*、青岛种完全相同。所以不是恢复功能的编辑，而是聚合酶在 T 串上的滑动（转录或建库反转录，现有数据分不开；需要直接 RNA 测序或第二个文库）。青岛种同处也是 6 T，*T. sanrikuensis* 被 C 打断 (benchmark/results/annelid_rna_2026-11-10/travisia_dna_check.py:1)
 - DNA 也证实：ATP8 3706 的碱基在 DNA 中（HiFi 277、Illumina 92 条，无缺失）——MitoM 的 P9 拼接是错的；COX1 内含子在 DNA 中完整（无剪接连接），RNA 的剪接是真剪接 (benchmark/results/annelid_rna_2026-11-10/travisia_dna_check.py:1)
 
+
+## 12. 转录组揭示组装碱基错误 / RNA-seq exposes assembly base errors (2026-11-12)
+
+- 同一标本、≥ 80 % RNA reads 与基因组差一个插入缺失：HiFi 核实 21/21 为组装错误；它们截断蛋白基因，是 MitoM 剩余误差的主要来源；*Hermodice* 按转录组共识改 10 处后 COX3、CYTB、ND4、ND6 恢复全长 (benchmark/results/annelid_rna_2026-11-10/README.md:232)
+- 部分比例的位点要用 DNA 区分：RNA 层面（臭海蛹 COX3）或 DNA 异质性（*Spirobrachia* ND2） (benchmark/results/annelid_rna_2026-11-10/hifi_site_check.py:1)
+- HiFi reads 先查编辑率：*Ridgeia* 的一个 HiFi run 比上的是核内拷贝（10 %），不能用 (benchmark/results/annelid_rna_2026-11-10/run_hifi_check.sh:1)
+
 ## 7. 未解决 / open
 
 - 终止密码子与下游 tRNA 重叠时由 poly(A) 决定末端：规律已学到（上表），规则尚未写入；计划先在 23 对干净数据上定参数， (mito_rna.py:301)

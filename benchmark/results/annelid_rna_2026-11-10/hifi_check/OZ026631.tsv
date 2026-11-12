@@ -1,0 +1,11 @@
+position	kind	bases	feature	rna_share	hifi_genome	hifi_rna_version	rna_genome	rna_rna_version	verdict
+8788	insertion	C	CYTB	0.94	2	770	0	9693	assembly error (DNA = RNA)
+8509	insertion	C	CYTB	0.90	9	770	0	9653	assembly error (DNA = RNA)
+7347	insertion	G	COX3	0.87	3	811	0	8282	assembly error (DNA = RNA)
+4601	deletion	G	rrnL	0.84	0	773	0	42974	assembly error (DNA = RNA)
+4610	deletion	A	rrnL	0.93	0	772	0	43930	assembly error (DNA = RNA)
+4694	deletion	G	rrnL	0.95	1	779	0	55043	assembly error (DNA = RNA)
+3859	deletion	T	rrnL	0.99	6	752	89	48712	assembly error (DNA = RNA)
+7594	deletion	C	ND6	0.95	3	795	0	455	assembly error (DNA = RNA)
+3234	deletion	G	rrnS	0.86	8	711	0	2723	assembly error (DNA = RNA)
+13814	deletion	CT	ND4	0.93	0	695	0	1835	assembly error (DNA = RNA)

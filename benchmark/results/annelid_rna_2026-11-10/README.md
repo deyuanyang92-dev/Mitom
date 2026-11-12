@@ -229,6 +229,30 @@ full length. Next: confirm with DNA reads, then an optional RNA-consensus sequen
 The RNA-seq module adds little to MitoM's counts because MitoM's ends are mostly right already; its value is direct
 evidence for every end and intron, the 20 ends the genome alone cannot decide, and the flags.
 
+## HiFi 核实：转录组与基因组不一致的位点 / RNA-vs-genome indels checked in HiFi DNA (2026-11-12)
+
+同一标本的 HiFi（organise-sra 直连下载：ERR12760787、ERR12319376、ERR14835533、ERR8575393、ERR13725949，33.8 GB）。
+每个位点建两个窗口（基因组版、转录组共识版，各 12 nt 两侧，邻近的高比例位点一并套用），在 HiFi reads 和 RNA reads
+中精确计数（`hifi_site_check.py`，`run_hifi_check.sh`；每个位点：`hifi_check/<acc>.tsv`）。先在臭海蛹上验证：COX3 +T
+判为 RNA 层面（HiFi 287 : 5），与 DNA 核对结果一致。
+Same-specimen HiFi; for each site the genome's and the RNA's version are counted in HiFi and RNA reads.
+
+| 记录 / record | HiFi 编辑率 / edit rate | 位点 / sites | 结论 / verdict | HiFi：基因组版 / 转录组版 |
+|---|---|---|---|---|
+| *Hermodice carunculata* OZ026631 | 0.30 % | 10（COX3、CYTB ×2、ND6、ND4、rrnL ×4、rrnS） | 10 个组装错误 / assembly errors | 0–9 / 695–811 |
+| *Sabellastarte* sp. OZ024941 | 0.21 % | 3（COX3、ND3、ND5） | 3 个组装错误 | 1–24 / 684–716 |
+| *Spirobrachia grandis* OZ483948 | 0.19 % | 8 | 7 个组装错误；ND2 1 个 DNA 两种长度并存（2,242 / 1,898）= 异质性 / heteroplasmy | 0–103 / 2,051–2,233 |
+| *Lepidonotus clava* OW387151 | 0.23 % | 1（COX1） | 组装错误 | 0 / 412 |
+| *Ridgeia piscesae* OZ461320 | 10.06 % | 4 | 无法判断：该 HiFi run 比上的是核内拷贝（NUMT，中位比对 337 nt），不是线粒体 reads | — |
+
+学到的规则 / learned:
+- 同一标本、≥ 80 % RNA reads 的插入缺失：可判断的 21 个全部是组装错误（DNA = RNA）。21 of 21 near-all sites are
+  assembly errors. 这类长读长（MitoHiFi）线粒体组装仍有单碱基插入缺失，常在同聚物处；它们会截断或打断蛋白基因
+  （*Hermodice* COX3、CYTB、ND4、ND6；*Spirobrachia* ND6 的“移码拼接”、*Sabellastarte* ND3 的“移码拼接”也是）。
+- 部分比例（20–79 %）：两种情况都有——臭海蛹 COX3 是 RNA 层面（DNA 全为 6 T），*Spirobrachia* ND2 是 DNA 本身的
+  异质性；只有 DNA reads 能分开。Partial sites: RNA-level (Travisia) or heteroplasmy (Spirobrachia) - DNA decides.
+- 先看 HiFi reads 的编辑率：线粒体 reads 约 0.2–0.3 %；约 10 % 是核内拷贝，不能用来判断。Check the HiFi edit rate first.
+
 ## Outliers / 异常值分析（如何得到上面的规则）
 
 | 异常 / outlier | 例子 / examples | 原因 / cause | 处理 / rule |

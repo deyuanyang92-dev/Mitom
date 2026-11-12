@@ -1,0 +1,4 @@
+position	kind	bases	feature	rna_share	hifi_genome	hifi_rna_version	rna_genome	rna_rna_version	verdict
+2945	insertion	C	COX3	0.92	24	716	4	3868	assembly error (DNA = RNA)
+8751	deletion	A	ND3	0.96	1	684	0	1310	assembly error (DNA = RNA)
+5757	deletion	G	ND5	0.97	3	702	0	1755	assembly error (DNA = RNA)
