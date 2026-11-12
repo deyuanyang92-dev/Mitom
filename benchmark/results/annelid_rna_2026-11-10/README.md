@@ -252,6 +252,12 @@ Same-specimen HiFi; for each site the genome's and the RNA's version are counted
 - 部分比例（20–79 %）：两种情况都有——臭海蛹 COX3 是 RNA 层面（DNA 全为 6 T），*Spirobrachia* ND2 是 DNA 本身的
   异质性；只有 DNA reads 能分开。Partial sites: RNA-level (Travisia) or heteroplasmy (Spirobrachia) - DNA decides.
 - 先看 HiFi reads 的编辑率：线粒体 reads 约 0.2–0.3 %；约 10 % 是核内拷贝，不能用来判断。Check the HiFi edit rate first.
+- 这些都是 MitoHiFi 组装（记录注释："The mitochondrial genome was assembled using MitoHiFi"），所用序列与 NCBI 原记录
+  完全相同（只旋转），差异不是我们引入的。21 个错误几乎全在同聚物或短串联重复处（如 `TTTTGG[+C]CCCCAG`、
+  `CGCTTC[-CT]CTCTTC`、`TTTTTA[-ATTTTTT]ATTTTT`）：长度差一个单元——组装一致序列在这类区域的典型弱点。规模：同标本
+  30 条中 4 条（Hermodice、Sabellastarte、Spirobrachia、Lepidonotus）有此类错误，其余未见；多数 MitoHiFi 组装没问题，
+  少数有几处，就足以打断蛋白基因。All MitoHiFi assemblies, sequences identical to NCBI; the errors are length errors in
+  homopolymers / short repeats; 4 of 30 same-specimen records affected.
 
 ## Outliers / 异常值分析（如何得到上面的规则）
 
