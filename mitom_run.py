@@ -130,7 +130,7 @@ def run_stages(args: argparse.Namespace, ctx: Optional[RunContext], stages) -> i
 
 def start_run(args: argparse.Namespace, ctx: RunContext, stages) -> RunState:
     """Output folder emptied of a previous run's work, run.log, [ENV] / [PARAMS] lines, the summary on the terminal;
-    one numbered step per stage of `stages` (run: 11, annotate: 7)."""
+    one numbered step per stage of `stages` (run: 12, annotate: 8)."""
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     removed = clear_previous_work(out_root, keep=("00.input", "00.imported"),   # made by this run (input copies, `import`)

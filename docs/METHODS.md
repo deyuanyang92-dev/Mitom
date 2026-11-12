@@ -1,6 +1,6 @@
 # MitoM 方法与评测 / Methods and benchmarks
 
-MitoM 各模块的方法、设计依据和历次评测（2026-10）。使用方法见 [USAGE_zh.md](USAGE_zh.md)，评测数据在 `../benchmark/results/`。
+MitoM 各模块的方法、设计依据和历次评测（2026-10）。使用见 [USAGE_zh.md](USAGE_zh.md)，示例见 [EXAMPLES.md](EXAMPLES.md)，参考库制备见 [DATASETS.md](DATASETS.md)。评测数据在 `../benchmark/results/`。
 
 ## 程序结构 / Code layout
 
@@ -31,8 +31,8 @@ Group I / II splice sites are judged in three places with different jobs (de nov
 `mitom annotate` 用同一套阶段函数（`mitom_run.ANNOTATE_STAGES`：不做第二轮、对比和输出整理），后处理只有一份代码。
 `mitom annotate` runs the same stage functions (`ANNOTATE_STAGES`: no round 2, comparison or output layout), so the steps after annotation exist once.
 
-校正、内含子和未知 ORF 以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`、`mito_orf.py`：调用外部程序、内存较大，进程崩溃只影响这一步），NCR、写回、圈图等纯 Python 的轻量步骤在主进程内运行、异常由 `optional_step` 记录后跳过；`tests/test_step_argv.py` 检查流水线给子进程的参数。旧名 `batch_mitoz.py` 仍可用。
-Curation and introns run as separate processes, so a crash affects only that step; `tests/test_step_argv.py` checks the arguments the pipeline passes them. The old name `batch_mitoz.py` still works.
+校正、内含子与未知 ORF 以独立进程运行（`mito_curate.py`、`mito_intron.py`、`mito_intron_ref.py`、`mito_orf.py`），崩溃只影响该步。NCR、写回、圈图等在主进程内运行；`tests/test_step_argv.py` 检查流水线给子进程的参数。旧名 `batch_mitoz.py` 仍可用。
+Curation, introns and ORF run as separate processes; NCR and plots stay in-process. `tests/test_step_argv.py` checks subprocess arguments. The old name `batch_mitoz.py` still works.
 
 
 ## 类群与遗传密码自动判断 / --clade auto (mito_classify.py, mitom_groups.py)
@@ -520,8 +520,8 @@ NCBI 提交校验（table2asn 1.28 `-V vb -Z`，2026-10-25）：多鳞虫 + 沙�
 
 ## 流程图 / Flowcharts
 
-`mitom run` 的 12 步（与 README 第 3 节的步骤表、终端的 `[Step k/12]` 一致；`mitom annotate` 不做第 3、4、10、12 步）。
-The 12 steps of `mitom run` (as the step table in README section 3; `mitom annotate` skips steps 3, 4, 10 and 12):
+`mitom run` 的 12 步（与 README 第 3 节的步骤表、终端的 `[Step k/12]` 一致；`mitom annotate` 不做定向、第二轮、对比与输出整理，共 8 步）。
+The 12 steps of `mitom run` (as the step table in README section 3; `mitom annotate` skips reorient, round 2, compare and output layout: 8 steps):
 [中文 SVG](flowcharts/mitom_workflow.zh.svg) · [English SVG](flowcharts/mitom_workflow.en.svg) ·
 [中文 Mermaid](flowcharts/mitom_workflow.zh.mmd) · [English Mermaid](flowcharts/mitom_workflow.en.mmd)。
 重新生成 / regenerate：`python3 scripts/render_workflow_diagrams.py`

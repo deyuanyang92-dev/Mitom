@@ -1,1070 +1,394 @@
 # MitoM 使用手册
 
-> **说明**：MitoM 目前仍在测试中，是本团队内部使用的软件，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
+> **说明**：MitoM 目前仍在测试中，供本团队内部使用，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
 
-MitoM（命令 `mitom`）注释动物线粒体基因组：找出 13 个蛋白基因、2 个 rRNA、22 个 tRNA 和内含子，统一方向和起点，按 NCBI 规范修整边界和基因名，生成可直接提交 NCBI 的文件和环状基因组图。另有一个独立功能 `mitom nuc`：在全基因组组装的 contig 中注释核 rDNA（18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。
-
-本手册按使用顺序编排：安装 → 快速开始 → 输入 → 流程 → 各命令 → 输出 → 调试排错 → 常见问题。方法细节与评测见 [METHODS.md](METHODS.md)，版本变化见 [../CHANGELOG.md](../CHANGELOG.md)。
+MitoM（命令 `mitom`）注释**动物线粒体基因组**：找出 13 个蛋白基因、2 个 rRNA、22 个 tRNA 和内含子，统一方向与起点，按 NCBI 规范修整边界和基因名，生成可提交的文件与环状基因组图。另有 `mitom nuc`：在全基因组组装中注释核 rDNA（18S–ITS1–5.8S–ITS2–28S）和组蛋白。
 
 ---
 
-## 1. 安装
+## 本手册怎么读
 
-### 1.1 一键安装（推荐）
+| 需求 | 去哪 |
+|---|---|
+| 安装与各命令的输入 / 输出 | **本页** |
+| 用仓库测试数据跟做 | [EXAMPLES.md](EXAMPLES.md) |
+| 主要功能的数字 | [BENCHMARK.md](BENCHMARK.md) |
+| 方法与完整评测表 | [METHODS.md](METHODS.md) |
+| 内部参考库怎么制备 | [DATASETS.md](DATASETS.md) |
+| 全部参数（由 `-h` 生成） | [OPTIONS.md](OPTIONS.md) |
+| 与 MITOS2 联用 | [MITOS2.md](MITOS2.md) |
+| 文档总目录 | [README.md](README.md) |
+
+测出来的数字只在 [BENCHMARK.md](BENCHMARK.md) 与 [METHODS.md](METHODS.md)。本页不复述。
+
+---
+
+## 1. 特色
+
+- **一条命令到可提交文件**：`mitom run` 从序列做到定向、补漏、内含子、未知 ORF、边界校正、table2asn 与圈图。
+- **多门混合输入**：默认 `--clade auto`，按门 / 遗传密码分组注释，再合并到同一输出目录。
+- **校正对着 NCBI 规则**：蛋白基因、rRNA、tRNA、原点规则可复查；报告在 `qc/curation_report.tsv`。
+- **内含子两步**：从头识别 + 近缘位点迁移；无类型内含子可用同源连续性规则。
+- **未知 ORF**：同源证明受选择才写入；其余进 WARNING 与 NCR 备注。
+- **核标记独立命令**：`mitom nuc` 做 rDNA 与组蛋白，不混进线粒体流程。
+- **可复现**：`logs/run_params.json`、`mitom doctor`、`mitom debug`。
+
+数字见 [BENCHMARK.md](BENCHMARK.md)。参考库制备见 [DATASETS.md](DATASETS.md)。
+
+---
+
+## 2. 安装
+
+### 2.1 一键安装（推荐）
 
 需要 Linux 或 Windows WSL2，以及 conda / mamba（推荐 [Miniforge](https://github.com/conda-forge/miniforge)）。
 
 ```bash
 git clone https://github.com/deyuanyang92-dev/Mitom.git MitoM
 cd MitoM
-bash install.sh        # 建 conda 环境 mitotools，装 mitom 命令，并运行 mitom setup
-mitom doctor           # 检查：必需程序都应显示 OK
+bash install.sh        # 建 conda 环境 mitotools，装 mitom，并运行 mitom setup
+mitom doctor           # 必需程序都应显示 OK
 mitom --version
 ```
 
-`install.sh` 做三件事：
+`install.sh` 会：按 `env/mitotools.yml` 建环境；安装 `mitom` 入口；运行 `mitom setup`（下载 MITOS2 的 refseq89m、准备 tRNA 模型、写配置）。不往系统 Python 装包。
 
-1. 按 `env/mitotools.yml` 建一个 conda 环境 `mitotools`：Python 3.11 及 Biopython、numpy、scikit-learn 1.7.2、matplotlib，以及 BLAST+、Exonerate、Infernal、HMMER、ARAGORN、tRNAscan-SE、MAFFT、bwa、NCBI table2asn。MitoM 只用这个环境，不往系统 Python 装任何东西。
-2. 安装命令 `mitom`（环境的 `bin/` 和 `~/.local/bin/` 各一个入口）。
-3. 运行 `mitom setup`：下载 MITOS2 的参考数据 refseq89m（核对 md5），准备 MitoM-ML 的 tRNA 模型，写配置文件。
-
-Java（MiTFi tRNA 程序用，任何 ≥ 8 的版本）优先用电脑上已有的；没有时 `install.sh` 往环境里加 openjdk 8。
-
-### 1.2 Docker
+### 2.2 Docker
 
 ```bash
 docker build -t mitom .
 docker run --rm -v "$PWD":/data mitom mitom run -i /data/genomes.gb -o /data/out
 ```
 
-### 1.3 数据与配置的位置
+### 2.3 数据与配置在哪
 
-| 内容 | 位置 | 说明 |
-|---|---|---|
-| MITOS2 参考数据 refseq89m | `mitom setup --refdir <目录>`；默认 `$MITOS_REFDIR`，否则 `~/mitos_refs` | 注释核心的参考蛋白、rRNA / tRNA 模型 |
-| MitoM-ML tRNA 模型 | `$MITOM_DATA`，否则 `$XDG_DATA_HOME/mitom`，否则 `~/.local/share/mitom` | 安装目录可以是只读的 |
-| 配置文件 | MitoM 目录下的 `mito_config.json`（`mitom doctor --write-config` 生成） | 记录各程序路径、参考数据目录 |
+| 内容 | 默认位置 |
+|---|---|
+| MITOS2 参考数据 refseq89m | `$MITOS_REFDIR` 或 `~/mitos_refs`（`mitom setup --refdir`） |
+| MitoM-ML tRNA 模型 | `$MITOM_DATA` 或 `~/.local/share/mitom` |
+| 配置文件 | 仓库内 `mito_config.json`（`mitom doctor --write-config`） |
 
-### 1.4 检查环境：`mitom doctor`
+### 2.4 可选软件
 
-列出每个程序找到的路径、版本，以及哪一步需要它。必需程序缺失时，`mitom run` 一开始就报错并说明缺什么；可选程序（MITOS2、MitoZ、minimap2、ARWEN）缺失时，相应功能跳过并在日志里写明。`mitom doctor --write-config` 把找到的路径写进配置文件。
+| 软件 | 用途 |
+|---|---|
+| MITOS2 2.1.10 | `--engine mitos2`、`--rescue yes`；`mamba env create -f env/mitos.yml` |
+| MitoZ 3.6 | `--engine mitoz`；自行安装 |
+| minimap2 | 圈图测序深度环（可选，装上后代替 bwa） |
 
-### 1.5 可选软件
-
-| 软件 | 用途 | 安装 |
-|---|---|---|
-| MITOS2 2.1.10 | `--engine mitos2`（用 MITOS2 找基因）、`--rescue yes`（补回核心漏掉的基因）、`mitom trna` 的 MITOS2 结果 | `mamba env create -f env/mitos.yml`，或 `install.sh --envs "mitotools mitos"` |
-| MitoZ 3.6 | `--engine mitoz`（用 MitoZ 找基因） | 按 MitoZ 官方说明自行安装；MitoM 在 PATH 或 conda 环境里自动寻找，或 `--mitoz_bin` |
-| minimap2 | 基因组图的测序深度环；装上后代替 bwa（1.02 M 对 reads、8 线程：2.7 s，bwa 21 s，平均深度相同） | `mamba install -n mitotools minimap2` |
+体积对比见 [BENCHMARK.md § 安装体积](BENCHMARK.md#6-安装体积与用时参考)。
 
 ---
 
-## 2. 快速开始
+## 3. 五分钟上手
 
 ```bash
-# 1) NCBI GenBank 记录（含分类信息）：类群和遗传密码自动判断
+# GenBank（推荐：自带分类）
 mitom run -i my_genomes.gb -o out
 
-# 2) 自己组装的 FASTA：需给类群和遗传密码
+# 自己组装的 FASTA
 mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5
 
-# 3) 已有的 MitoZ / MITOS2 结果：不重新注释，只做 MitoM 的后续步骤
+# 已有 MitoZ / MITOS2 结果：不重注，只整理
 mitom import -i mitoz_or_mitos2_results/ -o out --clade Mollusca --genetic_code 5
 
-# 4) 全基因组组装中的核 rDNA 和组蛋白
+# 核 rDNA / 组蛋白
 mitom nuc annotate -i scaffolds.fasta -o nuc_out
 ```
 
-结果在 `out/annotation/`（每条记录一个 GenBank 文件），NCBI 提交文件在 `out/submission/`，基因组图在 `out/annotation/plots/`，每一步的报告在 `out/reports/`，完整日志是 `out/logs/run.log`。
+**先看这些输出**
 
----
-
-## 3. 输入
-
-### 3.1 文件格式
-
-- **GenBank**（`.gb .gbk .gbf .gbff .genbank`）：单个文件（可含多条记录）或一个目录。记录自带的分类信息用来自动判断类群和遗传密码；原记录的表头（物种、文献、标本信息等）会复制到结果里。
-- **FASTA**：单个文件或目录。不写 `--clade` 时自动判断每条序列的门和遗传密码（见 3.3）；知道类群时可写明 `--clade` 和 `--genetic_code`。
-
-### 3.2 环状还是线状
-
-先看标签。GenBank 记录按自己的 `LOCUS` 行。FASTA 记录：
-
-- 表头写 `topology=circular` 或 `topology=linear` 时按写的处理，例如 `>sample1 topology=circular`。
-- 没写时：文件里只有一条且 ≥ 10 kb 的序列当作环状；一个文件有多条序列，或序列 < 10 kb，当作组装的 contig，按线状处理（日志中有 `[TOPOLOGY]` 警告）。
-
-标签可能标错，所以默认（`--topology auto`）第一轮注释后再核对序列两端：两端的蛋白基因用它的参考蛋白跨过“尾接头”的接点再比对一次。
-
-| 序列显示 | 处理 |
+| 路径 | 内容 |
 |---|---|
-| 有基因从序列末尾接到开头：参考蛋白跨过接点连续比对上，并且两侧各自也能比对上、正好接上（或两侧各 ≥ 90 nt 且读码框不断）。例如组装从基因中间开始、多条放在一个 FASTA 里又没写 `topology=` | 当环状 |
-| 标为环状，但两端有基因被截断：比对停在端点，缺 ≥ 30 个氨基酸，读码框一直开放到端点，另一端也接不上。即部分序列 | 当线状 |
-| 看似在端点被截断，实际中间隔着一个跨接点的内含子（如环节动物 cox1 的 II 类内含子，组装从外显子 2 开始；六放珊瑚 nad5 长达 10–12 kb、内含其他基因的内含子）：用 exonerate protein2genome（允许内含子）在接点前、后剩下的整圈序列上再比对一次，缺的残基在另一端比对上 | 当环状（`joined_intron`），内含子照常注释，旋转后内含子特征保留 |
-| 证据矛盾（例如比对只偶然越过接点几十 nt） | 不改判，按标签 |
-| 标为环状的水母类、水螅类（Medusozoa）和钙质海绵：它们的线粒体基因组是线状的，且没有基因跨两端 | 当线状（第一轮就按线状注释） |
-| GenBank 记录标为 linear，但 DEFINITION 写明是完整基因组（`complete genome`，或 DToL / ATLASea 细胞器组装的 `genome assembly, organelle: mitochondrion`），基因齐全（≥ 12 个蛋白基因和两个 rRNA），两端没有基因被截断，不属于上面的线状类群 | 当环状（再注释一遍，并旋转到 cox1） |
-| 其他 | 按标签 |
+| `out/summary.tsv` | 每条一行总览（基因数、cox1 起点、NCBI ERROR） |
+| `out/annotation/` | 最终 GenBank、序列、圈图 |
+| `out/submission/` | NCBI `.fsa` / `.tbl` / `.sqn` / `.val` |
+| `out/qc/` | 各步报告 |
+| `out/logs/run.log` | 完整日志 |
 
-被改判的记录用新的拓扑重新注释一遍；多数记录不改判，核对几乎不增加用时（实测见 [METHODS.md](METHODS.md)「环状还是线状」）；每条记录的标签、来源、最终拓扑和原因写在 `qc/topology_decision.tsv`。`--topology label` 只按标签；`--topology circular` / `linear` 把全部记录设为环状 / 线状。
-
-环状记录会旋转到以 cox1 起始（见第 4 节）；线状记录从不旋转，以免在假的“原点”处把真基因切断。
-
-### 3.3 类群和遗传密码：自动判断（可多门混合）
-
-遗传密码和若干规则按门（类群）设定。`--clade auto`（默认）逐条记录判断：
-
-- **GenBank 记录**：用记录自己的分类信息（门名；只有纲级名如 `Vertebrata`、`Gastropoda` 时按所属门）和 CDS 的 `transl_table`；没有 CDS 时取参考基因组里同一类群的遗传密码（例如海鞘 13）。分类信息不属于动物（植物、真菌等）时报错。
-- **FASTA 和没有分类信息的记录**：blastx 比对 refseq89m 的 8 个保守蛋白（cox1 cox2 cox3 cob atp6 nad1 nad4 nad5），按最近参考基因组的门投票，遗传密码取它们的 `transl_table`，再用基因组自己的 AGA AGG ATA AAA TGA TAA 密码子在比对中对应的氨基酸核验（AGR 在基因内部出现时排除把它当终止密码子的密码 2）；两者冲突时用密码子的结果并警告。参考库里没有近亲（门的支持度 < 0.7，小门常见）时按 `Animal` 和密码子判断的遗传密码。每条序列约几秒；序列太短（< 约 4 kb，命中少于 2 个基因）时并入输入中最常见的组。
-- **一次输入含多个门 / 多个遗传密码**：`mitom run` 按（门，遗传密码）分组，每组用自己的类群和密码注释（同时运行，`--jobs` 按记录数分给各组），结果合并到同一个输出目录，和单组运行的结构一样。`import`、`annotate` 仍需一个门。
-- 每条记录的判断、依据（分类信息 / blastx）、支持度、密码子核验、最近参考：`qc/clade_decision.tsv`。
-
-评测数字在 [METHODS.md](METHODS.md) 的 `--clade auto` 表（2026-10-31）；判错的都是参考库里只有 1–2 个科的小门。显式给 `--clade` 或 `--genetic_code` 时不做自动判断。
-
-| `--clade` | 默认遗传密码 | 说明 |
-|---|---|---|
-| `Chordata` | 2 | 脊椎动物（海鞘等请给 `--genetic_code 13`） |
-| `Arthropoda` | 5 | |
-| `Echinodermata` | 9 | |
-| `Annelida-segmented-worms` | 5 | 无任何分类信息的输入默认按此处理（有警告） |
-| `Mollusca` | 5 | |
-| `Nematoda` | 5 | |
-| `Bryozoa`、`Nemertea-ribbon-worms`、`Chaetognatha-arrow-worms` | 5 / 需给 | `Chaetognatha` 需给 `--genetic_code` |
-| `Porifera-sponges` | 4 | |
-| `Cnidaria` | 需给（通常 4） | |
-| `Platyhelminthes-flatworms` | 需给（通常 9） | |
-| `Animal` | 需给 | 其他门：用全动物参考库 |
-
-### 3.4 去重（同一个基因组只注释一次）
-
-从 NCBI 下载的记录里，同一个基因组常常出现不止一次：
-
-- 作者提交的原始记录（如 `MK123456`）和 NCBI 照它复制出来的参考记录（RefSeq，编号以 `NC_` 开头），两条序列一样；
-- 同一个登录号的新旧两个版本（如 `MK123456.1` 和 `MK123456.2`）；
-- 不同登录号、但序列完全相同的记录。
-
-`mitom run` 先把这些重复去掉，每个基因组只注释一次：留 `NC_` 记录、留新版本、相同序列只留一条。每条输入记录保留还是去掉、为什么去掉、保留的是哪一条，写在 `qc/dedup_report.tsv`。只想去重、不注释时用 `mitom dedup -i 输入 -o 输出`。
+用仓库数据跟做：[EXAMPLES.md](EXAMPLES.md)。
 
 ---
 
-## 4. `mitom run` 的流程
+## 4. 怎么选命令
 
-| 步骤 | 做什么 | 结果 / 报告 |
+| 手上有 | 想要 | 用 |
 |---|---|---|
-| 1 读入与去重 | 读 GenBank / FASTA；同一个基因组的多条记录只留一条（见 3.4）；给每条记录一个内部短 ID | `qc/dedup_report.tsv` |
-| 2 第一轮注释 | 注释核心 `mito_core.py`（或 `--engine mitoz / mitos2`）：蛋白基因（blastx 定位 + exonerate 定边界）、rRNA（按门的 profile HMM）、tRNA（MitoM-ML + MiTFi）；再核对序列两端，标签与序列矛盾的记录改判环状 / 线状并重注（见 3.2） | `qc/topology_decision.tsv` |
-| 3 统一方向 | 环状记录转到正链并以 cox1 起始；没有 cox1 时依次用 cox2、cox3、cob、nad1（`--fallback_genes`） | `qc/oriented_by_fallback.txt`、`qc/no_cox1_samples.txt` |
-| 4 需要时再注释一次 | 转动起点后，原来跨在序列首尾两端的基因会被接起来；这类记录，以及转动后有基因受影响、或缺了标准基因的记录，再注释一遍，其余记录不用重做 | `qc/reannotation_decision.tsv` |
-| 5 写结果 | 写 GenBank，并把原记录的表头（物种、文献、标本）复制回来 | `qc/metadata_transfer_log.tsv` |
-| 6 补漏 | 可选 MITOS2 补回漏掉的基因；仍缺的 12S/16S 用按门的 rRNA HMM 补搜；内含子：从头识别 + 近缘位点迁移 | `qc/rescue_report.tsv`、`rrna_hmm_report.tsv`、`intron_report.tsv`、`intron_ref_report.tsv` |
-| 7 边界与命名 | 蛋白基因起止密码子、rRNA 端点、重叠、NCBI 基因名等规则 | `qc/curation_report.tsv` |
-| 8 NCBI 校验 | 生成 .fsa / .tbl / .sqn，用 NCBI table2asn 校验 | `submission/`，`summary.tsv` 的 `ncbi_errors` 列 |
-| 9 与原注释对比 | GenBank 输入时逐基因对比原注释和 MitoM 注释 | `qc/original_vs_mitom.tsv` |
-| 10 基因组图 | 环状图：基因、GC 含量、GC 偏斜；有测序数据时加深度环 | `annotation/plots/` |
-| 11 整理输出 | 把结果整理成固定的目录结构，中间文件删除（`--keep_intermediate yes` 保留到 `work/`） | 见第 7 节 |
+| 还没有数据 | 某类群的 NCBI 线粒体全基因组 | `mitom fetch --taxon Annelida -o fetch_out` |
+| GenBank（`.gb`） | 统一重注 | `mitom run -i … -o out` |
+| FASTA | 注释 | `mitom run -i … -o out`（可写 `--clade`） |
+| MitoZ / MITOS2 结果 | **保留**原基因，只整理 | `mitom import -i … -o out --clade …` |
+| MitoZ `.gbf` | **丢掉**原基因、全部重注 | `mitom run -i sample.gbf -o out` |
+| 已注释 GenBank | 只要边界 / 命名 | `mitom curate` |
+| 组装 contig | 核 rDNA / 组蛋白 | `mitom nuc annotate` |
+| 出问题 | 定位哪一步失败 | `mitom debug out` |
+
+**`run` 与 `import`**：`run` 只用序列并全部重注，原注释留在 `input/` 供对比；`import` 保留已有基因，只做定向、补漏、校正、提交与作图。
+
+**为何推荐 GenBank**：自带分类与文献 / 标本信息；FASTA 靠 blastx 推断门与密码，小门请手写 `--clade` 与 `--genetic_code`。
 
 ---
 
-## 5. 怎么选命令
+## 5. 每个命令：输入 · 命令 · 输出
 
-### 5.1 常见情况
+参数名在各命令里一致：`-i` 输入、`-o` 输出、`--threads`、`--jobs`、`--refdir`。全部参数见 [OPTIONS.md](OPTIONS.md)。每个命令可加 `-h`。
 
-| 我手上有 | 想要 | 用 |
-|---|---|---|
-| 还没有数据，想要某类群的 NCBI 线粒体基因组 | 下载 | `mitom fetch --taxon Annelida -o fetch_out`（得到 GenBank；加 `--fasta` 同时得到 FASTA） |
-| NCBI 下载的 GenBank（`.gb`） | MitoM 的统一注释 | `mitom run -i fetch_out/Annelida.gb -o out` |
-| 自己组装的 FASTA | 注释 | `mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5` |
-| MitoZ 的结果（`.gbf`） | 用 MitoM 重新注释（只用它的序列） | `mitom run -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
-| MitoZ 的结果（`.gbf`）或任何已注释的 GenBank | 保留它原来的基因，只做 MitoM 的整理（统一起点、修整边界和名称、NCBI 文件、作图） | `mitom import -i sample.gbf -o out --clade Mollusca --genetic_code 5` |
-| MITOS2 的结果目录 | 同上 | `mitom import -i mitos2_dir/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5` |
-| GenBank（`.gb`、`.gbf` 都行） | 转成 FASTA | `mitom gb2fasta -i sample.gbf -o fasta_out` |
-| 已注释的线粒体基因组 + RNA-seq reads | 每个基因 / ORF 的转录证据、文库方向、polyA 3′ 端 | `mitom rna -g X.gb -1 R1.fq.gz -2 R2.fq.gz -o rna` |
-| 一个或一批已注释的 GenBank / EMBL（`.gb`、`.gbf`、`.embl` 都行） | NCBI 提交用的特征表 `.tbl` + `.fsa`（可合并、可分开） | `mitom gb2tbl -i annotation/ -o ncbi`（加 `--validate` 生成 `.sqn` 并检查） |
-| 一批 GenBank 或 FASTA，可能有重复 | 去掉重复，每个基因组留一条 | `mitom dedup -i in_dir/ -o dedup_out` |
+### 5.1 `mitom run`（完整流程，最常用）
 
-**`.gb` 和 `.gbf` 有什么区别？** 没有区别，都是 GenBank 格式，只是不同软件习惯用的后缀不同（NCBI 用 `.gb`，MitoZ 用 `.gbf`）。MitoM 认 `.gb .gbk .gbf .gbff .genbank` 这几种后缀，可以直接给单个文件，也可以给一个目录（含子目录）。
+| | |
+|---|---|
+| **做什么** | 读入 → 去重 → 注释 → 定向 → 补漏 → 内含子 → 校正 → ORF / NCR → NCBI 文件 → 对比 → 圈图 |
+| **输入** | GenBank 或 FASTA；单文件或目录；可多门混合 |
+| **输出** | 见 [§ 6 输出目录](#6-输出目录) |
 
-**`run` 和 `import` 的区别：** `run` 只用输入的序列，所有基因都由 MitoM 重新注释，原来的注释留在 `input/` 里供对比；`import` 保留输入里已有的基因注释，只做后面的整理步骤。想要统一、可比的注释，用 `run`；只想把别的软件的结果整理成 NCBI 可提交的格式，用 `import`。
+```bash
+mitom run -i fetch_out/Annelida.gb -o out
+mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5
+mitom run -i genomes/ -o out --threads 4 --jobs 8
+mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5 --engine mitoz
+```
 
-**为什么推荐 GenBank 而不是 FASTA？** GenBank 记录自带物种分类，MitoM 直接据此选类群和遗传密码；原记录的物种、文献、标本信息也会复制到结果里。FASTA 只有序列，类群和遗传密码靠 blastx 推断（见 3.3），没有近亲的类群请手动给 `--clade` 和 `--genetic_code`。
+常用参数：`--clade`、`--genetic_code`、`--engine native|mitoz|mitos2`、`--sbt`、`--infq`、`--keep_intermediate yes`、`--debug`。12 步与报告文件见 [§ 5.12](#512-mitom-run-的-12-步)。
 
----
+### 5.2 `mitom import`（整理已有注释）
 
-## 6. 每个命令的用法
+| | |
+|---|---|
+| **做什么** | 保留输入里的基因；只做定向、补漏、校正、提交、作图 |
+| **输入** | MitoZ 目录 / `.gbf`；MITOS2 目录（需 `--fasta`）；已注释 GenBank |
+| **输出** | 与 `run` 相同布局 |
 
-每个命令都可以加 `-h` 查看全部参数，例如 `mitom run -h`；全部命令的全部参数汇总在 [OPTIONS.md](OPTIONS.md)（由各命令的 `-h` 自动生成）。参数名在各命令里一致：`-i` 输入、`-o` 输出目录、`--threads` 线程数、`--jobs` 同时处理的记录数、`--refdir` 参考数据目录。
+```bash
+mitom import -i mitoz_results/ -o out --clade Mollusca --genetic_code 5
+mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5
+```
 
-### `mitom run`：完整流程（最常用）
+MITOS2 专页：[MITOS2.md](MITOS2.md)。跟做：[EXAMPLES.md 例 5](EXAMPLES.md#例-5-只整理已有注释import)。
 
-- **做什么**：从序列到最终注释、NCBI 提交文件和基因组图，11 个步骤见第 4 节。
-- **输入**：GenBank（推荐）或 FASTA；单个文件或目录。可以多门混合（见 3.3）。
-- **输出**：见第 7 节（`annotation/`、`submission/`、`annotation/plots/`、`qc/`、`run.log` 等）。
-- **示例**：
-  ```bash
-  mitom run -i fetch_out/Annelida.gb -o out                              # GenBank：类群和遗传密码自动判断
-  mitom run -i contigs.fasta -o out                                      # FASTA：类群和遗传密码自动判断（blastx）
-  mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5    # 或写明
-  mitom run -i genomes/ -o out --threads 4 --jobs 8                      # 目录：8 条同时注释，每条 4 线程
-  mitom run -i contigs.fasta -o out --clade Mollusca --genetic_code 5 --engine mitoz   # 用 MitoZ 找基因（需另装）
-  ```
-- **常用参数**：`--clade`、`--genetic_code`（见 3.3）；`--threads`、`--jobs`；`--engine native|mitoz|mitos2`（MITOS2 自身参数用 `--mitos_args="--best ..."`，见 [MITOS2.md](MITOS2.md)）；`--sbt template.sbt`（NCBI 提交者模板）；`--infq <FASTQ 目录>`（基因组图加测序深度）；`--keep_intermediate yes`（保留中间文件）；`--debug`（调试模式，见第 8 节）。
+### 5.3 `mitom fetch`（从 NCBI 下载）
 
-### `mitom import`：整理已有注释，不重新注释
+| | |
+|---|---|
+| **做什么** | 按类群或 Entrez 检索式下载完整线粒体基因组 |
+| **输入** | `--taxon Annelida`（或 taxid）、或 `--query '…'`；需 `--email` 或 `NCBI_EMAIL` |
+| **输出** | `<名称>.gb`、`fetch_report.tsv`、`query.txt`、`fetch.log`；`--fasta` 时另有 FASTA |
 
-> MITOS2 的调用、参数（`--mitos_args`）、导入已有 MITOS2 结果、Geneious 修改后 `curate`、与 MITOS2 的准确度对比：完整实例见 **[MITOS2.md](MITOS2.md)**。
+```bash
+mitom fetch --taxon Annelida -o fetch_out --email you@example.com
+mitom fetch --taxon Annelida -o fetch_out --refseq_only
+mitom fetch --taxon Annelida -o fetch_out --dry_run
+```
 
-- **做什么**：保留输入里已有的基因（MitoZ / MITOS2 结果或任何已注释的 GenBank），做统一起点、补漏、内含子、修整边界和名称、NCBI 文件、作图。
-- **输入**：MitoZ 结果目录或 `.gbf`；MITOS2 结果目录（要用 `--fasta` 给基因组序列）；已注释的 GenBank。
-- **输出**：与 `run` 相同。
-- **示例**：
-  ```bash
-  mitom import -i mitoz_results/ -o out --clade Mollusca --genetic_code 5
-  mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --genetic_code 5
-  ```
+同一目录可重复运行，只补新记录。下载后建议 `mitom run`（会自动去重）。
 
-### `mitom fetch`：从 NCBI 下载线粒体全基因组
+### 5.4 `mitom dedup`
 
-- **做什么**：按类群名或分类号（或自定义 Entrez 检索式）下载完整线粒体基因组。
-- **输入**：`--taxon Annelida`（或分类号 `6340`），或 `--query '...'`。
-- **输出**：`<名称>.gb`（全部记录，GenBank 格式）、`fetch_report.tsv`（每条记录一行）、`query.txt`、`fetch.log`；加 `--fasta` 时另有 `<名称>.fasta`。
-- **下载的是什么格式？** GenBank（`.gb`）。它带物种分类和原记录信息，是 `mitom run` 最好的输入。需要 FASTA 时加 `--fasta`，或之后用 `mitom gb2fasta` 转。
-- **示例**：
-  ```bash
-  mitom fetch --taxon Annelida -o fetch_out --email you@example.com          # RefSeq + GenBank 记录
-  mitom fetch --taxon Annelida -o fetch_out --refseq_only                    # 只要 NC_ 参考记录
-  mitom fetch --taxon Annelida -o fetch_out --fasta                          # 同时生成 Annelida.fasta
-  mitom fetch --taxon Annelida -o fetch_out --dry_run                        # 只看有多少条，不下载
-  ```
-- **说明**：同一目录再次运行时只下载新增的记录。NCBI 要求留邮箱（`--email`，或环境变量 `NCBI_EMAIL`）；有 API key 时（`--api_key`）下载更快。默认同时下载 RefSeq（`NC_`）和作者提交的 GenBank 记录，同一个基因组可能有两条，`mitom run` 会自动去重（或先用 `mitom dedup`）。
+| | |
+|---|---|
+| **做什么** | 同一基因组只留一条（`NC_`、新版本、相同序列留一条） |
+| **输入** | GenBank 和 / 或 FASTA |
+| **输出** | `dedup.gb`、`dedup.fasta`、`dedup_report.tsv` |
 
-### `mitom dedup`：去重（同一个基因组只留一条）
+```bash
+mitom dedup -i fetch_out/Annelida.gb -o dedup_out
+```
 
-- **做什么**：同一个基因组在 NCBI 里常有不止一条记录——作者提交的原始记录（如 `MK123456`）和 NCBI 照它复制出来的参考记录（`NC_` 开头）；同一个登录号的新旧版本（`.1`、`.2`）；或不同登录号但序列完全相同。去重后每个基因组只留一条：留 `NC_`、留新版本、相同序列留一条。`mitom run` 会自动做这一步，`dedup` 用于只想去重、不注释的时候。
-- **输入**：GenBank 和 / 或 FASTA（文件或目录）。FASTA 没有记录信息，只按两条规则：序列完全相同的留一条；表头第一个词是带版本号的登录号（如 `MK123456.1`）时，同一登录号留新版本。`NODE_1` 这类自己起的名字不会因为重名被当成重复。
-- **输出**：`dedup.gb`（保留的 GenBank 记录）、`dedup.fasta`（保留的全部记录；GenBank 来的记录表头带 `topology=`）、`dedup_report.tsv`（每条输入记录：保留还是去掉、原因、保留的是哪一条）。
-- **示例**：
-  ```bash
-  mitom dedup -i fetch_out/Annelida.gb -o dedup_out
-  mitom dedup -i my_fastas/ -o dedup_out
-  ```
+### 5.5 `mitom gb2fasta` / `mitom gb2tbl`
 
-### `mitom gb2fasta`：GenBank 转 FASTA
+**gb2fasta**
 
-- **做什么**：把 GenBank（`.gb`、`.gbf` 等）转成 FASTA。
-- **输出**：每个输入文件一个 `<文件名>.fasta`；加 `--split` 时每条记录一个 `<登录号>.fasta`。表头格式 `>登录号.版本 定义行 topology=circular|linear`，可直接作为 `mitom run` 的输入。
-- **示例**：
-  ```bash
-  mitom gb2fasta -i sample.gbf -o fasta_out
-  mitom gb2fasta -i fetch_out/Annelida.gb -o fasta_out --split
-  ```
+| | |
+|---|---|
+| **输入** | GenBank 文件或目录 |
+| **输出** | FASTA；`--split` 时每条一个文件；表头带 `topology=` |
 
-### `mitom rna`：转录组证据（RNA-seq）
+```bash
+mitom gb2fasta -i sample.gbf -o fasta_out --split
+```
 
-- **做什么**：把 RNA-seq reads 只比对到这个线粒体基因组（minimap2，没有时用 bwa；比对质量 ≥ 20，减少核基因组中线粒体假基因的干扰），给出每个基因、ORF、非编码区的转录证据。动物线粒体是多顺反子转录、在 tRNA 处切开，前体把基因间的空隙填满，所以覆盖图是连续的、看不出断点（Geneious 里看到的就是这样）；能说明问题的是：
-  - **相对深度**：与 13 个蛋白基因深度中位数之比；`transcribed_like_genes` = 深度不低于表达最低的蛋白基因的一半（ORF 是否像基因一样表达）；`covered_share` = 深度 ≥ 中位数 10 % 的位置比例（只有部分转录的 ORF 由此可见）；蛋白基因中位深度 < 10 时不下表达结论；
-  - **文库方向**：自动判断非链特异、链特异或反向链特异（dUTP，read1 反义）；
-  - **polyA 3′ 端**：reads 末端被截掉的一串 A（负链为 T），即成熟转录本的 3′ 端、补全 T / TA 不完整终止的位置；tRNA 3′ 端（CCA 尾）不计。polyA reads 太少时（随机引物总 RNA、短 reads、清洗时剪掉）提示没有 3′ 端证据。
-- **清洗**：只去接头即可，也可直接给原始 reads；**不要**用 fastp `-x` / `--trim_poly_x`（剪掉 polyA）、`-y`（低复杂度过滤会丢掉 polyA reads）、`-D` / `--dedup`（压平深度）。
-- **输出**：`rna_features.tsv`（每个特征一行）、`rna_polya_sites.tsv`（≥ 3 条 reads 的 polyA 位点及其结束的特征）。
-- **验证**（`benchmark/results/rnaseq_2026-11-10/`）：*Polydora* cf. *ciliata* 公开转录组（SRR26830859）复现 Selifanova 等 2023 的结论。
+**gb2tbl**（已注释 → NCBI `.tbl` + `.fsa`）
+
+| | |
+|---|---|
+| **输入** | GenBank / EMBL 文件或目录，或管道 `-i -` |
+| **输出** | `.tbl` + `.fsa`；`--validate` 时另有 `.sqn` / `.val` |
+
+```bash
+mitom gb2tbl -i annotation/ -o ncbi --validate
+```
+
+### 5.6 `mitom annotate` / `mitom curate` / `mitom intron` / `mitom trna`
+
+| 命令 | 输入 | 输出要点 | 示例 |
+|---|---|---|---|
+| `annotate` | GenBank / FASTA | 工作目录式布局（`04.final_gb/` 等），无 round-2 整理 | `mitom annotate -i NC_000931.gb -o out_ann` |
+| `curate` | 已注释 GenBank | 修整边界与命名；`curation_report.tsv` | `mitom curate -i ann/ -o curated --genetic_code 5` |
+| `intron` | 已注释目录 | 加内含子；`intron_report.tsv` | `mitom intron -i ann/ -o intron_out --genetic_code 4` |
+| `trna` | FASTA / GenBank | 多方法 tRNA 比较 | `mitom trna -i sample.gb -o trna_out --genetic_code 5` |
+
+### 5.7 `mitom rna`（转录组证据）
+
+| | |
+|---|---|
+| **输入** | 已注释线粒体 GenBank（`-g`）+ FASTQ，或已有 SAM |
+| **输出** | `rna_features.tsv`、`rna_polya_sites.tsv`、`rna_depth.tsv.gz`；`--refine`：`rna_refined.gb`、`rna_end_corrections.tsv` |
 
 ```bash
 mitom rna -g annotation/OQ078742.1.gb -1 R1.fq.gz -2 R2.fq.gz -o rna --threads 8
-mitom rna -g annotation/X.gb --sam mapped_to_X.sam -o rna          # 已比对到该序列的 SAM（'-' = 标准输入）
+mitom rna -g annotation/OQ078742.1.gb -o rna --refine --run SRR26830859      # 证据写回注释 / evidence -> GenBank
 ```
 
-### `mitom gb2tbl`：GenBank / EMBL 转 NCBI 提交文件（`.tbl` + `.fsa`）
+比对默认 bwa mem（`--mapper bwa|minimap2|bowtie2`）。清洗时不要用 fastp `-x` / `-y` / `-D`（会毁掉 polyA 证据）。
+转录组必须来自同一基因组项目（最好同一标本）；reads 与基因组差异 > 2 % 会警告。数字见
+`benchmark/results/rnaseq_2026-11-10/`、`rna_mappers_2026-11-10/`。
+Mapper bwa mem by default; RNA-seq must come from the same genome project (ideally the same specimen).
 
-- **做什么**：把已注释的 GenBank（`.gb .gbk .gbf .gbff .genbank`）或 EMBL / ENA（`.embl .ebl .ena`）文件转成 NCBI 提交需要的 5 列特征表 `.tbl` 和带来源信息的 `.fsa`（BankIt 上传这两个文件；table2asn 用它们生成 `.sqn`）。MitoM 的 `annotation/`、MitoZ / MITOS2 / Geneious 的结果、NCBI 或 ENA 下载的记录都行；格式按文件内容判断（`LOCUS` / `ID` 行）。`-i` 可以给多个文件、多个目录，混在一起也行；`-i -` 从管道读入（如 `efetch -db nuccore -id NC_000931 -format gb | mitom gb2tbl -i - -o ncbi`）。
-- **三种输出方式**：
+**`mitom rna` 与 `mito_rnaseq_annot.py` 的区别 / the two RNA-seq tools**
 
-  | 参数 | 输出 |
-  |---|---|
-  | 默认 `--split all` | 所有记录合并成一对文件：`<名字>.tbl` + `<名字>.fsa`（一次批量提交）。名字：`--name` 指定；只给一个文件时用它的文件名；否则 `submission` |
-  | `--split file` | 每个输入文件一对：`<文件名>.tbl` / `.fsa` |
-  | `--split record` | 每条记录一对：`<登录号.版本>.tbl` / `.fsa` |
+| | `mitom rna` | `python3 mito_rnaseq_annot.py` |
+|---|---|---|
+| 做什么 / what | 量证据：表达、poly(A) 3′ 端、文库链向；`--refine` 只改 3′ 端 / measures evidence; `--refine` changes 3′ ends only | 用转录组注释：质控、内含子（分段 reads）、重叠终止、3′ 端、RNA 与基因组不一致处、ORF 表达，每个判断标 confirmed / corrected / flagged / not_testable / annotates with RNA-seq, every decision labelled |
+| 输出 / output | 证据表 / evidence tables | `rnaseq_evidence.tsv`、`rnaseq_annotated.gb` |
+| 是否 `mitom run` 的一步 / part of `mitom run` | 否（单独命令）/ no | 否（单独脚本）/ no |
 
-- **自动处理**：
-  - 同一条记录在几个文件里重复出现，只写一次；
-  - 不同记录用了同一个 ID，自动改名为 `ID_2`、`ID_3`（NCBI 要求一次提交里 ID 唯一）；
-  - ID 中 NCBI 不接受的字符换成 `_`，最长 50 个字符；
-  - 按 `/organelle` 判断线粒体（`[location=mitochondrion] [mgcode=]`）、叶绿体或核基因组（`[gcode=]`）；遗传密码取 CDS 的 `transl_table`；`/db_xref="taxon:"` 写成 `[taxid=]`；物种名取 source 特征的 `/organism`（EMBL 的 OS 行带俗名，不用）；
-  - 来源信息（isolate、strain、specimen_voucher、country → geo_loc_name、collection_date、lat_lon、collected_by、isolation_source、haplotype、host、sex、note 等）写进 `.fsa` 表头；`--source_modifiers no` 不写；
-  - 原记录的 DEFINITION 作为 `.fsa` 的标题（与 NCBI 的 gbf2fsa 相同）；`topology=linear` 这类占位文字（MitoZ）不用，报告中提示；序列每行 70 个碱基；
-  - 特征表与 `mitom run` 的 `submission/` 相同：不完整的端点写成 `<` / `>`，内含子等多段位置逐段写出，不写 `/translation`、`/db_xref`、`/protein_id` 和 MitoM 内部的注释。
-- **自己的来源信息与产物名**（吸收 GB2sequin 的来源信息表、产物表和 table2asn 的 `.src` / `-j`）：
-  - `--source_table samples.tsv`：每条记录一行，制表符分隔（NCBI 的 `.src`）或 CSV（Excel 另存为 CSV 即可）。第一列是记录：写入的 ID、带或不带版本号的登录号、LOCUS 名或文件名（不含后缀）都行；其余列是 NCBI 的来源修饰符，列名不分大小写，空格、下划线、连字符都一样：isolate、specimen_voucher（写 voucher 也行）、country / geo_loc_name、collection_date、lat_lon、altitude、collected_by、identified_by、isolation_source、host、sex、tissue_type、dev_stage、haplotype、note、bioproject、biosample 等；organism、location（mitochondrion / chloroplast / genomic）、topology、genetic_code、definition 也能改。改了物种名时，原来的 taxid 去掉，标题里的旧物种名一起换掉。
-    ```
-    Sequence_ID	isolate	specimen_voucher	country	collection_date	lat_lon
-    sample1	PD-1	QDU-2024-01	China: Qingdao	2024-05-01	36.06 N 120.38 E
-    NC_000931	PD-7	QDU-2024-07	China: Weihai	2024-05-03	37.50 N 122.11 E
-    ```
-    NCBI 不认识的列（如 Family、Depth）不写进去，在报告和屏幕上列出；location 列如果写的是采样地（如 Qingdao）也不写，并提示用 geo_loc_name；表里没有对应记录的行、没有表行的记录都会提示。
-  - `--modifiers "[location=mitochondrion] [topology=circular]"`：对所有记录生效（同 table2asn 的 `-j`）；同一项以 `--source_table` 为准，两者都优先于记录本身。
-  - 产物名：CDS、tRNA、rRNA 缺 `/product` 时，按基因名补上线粒体基因的标准名称（cox1 → cytochrome c oxidase subunit I、trnL1 → tRNA-Leu、rrnL → 16S ribosomal RNA；tRNA 也可从 `/anticodon` 读出氨基酸）。CDS 缺产物名是 NCBI 的 ERROR（SEQ_FEAT.MissingProteinName）。认不出的基因在报告中列出。
-  - `--product_table genes.tsv`：两列「基因名、产物名」（第一行可以是 `gene	product`），按 `/gene`（不分大小写）设置或改写 CDS、tRNA、rRNA 的产物名，如 `cox1	cytochrome c oxidase subunit 1`、`orf314	hypothetical protein`。
-- **自动清理**（别的软件留在文件里、NCBI 不收的东西；每一处修改都写进报告）：
-  - 不在 INSDC 标准里的限定词（Geneious 的 `/created_by`、`/modified_by`，SnapGene / ApE 的 `/label`、`/ApEinfo_*` 等）去掉；不在标准里的特征类型（如 Geneious 的 `ORF`）改成 `misc_feature`，原类型写进 note；
-  - 文字转成 ASCII（NCBI 只收 ASCII，否则报 NonAsciiAsn 错误）：Müller → Muller，µm → um，弯引号、长破折号换成普通字符；中文等无法转换的字符去掉（报告里会提示，提交前请自行翻译）；文件按 UTF-8 读，不行再按 Windows-1252 / Latin-1（老的 Windows 软件）；
-  - 超出序列末端的特征、两个碱基之间的位点（`100^101`，写成前后 2 nt 的区间，与 NCBI 的 gbf2tbl 相同）在报告中列出；
-  - 读不了的文件（不完整的 GenBank）、没有序列的记录（CONTIG / WGS 主记录）报告并跳过，其余文件照常输出；
-  - 遗传密码取 CDS 的 `/transl_table`；没有时用 `--genetic_code N`（或来源信息表的 genetic_code 列），都不给则按分类信息取该门常用的线粒体密码（被囊动物 13、文昌鱼 5），并在报告中提示。
-- **与同类工具的对比**（17 个刁钻样例，NCBI table2asn 判定，2026-10-30，`benchmark/results/gb2tbl_stress_2026-10-30/`）：15 个有效样例 `gb2tbl` 全部 0 个 ERROR；NCBI 自己的 `gbf2tbl` + `gbf2fsa` 在跨原点基因（正、负链）、不完整端点、非 ASCII 文字、编辑软件导出、缺产物名、Latin-1 编码的记录上共报 51 个 ERROR，读不了 EMBL 文件，且因 FASTA 不带 `[mgcode=]` 每条记录有 13–14 个遗传密码警告；缺序列和损坏的文件它输出坏记录或什么都不输出，`gb2tbl` 报告并跳过。
-- **`--validate`**：用 NCBI 的 table2asn 检查每对文件，生成 `.sqn`（可直接上传）和 `.val`；每条记录的 ERROR / WARNING 数写在报告里。`--sbt template.sbt` 加提交者模板（在 https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。有 ERROR 时，多半是注释本身的问题（如缺终止密码子），先用 `mitom curate`（或对 MitoZ / MITOS2 结果用 `mitom import`）修整再转。
-- **报告**：`gb2tbl_report.tsv`，每条记录一行：写入的 ID、来源文件、输出文件、物种、长度、拓扑、位置、遗传密码、基因数、警告（改名、缺物种名、补的产物名等），加 `--validate` 时还有 NCBI ERROR / WARNING 数；跳过的文件（`skipped`）和来源信息表的提示（`note`）也各占一行。
-- **示例**：
-  ```bash
-  mitom gb2tbl -i out/annotation -o ncbi                    # 全部合并：ncbi/annotation.tbl + .fsa
-  mitom gb2tbl -i a.gbf b.gb c.embl -o ncbi --name batch1         # 三个文件合并：ncbi/batch1.tbl + .fsa
-  mitom gb2tbl -i genomes/ -o ncbi --split file                   # 每个文件一对
-  mitom gb2tbl -i genomes/ -o ncbi --split record --validate --sbt template.sbt   # 每条记录一对 + .sqn
-  mitom gb2tbl -i genomes/ -o ncbi --source_table samples.tsv --modifiers "[topology=circular]" --validate
-  mitom gb2tbl -i geneious_export.gb -o ncbi --genetic_code 5     # 记录里没有 /transl_table 时指定遗传密码
-  ```
+两者都不改序列；RNA 与基因组不一致处只标记（同一标本 ≥ 80 % reads 不一致多为组装碱基错误，用 HiFi 核实）。
+规则与评测：`benchmark/results/annelid_rna_2026-11-10/README.md`。Neither changes the sequence; RNA-genome
+mismatches are flagged only.
 
-### `mitom reorient`：只统一方向和起点
+### 5.8 `mitom nuc`（核标记）
 
-- **做什么**：环状记录转到 cox1 所在的链，并从 cox1 开始（没有 cox1 时依次用 cox2、cox3、cob、nad1）；线状记录不旋转。
-- **示例**：`mitom reorient -i genomes.gb -o reorient_out`
-- **常用参数**：`--which_gene_first cox1`、`--fallback_genes cox2,cox3,cob,nad1`。
+| | |
+|---|---|
+| **输入** | 组装 FASTA 或已注释 GenBank |
+| **输出** | `nuc_features.tsv`、`consensus/`、`submission/` |
 
-### `mitom annotate`：注释，但不整理输出目录
+```bash
+mitom nuc annotate -i scaffolds.fasta -o nuc_out
+mitom nuc annotate -i scaffolds.fasta -o nuc_out --genes rdna
+```
 
-- **做什么**：一轮注释，之后与 `run` 相同的写 GenBank、补漏、校正、未知 ORF 与非编码区、NCBI 文件、作图（共 8 步）；不做第二轮、不与原注释比较，保留工作目录结构（日志为 `run.log`），给脚本或集群流程调用。最终记录仍按 `--which_gene_first` 旋转，但没有 `run` 第 4 步的转动后核查（受转动影响的基因不重注）；需要核查时用 `run`。
-- **示例**：`mitom annotate -i contigs.fasta -o out --clade Mollusca --genetic_code 5`
+### 5.9 `mitom plot` / `mitom validate` / `mitom rescue` / `mitom rrna-hmm`
 
-### `mitom check`：检查已有注释
+| 命令 | 输入 | 输出 |
+|---|---|---|
+| `plot` | 已注释 GenBank；可选 `--fq1/--fq2` | `.png` / `.pdf`（`docs/images/` 有样式样例） |
+| `validate` | 已注释目录 | 提交文件与 `.val` |
+| `rescue` | GenBank **文件夹**（原地改） | 补回漏基因；需 MITOS2 |
+| `rrna-hmm search` | GenBank **文件夹** | 补搜 12S / 16S |
 
-- **做什么**：只检查、不修改，列出有问题的记录（例如 NCBI 下载记录的原注释是否缺基因、有内部终止密码子、tRNA 太少等）。
-- **输出**：`check_report.tsv`（每条记录 ok / flagged）、`check_details.tsv`（每个问题一行）。
-- **示例**：`mitom check -i fetch_out/Annelida.gb -o check_out`
+```bash
+mitom plot -i out/annotation -o maps
+mitom validate -i out/annotation -o ncbi_check
+```
 
-### `mitom compare`：比较原注释和 MitoM 的注释
+### 5.10 `mitom debug` / `doctor` / `setup`
 
-- **做什么**：逐个基因比较两份注释（相同 / 端点不同 / 只有一方有……）。`run` 在第 9 步已自动做了这一比较（`qc/original_vs_mitom.tsv`）。
-- **示例**：`mitom compare --original fetch_out/Annelida.gb --mitom out/annotation -o compare_out`
+```bash
+mitom doctor              # 程序是否齐
+mitom debug out           # 哪一步、哪条记录、哪个程序失败
+mitom run -i in.gb -o out --debug   # 保留中间文件与完整命令输出
+mitom setup               # 安装时已跑；可单独重下参考数据
+```
 
-### `mitom curate`：修整基因边界和名称
+### 5.11 其它
 
-- **做什么**：按 NCBI 规范修整蛋白基因的起止密码子、rRNA 端点、基因重叠和基因名。`run` 的第 7 步就是它。
-  - 起始密码子：先按准则取离上游基因最近、不重叠的（P1），再由一个从 NCBI 记录学习的模型在前后 30 个密码子内挑 NCBI 记录会选的那个（P11；按科交叉验证的结果见 [METHODS.md](METHODS.md)「注释后校正」表）；`--start_model no` 关闭。
-  - 终止密码子：紧接下游 tRNA 时写成不完整终止 T / TA（NCBI 写法）；环节动物紧接下一个蛋白基因时也这样写（与原点处一致）；脊椎动物（`run` 对 Chordata 自动加 `--abbreviated_overlap`）只在 tRNA 前这样写，紧接下一个蛋白基因时保留完整终止（如 atp6 的 TAA 与 cox3 的 ATG 共用一个 A）。
-  - 全部规则、依据和验证见 [METHODS.md](METHODS.md) 的“注释后校正”一节。
-- **常用参数**：`--genetic_code`；`--rrna_bounds trim|fill`（rRNA 端点只切掉与邻居的重叠 / 再补到两侧基因）；`--start_model no`；`--no_validate`（不做校正前后的 table2asn 对比）。全部参数见 [OPTIONS.md](OPTIONS.md#mitom-curate)。
-- **示例**：`mitom curate -i annotated_dir/ -o curated --genetic_code 5`
-- **输出**：修整后的 GenBank 和 `curation_report.tsv`（每一处修改的规则和原因）。
+| 命令 | 用途 |
+|---|---|
+| `mitom reorient` | 只统一方向与 cox1 起点 |
+| `mitom check` | 审核已有注释，只出报告 |
+| `mitom compare` | 原注释 vs MitoM，逐基因 |
+| `mitom transfer_metadata` / `mitom replace_organism` | 迁回表头 / 改物种名（`run` 通常已做） |
 
-### `mitom intron`：加内含子
+### 5.12 `mitom run` 的 12 步
 
-- **做什么**：先从头识别（MFannot 方法），再按近缘记录的内含子位点修正 / 补充，与 `run` 第 6 步相同；`--method denovo` 或 `--method ref` 只做其中一步。
-- **示例**：`mitom intron -i annotated_dir/ -o intron_out --genetic_code 4`
-- **输出**：加了内含子的 GenBank、`intron_report.tsv`、`intron_ref_report.tsv`。
+| 步 | 做什么 | 报告 |
+|---|---|---|
+| 1 | 读入与去重 | `qc/dedup_report.tsv` |
+| 2 | 第一轮注释；核对环状 / 线状 | `qc/topology_decision.tsv` |
+| 3 | 环状记录转到正链、cox1 起始 | `qc/oriented_by_fallback.txt` |
+| 4 | 需要时再注释 | `qc/reannotation_decision.tsv` |
+| 5 | 写 GenBank，复制原表头 | `qc/metadata_transfer_log.tsv` |
+| 6 | 补漏、rRNA HMM、内含子 | `qc/rescue_report.tsv`、`intron_*.tsv` |
+| 7 | 边界与 NCBI 命名 | `qc/curation_report.tsv` |
+| 8 | 未知 ORF 与 NCR | `qc/orf_report.tsv` |
+| 9 | table2asn 与提交文件 | `submission/` |
+| 10 | 与原注释对比 | `qc/original_vs_mitom.tsv` |
+| 11 | 基因组图 | `annotation/plots/` |
+| 12 | 整理目录 | 见下节 |
 
-### `mitom trna`：多种方法注释 tRNA 并比较
-
-- **做什么**：用 MitoM-ML、ARWEN、ARAGORN（及原注释，装了 MITOS2 时也用它）分别找 tRNA，再选出最终结果并列出各方法的异同。
-- **示例**：`mitom trna -i sample.gb -o trna_out --genetic_code 5`
-
-### `mitom rrna-hmm`：补搜 12S / 16S rRNA
-
-- **做什么**：对还缺 rRNA 的记录，用按门建立的 rRNA 模型补搜（`run` 第 6 步会自动做）。`search` 直接修改输入目录里的文件；`build` 用于重建模型库。
-- **示例**：`mitom rrna-hmm search -i annotated_dir/`
-
-### `mitom rescue`：用 MITOS2 补回漏掉的基因
-
-- **做什么**：对缺基因的记录跑 MITOS2，把它找到而 MitoM 漏掉的基因加回来（不改已有的基因）。需另装 MITOS2；直接修改输入目录里的文件。
-- **示例**：`mitom rescue -i annotated_dir/ --genetic_code 5`
-
-### `mitom validate`：NCBI 检查与提交文件
-
-- **做什么**：用 NCBI 的 table2asn 检查每条记录，生成 `.fsa`、`.tbl`、`.sqn` 和检查结果。`run` 的第 8 步就是它。
-- **示例**：`mitom validate -i out/annotation -o ncbi_check`
-
-### `mitom plot`：环状基因组图
-
-- **做什么**：每条记录画一张环状图（PNG 300 dpi 和 PDF，PDF 中文字可编辑）；给出测序数据时加一圈测序深度。两种样式：
-  - `--style circos`（默认）：借鉴 mitoPlotR（K. Onthank，MIT 许可）。每条链一个带边框的环道（外环正链、内环负链），按类型着色（蛋白基因、tRNA、rRNA），基因名沿圆弧书写，有坐标轴、GC 含量环；测序深度按 25 nt 分箱，以 99 分位数为满刻度，红色虚线标出平均深度；物种名在中心。颜色换成了色盲友好的配色。
-  - `--style mitom`：正链基因画在圆外侧、负链在内侧，按功能着色（COX、ND、ATP、CYTB、rRNA、tRNA），外加 GC 含量环和 GC 偏斜环。
-- **两种样式都有**：
-  - 内含子画斜线，标出所属基因和长度（GenBank 的 intron 特征；没有时，带内含子的基因各段之间 ≥ 142 nt 的间隔）；带内含子的基因名写在它最大的外显子上；
-  - 非编码区：没有任何注释覆盖、≥ `--min_noncoding`（默认 100）nt 的区段画浅灰，标 `NCR<k> <长度>`，编号与 GenBank 里的 non-coding region 特征一致（`mitom run --ncr`）；`--min_noncoding 0` 不画；
-  - `--formats png,pdf`（默认两种都出）；`--threads` 是测序深度比对的线程数（minimap2，没有时 bwa mem）。
-- **示例**：
-  ```bash
-  mitom plot -i out/annotation -o maps                   # circos 样式
-  mitom plot -i sample.gb -o maps --fq1 reads_1.fq.gz --fq2 reads_2.fq.gz
-  mitom plot -i out/annotation -o maps --style mitom     # 原来的样式
-  mitom run -i genomes.gb -o out --plot_style mitom            # 注释时用原来的样式出图
-  ```
-- **样式模板**（mitoPlotR 的示例基因组 *Octopus rubescens* 及其测序深度，由 MitoM 注释）：
-
-  | `--style circos` | `--style mitom` |
-  |---|---|
-  | ![circos](images/map_circos.png) | ![mitom](images/map_mitom.png) |
-
-  内含子与非编码区（*Metridium senile* NC_000933，由 MitoM 注释：cox1 内含子 853 bp；nad5 内含子 1,681 bp，内含 nad1 和 nad3；两个 NCR）：
-
-  ![introns](images/map_introns.png)
-
-### `mitom nuc`：全基因组组装中的核 rDNA 与组蛋白
-
-- **做什么**：在 contig（SPAdes 全基因组组装、GetOrganelle 的 rDNA 单元、PCR 片段、GenBank 记录）中注释 18S、ITS1、5.8S、ITS2、28S 和 H1、H2A、H2B、H3、H4，并把多拷贝的片段拼成每个基因一条共识序列。
-- **示例**：
-  ```bash
-  mitom nuc annotate -i scaffolds.fasta -o nuc_out                    # rDNA + 组蛋白
-  mitom nuc annotate -i scaffolds.fasta -o nuc_out --genes rdna       # 只要 rDNA
-  ```
-- **输出**：`nuc_features.tsv`（每个特征一行）、`nuc_annotation.gb`、`genes/<基因>.fasta`、`consensus/<基因>.fasta` 和 `consensus.tsv`、`submission/`（NCBI 提交文件）、`nuc.log`。
-- **用时**：见 [METHODS 核基因节](METHODS.md#核基因标记--nuclear-markers-rdna-and-histones-mito_nucpy)。
-
-### `mitom debug`：出问题时定位原因
-
-- **做什么**：读运行日志，告诉你哪一步、哪条记录、哪个程序出错，并给出错误信息、缺的程序和复现命令。详见第 8 节。
-- **示例**：`mitom debug out`
-
-### `mitom transfer_metadata` / `mitom replace_organism`
-
-- **做什么**：把原 GenBank 记录的表头（物种、文献、标本信息）复制到重新注释的文件里 / 修正 `/organism`。`run` 已自动做这两步，一般不需要单独用。
-- **示例**：`mitom transfer_metadata -m original.gb -n new.gb -o out`
-
-### `mitom setup` / `mitom doctor`
-
-- `mitom setup`：下载参考数据 refseq89m、准备 tRNA 模型、写配置（安装时已自动运行）。
-- `mitom doctor`：检查每一步需要的程序是否都找到，缺什么、怎么装。
+环状 / 线状、类群自动判断的规则与评测：[METHODS.md](METHODS.md) 对应节；本手册不展开。
 
 ---
 
-## 7. 输出
+## 6. 输出目录
 
-默认布局（`--output_layout grouped`）；`--output_layout classic` 用 2026-11-09 以前的平铺布局（`final_annotation/`、`ncbi_submission/`、`plots/`、`reports/`、`run.log`）。
+默认 `--output_layout grouped`。`--output_layout classic` 为旧平铺布局。
 
 ```
 out/
-├── README.txt                 本次输出各文件的说明
-├── summary.tsv                每条记录一行：基因数、是否以 cox1 起始、用的哪一轮、NCBI 错误数（先看这个）
-├── annotation/                结果：<登录号>.gb（cox1 起始、正链）、all_records.gb（合并）、
-│                              genes.fna（蛋白基因 + rRNA 核苷酸）、proteins.faa（蛋白），序列名 登录号|基因|物种；
-│                              plots/（每条记录的环状基因组图 .png / .pdf）
-├── submission/<登录号>/       每条记录的 .fsa / .tbl / .sqn / .val；submission/submission_summary.tsv（每条的 ERROR / WARNING 数）
-├── qc/                        original_vs_mitom.tsv（原注释与 MitoM，每个基因一行）和每一步的报告（见下表）
-├── input/                     输入的原始记录（GenBank 输入时）
-├── logs/                      run.log（完整日志：每一步、每条外部命令）、run_params.json、intron_fix.log、failed_logs/
-└── work/                      中间文件（仅 --keep_intermediate yes）
+├── README.txt
+├── summary.tsv              # 先看这个
+├── annotation/              # *.gb、all_records.gb、genes.fna、proteins.faa、plots/
+├── submission/<登录号>/     # .fsa .tbl .sqn .val
+├── qc/                      # 各步报告
+├── input/                   # 输入原样（GenBank 时）
+├── logs/                    # run.log、run_params.json
+└── work/                    # 仅 --keep_intermediate yes
 ```
 
-| 报告（`qc/`；最后两行在 `logs/`） | 内容 |
-|---|---|
-| `dedup_report.tsv` | 每条输入记录：保留 / 去掉及原因 |
-| `topology_decision.tsv` | 每条记录的标签及来源、最终按环状还是线状注释、是否改判及原因（见 3.2） |
-| `reannotation_decision.tsv` | 旋转后是否做第二轮及原因 |
-| `metadata_transfer_log.tsv` | 每条记录的表头来自哪里 |
-| `rescue_report.tsv` | MITOS2 补回的基因 |
-| `rrna_hmm_report.tsv` | rRNA HMM 补搜的结果 |
-| `intron_report.tsv` | 从头识别的每个内含子候选：位置、类型、可信度、是否写入、证据 |
-| `intron_ref_report.tsv` | 近缘位点迁移：每个位点的参考记录、一致度、是否采用 |
-| `curation_report.tsv` | 每一处边界 / 名称修改：规则、修改前后的位置、原因 |
-| `oriented_by_fallback.txt` / `no_cox1_samples.txt` | 用备选基因定方向 / 无法定方向的记录 |
-| `all_problem_samples.txt` | 运行中出过任何问题的记录 |
-| `logs/failed_logs/` | 出错记录的注释核心日志 |
-| `logs/run_params.json` | 本次运行的全部参数 |
-
-**提交 NCBI**：`submission/` 中 `ncbi_errors` 为 0 的记录可直接提交。正式提交时用 `--sbt` 给出提交者模板（https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）；GenBank 平面文件本身不能直接提交，NCBI 只收 table2asn 生成的 `.sqn`，或在 BankIt 上传 `.fsa` + `.tbl`。
+**提交 NCBI**：`submission/` 里 ERROR 为 0 的记录可提交。正式提交请加 `--sbt` 提交者模板。NCBI 收 `.sqn`，或 BankIt 上传 `.fsa` + `.tbl`。
 
 ---
 
-## 8. 调试与排错
+## 7. 输入要点（摘要）
 
-### 8.1 先看 `mitom debug`
+### 7.1 格式
 
-```bash
-mitom debug out              # out = 输出目录（或直接给 run.log 的路径）
-```
+- GenBank：`.gb .gbk .gbf .gbff .genbank`（单文件或目录）
+- FASTA：单文件或目录；表头可写 `topology=circular|linear`
 
-`mitom debug` 读运行日志，按顺序给出：
+### 7.2 类群与遗传密码
 
-| 部分 | 内容 |
-|---|---|
-| 状态 | 正常结束（退出码）/ 出错停止（哪一步、traceback 的末尾）/ 没有结束（被中断） |
-| Steps | 12 步各自的耗时和结果；第 6 步再分为补漏、rRNA HMM、内含子 |
-| 失败的记录 | 每条失败或被跳过的记录，以及它自己日志里的第一条错误 |
-| Failed programs | 每个失败的外部程序：退出码、耗时、运行目录、错误输出的最后几行 |
-| Missing programs | 缺少的程序，以及安装它的命令 |
-| NCBI ERROR | 每条记录的 table2asn ERROR |
-| Warnings | 按类别归并的警告和次数 |
-| Reproduce | 复现命令：加 `--debug` 重跑整个命令；单独运行失败的程序；单独运行失败的记录 |
+默认 `--clade auto`。GenBank 用记录分类；FASTA 用 blastx + 密码子核验。多门时 `run` 自动分组。`import` / `annotate` 一次只能一个门。
 
-退出码：0 = 没有发现问题，1 = 发现问题，2 = 找不到 MitoM 日志。
+常用 `--clade`：`Chordata`（密码 2）、`Arthropoda` / `Mollusca` / `Annelida-segmented-worms`（5）、`Echinodermata`（9）、`Porifera-sponges`（4）、`Cnidaria` / `Platyhelminthes-flatworms`（需给密码）、`Animal`（其它门）。
 
-### 8.2 调试模式 `--debug`
+评测表：[BENCHMARK.md § 类群](BENCHMARK.md#2-类群与遗传密码---clade-auto)。
 
-任何 `mitom` 命令都可以加 `--debug`：
+### 7.3 去重
+
+`NC_` 优先、新版本优先、相同序列只留一条。报告：`qc/dedup_report.tsv`。
+
+---
+
+## 8. 排错
 
 ```bash
-mitom run -i in.gb -o out --debug
+mitom doctor
 mitom debug out
 ```
 
-调试模式额外记录：运行环境（MitoM 版本和 git 提交、命令原文、Python、机器、每个外部程序的路径和版本、Python 包版本、配置文件、参考数据和数据目录、相关环境变量、内存和磁盘空间），每一步内部调用的每个程序及其完整输出（包括注释核心内部的 blastx、exonerate、cmsearch 等），并保留全部中间文件（`work/`）。“单独运行失败的程序”这条复现命令要用到中间文件，所以请在调试模式下使用。
-
-### 8.3 日志格式
-
-`run.log`（新布局在 `logs/run.log`）的每一行都有固定格式，便于查找：
-
-| 行 | 含义 |
+| 现象 | 处理 |
 |---|---|
-| `[ENV] ...` | 版本、命令、Python、机器等（开头几行） |
-| `[STEP 6/12 add_missing] start: ...` / `done 9.2s: ...` / `failed ...` | 每一步的开始、结束、耗时和结果（k/n：`run` 共 12 步，`annotate` 共 8 步） |
-| `[CMD rc=1 12.3s] <命令>  (in <目录>)` | 每个外部程序：退出码、耗时、完整命令；失败时下面以 `    | ` 开头列出错误输出的末尾 |
-| `[RECORD <名称>] ...` | 失败、被跳过或有 NCBI ERROR 的记录 |
-| `[ERROR] ...` | 运行出错停止时的完整 traceback |
-| `[DONE] exit=<退出码> <用时>` | 运行结束 |
+| `annotate` / `import` 报多个门 | 改用 `mitom run`，或显式 `--clade` |
+| 门 uncertain | 看 `qc/clade_decision.tsv`；知道类群就手写 |
+| 输出目录被锁 | 等当前运行结束，或换 `-o` |
+| 输入错误一行 `ERROR:`、退出码 2 | 空文件、截断下载、蛋白序列等；`--debug` 看细节 |
+| `ncbi_errors` ≠ 0 | 看 `submission/<id>/<id>.val` |
+| 很慢 | `--threads` × `--jobs` ≤ CPU；内含子约 10–20 s / 条 |
 
-手工查找：`grep -n "rc=[1-9]" out/logs/run.log` 列出所有失败的程序；`grep -n "\[RECORD" out/logs/run.log` 列出有问题的记录；出错记录的注释核心日志在 `out/logs/failed_logs/`。
-
-### 8.4 报告问题
-
-请附上 `mitom debug out` 的输出，以及加 `--debug` 重跑后的 `out/logs/run.log`。
+更多行见历史手册中的完整 FAQ（CHANGELOG 与 issue 跟踪）。报告问题时附上 `mitom doctor` 与 `mitom debug` 输出。
 
 ---
 
-## 9. 常见问题
+## 9. 引用
 
-| 现象 | 原因与处理 |
-|---|---|
-| `--clade auto: the input has several phyla / genetic codes ... mitom annotate needs one` | `annotate` / `import` 一次只能一个门；用 `mitom run`（自动分组），或给 `--clade` 和 `--genetic_code` |
-| `[CLADE] WARNING: ... phylum uncertain` 或 `genetic code ... from the codons` | 参考库里没有近亲或密码子与近亲的遗传密码不符：核对 `qc/clade_decision.tsv`，知道类群时给 `--clade` 和 `--genetic_code` |
-| `another MitoM run (pid N) is writing into OUT` | 同一个输出目录一次只能有一个运行（`OUT/.mitom.lock`）。等它结束、停止它，或换一个 `-o`；运行被 `kill -9` 杀掉后留下的锁会自动接管 |
-| `no sequence to annotate in ...` / `ERROR: no ... records in ...` | 输入为空、读不出、全是 N、是蛋白序列，或 GenBank 记录被截断（下载中断；`mitom fetch` 再运行一次会重新下载）。`[SEQ]` / `[SPLIT]` / `[DEDUP]` 警告指出是哪个文件、哪条序列。`.gz` 压缩文件、带 BOM 的 UTF-8、Latin-1 文本和 EMBL 文件会自动解压 / 转换；序列中的比对空位 `-` `.` 和 `*` 会自动去掉；没有序列的 CONTIG 记录跳过。所有命令遇到输入问题都只给一行 `ERROR:`，退出码 2（`--debug` 时显示完整报错） |
-| `mitom rescue` / `mitom rrna-hmm search` 要求文件夹 | 这两个命令直接修改输入文件夹里的 GenBank 文件，请给文件夹（压缩或非 UTF-8 文件请先解压 / 转换） |
-| 外部程序卡住 | 核心注释的每个外部程序最长 1 小时、table2asn 最长 10 分钟，超时按失败处理并写入日志，不会无限等待 |
-| 中途停止运行 | 用 Ctrl-C（或 `kill -INT`），所有子进程几秒内退出；`kill -9` 只杀主进程，子进程会继续跑完当前记录。之后在同一目录重跑即可，结果与一次跑完相同 |
-| `exonerate / blastp not found`，内含子步骤跳过 | 不在 mitotools 环境中运行，或环境不完整。运行 `mitom doctor`；用 `--intron_bin <环境>/bin` 指定 |
-| tRNA 很少或没有 | 先看 `mitom doctor` 中 cmsearch / cmalign / java 是否 OK（MitoM-ML 和 MiTFi 需要）；部分类群（刺胞动物、同骨海绵）本来只有 1–6 个 tRNA |
-| 线状记录没有旋转 | 线状序列旋转会切断真基因，所以按标签不转。以下情况自动改判为环状并旋转（原因写在 `qc/topology_decision.tsv`）：有基因跨两端；或 GenBank 记录标为 linear，但 DEFINITION 写明是完整基因组（`complete genome`，或 DToL / ATLASea 的 `genome assembly, organelle: mitochondrion`），且基因齐全、两端没有基因被截断、不属于线状线粒体类群（2026-11-09，issue #8：OZ287881、OZ346613）。其余确为环状的记录：FASTA 表头加 `topology=circular` |
-| `ncbi_errors` 不为 0 | 看 `submission/<记录>/<记录>.val`、`submission_summary.tsv` 和 `validation_messages.tsv`；常见原因是组装错误（移码、内部终止） |
-| 运行很慢 | `--threads` × `--jobs` 不要超过 CPU 数；内含子步骤对每条记录约 10–20 秒。MitoM 把 NumPy / OpenBLAS / OpenMP 的线程数设为每个进程 1 个（否则在多核机器上同时注释几条记录时慢 4–100 倍）；自己设了 `OMP_NUM_THREADS` 等环境变量的照用 |
-| 结果与 NCBI 原注释不同 | 看 `qc/original_vs_mitom.tsv` 和 `qc/curation_report.tsv`：MitoM 按统一规则修整边界，NCBI 各记录写法不一 |
+请同时引用 MitoM 所调用的软件（MITOS2 参考数据、MiTFi、MFannot、Infernal、BLAST+、Exonerate、HMMER、table2asn、Biopython 等）。见 [CITATION.cff](../CITATION.cff) 与仓库 README「引用」一节。
 
 ---
 
-## 10. 精度（摘要）
-
-详见 [METHODS.md](METHODS.md) 和 README 首页的表。测出来的比例、条数和用时只写在那些表里，这里不重复。
-- 核 rDNA / 组蛋白：见 `mito_nuc.py` 开头的说明和 `benchmark/nuc_*.py`。
-
----
-
-## 11. 引用
-
-使用 MitoM 时请同时引用它调用的软件（MITOS2 参考数据、MiTFi、MFannot、Infernal、BLAST+、Exonerate、HMMER、table2asn、Biopython 等），见 [../CITATION.cff](../CITATION.cff) 和 README 的“引用”一节。
-
----
-
-## 附录：输入格式、各命令与参数的详细说明
-
-以下为各部分的详细说明与示例，与上文互为补充。
-
-### 输入格式 / Input Formats
-
-#### FASTA 输入 / FASTA Input
-
-支持扩展名：
-
-```text
-.fa .fasta .fna .fas
-```
-
-FASTA header 中可以包含 topology：
-
-```text
->B9  topology=linear
-ATGC...
-```
-
-如果没有写 `topology=linear` 或 `topology=circular`：单条 ≥ 10 kb 的序列按 `circular`，多条或更短的按 `linear`；默认还会核对序列两端（见 3.2）。
-
-Supported FASTA extensions are `.fa`, `.fasta`, `.fna`, and `.fas`. Without a topology tag every sequence of >= 10 kb (one or several in a file) is decided from the sequence: an assembler's terminal overlap (removed) or header words ('circular', 'complete genome' / 'partial genome') first, then with `--topology auto` (default) the sequence ends and the gene set (>= 12 of 13 protein genes and both rRNAs: circular); shorter ones are linear (section 3.2).
-
-#### GenBank 输入 / GenBank Input
-
-支持扩展名：
-
-```text
-.gb .gbk .genbank .gbf .gbff
-```
-
-GenBank 输入会先执行：
-
-1. 解析所有 record。
-2. 跳过无序列 record，但保留其 metadata 来源索引。
-3. 去除完全重复、版本重复或序列重复的 record。
-4. 转换为内部 FASTA 后再进入注释核心。
-
-GenBank input is parsed, deduplicated, converted to internal FASTA, and then passed to the annotation core.
-
-注意：当前版本已避免把本地样本名 `B64_2` 误认为 accession version，因此 `B64` 和 `B64_2` 会保持为不同样本。
-
-Note: local IDs such as `B64_2` are kept distinct from `B64`.
-
-#### 目录扫描与多序列 FASTA / Directory Scanning And Multi-record FASTA
-
-输入目录会递归扫描。若同一目录同时包含 FASTA 和 GenBank，`annotate` / `run` 会优先使用 GenBank 文件，并忽略该目录中的 FASTA 文件。
-
-Input directories are scanned recursively. If a directory contains both FASTA and GenBank files, `annotate` / `run` use the GenBank files and ignore the FASTA files in that mixed directory.
-
-多记录 FASTA 默认会按 record 拆分：
-
-```bash
---if_split_fasta yes
-```
-
-如果设置：
-
-```bash
---if_split_fasta no
-```
-
-但输入 FASTA 含多个 record，脚本会报错退出。
-
-By default, multi-record FASTA files are split into individual records. With `--if_split_fasta no`, a multi-record FASTA causes the script to exit with an error.
-
-#### FASTQ 输入 / Optional FASTQ Input
-
-FASTQ 只用于 `annotate` / `run` 的基因组圈图，注释本身不用 reads：给出 `--infq` 时，用 bwa mem（装有 minimap2 时用它，更快，见 1.5 节）把该样本的 reads 比对到最终序列，圈图最内一圈画测序深度（`--plot no` 时不用）。脚本按最终 `sample_name` 查找双端 FASTQ。
-
-FASTQ files are used only for the genome maps of `annotate` / `run`; the annotation itself does not use reads. With `--infq`, the sample's reads are mapped to the final sequence with bwa mem (minimap2 when installed, faster: section 1.5) and the read depth is drawn as the innermost ring (not with `--plot no`). Matching is based on the final `sample_name`.
-
-示例：
-
-```bash
---infq /path/to/fastq_dir
---fq_position flat
---suffix_fq _1.clean.fq.gz,_2.clean.fq.gz
-```
-
-`--fq_position flat` 表示 FASTQ 文件直接在 `--infq` 目录下：
-
-```text
-<sample_name>_1.clean.fq.gz
-<sample_name>_2.clean.fq.gz
-```
-
-`--fq_position sample_dir` 表示每个样本有单独子目录：
-
-```text
-fastq_dir/<sample_name>/<sample_name>_1.clean.fq.gz
-fastq_dir/<sample_name>/<sample_name>_2.clean.fq.gz
-```
-
-在 `sample_dir` 模式下，脚本会优先找精确文件名；如果没有精确文件名，会取该样本子目录中第一个匹配 `*suffix1` 和 `*suffix2` 的文件。`--suffix_fq` 必须是两个逗号分隔的后缀。
-
-In `sample_dir` mode, exact filenames are preferred. If exact names are absent, the first files matching `*suffix1` and `*suffix2` in the sample subdirectory are used. `--suffix_fq` must contain exactly two comma-separated suffixes.
-
-### 子命令总览 / Subcommands
-
-| 子命令 | 用途 | English |
-|---|---|---|
-| `run` | 完整流程：注释（MitoM 核心，或 `--engine mitoz\|mitos2`）、重定向、可选二轮注释、校正、NCBI 提交文件、圈图 | Full pipeline |
-| `import` | 已有 MitoZ / MITOS2 结果或注释好的 GenBank：不再注释，走 `run` 的后续步骤 | Existing annotations through the MitoM steps |
-| `annotate` | 只做一轮批量注释和最终整理 | Annotation only |
-| `reorient` | 只对已有 GenBank 按目标基因重定向 | Reorient existing GenBank |
-| `transfer_metadata` | 单独转移 GenBank header metadata | Standalone metadata transfer |
-| `replace_organism` | 单独修复 `/organism=` 和 SOURCE | Standalone organism/source restoration |
-| `nuc` | 核基因标记：rDNA 18S-ITS1-5.8S-ITS2-28S、组蛋白 H1/H2A/H2B/H3/H4（contig 注释 + 多拷贝共识） | Nuclear rDNA and histones |
-
-### 推荐主流程：run / Recommended Main Workflow
-
-`run` 是最完整、最推荐的子命令。
-
-`run` is the recommended full pipeline.
-
-典型流程：
-
-```text
-输入 FASTA / GenBank
-→ 内部 FASTA 和 id_map.tsv
-→ 第一轮注释（注释核心；默认 mito_core.py）
-→ 按 cox1 或指定基因重定向
-→ 可选第二轮注释
-→ 最终 ID 重写
-→ metadata 恢复
-→ /organism= 同步
-→ 统计和合并输出
-→ 基因组圈图（annotation/plots/）
-```
-
-#### 常用参数示例 / Example With Common Options
-
-```bash
-mitom run \
-  -i /path/to/input_fasta_or_genbank \
-  -o mitom_out \
-  --scheduler_backend threads \
-  --threads 8 \
-  --jobs 4 \
-  --clade Arthropoda \
-  --genetic_code 5 \
-  --which_gene_first cox1 \
-  --if_reannotation_2 yes \
-  --preserve_phase1_metadata yes
-```
-
-#### 当前目录 FASTA 示例 / Example For The Current Directory
-
-当前目录已有：
-
-```text
-summary_all.fasta
-rename_summary_all.fasta
-```
-
-如果要用已改名后的 FASTA 跑完整流程，可用：
-
-```bash
-mitom run \
-  -i rename_summary_all.fasta \
-  -o mitom_renamed_out \
-  --scheduler_backend threads \
-  --threads 8 \
-  --jobs 4 \
-  --clade Arthropoda \
-  --genetic_code 5 \
-  --which_gene_first cox1
-```
-
-请把 `Arthropoda`、`genetic_code` 改成你真实数据需要的值。
-
-Replace `Arthropoda` and `genetic_code` with values appropriate for your dataset.
-
-#### 带 FASTQ 的 run 示例 / run With Optional FASTQ
-
-reads 只用于圈图的测序深度环（bwa mem；装有 minimap2 时用它）/ reads only add the read depth ring of the genome maps:
-
-```bash
-mitom run \
-  -i input.fasta \
-  -o mitom_out \
-  --infq /path/to/fastq_dir \
-  --fq_position sample_dir \
-  --suffix_fq _1.clean.fq.gz,_2.clean.fq.gz \
-  --scheduler_backend threads \
-  --threads 8 \
-  --jobs 4 \
-  --clade Arthropoda \
-  --genetic_code 5
-```
-
-#### Snakemake 调度示例 / Snakemake Scheduler Example
-
-```bash
-mitom run \
-  -i input.fasta \
-  -o mitom_out \
-  --scheduler_backend snakemake \
-  --snakemake_bin /path/to/snakemake \
-  --smk_cores 64 \
-  --smk_mem_mb 256000 \
-  --smk_latency_wait 60 \
-  --smk_extra '--profile slurm' \
-  --threads 8 \
-  --jobs 8 \
-  --clade Arthropoda \
-  --genetic_code 5
-```
-
-### 一轮注释：annotate / Annotation Only
-
-`annotate` 只运行第一轮注释（`mito_core.py`），并把结果整理为最终 `.gbf`。
-
-`annotate` runs one annotation pass (`mito_core.py`) and finalizes the `.gbf` output.
-
-注意：`annotate` 不做第二轮注释，但最终 `.gbf` 写出前仍会执行 ID 重写，并按 `--which_gene_first` 做一次保证性重定向；默认目标基因为 `cox1`，负链目标基因默认会反向互补。`--preserve_phase1_metadata` 在 `annotate` 中默认是 `no`，只有 GenBank 输入且显式设为 `yes` 时才恢复原始 header metadata。
-
-Note: `annotate` does not run phase-2 annotation, but final `.gbf` files are still ID-rewritten and reoriented by `--which_gene_first`. Metadata preservation defaults to `no` for `annotate`.
-
-```bash
-mitom annotate \
-  -i /path/to/fasta_or_genbank \
-  -o annotate_out \
-  --scheduler_backend threads \
-  --threads 8 \
-  --jobs 4 \
-  --clade Arthropoda \
-  --genetic_code 5
-```
-
-适合：
-
-- 不需要第二轮注释。
-- 只想批量注释并标准化输出文件名。
-
-Use it when one annotation pass is enough.
-
-### 只重定向：reorient / Reorient Only
-
-`reorient` 不运行注释核心，只处理已有 GenBank 文件。
-
-`reorient` does not run the annotation core. It only reorients existing GenBank files.
-
-`reorient` 的 `-i` 必须是 GenBank 文件或 GenBank 目录；FASTA 输入不会被该 workflow 处理。由于该子命令复用了通用参数，帮助中会显示 `--if_split_fasta` 和 `--id_maxlen`，但它们对 `reorient` 无实际作用。
-
-For `reorient`, `-i` must be a GenBank file or directory. FASTA input is not processed by this workflow. `--if_split_fasta` and `--id_maxlen` appear in the shared help output but have no practical effect for `reorient`.
-
-```bash
-mitom reorient \
-  -i /path/to/genbank_dir \
-  -o reorient_out \
-  --which_gene_first cox1
-```
-
-如果目标基因在负链上，默认会反向互补，使目标基因转到正向。如果不想这样做：
-
-```bash
-mitom reorient \
-  -i /path/to/genbank_dir \
-  -o reorient_out \
-  --which_gene_first cox1 \
-  --no_force_forward
-```
-
-By default, minus-strand target genes are reverse-complemented. Use `--no_force_forward` to disable that behavior.
-
-### 单独转移 metadata / Standalone Metadata Transfer
-
-`transfer_metadata` 用原始 GenBank 的 header 区域替换重新注释 GenBank 的 header 区域，保留新文件的 `FEATURES` 和 `ORIGIN` 主体。
-
-`transfer_metadata` replaces the header section of re-annotated GenBank files with metadata from the original GenBank files while keeping the new `FEATURES` and `ORIGIN`.
-
-```bash
-mitom transfer_metadata \
-  -m /path/to/original_gb_dir \
-  -n /path/to/new_body_gb_dir \
-  -o transfer_metadata_out \
-  --smart_metadata no
-```
-
-单文件模式可指定输出文件名：
-
-```bash
-mitom transfer_metadata \
-  -m original.gbf \
-  -n reannotated.gbf \
-  -o transfer_metadata_out \
-  --output_name final_with_metadata.gbf
-```
-
-如果需要自动接受模糊匹配：
-
-```bash
-mitom transfer_metadata \
-  -m original.gbf \
-  -n reannotated.gbf \
-  -o transfer_metadata_out \
-  --smart_metadata yes \
-  --auto_accept_metadata yes
-```
-
-注意：目录模式下如果 metadata 目录中存在多个相同 stem 的文件，脚本会报错退出，避免错配 header。
-
-In directory mode, duplicate metadata stems are rejected to avoid header mismatches.
-
-输出与行为：
-
-- 输出目录默认是 `transfer_metadata_out/`。
-- 新文件默认写入 `transfer_metadata_out/transferred_gb/`。
-- 审计表是 `transfer_metadata.tsv`。
-- 日志是 `transfer_metadata.log`。
-- 目录模式按文件 stem 配对 `metadata` 与 `new_body`；metadata 目录中重复 stem 会报错退出。
-- `--output_name` 仅单文件模式有效。
-- `--overwrite_new_body yes` 会直接覆盖 `-n/--new_body` 指定的 body 文件。
-- `--if_replace_metadata no` 时不替换 header，只复制或保留 new body。
-
-Outputs and behavior:
-
-- Default output root: `transfer_metadata_out/`.
-- New files are written to `transfer_metadata_out/transferred_gb/` by default.
-- Audit table: `transfer_metadata.tsv`.
-- Log file: `transfer_metadata.log`.
-- Directory mode pairs metadata and body files by stem; duplicate metadata stems are rejected.
-- `--output_name` is valid only in single-file mode.
-- `--overwrite_new_body yes` overwrites the files supplied by `-n/--new_body`.
-- `--if_replace_metadata no` keeps or copies the new body without replacing the header.
-
-### 单独修复 organism / Standalone Organism Replacement
-
-`replace_organism` 修复 `FEATURES source` 中的 `/organism=`，也可以同步 SOURCE 文本。
-
-`replace_organism` restores `/organism=` inside `FEATURES source` and can also sync the SOURCE text.
-
-```bash
-mitom replace_organism \
-  -m /path/to/original_gb_dir \
-  -n /path/to/new_body_gb_dir \
-  -o replace_organism_out
-```
-
-如需覆盖输入文件：
-
-```bash
-mitom replace_organism \
-  -m /path/to/original_gb_dir \
-  -n /path/to/new_body_gb_dir \
-  --overwrite_new_body yes
-```
-
-Use overwrite mode carefully because it modifies the input body files in place.
-
-输出与匹配规则：
-
-- 输出目录默认是 `replace_organism_out/`。
-- 新文件默认写入 `replace_organism_out/replaced_organism/`。
-- 审计表是 `replace_organism.tsv`，列为 `source_file`, `output_file`, `replaced`, `not_found`, `total`, `note`。
-- 日志是 `replace_organism.log`。
-- 匹配依据是 GenBank accession 及其兼容变体。
-- 匹配成功时更新 SOURCE 文本和 source feature 的 `/organism=`。
-- 未匹配 record 保持不变。
-
-Outputs and matching:
-
-- Default output root: `replace_organism_out/`.
-- New files are written to `replace_organism_out/replaced_organism/` by default.
-- Audit table: `replace_organism.tsv`.
-- Log file: `replace_organism.log`.
-- Matching uses GenBank accessions and compatible accession variants.
-- On match, SOURCE text and source-feature `/organism=` are updated.
-- Unmatched records are left unchanged.
-
-### 关键参数 / Key Options
-
-| 参数 | 适用子命令 | 中文说明 | English |
-|---|---|---|---|
-| `-i`, `--input` | `run`, `annotate`, `reorient` | FASTA 或 GenBank 文件/目录；`reorient` 只处理 GenBank | Input FASTA or GenBank; `reorient` accepts GenBank only |
-| `-o`, `--out` | all | 输出根目录；`run`/`annotate`/`reorient` 默认 `mitom_out`，其他子命令各有默认值 | Output root; defaults vary by subcommand |
-| `--which_gene_first` | `run`, `annotate`, `reorient` | 重定向起始基因，默认 `cox1` | Target gene for reorientation, default `cox1` |
-| `--fallback_genes` | `run`, `annotate` | 找不到 `--which_gene_first`（默认 cox1）时依次尝试的基因，默认 `cox2,cox3,cob,nad1`；`none` = 不旋转（旧行为）。用了备选基因的样本列在 `oriented_by_fallback.txt`。基因被注释成多段（如 intron 两侧外显子）时取转录方向最 5′ 的一段；线性序列从不旋转 | Fallback start genes when the first gene is absent; 5'-most piece of split genes; linear records never rotated |
-| `--force_forward` / `--no_force_forward` | `run`, `annotate`, `reorient` | 目标基因在负链时是否反向互补，默认开启 | Reverse-complement minus-strand target genes by default |
-| `--if_split_fasta` | `run`, `annotate` | 多序列 FASTA 是否拆分，默认 `yes`；对 `reorient` 无实际作用 | Split multi-record FASTA, default `yes`; no practical effect for `reorient` |
-| `--id_maxlen` | `run`, `annotate` | 内部 ID 最大长度，必须至少 6；对 `reorient` 无实际作用 | Maximum internal ID length, minimum 6; no practical effect for `reorient` |
-| `--threads` | `run`, `annotate` | 每个注释任务线程数，必须为正整数；默认 `min(8, CPU 数)` | Threads per annotation job, positive integer; default `min(8, CPUs)` |
-| `--jobs` | `run`, `annotate` | 同时运行的任务数，必须为正整数；默认 `max(1, CPU 数 // threads)` | Maximum concurrent jobs, positive integer; default `max(1, CPUs // threads)` |
-| `--clade` | `run`, `annotate` | 类群，默认 `auto`：逐条记录判断——GenBank 用记录的分类信息和 CDS `transl_table`，FASTA / 无分类信息的记录用 blastx 比对参考蛋白并核验密码子（mito_classify.py）；多门或多遗传密码时 `run` 分组注释再合并（`qc/clade_decision.tsv`），`annotate` 要求一个门；分类信息不属于动物时报错；可选值见"快速上手" | Clade, default `auto`: per record - the GenBank taxonomy and CDS transl_table; FASTA / no taxonomy: blastx to the reference proteins, codons checked (mito_classify.py); several phyla / codes: `run` annotates each group and merges (qc/clade_decision.tsv), `annotate` needs one; a non-animal taxonomy is an error |
-| `--genetic_code` | `run`, `annotate` | 遗传密码表，无默认固定值：`--clade auto` 时取输入各记录 CDS 的 transl_table（记录间不一致则报错），无则该门常用码；显式 `--clade` 时取该类群的密码（Chordata 2、Echinodermata 9、Porifera 4，其余 5；Cnidaria、Platyhelminthes、Chaetognatha、Animal 必须显式给出）；显式给出时优先 | Genetic code (no fixed default): with `--clade auto` from the per-record CDS transl_table (differing records are an error), else the phylum's usual code; with an explicit `--clade` the code of that clade (2 Chordata, 9 Echinodermata, 4 Porifera, else 5; required for Cnidaria, Platyhelminthes, Chaetognatha, Animal); an explicit value wins |
-| `--engine`, `--mitoz_bin` | `run`, `annotate` | 注释程序：`native`（默认，MitoM 核心）/ `mitoz` / `mitos2`（需自己安装；MitoZ 只支持它自己的 9 个 `--clade`）；`--mitoz_bin` 给 mitoz 所在目录 | Annotation program: native (default) / mitoz / mitos2 (installed by you) |
-| `--topology` | `run`, `annotate` | 环状 / 线状：`auto`（默认）= 按标签（GenBank LOCUS 行；FASTA 表头 `topology=`；没有时：两端重叠 → 环状并去掉重复，表头写 circular / complete genome → 环状、partial genome → 线状，其余 ≥ 10 kb 的看两端和基因组成——蛋白基因 ≥ 12 个且两个 rRNA 齐全为环状，否则线状；< 10 kb 线状），再核对序列两端：有基因从末尾接到开头（中间隔着内含子的也算）→ 环状；标为环状但两端有基因被截断 → 线状；标为环状的水母类、水螅类和钙质海绵（线状线粒体基因组）且没有基因跨两端 → 线状；改判的记录重注，结果见 `qc/topology_decision.tsv`。`label` = 只按标签；`circular` / `linear` = 全部设为环状 / 线状 | Circular or linear: `auto` (default) = the label, checked at the sequence ends (gene across the ends, also with an intron between -> circular; gene cut at an end of a circular-labelled record -> linear; Medusozoa / Calcarea labelled circular without a gene across the ends -> linear; changed records annotated again, `qc/topology_decision.tsv`); `label`; `circular` / `linear` for every record |
-| `--fasta`, `--topology` | `import` | MITOS2 结果对应的基因组 FASTA（按 result.bed 里的序列名匹配；默认在结果目录或其上一级找）；拓扑：`auto`（默认：MITOS2 取 result.gff，GenBank 取 LOCUS 行，MitoZ 输出按环状）/ `circular` / `linear` | Genome FASTA of MITOS2 results; topology of imported records |
-| `--pcg_hmm` | `run`, `annotate`, `import` | `yes`（默认）：注释完仍缺的蛋白基因（如分化的 atp8、atp6），用最近缘 10/30/100 条参考的谱 HMM 补找（`qc/pcg_hmm_report.tsv`）；`no`：不找 | Missing protein genes searched with profile HMMs of the nearest relatives; `no`: off |
-| `--rescue` | `run`, `annotate` | 从 MITOS2 补回核心漏注的蛋白基因/rRNA（需另装 MITOS2）：`auto`（默认）/ `no` = 不运行（核心自己重试其他位点）；`yes` = 对缺基因的记录运行 | Rescue genes the core missed from MITOS2 (optional install): `auto` (default) / `no` = not run; `yes` = run for records missing a gene |
-| `--rrna_method` | `run`, `annotate` | 注释核心的 12S/16S 搜索：`hmm`（默认，更快）= MitoM 按门 profile HMM，无模型或无命中时用 MITOS2 协方差模型；`cm` = 只用 MITOS2 协方差模型（refseq89m）。两者准确度相同（2026-10-28，450 条留一法记录，数字见 `mitom run -h` 或 [OPTIONS.md](OPTIONS.md)）；hmm 每个基因几秒、约 0.1 GB，cm 约 10 秒、约 0.5 GB | 12S/16S search of the core: `hmm` (default, faster) = per-phylum profile HMMs, MITOS2 covariance models where there is no model or hit; `cm` = MITOS2 covariance models only. Same accuracy (450 leave-out records; numbers in `mitom run -h` / [OPTIONS.md](OPTIONS.md)) |
-| `--rrna_hmm`, `--rrna_hmm_lib`, `--phylum` | `run`, `annotate` | 仍缺的 12S/16S 用按门 HMM 补搜：`auto`（默认）/ `yes` / `no`；库默认 `models/rrna_hmm`；`--phylum` 默认取 `--clade auto` 判出的门、显式 `--clade` 对应的门（`--clade Animal` 时不确定，FASTA 输入请自己给 `--phylum`），都没有时才用记录自己的分类信息；没有可用模型的记录会在日志和屏幕上提示 | Per-phylum rRNA HMM fallback for rRNAs still missing: `auto` (default) / `yes` / `no`; `--phylum` defaults to the phylum found by `--clade auto` or that of an explicit `--clade` (unknown for `--clade Animal`: give it for FASTA input), then to the record's own taxonomy; records without a model are reported on screen and in the log |
-| `--intron_fix` | `run`, `annotate` | 内含子：从头识别（MFannot 方法，`mito_intron.py`）+ 近缘位点迁移（`mito_intron_ref.py`，位点库 `models/intron_sites.*`）：`auto`（默认，找到 exonerate 即运行）/ `yes` / `no` | Introns: de novo (MFannot method) + site transfer from annotated relatives: `auto` (default) / `yes` / `no` |
-| `--intron_rule` | `run`, `annotate` | 认不出 I/II 类的内含子何时写入：`continuity`（默认）= 同源蛋白在接头处连续（不缺也不多残基）且必须剪接才能覆盖同源蛋白（[METHODS](METHODS.md) “无类型内含子的判定”）；`splice` = 2026-11-09 以前的规则（I 类剪接分数 ≥ 14、比上同源蛋白 ≥ 80 %） | Introns of no known type: `continuity` (default) = homologs continuous across the junction and the splice needed; `splice` = the rule before 2026-11-09 |
-| `--curate`, `--sbt` | `run`, `annotate` | 端点校正 + NCBI 命名 + 提交文件（默认 `yes`）；`--sbt` 为 NCBI 提交者模板 | Curation + NCBI names + submission files (default `yes`); `--sbt` submitter template |
-| `--plot` | `run`, `annotate` | 每条记录的基因组圈图 `annotation/plots/<记录>.png`、`.pdf`（`mito_plot.py`）：`yes`（默认，每条约 1 秒）/ `no` | Circular genome map per record (`annotation/plots/`): `yes` (default) / `no` |
-| `--ncr` | `run`, `annotate`, `import` | `yes`（默认）：没有注释覆盖的 ≥ `--ncr_min_len` nt 区段写成 misc_feature “non-coding region NCR<k>”（GenBank、.tbl、圈图）；`no`：不写 | Non-coding regions: stretches of >= `--ncr_min_len` nt no feature covers become misc_feature "non-coding region NCR<k>" (GenBank, .tbl, maps); `no`: none |
-| `--ncr_min_len` | `run`, `annotate`, `import` | 最短非编码区，默认 100 nt（基因间隔一般更短） | Shortest non-coding region written, default 100 nt |
-| `--orf` | `run`, `annotate`, `import` | `yes`（默认）：未注释序列中有同源证明受选择的 ORF，或属已知蛋白家族的，写成 CDS `orf<密码子数>` “hypothetical protein”；只是较长、与 13 基因同源、读进下一基因的给 WARNING 并写进 NCR note（`qc/orf_report.tsv`）；`all`：较长的也写；`report`：只报告；`no`：跳过 | ORFs of unknown function: `yes` (default) writes those a homolog shows to be under selection and known families; the rest are WARNINGs; `all` also writes ORFs longer than chance; `report` writes none; `no` skips |
-| `--orf_ref` | `run`, `annotate`, `import` | 近缘物种的 GenBank 文件或目录（可重复），其 ORF 也作为同源证据；默认无（用同次运行的其他记录和 RefSeq ORF 库）。类群不在 RefSeq 时给出 | GenBank of relatives whose ORFs also count as homologs (repeat); default none |
-| `--plot_style` | `run`, `annotate`, `import` | 圈图样式：`circos`（默认，借鉴 mitoPlotR：每条链一个环道、基因名沿圆弧、坐标轴、GC 含量、测序深度）/ `mitom`（基因在一个圆的两侧、GC 含量和 GC 偏斜环）；效果见 `mitom plot` 一节 | Map style: `circos` (default, after mitoPlotR: a lane per strand, names along the circle, axis, GC content, read depth) or `mitom` |
-| `--infq`, `--fq_position`, `--suffix_fq` | `run`, `annotate` | 可选双端 FASTQ，只用于圈图的测序深度环（bwa mem，装有 minimap2 时用它）；`--suffix_fq` 必须有两个逗号分隔后缀 | Optional paired FASTQ, only for the read depth ring of the genome maps (bwa mem, or minimap2 when installed); suffix list must contain two comma-separated values |
-| `--scheduler_backend` | `run`, `annotate` | `auto` / `threads` / `snakemake`，默认 `auto` | Scheduler backend, default `auto` |
-| `--snakemake_bin`, `--smk_cores`, `--smk_mem_mb`, `--smk_latency_wait`, `--smk_extra` | `run`, `annotate` | Snakemake 后端参数；数值项必须为正整数 | Snakemake backend options; numeric values must be positive integers |
-| `--if_reannotation_2` | `run` | 第二轮注释：`auto`（默认；第一轮用灵敏 tRNA 模式，平移后检查——原序列两端 50 nt 内有**看起来被截断**的基因（CDS 长度非 3 的倍数且无 T/TA 终止尾、靠序列端的一侧缺起始/终止密码子，按所用遗传密码判断；tRNA 不在 55–95 nt；s-rRNA < 600 nt、l-rRNA < 900 nt）、缺标准基因（COX1-3、CYTB、ND1-6、ND4L、两个 rRNA；ATP6/ATP8 在整个门中可能缺失，不算）、平移前后基因序列不一致、基因跨新起点——只重注未通过的；决定写 `reannotation_decision.tsv`；6 条 A/B 结果完全一致）/ `yes`（每条都重注）/ `no` | Phase-2 re-annotation: `auto` (default: only records failing the post-shift check: truncated-looking genes at the ends of the round-1 sequence, missing standard genes (not ATP6/ATP8), changed gene sequences, genes across the new origin; decisions in `reannotation_decision.tsv`) / `yes` (every record) / `no` |
-| `--keep_intermediate` | `run`, `annotate` | 是否保留中间目录（`00.*`、`01.*`、`03.*`、`04.*`、`05.*`、`_snakemake_*`），默认 `no`：最终输出写完后删除以节约空间；`yes` 时 `run` 把它们放进 `work/`。问题样本的核心日志总是保留（`run`：`logs/failed_logs/`，`annotate`：`failed_logs/`） | Keep the intermediate folders (run: moved to `work/`); default `no` deletes them after the final output; core logs of problem samples are always kept (logs/failed_logs/ or failed_logs/) |
-| `--preserve_phase1_metadata` | `run`, `annotate` | `run` 默认 `yes`；`annotate` 默认 `no` | Defaults to `yes` for `run`, `no` for `annotate` |
-| `--smart_metadata` | `run`, `transfer_metadata` | 开启模糊 metadata 匹配 | Enable fuzzy metadata matching |
-| `--auto_accept_metadata` | `run`, `transfer_metadata` | 自动接受最佳模糊匹配；必须配合 `--smart_metadata yes` | Auto-accept best fuzzy match; requires `--smart_metadata yes` |
-| `-m`, `--metadata` | `transfer_metadata`, `replace_organism` | 原始 GenBank metadata 来源 | Original GenBank metadata source |
-| `-n`, `--new_body` | `transfer_metadata`, `replace_organism` | 新 GenBank body 来源 | New GenBank body source |
-| `--if_replace_metadata` | `transfer_metadata` | 是否替换 header metadata，默认 `yes` | Replace header metadata, default `yes` |
-| `--overwrite_new_body` | `transfer_metadata`, `replace_organism` | 是否原地覆盖 `new_body` | Overwrite `new_body` in place |
-| `--output_name` | `transfer_metadata` | 单文件模式输出文件名 | Output filename in single-file mode |
-
-### 调度建议 / Scheduler Recommendations
-
-#### threads 后端 / threads Backend
-
-本地机器推荐先用：
-
-```bash
---scheduler_backend threads --threads 8 --jobs 4
-```
-
-实际总线程消耗约为：
-
-```text
-threads × jobs
-```
-
-例如 `8 × 4 = 32`。请不要超过机器可承受的 CPU 和内存。
-
-The approximate CPU demand is `threads × jobs`.
-
-#### Snakemake 后端 / Snakemake Backend
-
-```bash
---scheduler_backend snakemake \
---smk_cores 64 \
---smk_mem_mb 256000 \
---threads 8 \
---jobs 8
-```
-
-当前版本生成的 Snakefile 会把每个任务声明为真实 `threads`，并声明每任务内存资源，避免调度器误判。
-
-The generated Snakefile declares real per-job `threads` and memory resources.
-
-### 输出目录 / Output Layout
-
-`run` / `import` 的输出目录见[第 7 节](#7-输出)（终端第 12 步逐项打印，目录里的 `README.txt` 有同样的说明）。
-
-主要文件：
-
-- `annotation/<登录号>.gb`：**最终 GenBank**：端点校正（mito_curate.py）并统一为 NCBI 命名——CDS `COX1…CYTB`、`ND1…ND6`、`ND4L`；rRNA `rrnS`/`rrnL`（12S/16S ribosomal RNA）；tRNA `/gene` 只写符号（`trnL1`/`trnL2`、`trnS1`/`trnS2` 按反密码子，与 MITOS2（2.1.10）相同：所有类群、包括脊椎动物都是 L1 = CUN、L2 = UUR、S1 = AGN、S2 = UCN；NCBI 的脊椎动物记录（如人 NC_012920.1）L1/L2、S1/S2 编号相反，MitoM 按 MITOS2，不随类群改变），反密码子写在 `/note`；非法起始密码子按 NCBI 惯例标 5′ partial（"start codon not determined"）。`--curate no` 时为校正前的注释。
-- `submission/`：每条记录的 NCBI 提交文件和校验报告。`submission_summary.tsv` 中 ERROR 为 0 的记录可直接提交；GenBank 平面文件（.gb）本身不能直接提交给 NCBI（NCBI 只收 table2asn 生成的 `.sqn`，或 BankIt 上传 `.fsa` + `.tbl`），`.sqn/.tbl` 与 `annotation/*.gb` 是同一份注释。正式提交时用 `--sbt` 给出 NCBI 提交者模板（https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ 生成）。基准记录上的 table2asn ERROR 数见 [README 精度表](../README.md)（此前的 ERROR 主要是鸟类/龟类 ND3 移码、蚌类 nad1 包住 trnL2、环节动物 nad2 跨原点无终止子，已修正）；余下 WARNING 为 NCBI 自己记录里也有的类型（ND3 移码 join 的 ShortIntron、无起始/终止密码子基因的 partial 提示）。
-- `summary.tsv` 的 `annotation_used`：`round 2` = 定向后重注；`round 1, shifted` = 第一轮注释随序列平移（通过检查，不必重注）；`round 1, not re-oriented` = 未找到定向基因。
-- 输出目录里用户自己的文件和目录不会被移动或删除；同一目录再次运行会替换上一次的结果。
-
-The `run` / `import` output (section 7): summary.tsv, README.txt and annotation/ (one GenBank per record, all_records.gb, genes.fna, proteins.faa, plots/), submission/<record>/, qc/ (original_vs_mitom.tsv and the step reports), input/ (the input records), logs/ (run.log, run_params.json) and, with `--keep_intermediate yes`, work/; `--output_layout classic` gives the layout before 2026-11-09. Files the user put into the folder are left alone; a second run into the same folder replaces the previous results. NCBI accepts the `.sqn` (table2asn) or `.fsa` + `.tbl` (BankIt) of `submission/`, not a GenBank flat file; give the submitter template with `--sbt`. table2asn ERRORs on the benchmark records: README accuracy table (the earlier ones, bird / turtle nad3 frameshift, unionid nad1 over trnL2, annelid nad2 across the origin without a stop, are fixed).
-
-`annotate`（只做一轮注释和其后的补漏、校正、NCBI 文件、作图；不做第二轮、不比较）保留工作目录布局：
-
-```text
-annotate_out/
-├── run.log
-├── reports/                    # dedup_report.tsv、curation_report.tsv、intron_report.tsv、run_params.json 等
-├── original_annotation/        # GenBank 输入时：输入记录原样
-├── 00.internal_fasta/ (id_map.tsv), 00.gb_converted_fasta/, 01.anno_round1/   # --keep_intermediate yes 时保留
-├── 04.final_gb/                # 端点校正前
-├── 05.curated/                 # --curate yes（默认）：端点校正 + NCBI 命名
-├── 06.ncbi_submission/         # NCBI 提交文件（需 table2asn）
-├── plots/                      # 基因组圈图
-├── annotation-summary.tsv
-└── all.final.gbf
-```
-
-`annotation-summary.tsv`（`annotate`）中的 `cox1_orientation_ok` 是历史列名。当 `--which_gene_first` 不是 `cox1` 时，该列实际表示指定目标基因是否重定向成功。
-
-The `cox1_orientation_ok` column name is historical. If `--which_gene_first` is not `cox1`, the column still means whether the selected target gene was successfully used for reorientation.
-
-列表和 TSV 在内容为空时可能不会生成。
-
-Some report files are written only when non-empty.
-
-
-### 注意事项 / Practical Notes
-
-1. `--clade` 默认 `auto`：逐条记录判断（GenBank 分类信息；FASTA 用 blastx 推断，见 3.3），多门输入由 `run` 分组注释后合并。参考库里没有近亲的类群（小门）门可能判不准，遗传密码按密码子判断；知道类群时请显式给 `--clade` 和 `--genetic_code`。
-2. `--genetic_code` 没有固定默认值：`--clade auto` 时取输入 CDS 的 `transl_table`，否则按 `--clade`（Chordata 2、Echinodermata 9、Porifera 4，其余 5）；请按物种确认。
-3. `--id_maxlen` 不能小于 6，否则内部 ID 会冲突；脚本现在会拒绝这种参数。
-4. 线性序列重定向后会保留 `linear` topology，不会被强制改成 `circular`。
-5. 多 contig 样本中缺少目标基因的 contig 会合并回最终结果，不会静默丢弃。
-6. 如果只需要改名 FASTA header，不需要运行本脚本；可以直接处理 FASTA 文本。
-
-Notes:
-
-1. The default `--clade` is `auto`, per record (the GenBank taxonomy; FASTA by blastx to the reference proteins, section 3.3); `run` annotates an input of several phyla group by group and merges the results. Lineages without a close relative in the reference (small phyla) may get a wrong or uncertain phylum, their genetic code then comes from the codons; give `--clade` and `--genetic_code` when you know the group.
-2. `--genetic_code` has no fixed default: with `--clade auto` it is the CDS `transl_table` of the input, else the code of the `--clade` (2 Chordata, 9 Echinodermata, 4 Porifera, else 5); verify it for your dataset.
-3. `--id_maxlen` must be at least 6.
-4. Linear records keep linear topology after reorientation.
-5. Partial no-target-gene contigs are merged back into final outputs.
-6. Simple FASTA header renaming does not require this pipeline.
-
+## 附录
+
+- 全部参数：[OPTIONS.md](OPTIONS.md)
+- 重建 `models/`：[DATASETS.md](DATASETS.md)
+- 评测摘要：[BENCHMARK.md](BENCHMARK.md)

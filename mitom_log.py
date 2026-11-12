@@ -4,9 +4,9 @@ one log file per sample of the annotation stage.
 
 Lines of the run log that `mitom debug` reads (their form stays as it is; k/n = step k of n stages: run 11,
 annotate 7):
-  [STEP 6/11 add_missing] start: <title>            a step starts (Steps.start)
-  [STEP 6/11 add_missing] introns done 5.4s: ...    a part of a step (Steps.part)
-  [STEP 6/11 add_missing] done 9.2s: <result>       ... ends ('failed' instead of 'done': it could not do its work)
+  [STEP 6/12 add_missing] start: <title>            a step starts (Steps.start)
+  [STEP 6/12 add_missing] introns done 5.4s: ...    a part of a step (Steps.part)
+  [STEP 6/12 add_missing] done 9.2s: <result>       ... ends ('failed' instead of 'done': it could not do its work)
   [CMD rc=1 12.3s] <command line>  (in <folder>)    every external program (mito_common.run_tool); when it
       | <a line of its stderr>                      failed, the end of its stderr below (debug mode: always)
   [RECORD <name>] <what happened to this record>    a record that failed or was left out (record_event)

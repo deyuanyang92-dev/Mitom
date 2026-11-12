@@ -84,13 +84,13 @@ FAILED = """\
 2026-10-30 10:00:00,003 [INFO] [PARAMS]
 {"cmd": "run", "input": "in.fa"}
 2026-10-30 10:00:00,004 [WARNING] [ENV] MitoM needs table2asn for the NCBI submission files (install.sh; mitom doctor)
-2026-10-30 10:00:00,005 [INFO] [STEP 1/11 input] start: Read input and remove duplicate records
-2026-10-30 10:00:00,006 [INFO] [STEP 1/11 input] done 0.1s: 2 FASTA sequences to annotate
-2026-10-30 10:00:00,007 [INFO] [STEP 2/11 annotate] start: Round-1 annotation
+2026-10-30 10:00:00,005 [INFO] [STEP 1/12 input] start: Read input and remove duplicate records
+2026-10-30 10:00:00,006 [INFO] [STEP 1/12 input] done 0.1s: 2 FASTA sequences to annotate
+2026-10-30 10:00:00,007 [INFO] [STEP 2/12 annotate] start: Round-1 annotation
 2026-10-30 10:00:02,000 [DEBUG] [CMD rc=2 1.5s] /env/bin/blastx -query g.fa -db cox1.fas  (in /work/S00001)
     | BLAST Database error: No alias or index file found
 2026-10-30 10:00:02,001 [WARNING] [RECORD rec1] annotation failed (round-1 annotation, exit 1): RuntimeError: blastx failed (2)
-2026-10-30 10:00:03,000 [INFO] [STEP 2/11 annotate] done 3.0s: 1 annotated, 1 failed (rec1)
+2026-10-30 10:00:03,000 [INFO] [STEP 2/12 annotate] done 3.0s: 1 annotated, 1 failed (rec1)
 2026-10-30 10:00:04,000 [WARNING] [RECORD rec2] NCBI ERROR: 2 (SEQ_FEAT.InternalStop) - ncbi_submission/validation_messages.tsv
 2026-10-30 10:00:04,500 [WARNING] [INTRON_FIX] skipped: exonerate / blastp not found
 2026-10-30 10:00:04,600 [WARNING] [INTRON_FIX] skipped: exonerate / blastp not found
@@ -111,7 +111,7 @@ def test_report_of_a_failed_run(tmp_path, capsys):
     rep = capsys.readouterr().out
     assert "command : mitom run -i in.fa -o out --clade Mollusca" in rep and "MitoM   : 1.1.0" in rep
     assert "status  : FAILED (exit 1): every record failed in the annotation core" in rep
-    assert " 2/11 annotate          3.0 s  done    1 annotated, 1 failed (rec1)" in rep
+    assert " 2/12 annotate          3.0 s  done    1 annotated, 1 failed (rec1)" in rep
     assert ("first error in reports/failed_logs/rec1.01.anno_round1.core.stderr.log: RuntimeError: blastx failed (2): "
             "BLAST Database error") in rep
     assert "[exit 2, 1.5 s] /env/bin/blastx -query g.fa -db cox1.fas" in rep and "in /work/S00001" in rep
@@ -125,8 +125,8 @@ def test_report_of_a_failed_run(tmp_path, capsys):
 
 def test_report_of_a_run_stopped_by_an_error_killed_or_clean(tmp_path, capsys):
     stopped = write_run(tmp_path / "stopped", """\
-        2026-10-30 10:00:00,005 [INFO] [STEP 6/11 add_missing] start: Add what the core missed
-        2026-10-30 10:00:01,000 [ERROR] [STEP 6/11 add_missing] failed 1.0s: ValueError: bad location
+        2026-10-30 10:00:00,005 [INFO] [STEP 6/12 add_missing] start: Add what the core missed
+        2026-10-30 10:00:01,000 [ERROR] [STEP 6/12 add_missing] failed 1.0s: ValueError: bad location
         2026-10-30 10:00:01,001 [ERROR] [ERROR] ValueError: bad location
         Traceback (most recent call last):
           File "mitom_pipeline.py", line 9, in main
@@ -136,14 +136,14 @@ def test_report_of_a_run_stopped_by_an_error_killed_or_clean(tmp_path, capsys):
     assert mito_debug.main([str(stopped / "run.log")]) == 1
     rep = capsys.readouterr().out
     assert "STOPPED ON AN ERROR: ValueError: bad location" in rep and "File \"mitom_pipeline.py\", line 9" in rep
-    assert " 6/11 add_missing       1.0 s  failed" in rep
+    assert " 6/12 add_missing       1.0 s  failed" in rep
     killed = write_run(tmp_path / "killed", """\
-        2026-10-30 10:00:00,005 [INFO] [STEP 2/11 annotate] start: Round-1 annotation
+        2026-10-30 10:00:00,005 [INFO] [STEP 2/12 annotate] start: Round-1 annotation
         2026-10-30 10:00:09,000 [INFO] [PROGRESS] 3/10 'rec3' done (rc=0, 9s)
         """)
     os.utime(killed / "run.log", (0, 0))
     assert mito_debug.main([str(killed)]) == 1
-    assert "DID NOT FINISH in step 2/11 annotate (Round-1 annotation): the log ends at 2026-10-30 10:00:09" in \
+    assert "DID NOT FINISH in step 2/12 annotate (Round-1 annotation): the log ends at 2026-10-30 10:00:09" in \
         capsys.readouterr().out
     clean = write_run(tmp_path / "clean", """\
         2026-10-30 10:00:00,005 [INFO] [STEP 1/1 input] start: Read input

@@ -7,19 +7,25 @@
 
 MitoM（命令 `mitom`）找出动物线粒体基因组的 13 个蛋白基因、2 个 rRNA、22 个 tRNA 和内含子，统一方向与起点，
 按 NCBI 规范修整边界和基因名，生成可直接提交 NCBI 的文件和环状基因组图；`mitom nuc` 在全基因组组装中注释核 rDNA
-（18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。完整使用手册见 **[docs/USAGE_zh.md](docs/USAGE_zh.md)**。
+（18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。
 
 MitoM (command `mitom`) annotates the 13 protein genes, 2 rRNAs, 22 tRNAs and the introns of animal mitochondrial
 genomes, orients them, curates gene ends and names to NCBI rules, and writes NCBI submission files and genome maps;
 `mitom nuc` annotates nuclear rDNA and histone genes in whole-genome assemblies.
 
-| 精度 / Accuracy（开发期基准，2026-10-27 / 10-29，与 NCBI 比较；不是论文的冻结评测 [benchmark/frozen/PLAN.md](benchmark/frozen/PLAN.md)；细节见 [docs/METHODS.md](docs/METHODS.md)） / development benchmarks, not the frozen evaluation | |
+**文档 / Docs**：[总目录](docs/README.md) · [使用手册](docs/USAGE_zh.md) · [跟做示例](docs/EXAMPLES.md) · [评测摘要](docs/BENCHMARK.md) · [数据集制备](docs/DATASETS.md) · [方法](docs/METHODS.md) · [参数](docs/OPTIONS.md)
+
+**特色 / Highlights**：一条命令到可提交文件；多门混合自动分组；NCBI 规则校正；内含子两步 + 未知 ORF；`mitom nuc` 独立做核标记。见 [USAGE § 特色](docs/USAGE_zh.md#1-特色)。
+
+**精度 / Accuracy**（开发期基准，非论文冻结评测；详表 [BENCHMARK.md](docs/BENCHMARK.md)、[METHODS.md](docs/METHODS.md)）：
+
+| 指标 | 结果 |
 |---|---|
-| 蛋白基因两端与 NCBI 完全一致 / protein genes, both ends exact | 1,050 条多类群 RefSeq：24 个门全部高于 MITOS2 |
-| NCBI table2asn ERROR | 2,497 条基准记录 / benchmark records（2026-10-27；1,050 多类群 RefSeq、669 环节动物、577 科未参与训练的无脊椎动物、188 脊椎动物、13 锚定基因组）：0（此前 / before：199） |
-| tRNA（未参与训练的类群）/ tRNAs (families unseen in training) | 召回率高于 MITOS2，精确率持平或更高 |
-| 内含子 / introns | 逐个核实的 NCBI 内含子金标准：默认全部一致，被测记录不进参考库时少数不一致，无内含子记录无假阳性（数字见 [METHODS 内含子表](docs/METHODS.md#intron-注释--introns-mito_intronpy-mito_intron_refpy)） / gold-standard introns: see the METHODS intron table |
-| 核 rDNA / 组蛋白 / nuclear markers | 全基因组组装几秒到几分钟；准确度与用时见 [METHODS 核基因节](docs/METHODS.md#核基因标记--nuclear-markers-rdna-and-histones-mito_nucpy) / seconds to minutes per assembly; accuracy and time in METHODS |
+| 蛋白基因两端与 NCBI 完全一致 | 1,050 条多类群 RefSeq：24 个门全部高于 MITOS2 |
+| NCBI table2asn ERROR | 2,497 条基准记录：**0**（此前 199） |
+| tRNA（未参与训练的科） | 召回高于 MITOS2，精确率持平或更高 |
+| 内含子 | 默认金标准 309/309；留一 299/309；无假阳性 |
+| 核 rDNA / 组蛋白 | 见 METHODS 核基因节 |
 
 ## 快速上手 / Quick start
 
@@ -85,7 +91,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 **3. 运行过程与结果 / What you see and what you get**
 
-**`mitom run` 的 12 步 / The 12 steps of `mitom run`**（与终端的 `[Step k/12]` 一致；每步的细节和报告文件见 [使用手册第 4 节](docs/USAGE_zh.md#4-mitom-run-的流程)）
+**`mitom run` 的 12 步 / The 12 steps of `mitom run`**（与终端的 `[Step k/12]` 一致；报告文件见 [使用手册 § 5.12](docs/USAGE_zh.md#512-mitom-run-的-12-步)）
 
 | 步 / step | 终端显示 / terminal | 做什么 |
 |---|---|---|
@@ -118,6 +124,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 [Step 10/12] Compare with the original annotation
 ...
 [Step 11/12] Genome maps (circular plots)
+[Step 12/12] Organise the output
 ```
 
 输出目录（`out/README.txt` 逐项说明；`--output_layout classic` 用 2026-11-09 以前的布局）：
@@ -134,7 +141,7 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 | `input/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与 `annotation/` 对应，便于前后对比 |
 | `logs/` | `run.log`（全部过程与调用的命令）、`run_params.json`（全部参数）、`intron_fix.log`、出错记录的日志 |
 
-**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；每个命令的用法和示例见 [使用手册第 6 节](docs/USAGE_zh.md#6-每个命令的用法)，怎么选命令见 [第 5 节](docs/USAGE_zh.md#5-怎么选命令)）
+**4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；输入 / 输出见 [使用手册 § 5](docs/USAGE_zh.md#5-每个命令输入--命令--输出)，怎么选命令见 [§ 4](docs/USAGE_zh.md#4-怎么选命令)）
 
 | 命令 / command | 作用 / purpose |
 |---|---|
@@ -174,8 +181,7 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 ```
 求助时请附上 `mitom doctor` 和 `mitom debug out` 的输出。/ When asking for help, include the output of both.
 
-**文档 / Documentation**：完整使用手册 [docs/USAGE_zh.md](docs/USAGE_zh.md)（安装、输入、流程、每个命令、输出、调试、常见问题）；
-全部命令与参数 [docs/OPTIONS.md](docs/OPTIONS.md)；方法与评测 [docs/METHODS.md](docs/METHODS.md)；版本变化 [CHANGELOG.md](CHANGELOG.md)；评测数据 `benchmark/results/`。
+**文档 / Documentation**：总目录 [docs/README.md](docs/README.md)；使用手册 [docs/USAGE_zh.md](docs/USAGE_zh.md)；示例 [docs/EXAMPLES.md](docs/EXAMPLES.md)；数据集制备 [docs/DATASETS.md](docs/DATASETS.md)；参数 [docs/OPTIONS.md](docs/OPTIONS.md)；方法与评测 [docs/METHODS.md](docs/METHODS.md)；版本 [CHANGELOG.md](CHANGELOG.md)；评测数据 `benchmark/results/`。
 
 ## MitoM：声明、致谢与引用 / Statement, acknowledgements and citation
 
