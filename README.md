@@ -1,25 +1,73 @@
-# MitoM：动物线粒体基因组注释 / Annotation of animal mitochondrial genomes
+<p align="center">
+  <img src="docs/images/logo.svg" width="110" alt="MitoM logo">
+</p>
 
-> **版本 / Version**：v0.0.1（测试版 / test release）。
->
-> **说明**：MitoM 目前仍在测试中，是本团队内部使用的软件，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
-> MitoM is still being tested and is used inside our group only; check the results before publishing or submitting them.
+<h1 align="center">MitoM</h1>
 
-MitoM（命令 `mitom`）找出动物线粒体基因组的 13 个蛋白基因、2 个 rRNA、22 个 tRNA 和内含子，统一方向与起点，
-按 NCBI 规范修整边界和基因名，生成可直接提交 NCBI 的文件和环状基因组图；`mitom nuc` 在全基因组组装中注释核 rDNA
-（18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。
+<p align="center">
+  <b>动物线粒体基因组注释：一条命令，从序列到可提交 NCBI 的注释</b><br>
+  Animal mitochondrial genome annotation: one command from sequence to an NCBI-ready annotation
+</p>
 
-MitoM (command `mitom`) annotates the 13 protein genes, 2 rRNAs, 22 tRNAs and the introns of animal mitochondrial
-genomes, orients them, curates gene ends and names to NCBI rules, and writes NCBI submission files and genome maps;
-`mitom nuc` annotates nuclear rDNA and histone genes in whole-genome assemblies.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-v0.0.1-blue" alt="version v0.0.1">
+  <img src="https://img.shields.io/badge/status-test%20release-orange" alt="test release">
+  <img src="https://img.shields.io/badge/platform-Linux%20%7C%20WSL2%20%7C%20Docker-lightgrey" alt="Linux, WSL2, Docker">
+  <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-CC0%201.0-green" alt="CC0 1.0"></a>
+  <img src="https://img.shields.io/github/last-commit/deyuanyang92-dev/Mitom" alt="last commit">
+</p>
 
-**文档 / Docs**：[总目录](docs/README.md) · [使用手册](docs/USAGE_zh.md) · [跟做示例](docs/EXAMPLES.md) · [评测摘要](docs/BENCHMARK.md) · [数据集制备](docs/DATASETS.md) · [方法](docs/METHODS.md) · [参数](docs/OPTIONS.md)
+<p align="center">
+  <a href="#安装--install"><b>安装 Install</b></a> ·
+  <a href="#快速上手--quick-start"><b>快速上手 Quick start</b></a> ·
+  <a href="docs/USAGE_zh.md">使用手册 Manual</a> ·
+  <a href="docs/EXAMPLES.md">示例 Examples</a> ·
+  <a href="docs/METHODS.md">方法 Methods</a> ·
+  <a href="docs/BENCHMARK.md">评测 Benchmarks</a> ·
+  <a href="#引用与致谢--citation-and-acknowledgements">引用 Citation</a>
+</p>
 
-**特色 / Highlights**：一条命令到可提交文件；多门混合自动分组；NCBI 规则校正；内含子两步 + 未知 ORF；`mitom nuc` 独立做核标记。见 [USAGE § 特色](docs/USAGE_zh.md#1-特色)。
+<p align="center">
+  <img src="docs/images/map_mitom.png" width="49%" alt="MitoM genome map of Octopus rubescens: genes on two strands, GC content, GC skew and read depth">
+  <img src="docs/images/map_introns.png" width="49%" alt="MitoM genome map of Metridium senile with its cox1 and nad5 introns hatched">
+</p>
+<p align="center"><sub>MitoM 的圈图：<i>Octopus rubescens</i>（含测序深度环）与 <i>Metridium senile</i>（内含子画斜线） /
+genome maps made by MitoM: <i>Octopus rubescens</i> (with a read-depth ring) and <i>Metridium senile</i> (introns hatched)</sub></p>
 
-Highlights: one command to submission-ready files; mixed phyla grouped automatically; NCBI-rule curation; two-step introns plus unknown ORFs; `mitom nuc` for nuclear markers alone. See [USAGE § highlights](docs/USAGE_zh.md#1-特色).
+> [!NOTE]
+> MitoM 仍在测试中（v0.0.1），是本团队内部使用的软件，尚未正式发布。结果（尤其是内含子、tRNA 和基因边界）请人工核对后再用于发表或提交 NCBI。
+> MitoM is a test release used inside our group; check the results (especially introns, tRNAs and gene ends) before publishing or submitting them.
 
-**精度 / Accuracy**（开发期基准，非论文冻结评测；详表 [BENCHMARK.md](docs/BENCHMARK.md)、[METHODS.md](docs/METHODS.md)）：
+## 为什么用 MitoM / Why MitoM
+
+**🧬 一条命令，到可提交的文件。** 13 个蛋白基因、2 个 rRNA、22 个 tRNA、内含子和受选择的未知 ORF；统一方向与起点，生成 NCBI 提交文件和圈图。
+*One command gives the 13 protein genes, 2 rRNAs, 22 tRNAs, introns and selected unknown ORFs, oriented records, NCBI submission files and maps.*
+
+**🧭 多门混合，自动分组。** `--clade auto` 逐条判断门和遗传密码（GenBank 用自身分类，FASTA 用 blastx 比对保守蛋白），按组注释再合并。
+*`--clade auto` decides phylum and genetic code per record and annotates mixed inputs group by group.*
+
+**✂️ 按 NCBI 规则修整边界。** 起止密码子、T / TA 不完整终止、tRNA 间断模型、移码与读码框修复（规则 P1–P11），table2asn 检查。
+*Gene ends are curated to NCBI rules (rules P1-P11) and checked with table2asn.*
+
+**🧩 内含子与难注的基因。** 内含子从头预测并用近缘位点库核对；ATP8、ATP6 等高度分化的基因用近缘谱 HMM 补回；注不出的 ORF 会给出警告，不静默。
+*Introns are predicted de novo and checked against a library of known sites; divergent genes such as ATP8 / ATP6 are recovered with profile HMMs of relatives; unannotatable ORFs are reported, not silent.*
+
+**🔁 兼容 MitoZ 与 MITOS2。** 可用 `--engine mitoz|mitos2` 让它们注释，或用 `mitom import` 读入已有结果，后续步骤相同。
+*MitoZ or MITOS2 can annotate (`--engine`) or their results can be imported (`mitom import`); the later steps are the same.*
+
+**🧪 转录组证据（可选）。** `mitom rna` 给出表达与 poly(A) 3′ 端，`mito_rnaseq_annot.py` 用同一标本的转录组确认或修正末端、内含子。
+*Optional RNA-seq evidence: `mitom rna` measures expression and poly(A) 3′ ends; `mito_rnaseq_annot.py` confirms or corrects ends and introns.*
+
+**🧫 核基因标记。** `mitom nuc` 在全基因组组装中注释核 rDNA（18S–ITS1–5.8S–ITS2–28S）和组蛋白基因。
+*`mitom nuc` annotates nuclear rDNA (18S-ITS1-5.8S-ITS2-28S) and histone genes in whole-genome assemblies.*
+
+准确率见下表与 [评测摘要](docs/BENCHMARK.md)。 / Accuracy: the table below and [the benchmark summary](docs/BENCHMARK.md).
+
+## 精度 / Accuracy
+
+开发期基准，不是论文用的冻结评测；详表见 [BENCHMARK.md](docs/BENCHMARK.md)、[METHODS.md](docs/METHODS.md)。
+Development benchmarks, not the frozen evaluation of the paper; details in [BENCHMARK.md](docs/BENCHMARK.md) and [METHODS.md](docs/METHODS.md).
 
 | 指标 / Metric | 结果 / Result |
 |---|---|
@@ -29,7 +77,7 @@ Highlights: one command to submission-ready files; mixed phyla grouped automatic
 | 内含子 / Introns | 默认金标准 309/309；留一 299/309；无假阳性 / default gold standard, leave-one-out, no false positives |
 | 核 rDNA / 组蛋白 / Nuclear rDNA / histones | 见 METHODS 核基因节 / see METHODS nuclear section |
 
-## 快速上手 / Quick start
+## 安装 / Install
 
 **1. 安装（一条命令）/ Install (one command)**：Linux 或 Windows WSL2；macOS 见 `install.sh` 开头说明，或用 Docker：
 
@@ -50,6 +98,9 @@ All dependencies, the Python packages included, live in one conda environment (`
 Docker：`docker build -t mitom . && docker run --rm -v "$PWD":/data mitom mitom run -i /data/genomes.gb -o /data/out`
 （bioconda 配方在 `packaging/bioconda/`；发布后可 `mamba create -n mitom -c conda-forge -c bioconda mitom && conda activate mitom && mitom setup`）
 
+<details>
+<summary><b>安装大小与第三方软件 / Install size and other tools</b></summary>
+
 **安装大小 / Install size**（2026-10-28，Linux x86_64 全新安装实测：conda 环境 + 参考数据 refseq89m）：
 
 | 软件 / tool | 下载 / download | 安装后 / installed | conda 包 / packages |
@@ -66,7 +117,9 @@ MitoZ、MITOS2 不随 MitoM 安装；装了它们时，MitoM 可以调用它们�
 
 MitoZ and MITOS2 are not installed with MitoM; when they are installed, MitoM can call them to annotate or import their results (see below).
 
-**2. 运行 / Run**
+</details>
+
+## 快速上手 / Quick start
 
 ```bash
 # 从 NCBI 下载某类群的全部完整线粒体基因组（RefSeq + GenBank；--refseq_only 只要 NC_；--query 自定义检索式）
@@ -90,6 +143,9 @@ mitom import -i mitos2_result/ --fasta genome.fasta -o out --clade Mollusca --ge
 
 MITOS2 用户 / MITOS2 users：MitoM 把 MITOS2 结果批量转成 GenBank、统一方向、修整端点、生成 NCBI 文件，见 / see **[docs/MITOS2.md](docs/MITOS2.md)**。
 
+<details>
+<summary><b>`--clade` 与常用参数 / `--clade` and common options</b></summary>
+
 `--clade` 可选：`Chordata Arthropoda Echinodermata Annelida-segmented-worms Bryozoa Mollusca Nematoda
 Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaetognatha-arrow-worms Animal`
 （`Animal` = 全动物蛋白库，用于其他门）。常用：`--threads 8 --jobs 4`（每个任务线程数 / 同时任务数）、
@@ -97,7 +153,15 @@ Nemertea-ribbon-worms Porifera-sponges Cnidaria Platyhelminthes-flatworms Chaeto
 
 `--clade` choices are listed above (`Animal` = all-animal protein library, for other phyla). Common options: `--threads` (threads per job), `--jobs` (jobs at the same time), `--sbt template.sbt` (NCBI submitter template). Defaults: `--threads` is the smaller of 8 and the CPU count; `--jobs` is the CPU count divided by `--threads`. `--clade auto` (default) decides per record: GenBank records use their own taxonomy and the CDS `transl_table`; FASTA records and records without taxonomy are blasted (blastx) against 8 conserved proteins of refseq89m, take the phylum and genetic code of the nearest reference genome, then check it with codons such as AGR / ATA / AAA / TGA (with no close relative: `Animal` and the codon-based code). If one input holds several phyla or genetic codes, `run` annotates each group and merges them into one output folder; the decision and its evidence per record are in `qc/clade_decision.tsv`.
 
-**3. 运行过程与结果 / What you see and what you get**
+</details>
+
+## 流程与输出 / Workflow and output
+
+<p align="center"><img src="docs/flowcharts/mitom_workflow.zh.svg" width="100%" alt="MitoM workflow"></p>
+<p align="center"><sub>English diagram: <a href="docs/flowcharts/mitom_workflow.en.svg">mitom_workflow.en.svg</a></sub></p>
+
+<details>
+<summary><b>`mitom run` 的 12 步与终端显示 / The 12 steps and what the terminal shows</b></summary>
 
 **`mitom run` 的 12 步 / The 12 steps of `mitom run`**（与终端的 `[Step k/12]` 一致；报告文件见 [使用手册 § 5.12](docs/USAGE_zh.md#512-mitom-run-的-12-步)）
 
@@ -137,6 +201,11 @@ The terminal shows each step (what it does, how many records, result, time, resu
 [Step 12/12] Organise the output
 ```
 
+</details>
+
+<details>
+<summary><b>输出目录 / Output folder</b></summary>
+
 输出目录（`out/README.txt` 逐项说明；`--output_layout classic` 用 2026-11-09 以前的布局）：
 
 Output folder (`out/README.txt` explains each item; `--output_layout classic` gives the layout used before 2026-11-09):
@@ -153,9 +222,16 @@ Output folder (`out/README.txt` explains each item; `--output_layout classic` gi
 | `input/<登录号>.gb` | 输入记录原样（含 NCBI 原注释），文件名与 `annotation/` 对应，便于前后对比 / input records unchanged (with the NCBI annotation), named as in `annotation/`, for before / after comparison |
 | `logs/` | `run.log`（全部过程与调用的命令）、`run_params.json`（全部参数）、`intron_fix.log`、出错记录的日志 / `run.log` (whole process and commands called), `run_params.json` (all parameters), `intron_fix.log`, logs of failed records |
 
+</details>
+
+## 命令 / Commands
+
 **4. 全部子命令 / Commands**（每个命令加 `-h` 看参数，如 `mitom run -h`，全部参数汇总在 [docs/OPTIONS.md](docs/OPTIONS.md)；输入 / 输出见 [使用手册 § 5](docs/USAGE_zh.md#5-每个命令输入--命令--输出)，怎么选命令见 [§ 4](docs/USAGE_zh.md#4-怎么选命令)）
 
 Add `-h` to any command to see its options, e.g. `mitom run -h`; all options are collected in [docs/OPTIONS.md](docs/OPTIONS.md); input / output: [USAGE § 5](docs/USAGE_zh.md#5-每个命令输入--命令--输出); choosing a command: [§ 4](docs/USAGE_zh.md#4-怎么选命令).
+
+<details>
+<summary><b>全部子命令 / All commands</b></summary>
 
 | 命令 / command | 作用 / purpose |
 |---|---|
@@ -181,6 +257,11 @@ Add `-h` to any command to see its options, e.g. `mitom run -h`; all options are
 | `mitom transfer_metadata` / `replace_organism` | 把原记录的物种、文献等信息复制到新注释 / 修正物种名 / copy species, references etc. from the original record to the new annotation / fix the species name |
 | `mitom setup` / `mitom doctor` | 下载参考数据（安装时已自动运行）/ 检查需要的程序是否都装好 / download reference data (run automatically at install) / check that the needed programs are installed |
 
+</details>
+
+<details>
+<summary><b>注释审核报告 / Annotation audit report</b></summary>
+
 **注释审核报告 / Annotation audit report**：`mitom check -i genomes.gb -o check_out` 审核已有注释（只出报告，不改文件；
 可用于查看 NCBI 下载记录的原注释问题，或检查最终结果），`check_report.tsv` 每条一行（ok / flagged），`check_details.tsv` 列出每个问题。ERROR（触发重注）：无注释、缺蛋白基因或
 rRNA、基因重复、内部终止子、长度非 3 倍数且无 transl_except、基因长度异常、基因重叠 > 100 nt、tRNA 少于 22（`--min_trna`）；
@@ -188,7 +269,9 @@ WARNING：起始/终止密码子、cox1 方向、tRNA 种类、非标准 CDS。
 
 `mitom check -i genomes.gb -o check_out` audits existing annotations (report only, no file changed; useful for the problems in NCBI records as downloaded, or for checking final results). `check_report.tsv` has one row per record (ok / flagged), `check_details.tsv` lists every problem. ERROR (triggers re-annotation): no annotation, missing protein gene or rRNA, duplicated gene, internal stop, length not a multiple of 3 without transl_except, abnormal gene length, gene overlap > 100 nt, fewer than 22 tRNAs (`--min_trna`). WARNING: start / stop codon, cox1 orientation, tRNA types, non-standard CDS.
 
-**5. 出问题时 / When something goes wrong**
+</details>
+
+**出问题时 / When something goes wrong**
 
 ```bash
 mitom doctor                         # 先查安装：版本和文件夹、Python、每个程序；有问题的行标 !!，并给出修复命令
@@ -197,9 +280,69 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 ```
 求助时请附上 `mitom doctor` 和 `mitom debug out` 的输出。/ When asking for help, include the output of both.
 
-**文档 / Documentation**：总目录 [docs/README.md](docs/README.md)；使用手册 [docs/USAGE_zh.md](docs/USAGE_zh.md)；示例 [docs/EXAMPLES.md](docs/EXAMPLES.md)；数据集制备 [docs/DATASETS.md](docs/DATASETS.md)；参数 [docs/OPTIONS.md](docs/OPTIONS.md)；方法与评测 [docs/METHODS.md](docs/METHODS.md)；版本 [CHANGELOG.md](CHANGELOG.md)；评测数据 `benchmark/results/`。
+## 文档 / Documentation
 
-## MitoM：声明、致谢与引用 / Statement, acknowledgements and citation
+| 文档 / document | 内容 / contents |
+|---|---|
+| [总目录 / index](docs/README.md) | 全部文档 / all documents |
+| [使用手册 / manual](docs/USAGE_zh.md) | 每个命令的输入、命令、输出 / input, command and output of every command |
+| [示例 / examples](docs/EXAMPLES.md) | 用 `tests/data/` 跟做 / walk-throughs with `tests/data/` |
+| [参数 / options](docs/OPTIONS.md) | 全部参数 / all options |
+| [方法 / methods](docs/METHODS.md) | 算法、规则与评测 / algorithms, rules and benchmarks |
+| [评测摘要 / benchmarks](docs/BENCHMARK.md) | 主要结果 / main results |
+| [数据集制备 / datasets](docs/DATASETS.md) | 重建 `models/` / rebuilding `models/` |
+| [MITOS2 用户 / MITOS2 users](docs/MITOS2.md) | 导入 MITOS2 结果 / importing MITOS2 results |
+| [版本 / changelog](CHANGELOG.md) | 版本变化 / changes per version |
+
+## 引用与致谢 / Citation and acknowledgements
+
+**声明 / Statement**
+
+- 本软件基于作者多年研究中的一些心得，整合了大家的优秀软件，并使用 Claude Code（Anthropic）开发。
+- 作者不保留任何版权：本仓库代码以 CC0 1.0 放入公有领域（见 `LICENSE`），任何人都可以使用、修改、再发布，欢迎持续优化升级。
+- 使用本软件时，请引用本 GitHub 仓库，其他没有任何要求。
+- This software builds on the author's experience from years of research. It integrates excellent tools written by others and was developed with Claude Code (Anthropic).
+- The author claims no copyright: the code in this repository is dedicated to the public domain under CC0 1.0 (see `LICENSE`). Anyone may use, modify and redistribute it, and further improvements are welcome.
+- If you use it, please cite this GitHub repository. Nothing else is required.
+
+
+**引用 / Citation**
+
+引用本软件的同时，请一并引用实际用到的软件 / When citing this software, please also cite the tools it ran:
+
+- 本软件 / This software: https://github.com/deyuanyang92-dev/Mitom (`CITATION.cff`)
+- MitoZ（`--engine mitoz`、方法参考 / methods reference）: Meng G, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz173
+- MITOS2: Donath A, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz833
+- MITOS: Bernt M, et al. 2013. Mol Phylogenet Evol. doi:10.1016/j.ympev.2012.08.023
+- MiTFi (tRNA models; MitoM's core and MITOS2): Jühling F, et al. 2012. Nucleic Acids Res. doi:10.1093/nar/gkr1131
+- Infernal: Nawrocki EP, Eddy SR. 2013. Bioinformatics. doi:10.1093/bioinformatics/btt509
+- BLAST+: Camacho C, et al. 2009. BMC Bioinformatics. doi:10.1186/1471-2105-10-421
+- 内含子 / introns（`mito_intron.py`）— MFannot: Lang BF, et al. 2023. Front Plant Sci. doi:10.3389/fpls.2023.1222186; Exonerate: Slater GSC, Birney E. 2005. BMC Bioinformatics. doi:10.1186/1471-2105-6-31
+- 端点校正依据 / boundary curation rules（`mito_curate.py`）: Fourdrilis S, et al. 2018. Sci Rep 8:17964. doi:10.1038/s41598-018-36428-7; Ghiselli F, et al. 2021. Phil Trans R Soc B. doi:10.1098/rstb.2020.0159
+- 可选 tRNA 工具 / optional tRNA tools（`mito_trna.py`）: ARWEN doi:10.1093/bioinformatics/btm573; ARAGORN doi:10.1093/nar/gkh152; tRNAscan-SE 2.0 doi:10.1093/nar/gkab688
+- 基因组圈图 / genome maps（`mito_plot.py`）— matplotlib: Hunter JD. 2007. Comput Sci Eng 9:90-95. doi:10.1109/MCSE.2007.55; 测序深度 / read depth — BWA-MEM: Li H. 2013. arXiv:1303.3997; minimap2: Li H. 2018. Bioinformatics 34:3094-3100. doi:10.1093/bioinformatics/bty191
+- Biopython: Cock PJA, et al. 2009. Bioinformatics. doi:10.1093/bioinformatics/btp163
+- NCBI table2asn: https://www.ncbi.nlm.nih.gov/genbank/table2asn/
+
+<details>
+<summary><b>致谢与第三方软件 / Acknowledgements and third-party tools</b></summary>
+
+**第三方软件 / Third-party tools**
+
+注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa（装有 minimap2 时自动改用它，更快，见使用手册 1.5）、Python 包（Biopython、scikit-learn、matplotlib）由 `install.sh` 装入同一个 conda 环境，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`mitom setup` 下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MitoZ（GPL-3.0）、MITOS2 可选，不随本仓库分发。
+
+The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, faster: USAGE 1.5) and the Python packages (Biopython, scikit-learn, matplotlib) are installed into one conda environment by `install.sh`; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `mitom setup` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MitoZ (GPL-3.0) and MITOS2 are optional and not distributed here.
+
+**致谢 / Acknowledgements**
+
+感谢 MitoZ、MITOS2/MITOS、MiTFi、MFannot、Infernal、BLAST+、GeneWise、Exonerate、NCBI table2asn、Biopython、mitoPlotR（圈图样式）、GB2sequin（提交文件转换的做法）等软件的作者。没有他们的工作，就没有本软件。
+
+We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, GeneWise, Exonerate, NCBI table2asn, Biopython, mitoPlotR (map layout), GB2sequin (submission file conversion) and the other tools listed below. This software would not exist without their work.
+
+</details>
+
+<details>
+<summary><b>MitoM 的组成与来源 / What MitoM is built from</b></summary>
 
 **MitoM**（命令名 `mitom`；M = Merge / Metazoa）是一条动物线粒体基因组注释流程。流程本身（下表"MitoM 自有步骤"）是作者多年研究中逐步优化形成的；基因识别由 MitoM 自己的注释核心 `mito_core.py` 完成，各环节用什么方法以 benchmark 结果为依据（`benchmark/`）。MitoZ、MITOS2 不随 MitoM 安装：装了它们时可以用 `--engine mitoz|mitos2` 让它们注释，或用 `mitom import` 读入它们已有的结果，之后的 MitoM 步骤相同；MITOS2 还可用于漏注救回（`--rescue yes`）。核心用到的 MITOS2 参考数据 refseq89m 由 `mitom setup` 下载（install.sh 会运行）。
 
@@ -229,46 +372,10 @@ mitom run -i in.gb -o out --debug    # 调试模式：记录环境（各程序�
 
 **MitoM** (command name `mitom`; M = Merge / Metazoa) is an annotation workflow for animal mitochondrial genomes. The workflow itself (the "MitoM steps" above: input deduplication, reorientation, round-2 annotation, metadata transfer, introns, rescue of missed genes, per-phylum rRNA HMM fallback, boundary curation, NCBI validation, genome maps) was developed by the author over years of research. Gene finding is done by MitoM's own annotation core `mito_core.py`, its methods chosen by benchmark results (`benchmark/`): blastx + exonerate protein genes, per-phylum rRNA profile HMMs, MitoM-ML tRNAs (clade covariance models with a learned caller and ends, MiTFi for the families it does not call and MiTFi ends for vertebrates); one conda environment. MitoZ and MITOS2 are not installed with MitoM: when they are installed, `--engine mitoz|mitos2` lets them annotate, or `mitom import` reads their existing results, and the MitoM steps that follow are the same; MITOS2 can also rescue missed genes (`--rescue yes`). The MITOS2 reference data refseq89m the core uses are downloaded by `mitom setup` (install.sh runs it).
 
-**声明 / Statement**
+</details>
 
-- 本软件基于作者多年研究中的一些心得，整合了大家的优秀软件，并使用 Claude Code（Anthropic）开发。
-- 作者不保留任何版权：本仓库代码以 CC0 1.0 放入公有领域（见 `LICENSE`），任何人都可以使用、修改、再发布，欢迎持续优化升级。
-- 使用本软件时，请引用本 GitHub 仓库，其他没有任何要求。
-- This software builds on the author's experience from years of research. It integrates excellent tools written by others and was developed with Claude Code (Anthropic).
-- The author claims no copyright: the code in this repository is dedicated to the public domain under CC0 1.0 (see `LICENSE`). Anyone may use, modify and redistribute it, and further improvements are welcome.
-- If you use it, please cite this GitHub repository. Nothing else is required.
-
-**第三方软件 / Third-party tools**
-
-注释核心调用的程序（BLAST+、exonerate、Infernal、HMMER、Java、table2asn 等）和测序深度环用的 bwa（装有 minimap2 时自动改用它，更快，见使用手册 1.5）、Python 包（Biopython、scikit-learn、matplotlib）由 `install.sh` 装入同一个 conda 环境，各自保留原有许可证。随仓库分发的第三方文件：MITOS2 的 MiTFi（`models/mitfi/`，MIT，见其中的 LICENSE）；`mitom setup` 下载 MITOS2 的参考数据 refseq89m（蛋白集与 tRNA/rRNA 模型，MIT）。MitoZ（GPL-3.0）、MITOS2 可选，不随本仓库分发。
-
-The programs the core runs (BLAST+, exonerate, Infernal, HMMER, Java, table2asn ...) and bwa (read depth ring; minimap2 is used instead when installed, faster: USAGE 1.5) and the Python packages (Biopython, scikit-learn, matplotlib) are installed into one conda environment by `install.sh`; they keep their own licences. Third-party files shipped here: MiTFi from MITOS2 (`models/mitfi/`, MIT); `mitom setup` downloads the MITOS2 reference data refseq89m (protein sets, tRNA / rRNA models, MIT). MitoZ (GPL-3.0) and MITOS2 are optional and not distributed here.
-
-**致谢 / Acknowledgements**
-
-感谢 MitoZ、MITOS2/MITOS、MiTFi、MFannot、Infernal、BLAST+、GeneWise、Exonerate、NCBI table2asn、Biopython、mitoPlotR（圈图样式）、GB2sequin（提交文件转换的做法）等软件的作者。没有他们的工作，就没有本软件。
-
-We thank the authors of MitoZ, MITOS2/MITOS, MiTFi, MFannot, Infernal, BLAST+, GeneWise, Exonerate, NCBI table2asn, Biopython, mitoPlotR (map layout), GB2sequin (submission file conversion) and the other tools listed below. This software would not exist without their work.
-
-**引用 / Citation**
-
-引用本软件的同时，请一并引用实际用到的软件 / When citing this software, please also cite the tools it ran:
-
-- 本软件 / This software: https://github.com/deyuanyang92-dev/Mitom (`CITATION.cff`)
-- MitoZ（`--engine mitoz`、方法参考 / methods reference）: Meng G, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz173
-- MITOS2: Donath A, et al. 2019. Nucleic Acids Res. doi:10.1093/nar/gkz833
-- MITOS: Bernt M, et al. 2013. Mol Phylogenet Evol. doi:10.1016/j.ympev.2012.08.023
-- MiTFi (tRNA models; MitoM's core and MITOS2): Jühling F, et al. 2012. Nucleic Acids Res. doi:10.1093/nar/gkr1131
-- Infernal: Nawrocki EP, Eddy SR. 2013. Bioinformatics. doi:10.1093/bioinformatics/btt509
-- BLAST+: Camacho C, et al. 2009. BMC Bioinformatics. doi:10.1186/1471-2105-10-421
-- 内含子 / introns（`mito_intron.py`）— MFannot: Lang BF, et al. 2023. Front Plant Sci. doi:10.3389/fpls.2023.1222186; Exonerate: Slater GSC, Birney E. 2005. BMC Bioinformatics. doi:10.1186/1471-2105-6-31
-- 端点校正依据 / boundary curation rules（`mito_curate.py`）: Fourdrilis S, et al. 2018. Sci Rep 8:17964. doi:10.1038/s41598-018-36428-7; Ghiselli F, et al. 2021. Phil Trans R Soc B. doi:10.1098/rstb.2020.0159
-- 可选 tRNA 工具 / optional tRNA tools（`mito_trna.py`）: ARWEN doi:10.1093/bioinformatics/btm573; ARAGORN doi:10.1093/nar/gkh152; tRNAscan-SE 2.0 doi:10.1093/nar/gkab688
-- 基因组圈图 / genome maps（`mito_plot.py`）— matplotlib: Hunter JD. 2007. Comput Sci Eng 9:90-95. doi:10.1109/MCSE.2007.55; 测序深度 / read depth — BWA-MEM: Li H. 2013. arXiv:1303.3997; minimap2: Li H. 2018. Bioinformatics 34:3094-3100. doi:10.1093/bioinformatics/bty191
-- Biopython: Cock PJA, et al. 2009. Bioinformatics. doi:10.1093/bioinformatics/btp163
-- NCBI table2asn: https://www.ncbi.nlm.nih.gov/genbank/table2asn/
-
-## 开发期评测 / Development benchmarks（2026-10）
+<details>
+<summary><b>开发期评测（2026-10）/ Development benchmarks (2026-10)</b></summary>
 
 开发期间的基准，不是论文用的冻结评测（[benchmark/frozen/PLAN.md](benchmark/frozen/PLAN.md)）；方法与更多结果见 [docs/METHODS.md](docs/METHODS.md)。测出来的数字只在表里。
 Development benchmarks, not the frozen evaluation of the paper; methods and more results in docs/METHODS.md. Measured numbers are only in the tables.
@@ -377,7 +484,10 @@ Bare sequences, compared with the NCBI annotation. A clear error = missing gene,
 | 有明显错误的记录 / records with a clear error | 16/40 | 36/40 | 39/40 | 34/39 |
 | 每条用时中位数 / median time | 100 s | 244 s | 353 s | 206 s |
 
-## 依赖 / Requirements
+</details>
+
+<details>
+<summary><b>依赖 / Requirements</b></summary>
 
 一条命令安装全部依赖：`bash install.sh`（见"快速上手"）；`mitom doctor` 检查。全部在一个 conda 环境 `mitotools`（`env/mitotools.yml`）：
 
@@ -403,3 +513,8 @@ mitom transfer_metadata -h
 mitom replace_organism -h
 ```
 
+</details>
+
+## 许可 / License
+
+CC0 1.0（公有领域，见 [LICENSE](LICENSE)）。 / CC0 1.0 (public domain, see [LICENSE](LICENSE)).

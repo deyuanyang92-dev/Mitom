@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="MitoM logo">
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e5484d" stroke-width="13" stroke-dasharray="27.84 276.46" stroke-dashoffset="-0.00" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#333333" stroke-width="13" stroke-dasharray="2.81 276.46" stroke-dashoffset="-28.44" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e5484d" stroke-width="13" stroke-dasharray="13.62 276.46" stroke-dashoffset="-31.86" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#008300" stroke-width="13" stroke-dasharray="13.62 276.46" stroke-dashoffset="-46.08" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#333333" stroke-width="13" stroke-dasharray="2.81 276.46" stroke-dashoffset="-60.30" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e5484d" stroke-width="13" stroke-dasharray="13.62 276.46" stroke-dashoffset="-63.71" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e8a000" stroke-width="13" stroke-dasharray="22.15 276.46" stroke-dashoffset="-77.93" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#333333" stroke-width="13" stroke-dasharray="5.09 276.46" stroke-dashoffset="-100.69" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e8a000" stroke-width="13" stroke-dasharray="33.53 276.46" stroke-dashoffset="-106.37" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#1baf7a" stroke-width="13" stroke-dasharray="19.31 276.46" stroke-dashoffset="-140.51" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#333333" stroke-width="13" stroke-dasharray="2.81 276.46" stroke-dashoffset="-160.42" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e8a000" stroke-width="13" stroke-dasharray="16.47 276.46" stroke-dashoffset="-163.83" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#2a78d6" stroke-width="13" stroke-dasharray="19.31 276.46" stroke-dashoffset="-180.89" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#333333" stroke-width="13" stroke-dasharray="2.81 276.46" stroke-dashoffset="-200.80" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#2a78d6" stroke-width="13" stroke-dasharray="13.62 276.46" stroke-dashoffset="-204.22" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e8a000" stroke-width="13" stroke-dasharray="19.31 276.46" stroke-dashoffset="-218.44" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#dcdcd5" stroke-width="13" stroke-dasharray="16.47 276.46" stroke-dashoffset="-238.35" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="44" fill="none" stroke="#e8a000" stroke-width="13" stroke-dasharray="20.45 276.46" stroke-dashoffset="-255.41" transform="rotate(-90 60 60)"/>
+<text x="60" y="66" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#2b2b29">MitoM</text>
+</svg>
