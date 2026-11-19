@@ -3,6 +3,7 @@
 Run: python3 -m pytest -q tests/test_mito_nuc.py   (the end-to-end tests need blastn, tblastn, makeblastdb, exonerate)
 """
 import csv
+import os
 import random
 import sys
 from pathlib import Path
@@ -795,3 +796,14 @@ def test_partial_h3_far_from_any_reference_is_not_reported(tmp_path, lib):
     nuc.annotate(tmp_path / "in.fa", tmp_path / "out", lib["dir"], ["histone"], 2)
     got = {r["contig"]: (r["partial_5"], r["partial_3"]) for r in read_rows(tmp_path / "out")}
     assert got == {"near": ("1", "0"), "whole": ("0", "0")}
+
+
+def test_fasta_index_context_manager_closes_once(tmp_path):
+    (tmp_path / "a.fa").write_text(">NODE_1\nACGT\n")
+    with nuc.FastaIndex(tmp_path / "a.fa") as idx:
+        fd = idx.fd
+        assert str(idx["NODE_1"].seq) == "ACGT"
+    assert idx.fd is None
+    idx.close()                                  # idempotent
+    with pytest.raises(OSError):
+        os.fstat(fd)

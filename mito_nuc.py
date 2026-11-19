@@ -303,7 +303,16 @@ class FastaIndex:
         return self.at.keys()
 
     def close(self) -> None:
-        os.close(self.fd)
+        """close the file descriptor; calling it again does nothing"""
+        fd, self.fd = self.fd, None
+        if fd is not None:
+            os.close(fd)
+
+    def __enter__(self) -> "FastaIndex":
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
 
 
 def open_input(path: Path, work: Path) -> Tuple[Path, Optional[FastaIndex], Dict[str, str], int, int, set]:
@@ -951,68 +960,71 @@ def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int
     lib = Library(lib_dir, work)
     t0 = time.time()
     fa, recs, org, n_seq, n_nt, circ = open_input(inp, work)
-    if circ:
-        rotate_circular(fa, circ, lib, genes, work, threads, lo)
-    recs = recs or FastaIndex(fa)
-    logging.info(f"[NUC] {n_seq} sequences, {n_nt:,} nt ({time.time() - t0:.0f} s)")
-    # the prefilter (one reference per genus) only pays off on large assemblies; smaller inputs are searched whole
-    t0 = time.time()
-    if n_nt > PREFILTER_NT:
-        windows, bounded = prefilter(fa, lib, genes, work, threads, n_seq)
-    else:
-        whole = {r.id: [(1, len(r))] for r in SeqIO.parse(str(fa), "fasta")}
-        windows, bounded = {g: whole for g in genes}, set()
-    regions, seqs = {}, {}
-    for g in genes:
-        regions[g] = work / f"regions_{g}.fa"
-        seqs[g] = write_regions(windows[g], recs, regions[g])
-        logging.info(f"[NUC] prefilter {g}: {len(windows[g])} contig(s), {len(seqs[g])} region(s), "
-                     f"{sum(len(s) for s in seqs[g].values()):,} nt ({time.time() - t0:.0f} s)")
-    rdna = hist = None
-    if seqs.get("rdna"):
-        rdna = annotate_rdna(regions["rdna"], lib, work, threads, lo, {k: len(v) for k, v in seqs["rdna"].items()},
-                             refine, "rdna" in bounded)
-    if seqs.get("histone"):
+    try:
+        if circ:
+            rotate_circular(fa, circ, lib, genes, work, threads, lo)
+        recs = recs or FastaIndex(fa)
+        logging.info(f"[NUC] {n_seq} sequences, {n_nt:,} nt ({time.time() - t0:.0f} s)")
+        # the prefilter (one reference per genus) only pays off on large assemblies; smaller inputs are searched whole
         t0 = time.time()
-        hist = annotate_histones(regions["histone"], lib, work, threads, lo, seqs["histone"])
-        logging.info(f"[NUC] histones (tblastn + exonerate): {time.time() - t0:.0f} s")
-    base = single_copy_cov(recs.keys()) if hist else None
-    if base:
-        logging.info(f"[NUC] single-copy coverage {base:.1f}x (length-weighted median of SPAdes contigs >= 1 kb)")
-    rows, feats = collect(recs, rdna, hist, base)
-    write_outputs(out, recs, org, rows, feats)
-    if feats:
-        write_submission(out, inp, recs, org, feats, organism, src_table)
-    if rows and consensus_identity > 0:
-        rows_s = [{k: str(v) for k, v in r.items()} for r in rows]
-        # GenBank records of several organisms are several samples: a consensus over them would join conserved
-        # 18S of different species (and an all-against-all blastn of hundreds of fragments took hours)
-        groups: Dict[str, List[dict]] = defaultdict(list)
-        for r in rows_s:
-            groups[org.get(r["contig"], "")].append(r)
-        if len(groups) == 1:
-            groups = {"": rows_s}
-        items = sorted(groups.items())
-        if len(items) == 1:
-            res = [consensus(items[0][1], recs, lib, work, consensus_identity, "rdna" in bounded)]
+        if n_nt > PREFILTER_NT:
+            windows, bounded = prefilter(fa, lib, genes, work, threads, n_seq)
         else:
-            seqs_by_id = {r.id: r for r in (recs[c] for c in {r["contig"] for r in rows_s})}
-            lib._seqs = SeqIO.to_dict(SeqIO.parse(str(lib.rdna_fa), "fasta"))     # SeqIO.index is not thread-safe
+            whole = {r.id: [(1, len(r))] for r in SeqIO.parse(str(fa), "fasta")}
+            windows, bounded = {g: whole for g in genes}, set()
+        regions, seqs = {}, {}
+        for g in genes:
+            regions[g] = work / f"regions_{g}.fa"
+            seqs[g] = write_regions(windows[g], recs, regions[g])
+            logging.info(f"[NUC] prefilter {g}: {len(windows[g])} contig(s), {len(seqs[g])} region(s), "
+                         f"{sum(len(s) for s in seqs[g].values()):,} nt ({time.time() - t0:.0f} s)")
+        rdna = hist = None
+        if seqs.get("rdna"):
+            rdna = annotate_rdna(regions["rdna"], lib, work, threads, lo, {k: len(v) for k, v in seqs["rdna"].items()},
+                                 refine, "rdna" in bounded)
+        if seqs.get("histone"):
+            t0 = time.time()
+            hist = annotate_histones(regions["histone"], lib, work, threads, lo, seqs["histone"])
+            logging.info(f"[NUC] histones (tblastn + exonerate): {time.time() - t0:.0f} s")
+        base = single_copy_cov(recs.keys()) if hist else None
+        if base:
+            logging.info(f"[NUC] single-copy coverage {base:.1f}x (length-weighted median of SPAdes contigs >= 1 kb)")
+        rows, feats = collect(recs, rdna, hist, base)
+        write_outputs(out, recs, org, rows, feats)
+        if feats:
+            write_submission(out, inp, recs, org, feats, organism, src_table)
+        if rows and consensus_identity > 0:
+            rows_s = [{k: str(v) for k, v in r.items()} for r in rows]
+            # GenBank records of several organisms are several samples: a consensus over them would join conserved
+            # 18S of different species (and an all-against-all blastn of hundreds of fragments took hours)
+            groups: Dict[str, List[dict]] = defaultdict(list)
+            for r in rows_s:
+                groups[org.get(r["contig"], "")].append(r)
+            if len(groups) == 1:
+                groups = {"": rows_s}
+            items = sorted(groups.items())
+            if len(items) == 1:
+                res = [consensus(items[0][1], recs, lib, work, consensus_identity, "rdna" in bounded)]
+            else:
+                seqs_by_id = {r.id: r for r in (recs[c] for c in {r["contig"] for r in rows_s})}
+                lib._seqs = SeqIO.to_dict(SeqIO.parse(str(lib.rdna_fa), "fasta"))     # SeqIO.index is not thread-safe
 
-            def one(i: int) -> List[dict]:
-                wd = work / f"cons{i}"      # each sample its own blastn scratch files
-                wd.mkdir(exist_ok=True)
-                return consensus(items[i][1], seqs_by_id, lib, wd, consensus_identity)
-            with ThreadPoolExecutor(max(1, threads)) as pool:
-                res = list(pool.map(one, range(len(items))))
-        cons = [dict(c, sample=sample) for (sample, _), cs in zip(items, res) for c in cs]
-        write_consensus(out, cons)
-        if len(groups) > 1:
-            logging.info(f"[NUC] consensus: {len(cons)} sequences of {len(groups)} organisms  ({out / 'consensus.tsv'})")
-        else:
-            logging.info("[NUC] consensus: " + ", ".join(f"{c['gene']} {c['length']} nt from {c['n_fragments']}"
-                                                         for c in cons) + f"  ({out / 'consensus.tsv'})")
-    recs.close()
+                def one(i: int) -> List[dict]:
+                    wd = work / f"cons{i}"      # each sample its own blastn scratch files
+                    wd.mkdir(exist_ok=True)
+                    return consensus(items[i][1], seqs_by_id, lib, wd, consensus_identity)
+                with ThreadPoolExecutor(max(1, threads)) as pool:
+                    res = list(pool.map(one, range(len(items))))
+            cons = [dict(c, sample=sample) for (sample, _), cs in zip(items, res) for c in cs]
+            write_consensus(out, cons)
+            if len(groups) > 1:
+                logging.info(f"[NUC] consensus: {len(cons)} sequences of {len(groups)} organisms  ({out / 'consensus.tsv'})")
+            else:
+                logging.info("[NUC] consensus: " + ", ".join(f"{c['gene']} {c['length']} nt from {c['n_fragments']}"
+                                                             for c in cons) + f"  ({out / 'consensus.tsv'})")
+    finally:
+        if recs is not None:
+            recs.close()
     shutil.rmtree(work)
     counts = Counter(r["gene"] for r in rows)
     found = ", ".join(f"{g} {counts[g]}" for g in (*UNIT, *HISTONES) if counts[g])
