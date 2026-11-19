@@ -28,6 +28,7 @@ Generated from each command's `-h` by `scripts/make_options_doc.py`; usage, exam
 | [`mitom rna`](#mitom-rna) | `mito_rna.py` |
 | [`mitom compare`](#mitom-compare) | `mito_compare.py` |
 | [`mitom plot`](#mitom-plot) | `mito_plot.py` |
+| [`mitom coverage`](#mitom-coverage) | `mito_coverage.py` |
 | [`mitom nuc`](#mitom-nuc) | `mito_nuc.py` |
 | [`mitom debug`](#mitom-debug) | `mito_debug.py` |
 
@@ -794,6 +795,8 @@ to automatic annotation (MitoM's core, or another annotator's GenBank such as MI
   P9  one untranslated extra nucleotide (bird / turtle nad3 at position 174, Mindell et al. 1998; rarely other genes):
       join(start..p-1,p+1..end) as NCBI writes it, with its note, when no single-frame repair keeps 85 % of the gene
       and a start / stop codon within 30 nt of the annotated ends make an open frame over one skipped nucleotide.
+      Before joining: one uninterrupted ORF in another frame covering >= FRAMESHIFT_MAX_TRIM of the CDS is taken
+      instead (the core's frame was wrong - Travisia forbesii ATP8; a real extra nucleotide leaves no such ORF).
   P10 a CDS that still has internal stops is written /pseudo (gene and CDS, not translated; table2asn InternalStop).
   O2  a join across the origin of a circular record written by the core with <= 300 nt past the origin is cut back to
       the sequence end; P1 / P3 / O1 place its end again (annelid nad2 before cox1 ended without a stop: NoStop).
@@ -1481,6 +1484,55 @@ options:
   --min_noncoding MIN_NONCODING
                         shortest unannotated stretch shaded and labelled 'NCR <length>' (default 100 nt; 0:
                         none)
+```
+
+## mitom coverage
+
+```text
+usage: mito_coverage.py [-h] -i INPUT -o OUT [--fq1 FQ1] [--fq2 FQ2] [--depth_file DEPTH_FILE]
+                        [--mapper {bwa,bwa-mem2,minimap2,bowtie2}] [--threads THREADS] [--min_mapq MIN_MAPQ]
+                        [--circular] [--plot PLOT] [--log_scale] [--smooth BP] [--formats FORMATS]
+                        [--prefix PREFIX]
+
+mito_coverage.py - read depth of a mitogenome (or any small reference): compute it, summarise it, draw it.
+
+  mitom coverage -i ref.gb|ref.fa --fq1 R1.fq.gz [--fq2 R2.fq.gz] -o OUT [--plot flat,circos,mitom | none]
+  mitom coverage -i ref.gb --depth_file depth.tsv -o OUT --plot flat,circos        (draw from `samtools depth` output)
+
+Computing (benchmark/results/coverage_2026-11-19/README.md): the reads are mapped with --mapper (bwa mem, bwa-mem2,
+minimap2 -x sr, bowtie2 --sensitive --dovetail; all SAM on a pipe) and the reference span of every primary alignment is
+added to a difference array - no BAM, no sort, no `samtools depth`, nothing on disk but the index. A circular
+reference is mapped as sequence + its first ORIGIN_EXT nt and the extension is folded back, so reads across the origin
+count (GenBank topology, `topology=circular` in the FASTA header, or --circular). Depth is per base, zeros included.
+
+Output (prefix = --prefix, default the reference file name):
+  <prefix>.depth.tsv       record, position (1-based), depth - the format of `samtools depth -a`
+  <prefix>.coverage.tsv    one row per record: length, mean / median / min / max depth, % bases >= 1x / 10x / 0.2 x mean
+  <prefix>.<record>.flat.png|pdf     flat map: depth along the sequence on a log or linear axis, genes below (GenBank),
+                                     bases with no reads marked (the view of GetOrganelle and of using_bwa_draw_coverage)
+  <record>.png|pdf                   circular maps (--plot circos | mitom) with the depth ring, drawn by mito_plot.py
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        reference: GenBank / FASTA file, or a folder of GenBank files
+  -o OUT, --out OUT     output folder
+  --fq1 FQ1             reads (FASTQ, .gz allowed)
+  --fq2 FQ2             mates of --fq1
+  --depth_file DEPTH_FILE
+                        an existing `samtools depth` table (record, position, depth) instead of reads
+  --mapper {bwa,bwa-mem2,minimap2,bowtie2}
+                        read mapper (default bwa)
+  --threads THREADS     mapper threads (default 4)
+  --min_mapq MIN_MAPQ   count only alignments with this MAPQ or more (default 0)
+  --circular            treat every record as circular (default: GenBank topology / FASTA
+                        'topology=circular')
+  --plot PLOT           comma-separated: flat (depth along the sequence), circos / mitom (circular maps,
+                        GenBank input), or none = tables only (default flat)
+  --log_scale           flat map with a log depth axis (default linear)
+  --smooth BP           flat map: running mean over BP bases
+  --formats FORMATS     comma-separated (default png,pdf)
+  --prefix PREFIX       prefix of the output files (default: the reference file name)
 ```
 
 ## mitom nuc

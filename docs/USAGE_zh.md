@@ -297,17 +297,20 @@ mitom nuc annotate -i scaffolds.fasta -o nuc_out
 mitom nuc annotate -i scaffolds.fasta -o nuc_out --genes rdna
 ```
 
-### 5.9 `mitom plot` / `mitom validate` / `mitom rescue` / `mitom rrna-hmm`
+### 5.9 `mitom plot` / `mitom coverage` / `mitom validate` / `mitom rescue` / `mitom rrna-hmm`
 
 | 命令 / Command | 输入 / Input | 输出 / Output |
 |---|---|---|
 | `plot` | 已注释 GenBank；可选 / optional `--fq1/--fq2` | `.png` / `.pdf`（`docs/images/` 有样式样例 / style samples） |
+| `coverage` | GenBank 或 FASTA + `--fq1/--fq2`（或已有 `samtools depth` 表 / or a `samtools depth` table） | 逐碱基深度表、汇总表、平面图（`--plot flat`）和 / 或圈图（`circos` / `mitom`）；`--plot none` 只算覆盖度 / per-base depth table, summary, flat map and / or circular maps; `--plot none` = numbers only |
 | `validate` | 已注释目录 / annotated directory | 提交文件与 `.val` / submission files and `.val` |
 | `rescue` | GenBank **文件夹 / folder**（原地改 / edited in place） | 补回漏基因；需 MITOS2 / recovers missed genes; needs MITOS2 |
 | `rrna-hmm search` | GenBank **文件夹 / folder** | 补搜 12S / 16S / searches for missing 12S / 16S |
 
 ```bash
 mitom plot -i out/annotation -o maps
+mitom coverage -i NC_001636.gb --fq1 R1.fq.gz --fq2 R2.fq.gz -o cov --plot flat,circos --threads 8
+mitom coverage -i NC_001636.gb --fq1 R1.fq.gz --fq2 R2.fq.gz -o cov --plot none     # 只要表 / tables only
 mitom validate -i out/annotation -o ncbi_check
 ```
 

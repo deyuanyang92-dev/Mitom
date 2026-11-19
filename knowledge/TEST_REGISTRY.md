@@ -151,6 +151,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
 |---|---|---|---|---|---|---|---|
 | 2026-10-26 | ? | 蛋白基因第二拷贝 | 鹭、鸬鹚等记录 | MitoM | 多得 9 个 NCBI 有的基因、1 个 NCBI 没有 | COPY_IDENTITY 95 % | CHANGELOG.md |
+| 2026-11-19 | cody | 线粒体覆盖度怎么算最快最准：using_bwa_draw_coverage（bwa+samtools depth）/ MitoZ / GetOrganelle（bowtie2）/ 流式计数；环状原点是否丢深度 | 模拟：NC_001636.1 15.5 kb，wgsim 2×150，旋转半圈使跨原点 reads 有真值；20 万 / 100 万对，SNP 0 / 5 %，1 / 8 线程 | bwa 0.7.19，bwa-mem2，minimap2 2.31，bowtie2 2.5.5，samtools（env mapbench）；mito_coverage.py | 原点深度：samtools depth 无环处理 0.90–0.94 倍真值，延长参考后 1.00；流式计数比 BAM+sort+depth 快约 25–30 %；5 % 差异下 bwa r 0.9985 > minimap2 0.9954 > bowtie2 0.9938（minimap2 最快 2.5 s，bowtie2 最慢 3–5 倍）；pyasm 是字节码库，未比 | `mitom coverage`（默认 bwa mem + 流式计数 + 环状延长折回；--mapper minimap2 可选）；仅模拟数据，真实数据未测 | benchmark/results/coverage_2026-11-19/README.md |
 
 ## 未测 / 未定 / Not yet tested or open
 

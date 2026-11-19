@@ -35,6 +35,8 @@ Usage: mitom <command> [options]        mitom <command> -h   shows the options o
   compare            original annotation vs MitoM, gene by gene                       = mito_compare.py
   plot               circular genome maps (--style circos / mitom): genes, GC content; read depth with --fq1 / --fq2
                                                                                        = mito_plot.py
+  coverage           read depth of a mitogenome from reads: per-base table + summary, flat map (depth along the
+                     sequence, genes below) and / or circular maps; bwa / bwa-mem2 / minimap2 / bowtie2 = mito_coverage.py
   nuc                nuclear markers in contigs: 18S-ITS1-5.8S-ITS2-28S rDNA, histones H1-H4
                      (fetch / build / annotate)                                        = mito_nuc.py
   debug              what happened in a run: its status, step times, failed records and the first error,
@@ -72,6 +74,7 @@ COMMANDS = {
     "rna": ("mito_rna.py", []),
     "compare": ("mito_compare.py", []),
     "plot": ("mito_plot.py", []),
+    "coverage": ("mito_coverage.py", []),
     "nuc": ("mito_nuc.py", []),
     "debug": ("mito_debug.py", []),
 }
