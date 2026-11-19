@@ -52,3 +52,29 @@ def test_single_frame_orf_found_for_frameshift_join():
     _cds(rec, "ATP8", CompoundLocation([FeatureLocation(13, 40, 1), FeatureLocation(41, 106, 1)]))
     st, en, aa = m.single_frame_orf(rec, rec.features[0])
     assert (st, en, aa) == (10, 106, 31)
+
+
+def test_single_frame_orf_minus_strand_mirrors_plus():
+    g = "CCCCCCCCCCCC" + "ATG" + "GCAGCC" * 15 + "TAA" + "CCCCCCCCCC"      # gene 12..108, uneven flanks
+    L = len(g)
+    plus = SeqRecord(Seq(g), id="p")
+    _cds(plus, "ATP8", CompoundLocation([FeatureLocation(15, 42, 1), FeatureLocation(43, 108, 1)]))
+    want = m.single_frame_orf(plus, plus.features[0])
+    assert want == (12, 108, 31)
+    minus = SeqRecord(Seq(g).reverse_complement(), id="m")
+    _cds(minus, "ATP8", CompoundLocation([FeatureLocation(L - 108, L - 43, -1), FeatureLocation(L - 42, L - 15, -1)]))
+    assert m.single_frame_orf(minus, minus.features[0]) == (L - 108, L - 12, 31)
+
+
+def test_junction_past_circular_end_wraps_and_does_not_raise():
+    n = 100
+    lines = ["r1\t0\tc\t91\t60\t30M70S\t*\t0\t0\t" + "A" * 100 + "\t*\tSA:Z:c,1,+,30S70M,60,0;"]
+    t = m.Tap(lines, n)
+    list(t)
+    assert all(0 <= a < n and 0 <= b < n for a, b in t.junctions)
+    import numpy as np
+    rec = SeqRecord(Seq("A" * n), id="c")
+    rows = []
+    m.step_introns(rec, t, np.full(n, 100), rows)          # must not raise
+    t.junctions[(n + 5, n + 60)] = 20
+    m.step_introns(rec, t, np.full(n, 100), rows)

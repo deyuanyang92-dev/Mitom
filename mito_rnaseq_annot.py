@@ -42,6 +42,7 @@ from typing import Iterable, Iterator, List, Optional, Sequence
 
 from Bio import SeqIO
 from Bio.Data import CodonTable
+from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 from Bio.SeqRecord import SeqRecord
 
@@ -118,7 +119,7 @@ class Tap:
             slen = sum(int(k) for k, op in sops if op in "MD=X")
             a, b = (ref - 1, sp) if lead < slead else (sp + slen - 1, pos)   # last base before / first after the gap
             if b - a - 1 > MIN_GAP:
-                self.junctions[(a, b)] += 1
+                self.junctions[(a % self.n, b % self.n)] += 1      # ends past the end of a circular genome wrap
 
 
 def merge_junctions(j: Counter) -> List[tuple]:
@@ -157,7 +158,7 @@ def step_introns(rec: SeqRecord, tap: Tap, depth, rows: list) -> None:
             if gap < MIN_GAP:                                          # a frameshift join (MitoM P9), not an intron
                 skipped = [x for x in range(a + 1, b)]
                 dl = sum(c for (p, k), c in tap.dels.items() if p in skipped)
-                d = int(depth[skipped[0]]) if skipped else 0
+                d = int(depth[skipped[0] % len(depth)]) if skipped else 0
                 verdict, alt = "flagged", single_frame_orf(rec, f)
                 rows.append({"step": 1, "feature": name, "verdict": verdict, "detail":
                              f"frameshift join skipping {gap} nt at {a + 2}: the base is in {d - dl} of {d} RNA reads "
@@ -166,7 +167,7 @@ def step_introns(rec: SeqRecord, tap: Tap, depth, rows: list) -> None:
                              "no single-frame ORF covers it: a real frameshift or an error in the sequence")})
                 continue
             hit = [j for j in junc if abs(j[0] - a) <= JUNCTION_MERGE and abs(j[1] - b) <= JUNCTION_MERGE]
-            cov = min(int(depth[a]), int(depth[b]))
+            cov = min(int(depth[a % len(depth)]), int(depth[b % len(depth)]))
             if hit and hit[0][2] >= MIN_JUNCTION:
                 used.add(hit[0][:2])
                 exact = hit[0][0] == a and hit[0][1] == b
@@ -178,7 +179,7 @@ def step_introns(rec: SeqRecord, tap: Tap, depth, rows: list) -> None:
                              "verdict": "flagged" if cov >= 50 else "not_testable",
                              "detail": f"{hit[0][2] if hit else 0} split reads at {cov}x exon depth"})
     for a, b, c in junc:
-        flank = min(int(depth[a]), int(depth[b % len(depth)]))
+        flank = min(int(depth[a % len(depth)]), int(depth[b % len(depth)]))
         if c >= MIN_JUNCTION and (a, b) not in used and b > a and flank >= MIN_FLANK_DEPTH \
                 and c >= JUNCTION_RATIO * flank:
             inside = [_name(f) for f in rec.features if f.type in ("CDS", "rRNA")
@@ -192,14 +193,18 @@ def step_introns(rec: SeqRecord, tap: Tap, depth, rows: list) -> None:
 
 def single_frame_orf(rec: SeqRecord, f) -> Optional[tuple]:
     """(start, end, aa) of an uninterrupted ORF in any frame covering >= SINGLE_FRAME of the span of f, start codon
-    within 90 nt upstream of it, stop within 30 nt of its end (plus strand only; else None)."""
-    if f.location.strand == -1:
-        return None
+    within 90 nt upstream of it, stop within 30 nt of its end. Coordinates are 0-based half-open on the forward
+    genome for both strands (a minus-strand gene is searched on the reverse complement and mapped back, so start < end
+    and 'upstream' is on the gene's own strand)."""
     code = int(f.qualifiers.get("transl_table", ["5"])[0])
     table = CodonTable.unambiguous_dna_by_id[code]
     starts, stops = set(table.start_codons) | {"ATG"}, set(table.stop_codons)
     g = str(rec.seq).upper()
     s0, e0 = int(f.location.start), int(f.location.end)
+    minus = f.location.strand == -1
+    if minus:
+        g = str(Seq(g).reverse_complement())
+        s0, e0 = len(g) - e0, len(g) - s0
     best = None
     for st in range(max(0, s0 - 90), s0 + 31):
         if g[st:st + 3] not in starts:
@@ -210,6 +215,8 @@ def single_frame_orf(rec: SeqRecord, f) -> Optional[tuple]:
         cover = (min(e, e0) - max(st, s0)) / (e0 - s0)
         if cover >= SINGLE_FRAME and (best is None or abs(st - s0) < abs(best[0] - s0)):
             best = (st, e, (e - st) // 3 - 1)
+    if best and minus:
+        best = (len(g) - best[1], len(g) - best[0], best[2])
     return best
 
 
