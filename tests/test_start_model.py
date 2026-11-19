@@ -133,3 +133,15 @@ def test_curate_cli_dump_and_model_options(tmp_path):
                              "--dump_starts", str(tmp_path / "starts.tsv")]) == 0
     rows = list(csv.DictReader(open(tmp_path / "starts.tsv"), delimiter="\t"))
     assert rows and {"record", "strand", "genome_pos", "codon", "is_p1"} <= set(rows[0])
+
+
+def test_missing_sentinel_is_outside_the_real_feature_range():
+    """-999 marks 'does not apply'; real values of the numeric features stay far from it (up_gap >= -(90+60+1))."""
+    s = "ATG" * 200
+    a = 100                                            # 1-based, in frame (a-1 divisible by 3)
+    none = mito_start.candidates(s, a, 500, STARTS, set(), None, None, None, "COX1", "Annelida", 5)
+    assert {r["core_off"] for r in none} == {r["aln_missing5"] for r in none} == {mito_start.MISSING}
+    up = (a + 60, "tRNA", True)                        # the farthest-downstream neighbour the caller allows
+    rows = mito_start.candidates(s, a, 500, STARTS, set(), a, (1, 100, 100), up, "COX1", "Annelida", 5)
+    assert min(r["up_gap"] for r in rows) >= -151 > mito_start.MISSING
+    assert all(r["aln_missing5"] >= 0 and r["aln_cover"] >= 0 for r in rows)

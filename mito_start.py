@@ -32,6 +32,10 @@ NUMERIC = ["cand", "rank", "is_p1", "core_off", "aln_missing5", "aln_cover", "up
            "code"]
 CATEGORICAL = ["codon", "gene", "phylum", "up_type"]
 MISSING = -999.0                              # a numeric feature that does not apply (no core note, no neighbour)
+# Why a sentinel and no NaN: the exported JSON trees (StartModel) have no missing-value branch. -999 cannot be a real
+# value: up_gap >= -151 (the neighbour ends <= a + 60 and a candidate starts >= a - 90), aln_missing5 and aln_cover
+# are >= 0, core_off is a distance between two starts of one gene (shipped thresholds lie in -582..250). The
+# training data (runs/mitom_lo of the benchmark sets) was not available on cody on 2026-11-19, so no NaN retrain.
 
 
 def candidates(s: str, a: int, b: int, starts: set, stops: set, core_a: Optional[int],
