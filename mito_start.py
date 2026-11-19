@@ -43,7 +43,7 @@ def candidates(s: str, a: int, b: int, starts: set, stops: set, core_a: Optional
     residue, last residue, reference length) of its alignment; up: (end, type, same strand) of the preceding feature."""
     cands = []
     for c in range(a - 3 * MAX_SHIFT, a + 3 * MAX_SHIFT + 1, 3):
-        if c < 1 or c > b - 30 or s[c - 1:c + 2] not in starts and c != a:
+        if c != a and (c < 1 or c > b - 30 or s[c - 1:c + 2] not in starts):    # a itself is always a candidate
             continue
         lo, hi = min(c, a), max(c, a)
         if any(s[k - 1:k + 2] in stops for k in range(lo, hi, 3)):
@@ -110,6 +110,8 @@ class StartModel:
 
     def best(self, rows: Sequence[Dict]) -> Tuple[int, List[float]]:
         """Index of the best-scoring candidate (P1's start on a tie) and every candidate's score."""
+        if not rows:
+            raise ValueError("no candidate starts")
         scores = self.score(rows)
         return max(range(len(rows)), key=lambda i: (scores[i], rows[i]["is_p1"])), scores
 

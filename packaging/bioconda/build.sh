@@ -3,7 +3,11 @@
 set -euo pipefail
 dest="$PREFIX/share/mitom"
 mkdir -p "$dest/scripts" "$PREFIX/bin"
-cp mitom *.py "$dest/"
+cp mitom "$dest/"
+for f in *.py; do                                  # not setup.py (build file) nor batch_mitoz.py (old-name shim)
+  case "$f" in setup.py|batch_mitoz.py) continue;; esac
+  cp "$f" "$dest/"
+done
 cp scripts/runmitos_fast.py "$dest/scripts/"
 cp -r models "$dest/"
 rm -rf "$dest/models/trna_ml/clades" "$dest/models/trna_ml/cache"      # unpacked / trained on first use

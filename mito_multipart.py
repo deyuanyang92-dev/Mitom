@@ -64,6 +64,9 @@ def genes_of(rec: SeqRecord) -> Dict[str, int]:
     return out
 
 
+_COMP = str.maketrans("ACGT", "TGCA")
+
+
 def kmers(rec: SeqRecord, k: int = 21) -> set:
     """Canonical k-mers of a record (strand and start position do not matter)."""
     s = str(rec.seq).upper()
@@ -71,7 +74,7 @@ def kmers(rec: SeqRecord, k: int = 21) -> set:
     out = set()
     for i in range(len(s)):
         x = s2[i: i + k]
-        y = x[::-1].translate(str.maketrans("ACGT", "TGCA"))
+        y = x[::-1].translate(_COMP)
         out.add(min(x, y))
     return out
 

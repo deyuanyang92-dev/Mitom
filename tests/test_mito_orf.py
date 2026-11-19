@@ -171,6 +171,7 @@ def test_circular_orf_across_the_origin_is_found():
 def test_codon_pattern_rejects_even_differences_and_the_other_strand_frame():
     assert m.third_position_p([71, 35, 117]) < 1e-8               # coding: 2 least, 3 most
     assert m.third_position_p([27, 22, 38]) > 0.05                # nearly even (a fish control region)
+    assert m.third_position_p([1, 0, 6]) == 1.0                   # 7 differences: too few for the chi-square
     assert m.third_position_p([35, 71, 117]) == 1.0               # position 1 least: the frame on the other strand
 
 

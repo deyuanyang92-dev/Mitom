@@ -272,7 +272,7 @@ def search_record(rec: SeqRecord, refs: Dict[str, list], default_code: int, gene
             if not near or not cands:
                 rows.append({**base, "status": "not found", "note": "no references" if not near else "no ORF"})
                 continue
-            pr, have, of = prior(refs, g, lineage, exclude_acc | {rec.id}, exclude_genus)
+            pr, have, of = prior(refs, g, lineage, exclude_acc | {rec.id}, exclude_genus, k)
             e_max = E_MAX * min(1.0, pr / (1 - pr))      # prior odds: a gene the relatives lack needs more evidence
             base["prior"] = f"{have}/{of}"
             sizes = sorted({min(n, len(near)) for n in SIZES})

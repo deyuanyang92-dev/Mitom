@@ -440,6 +440,9 @@ def codon_differences(q_aln: str, s_aln: str, q_nt: str, q_from: int, s_nt: str,
     return d
 
 
+MIN_POS3_CHANGES = 15                          # fewer differences than this: no coding-pattern evidence
+
+
 def third_position_p(d: Sequence[int]) -> float:
     """p of the coding pattern of the differences at codon positions 1, 2, 3 of a frame: a protein-coding frame changes
     most at its synonymous third positions and least at the second (every change there alters the amino acid);
@@ -448,7 +451,7 @@ def third_position_p(d: Sequence[int]) -> float:
     the other strand whose third positions coincide with the gene's changes least at its position 1, so it fails."""
     from math import exp
     n = sum(d)
-    if not n or d[2] < max(d) or d[1] > min(d):
+    if n < MIN_POS3_CHANGES or d[2] < max(d) or d[1] > min(d):   # too few changes: the chi-square is not reliable
         return 1.0
     x = sum((k - n / 3) ** 2 / (n / 3) for k in d)
     return min(1.0, exp(-x / 2))

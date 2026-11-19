@@ -150,6 +150,38 @@ def _meta_is_meaningful(meta: str) -> bool:
     return any(any(ln.startswith(p) for p in useful) for ln in lines[1:])
 
 
+def _file_key(path: Path) -> Tuple[str, int, int]:
+    """Cache key of a source file: path + mtime + size, so an edited file is parsed again."""
+    st = Path(path).stat()
+    return str(path), st.st_mtime_ns, st.st_size
+
+
+@functools.lru_cache(maxsize=2)
+def _source_text_cached(key: Tuple[str, int, int]) -> str:
+    return Path(key[0]).read_text(encoding="utf-8", errors="replace")
+
+
+@functools.lru_cache(maxsize=2)
+def _meaningful_cached(key: Tuple[str, int, int]) -> bool:
+    return any(_meta_is_meaningful(_split_meta_body(r)[0]) for r in _split_gb_records(_source_text_cached(key)))
+
+
+@functools.lru_cache(maxsize=2)
+def _metadata_index_cached(key: Tuple[str, int, int]) -> Tuple[Dict, Dict, Dict]:
+    return build_metadata_index(_source_text_cached(key))
+
+
+@functools.lru_cache(maxsize=2)
+def _organism_index_cached(keys: Tuple[Tuple[str, int, int], ...]) -> Dict[str, Tuple[str, str]]:
+    return _build_organism_index([Path(k[0]) for k in keys])
+
+
+def clear_source_caches() -> None:
+    """Forget the parsed metadata sources (tests; a long-lived process that rewrites files in place)."""
+    for fn in (_source_text_cached, _meaningful_cached, _metadata_index_cached, _organism_index_cached):
+        fn.cache_clear()
+
+
 def build_metadata_index(src_text: str) -> Tuple[Dict, Dict, Dict]:
     exact_dict: Dict[str, str] = {}
     clean_dict: Dict[str, str] = {}
@@ -330,9 +362,9 @@ def transfer_gb_metadata_file(
         return False, 0, 0, [], f"metadata source not found: {metadata_src_gb}", []
     if not new_body_gb.exists():
         return False, 0, 0, [], f"body source not found: {new_body_gb}", []
-    src_text = metadata_src_gb.read_text(encoding="utf-8", errors="replace")
     new_text = new_body_gb.read_text(encoding="utf-8", errors="replace")
-    exact_dict, clean_dict, norm_dict = build_metadata_index(src_text)
+    # the source is the same file for every sample of a multi-record input: parsed once per run, only read below
+    exact_dict, clean_dict, norm_dict = _metadata_index_cached(_file_key(metadata_src_gb))
     if not exact_dict and not norm_dict:
         return False, 0, 0, [], "metadata source has no usable metadata", []
     replaced_text, stats = replace_metadata_in_text(
@@ -347,7 +379,15 @@ def transfer_gb_metadata_file(
 
 def build_organism_index(gb_files: List[Path]) -> Dict[str, Tuple[str, str]]:
     """Accession -> (organism_name, source_line_text) lookup, under every accession variant (_acc_variants, which
-    include the normalised form)."""
+    include the normalised form). Parsed once per source file (cached on path, mtime, size); a copy is returned."""
+    try:
+        keys = tuple(_file_key(p) for p in gb_files)
+    except OSError:                    # a missing file: let the uncached parser log it as before
+        return _build_organism_index(gb_files)
+    return dict(_organism_index_cached(keys))
+
+
+def _build_organism_index(gb_files: List[Path]) -> Dict[str, Tuple[str, str]]:
     index: Dict[str, Tuple[str, str]] = {}
     for gb_path in gb_files:
         try:
@@ -520,7 +560,6 @@ def gb_file_has_meaningful_metadata(gb_path: Path) -> bool:
     if not gb_path.is_file():
         return False
     try:
-        txt = gb_path.read_text(encoding="utf-8", errors="replace")
+        return _meaningful_cached(_file_key(gb_path))
     except Exception:
         return False
-    return any(_meta_is_meaningful(_split_meta_body(r)[0]) for r in _split_gb_records(txt))
