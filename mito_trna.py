@@ -58,6 +58,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -520,7 +521,7 @@ def annotate_trnas_ml(genome: str, n: int, code: int, threads: int, tools: dict,
             if tools.get(t):
                 ext += unwrap(TOOLS[t](fa, code, {t: tools[t]}, Path(td), None), n)
     calls = trna_ml.predict(genome, lineage, code, Path(tools["refdir"]) / "ncRNA", tools["cmsearch"], tools["cmalign"], ext,
-                            cpu=max(1, threads))
+                            cpu=max(1, threads), circular=circular)
     feats = []
     for c in calls:
         if c["end"] > n and not circular:
@@ -660,6 +661,19 @@ def parse_mitfi(text: str, log, n: Optional[int] = None) -> List[CoreFeature]:
     return sorted(kept, key=lambda f: f.start)
 
 
+ALWAYS_MITFI = os.environ.get("MITOM_TRNA_ALWAYS_MITFI", "") not in ("", "0")   # old behaviour: MiTFi on every record
+
+
+def mitfi_needed(ml: List[CoreFeature], lineage: str) -> bool:
+    """Whether MiTFi's tRNAs can change core_trnas' result (2026-11-19): only through a kept MitoM-ML call with
+    p < TRNA_SURE_P (trna_second_opinion), a vertebrate (mitfi_ends) or a tRNA family MitoM-ML did not call
+    (rescue_trnas). When none applies the result without MiTFi is the same, and its 22-CM scan (the one MitoM-ML
+    already ran with other settings) is skipped. MITOM_TRNA_ALWAYS_MITFI=1 runs it always."""
+    kept = trna_second_opinion(ml, None, 0)
+    return (vertebrate(lineage) or any(f.score < TRNA_SURE_P for f in kept)
+            or bool(set(TRNA_NAMES) - {f.name for f in kept}))
+
+
 def core_trnas(genome: str, searched: str, genome_fa: Path, refdir: Path, code: int, threads: int, tools: dict,
                tmp: Path, log, n: int, phylum: Optional[str], lineage: str, circular: bool, use_ml: bool,
                genes: List[CoreFeature]) -> List[CoreFeature]:
@@ -675,8 +689,13 @@ def core_trnas(genome: str, searched: str, genome_fa: Path, refdir: Path, code: 
     except RuntimeError as exc:                       # cmsearch / cmalign failed: MiTFi's tRNAs, said on the console
         log.warning(f"[core] MitoM-ML failed ({str(exc)[:300]}): tRNAs by MiTFi only")
         return annotate_trnas(searched, genome_fa, refdir, code, threads, tools, tmp, log, n, phylum, genes=genes)
-    mitfi = annotate_trnas(searched, genome_fa, refdir, code, threads, tools, tmp, log, n, phylum,
-                           genes=genes) if tools.get("mitfi") else None
+    mitfi = None
+    if tools.get("mitfi"):
+        if ALWAYS_MITFI or mitfi_needed(trnas, lineage):
+            mitfi = annotate_trnas(searched, genome_fa, refdir, code, threads, tools, tmp, log, n, phylum, genes=genes)
+        else:
+            log.info("[core] MiTFi skipped: every MitoM-ML call p >= %s, all %d tRNA families called, not a vertebrate"
+                     % (TRNA_SURE_P, len(TRNA_NAMES)))
     kept = trna_second_opinion(trnas, mitfi, n)
     if len(kept) < len(trnas):
         log.info(f"[core] MitoM-ML calls not sure enough without MiTFi: "
