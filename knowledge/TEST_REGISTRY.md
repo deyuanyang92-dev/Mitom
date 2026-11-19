@@ -152,6 +152,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 |---|---|---|---|---|---|---|---|
 | 2026-10-26 | ? | 蛋白基因第二拷贝 | 鹭、鸬鹚等记录 | MitoM | 多得 9 个 NCBI 有的基因、1 个 NCBI 没有 | COPY_IDENTITY 95 % | CHANGELOG.md |
 | 2026-11-19 | cody | 线粒体覆盖度怎么算最快最准：using_bwa_draw_coverage（bwa+samtools depth）/ MitoZ / GetOrganelle（bowtie2）/ 流式计数；环状原点是否丢深度 | 模拟：NC_001636.1 15.5 kb，wgsim 2×150，旋转半圈使跨原点 reads 有真值；20 万 / 100 万对，SNP 0 / 5 %，1 / 8 线程 | bwa 0.7.19，bwa-mem2，minimap2 2.31，bowtie2 2.5.5，samtools（env mapbench）；mito_coverage.py | 原点深度：samtools depth 无环处理 0.90–0.94 倍真值，延长参考后 1.00；流式计数比 BAM+sort+depth 快约 25–30 %；5 % 差异下 bwa r 0.9985 > minimap2 0.9954 > bowtie2 0.9938（minimap2 最快 2.5 s，bowtie2 最慢 3–5 倍）；pyasm 是字节码库，未比 | `mitom coverage`（默认 bwa mem + 流式计数 + 环状延长折回；--mapper minimap2 可选）；仅模拟数据，真实数据未测 | benchmark/results/coverage_2026-11-19/README.md |
+| 2026-11-19 | cody | tRNA 判别器（caller / bounds）改为 JSON 树 + numpy 推理（无 scikit-learn、无 pickle）后，概率是否与 scikit-learn 相同；整个流程输出是否不变 | models/trna_ml/caller_train.tsv.gz（82,448 行）、bounds_train.tsv.gz（129,310 行）；golden 全部案例 | scikit-learn 1.7.2；mito_gbdt.py；tests/test_trna_json.py；scripts/golden.py --jobs 2；pytest 856 通过 | decision_function 最大差 0.0，predict_proba 最大差 2.2e-16（两张表所有行；含缺失值构造），预测类别 0 差异；golden 仅提示 reports/intron_fix.log 为参考中没有的新文件（与本改动无关），其余相同；屏蔽 sklearn 后推理可用；预发布 JSON 随仓库提供，首次运行不再训练 | exp/trna-json-2026-11-19 | tests/test_trna_json.py |
 
 ## 未测 / 未定 / Not yet tested or open
 
