@@ -519,7 +519,7 @@ def annotate_trnas_ml(genome: str, n: int, code: int, threads: int, tools: dict,
             if tools.get(t):
                 ext += unwrap(TOOLS[t](fa, code, {t: tools[t]}, Path(td), None), n)
     calls = trna_ml.predict(genome, lineage, code, Path(tools["refdir"]) / "ncRNA", tools["cmsearch"], tools["cmalign"], ext,
-                            cpu=max(1, threads))
+                            cpu=max(1, threads), circular=circular)
     feats = []
     for c in calls:
         if c["end"] > n and not circular:

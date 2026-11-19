@@ -9,13 +9,14 @@ import trna_ml, mito_env
 from Bio import SeqIO
 REF = mito_env.refseq_dir(mito_env.mitos_refdir(None)) / "ncRNA"
 CMS, CMA = mito_env.find("cmsearch"), mito_env.find("cmalign")
+FIX = os.environ.get("MITOM_TRNA_CIRC", "") not in ("", "0")
 
 def run(args):
     seq, lin, code, off = args
     L = len(seq)
     rot = seq[off:] + seq[:off]
     t = time.time()
-    calls = trna_ml.predict(rot, lin, code, REF, CMS, CMA, cpu=1)
+    calls = trna_ml.predict(rot, lin, code, REF, CMS, CMA, cpu=1, circ_fix=FIX)
     out = set()
     for c in calls:
         s = (c["start"] - 1 + off) % L + 1

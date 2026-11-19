@@ -50,6 +50,10 @@ WRAP = 300
 RESCUE_E = 1e-3
 RESCUE_MODE = "--mid"            # --max (MITOS2 sensitive pass) was > 10 min per genome, --mid 13 s
 THRESHOLD = 0.5
+# EXPERIMENTAL (2026-11-19, benchmark/results/trna_circ_2026-11-19): circular-aware overlaps (loci, overlap features,
+# call clustering, end pairs across the origin) and no appended copy for linear sequences. Off by default: the
+# shipped classifiers were trained with the old features; on with MITOM_TRNA_CIRC=1 or predict(circ_fix=True).
+CIRC_FIX = os.environ.get("MITOM_TRNA_CIRC", "") not in ("", "0")
 COMP = str.maketrans("ACGTUNacgtun", "TGCAANtgcaan")
 # anticodon (5'->3', DNA) -> Leu / Ser family; invertebrate convention L1 = CUN, L2 = UUR, S1 = AGN, S2 = UCN
 LS_FAM = {"tag": "L1", "taa": "L2", "tct": "S1", "gct": "S1", "tga": "S2", "cct": "S1", "tcc": "S1", "act": "S1"}
@@ -262,11 +266,12 @@ def drop_wrap_duplicates(rows: List[Dict[str, Any]], L: int) -> List[Dict[str, A
 
 
 def scan(seq: str, lineage: str, pan: Path, cdir: Optional[Path], cmsearch: str, cmalign: str, tmp: Path,
-         cpu: int = 1, rescue: bool = True) -> List[Dict[str, Any]]:
+         cpu: int = 1, rescue: bool = True, wrap: bool = True) -> List[Dict[str, Any]]:
+    """wrap False: a linear sequence, searched without its first WRAP nt appended (CIRC_FIX)."""
     seq = seq.upper()
     L = len(seq)
     q = tmp / "q.fa"
-    ext = seq + seq[:WRAP]
+    ext = seq + seq[:WRAP] if wrap else seq
     q.write_text(f">q\n{ext}\n")
     paths = model_paths(pan, cdir, lineage)
     info = {}
@@ -326,17 +331,20 @@ def lg(e: float) -> float:
     return math.log10(max(e, 1e-300))
 
 
-def _ov(a, b) -> int:
-    return min(a["end"], b["end"]) - max(a["start"], b["start"]) + 1
+def _ov(a, b, L: int = 0) -> int:
+    """Overlap (nt; negative = gap) of two hits; L > 0: of a circular sequence of length L, b also shifted by +-L."""
+    if not L:
+        return min(a["end"], b["end"]) - max(a["start"], b["start"]) + 1
+    return max(min(a["end"], b["end"] + k) - max(a["start"], b["start"] + k) + 1 for k in (-L, 0, L))
 
 
-def _loci(hits):
+def _loci(hits, L: int = 0):
     out: List[List[Dict[str, Any]]] = []
     for h in sorted(hits, key=lambda h: h["evalue"]):
-        for L in out:
-            r = L[0]
-            if r["strand"] == h["strand"] and _ov(r, h) >= 0.5 * min(r["end"] - r["start"] + 1, h["end"] - h["start"] + 1):
-                L.append(h)
+        for loc in out:
+            r = loc[0]
+            if r["strand"] == h["strand"] and _ov(r, h, L) >= 0.5 * min(r["end"] - r["start"] + 1, h["end"] - h["start"] + 1):
+                loc.append(h)
                 break
         else:
             out.append([h])
@@ -357,8 +365,9 @@ def ext_hits(preds) -> List[Dict[str, Any]]:
     return out
 
 
-def candidates(hits: List[Dict[str, Any]], ext: List[Dict[str, Any]], code: int) -> List[Dict[str, Any]]:
-    """Candidates (locus x family) with the FEATS features; same computation as projects/invert_trna learn.py."""
+def candidates(hits: List[Dict[str, Any]], ext: List[Dict[str, Any]], code: int, L: int = 0) -> List[Dict[str, Any]]:
+    """Candidates (locus x family) with the FEATS features; same computation as projects/invert_trna learn.py.
+    L > 0: overlaps on a circular sequence of length L (CIRC_FIX)."""
     for h in hits:
         a = ac_aa(h.get("anticodon", ""), code)
         h["ac_known"] = int(bool(a))
@@ -367,9 +376,9 @@ def candidates(hits: List[Dict[str, Any]], ext: List[Dict[str, Any]], code: int)
         h["ac_match"] = int(a == h["family"][0]) if a else 0
     hs = hits + ext
     cands = []
-    for li, L in enumerate(_loci(hs)):
+    for li, loc in enumerate(_loci(hs, L)):
         byfam = defaultdict(list)
-        for h in L:
+        for h in loc:
             byfam[h["family"]].append(h)
         fam_best = {fa: max(v, key=lambda h: h["bits"]) for fa, v in byfam.items()}
         order = sorted(fam_best, key=lambda fa: -fam_best[fa]["bits"])
@@ -409,15 +418,15 @@ def candidates(hits: List[Dict[str, Any]], ext: List[Dict[str, Any]], code: int)
     n_strong = len({c["family"] for c in strong})
     for c in cands:
         c["n_strong_genome"] = n_strong
-        c["overlap_stronger"] = max([_ov(c, s) for s in strong if s is not c and s["strand"] == c["strand"]
+        c["overlap_stronger"] = max([_ov(c, s, L) for s in strong if s is not c and s["strand"] == c["strand"]
                                      and s["_bits"] > c["_bits"] and s["locus"] != c["locus"]] or [0])
-        opp = [s for s in strong if s["strand"] != c["strand"] and _ov(c, s) > 0.5 * c["len"]]
-        c["overlap_stronger_opp"] = max([_ov(c, s) for s in opp] or [0])
+        opp = [s for s in strong if s["strand"] != c["strand"] and _ov(c, s, L) > 0.5 * c["len"]]
+        c["overlap_stronger_opp"] = max([_ov(c, s, L) for s in opp] or [0])
         c["opp_bits_ratio"] = max([s["_bits"] for s in opp] or [0]) / max(c["_bits"], 1)
     return cands
 
 
-def call(cands, clf, thr: float = THRESHOLD):
+def call(cands, clf, thr: float = THRESHOLD, L: int = 0):
     """Best candidate per locus with p >= thr; same-strand calls overlapping > 50 % keep the more probable."""
     if not cands:
         return []
@@ -430,7 +439,7 @@ def call(cands, clf, thr: float = THRESHOLD):
     final: List[Dict[str, Any]] = []
     for c in sorted(best.values(), key=lambda c: -c["p"]):
         # lengths end - start + 1 as in _loci (Grok 2.5, 2026-11-05: half a base short)
-        if any(x["strand"] == c["strand"] and _ov(x, c) > 0.5 * min(x["end"] - x["start"] + 1, c["end"] - c["start"] + 1)
+        if any(x["strand"] == c["strand"] and _ov(x, c, L) > 0.5 * min(x["end"] - x["start"] + 1, c["end"] - c["start"] + 1)
                for x in final):
             continue
         final.append(c)
@@ -446,11 +455,15 @@ def _stem(a: str, b: str) -> Tuple[int, int]:
     return p, w
 
 
-def end_pairs(c, gen: str) -> List[Dict[str, Any]]:
-    """Candidate (start, end) pairs of one call with the BFEATS features (as projects/invert_trna bounds.py)."""
+def end_pairs(c, gen: str, circ: bool = False) -> List[Dict[str, Any]]:
+    """Candidate (start, end) pairs of one call with the BFEATS features (as projects/invert_trna bounds.py). circ
+    (CIRC_FIX): the source hits are put in the frame of the call (a hit at L..L+n and one at 1..n are the same place)
+    and a start before position 1 is read across the origin; the pairs come back with 1 <= s <= L."""
     strand, L = c["strand"], len(gen)
     g2 = gen + gen
-    opts = [{"m": h["model"], "clade": h["clade"], "s": h["start"], "e": h["end"], "bits": h["bits"],
+    def shift(h) -> int:
+        return min((-L, 0, L), key=lambda k: abs(h["start"] + k - c["start"])) if circ else 0
+    opts = [{"m": h["model"], "clade": h["clade"], "s": h["start"] + shift(h), "e": h["end"] + shift(h), "bits": h["bits"],
              "full5": h["mfrom"] == 1, "full3": h["mto"] == h["clen"]} for h in c["_opts"]]
     S, E = defaultdict(list), defaultdict(list)
     for o in opts:
@@ -471,14 +484,15 @@ def end_pairs(c, gen: str) -> List[Dict[str, Any]]:
             n = e - s + 1
             if not 40 <= n <= 110:
                 continue
-            sub = g2[s - 1:e] if e <= 2 * L and s >= 1 else ""
+            k = (L if s < 1 else -L if s > L else 0) if circ else 0
+            sub = g2[s + k - 1:e + k] if e + k <= 2 * L and s + k >= 1 else ""
             seq = sub if strand == 1 else rc(sub)
             if len(seq) != n:
                 continue
             accs = [_stem(seq[:7], seq[-7 - d:len(seq) - d])[0] for d in (0, 1, 2)]
             so, eo = S[s0], E[e0]
             f5, f3 = ("full5", "full3") if strand == 1 else ("full3", "full5")
-            out.append({"s": s, "e": e,
+            out.append({"s": s + k, "e": e + k,
                         "s_n": len(so), "s_bits": max(o["bits"] for o in so),
                         "s_pan": int(any(o["clade"] == "pan" for o in so)),
                         "s_clade": int(any(o["clade"] not in ("pan", "ext") for o in so)),
@@ -497,9 +511,9 @@ def end_pairs(c, gen: str) -> List[Dict[str, Any]]:
     return out
 
 
-def refine_ends(calls, gen: str, bclf) -> None:
+def refine_ends(calls, gen: str, bclf, circ: bool = False) -> None:
     for c in calls:
-        pairs = end_pairs(c, gen)
+        pairs = end_pairs(c, gen, circ)
         if pairs:
             p = bclf.predict_proba([[float(r[k]) for k in BFEATS] for r in pairs])[:, 1]
             i = max(range(len(pairs)), key=lambda k: p[k])
@@ -508,18 +522,22 @@ def refine_ends(calls, gen: str, bclf) -> None:
 
 # ── driver ───────────────────────────────────────────────────────────────────
 def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign: str, ext_preds=(),
-            models: Optional[Path] = None, cpu: int = 1, thr: float = THRESHOLD, use_clades: bool = True) -> List[Dict[str, Any]]:
+            models: Optional[Path] = None, cpu: int = 1, thr: float = THRESHOLD, use_clades: bool = True,
+            circular: bool = True, circ_fix: Optional[bool] = None) -> List[Dict[str, Any]]:
     """tRNA calls of one (circular) sequence: dicts with family (A..Y, L1/L2, S1/S2), aa, anticodon, start, end
-    (1-based; end > len(seq) for a tRNA across the origin), strand, p (classifier probability), bound_p."""
+    (1-based; end > len(seq) for a tRNA across the origin), strand, p (classifier probability), bound_p.
+    circ_fix (default CIRC_FIX): circular-aware overlaps for a circular sequence, no appended copy for a linear one."""
     models = Path(models) if models is not None else MODELS
+    circ_fix = CIRC_FIX if circ_fix is None else circ_fix
+    L = len(seq) if circ_fix and circular else 0
     from threadpoolctl import threadpool_limits      # installed with scikit-learn
     with threadpool_limits(limits=max(1, cpu)):     # its OpenMP pool otherwise takes every core: 16 parallel records
         clf, bclf = classifiers(models)              # ran 99 threads each (load 160 on 72 cores)
         cdir = clade_dir(models) if use_clades else None
         with tempfile.TemporaryDirectory() as td:
-            hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu)
-        calls = call(candidates(hits, ext_hits(ext_preds), code), clf, thr)
-        refine_ends(calls, seq.upper(), bclf)
+            hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu, wrap=circular or not circ_fix)
+        calls = call(candidates(hits, ext_hits(ext_preds), code, L), clf, thr, L)
+        refine_ends(calls, seq.upper(), bclf, bool(L))
     return [{"family": c["family"], "aa": c["family"][0], "anticodon": c["anticodon"], "start": c["start"],
              "end": c["end"], "strand": c["strand"], "p": round(c["p"], 4), "bound_p": round(c.get("bound_p", 0), 4)}
             for c in sorted(calls, key=lambda c: c["start"])]
