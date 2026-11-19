@@ -91,18 +91,10 @@ def dump(job):
 
 
 def export(model, cols, categories, meta) -> dict:
-    """HistGradientBoostingClassifier -> {columns, categories, trees: [{left, right, feature, threshold, value}]};
-    leaves have left = -1. (Its trees are scikit-learn internals: read here, at training, only.)"""
-    trees = []
-    for (pred,) in model._predictors:
-        nodes = pred.nodes
-        leaf = nodes["is_leaf"].astype(bool)
-        trees.append({"left": np.where(leaf, -1, nodes["left"].astype(np.int64)).tolist(),   # (uint32 in the nodes)
-                      "right": np.where(leaf, -1, nodes["right"].astype(np.int64)).tolist(),
-                      "feature": nodes["feature_idx"].astype(int).tolist(),
-                      "threshold": [float(x) for x in nodes["num_threshold"]],
-                      "value": [float(x) for x in nodes["value"]]})
-    return {**meta, "columns": cols, "categories": categories, "trees": trees}
+    """HistGradientBoostingClassifier -> {columns, categories, baseline, trees} (mito_gbdt.export_hgb: the trees'
+    split features, thresholds and leaf values; leaves have left = -1)."""
+    import mito_gbdt
+    return {**meta, "columns": cols, "categories": categories, **mito_gbdt.export_hgb(model)}
 
 
 def main() -> int:

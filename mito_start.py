@@ -92,25 +92,13 @@ class StartModel:
     (the ranking needs no link function)."""
 
     def __init__(self, meta: Dict):
-        import numpy as np
+        import mito_gbdt
         self.meta = meta
-        self.trees = [tuple(np.asarray(t[k]) for k in ("left", "right", "feature", "threshold", "value"))
-                      for t in meta["trees"]]
+        self.trees = mito_gbdt.Trees(meta)
 
     def score(self, rows: Sequence[Dict]) -> List[float]:
-        import numpy as np
         x = matrix(rows, self.meta["categories"])
-        total = np.zeros(len(rows))
-        for left, right, feature, threshold, value in self.trees:
-            node = np.zeros(len(rows), dtype=int)
-            while True:
-                inner = left[node] >= 0
-                if not inner.any():
-                    break
-                go_left = x[np.arange(len(rows)), np.where(inner, feature[node], 0)] <= threshold[node]
-                node = np.where(inner, np.where(go_left, left[node], right[node]), node)
-            total += value[node]
-        return [float(v) for v in total]
+        return [float(v) for v in self.trees.raw(x)]
 
     def best(self, rows: Sequence[Dict]) -> Tuple[int, List[float]]:
         """Index of the best-scoring candidate (P1's start on a tie) and every candidate's score."""

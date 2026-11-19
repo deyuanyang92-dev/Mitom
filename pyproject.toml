@@ -15,11 +15,12 @@ requires-python = ">=3.8"
 # models/orf_families.hmm.gz: 14 Pfam HMMs (CC0, Pfam / InterPro)
 license = { text = "CC0-1.0 AND GPL-3.0-only AND MIT" }
 authors = [{ name = "De-Yuan Yang" }]
-dependencies = ["biopython>=1.79", "numpy", "scikit-learn"]
+dependencies = ["biopython>=1.79", "numpy"]
 
 [project.optional-dependencies]
 plot = ["matplotlib"]
-test = ["pytest", "defusedxml"]
+train = ["scikit-learn"]          # only to retrain the tRNA classifiers (trna_ml.py --train)
+test = ["pytest", "defusedxml", "scikit-learn"]
 
 [project.scripts]
 mitom = "mitom_main:main"

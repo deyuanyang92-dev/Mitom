@@ -21,7 +21,6 @@ requirements:
     - python >=3.9
     - biopython
     - numpy
-    - scikit-learn ==1.7.2   # MitoM-ML tRNA classifiers are trained with this version (models/trna_ml)
     - matplotlib-base
     - exonerate
     - blast >=2.12

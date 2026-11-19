@@ -12,7 +12,7 @@ dependencies:
   - python=3.11
   - biopython
   - numpy
-  - scikit-learn=1.7.2
+  - scikit-learn          # only to retrain the tRNA classifiers / run the equivalence test; not needed at run time
   - matplotlib-base
   - exonerate=2.4.0
   - blast=2.17.0
