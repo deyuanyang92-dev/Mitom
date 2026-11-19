@@ -80,8 +80,8 @@ COMMANDS = {
 }
 
 
-# the Python packages every `mitom run` needs (Biopython; numpy + scikit-learn: the MitoM-ML tRNA caller, trna_ml.py)
-NEEDED = "Bio, numpy, sklearn"
+# the Python packages every `mitom run` needs (Biopython; numpy: the MitoM-ML tRNA caller, trna_ml.py; scikit-learn only to retrain it)
+NEEDED = "Bio, numpy"
 
 
 def _imports(py, modules=NEEDED):

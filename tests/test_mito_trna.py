@@ -175,14 +175,21 @@ def test_trna_ml_wrap_duplicate_of_a_gene_at_the_sequence_start_is_dropped():
                                                                      ("trnM", L, -1)]
 
 
-def test_mitom_ready_needs_scikit_learn(tmp_path, monkeypatch):
+def test_mitom_ready_needs_json_models_or_scikit_learn(tmp_path, monkeypatch):
     """Without scikit-learn the first MitoM-ML call failed (the whole core run stopped) instead of MiTFi taking over."""
     import importlib.util
     real = importlib.util.find_spec
     if real("sklearn") is not None and (trna_ml.MODELS / "caller_train.tsv.gz").exists():
         assert mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))     # the same call with scikit-learn
     monkeypatch.setattr(importlib.util, "find_spec", lambda name, *a: None if name == "sklearn" else real(name, *a))
+    monkeypatch.setattr(trna_ml, "MODELS", tmp_path / "m")          # no shipped JSON and no scikit-learn: not ready
+    (tmp_path / "m").mkdir()
+    (tmp_path / "m" / "caller_train.tsv.gz").write_bytes(b"")
+    (tmp_path / "m" / "clades.tar.gz").write_bytes(b"")
     assert not mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))
+    (tmp_path / "m" / "caller_model.json").write_text("{}")
+    (tmp_path / "m" / "bounds_model.json").write_text("{}")
+    assert mt.mitom_ready({"cmsearch": "x", "cmalign": "y"}, str(tmp_path))      # JSON trees: numpy only
 
 
 def test_select_auto_falls_back_without_models(tmp_path, monkeypatch):
@@ -253,8 +260,8 @@ def test_trna_ml_prepares_into_the_user_data_folder_of_a_read_only_install(tmp_p
         d = trna_ml.prepare()
         assert d == tmp_path / "data" / "trna_ml" / "clades" and (d / "models.json").is_file()
         assert sorted(p.name for p in models.iterdir()) == ["bounds_train.tsv.gz", "caller_train.tsv.gz", "clades.tar.gz"]
-        cached = sorted(p.name for p in (tmp_path / "data" / "trna_ml" / "cache").rglob("*.pkl"))
-        assert cached == ["bounds.pkl", "caller.pkl"]
+        cached = sorted(p.name for p in (tmp_path / "data" / "trna_ml" / "cache").rglob("*.json"))
+        assert cached == ["bounds_model.json", "caller_model.json"]       # trained here: no JSON shipped in this install
         assert trna_ml.clade_dir() == d and len(trna_ml.classifiers()) == 2       # read back, nothing trained again
     finally:
         for p in (models, models.parent, models.parent.parent):

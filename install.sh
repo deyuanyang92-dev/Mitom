@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # install.sh - one command installs everything MitoM needs into ONE conda environment, mitotools (env/mitotools.yml):
-#   Python with Biopython, scikit-learn (MitoM-ML tRNAs) and matplotlib (genome maps) - the `mitom` command runs on
+#   Python with Biopython, numpy and matplotlib (scikit-learn only to retrain the MitoM-ML tRNA classifiers) (genome maps) - the `mitom` command runs on
 #   this Python, nothing is installed into the system Python - and the programs (BLAST, exonerate, Infernal, HMMER,
 #   table2asn, ARAGORN, tRNAscan-SE, MAFFT, bwa). Java for MiTFi: the system Java when there is one, else openjdk 8
 #   is added to the environment. Then the `mitom` command (in the environment and

@@ -742,7 +742,7 @@ def annotate(args) -> int:
         if args.trna == "ml" and not use_ml:
             raise SystemExit("[core] --trna ml: MitoM-ML needs models/trna_ml, cmsearch and cmalign")
         if not use_ml:
-            log.warning("[core] MitoM-ML not installed (models/trna_ml, cmalign, scikit-learn): tRNAs by MiTFi")
+            log.warning("[core] MitoM-ML not installed (models/trna_ml, cmalign): tRNAs by MiTFi")
     if not args.no_trna and not use_ml:
         tools["java"] = program("java", args.java)
         tools["mitfi"] = mitfi_files(args.mitos_bin)
