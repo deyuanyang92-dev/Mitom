@@ -48,6 +48,7 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 2026-10-27 | deyuan | tRNA 锚定集 | 13 锚定基因组 | native / v27 / MITOS2 | 召回 98.61/97.57/96.88 % | — | benchmark/results/full_v30_2026-10-27/ |
 | 2026-10-31 | ? | Leu/Ser 编号 | 规则测试 | MITOS2 2.1.10 规则 | 所有类群按 MITOS2（与 NCBI 脊椎动物相反），有意 | 655a75c | docs/METHODS.md |
 
+| 2026-11-19 | cody | MitoM-ML 环状起点（旋转不变）；MiTFi 重复扫描能否跳过 | tests/data 8 环状 + 3 issues 记录；4 记录 219 个旋转 | trna_ml / mito_trna（exp/trna-circ-mitfi-2026-11-19），Infernal 1.1，mitotools | 旋转不一致 8/219 → 0/219（MITOM_TRNA_CIRC=1）；未旋转 8/8 位置相同；线性不加尾产生 11 个片段调用（未采用）；MiTFi 在 2/10 记录跳过，每条省 ~2 s / 57 s，core.tsv 10/10 相同；golden 两种设置均相同（intron_fix.log 为基线已有）；pytest 856 通过 | CIRC_FIX 实验开关默认关（保留集准确率需在 deyuan 测）；MiTFi 按需默认开 | benchmark/results/trna_circ_2026-11-19/README.md |
 ## 4. rRNA
 
 | date | machine | question | data | tools & versions | key result | conclusion / action (commit) | where recorded |
