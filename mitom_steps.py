@@ -502,7 +502,9 @@ def run_plots(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepRes
     ok = True
     try:
         import multiprocessing as mp
-        with mp.get_context("fork").Pool(max(1, min(len(jobs), int(getattr(args, "max_tasks", 1) or 1)))) as pool:
+        # spawn, not fork: earlier stages run ThreadPoolExecutor threads and import matplotlib / numpy, and forking a
+        # multi-threaded process can deadlock; _plot_file and the job tuples (paths, str, int) are picklable
+        with mp.get_context("spawn").Pool(max(1, min(len(jobs), int(getattr(args, "max_tasks", 1) or 1)))) as pool:
             for k, d, msgs in pool.imap(_plot_file, jobs):          # matplotlib is not thread-safe: processes
                 n, depth_n = n + k, depth_n + d
                 for m in msgs:
