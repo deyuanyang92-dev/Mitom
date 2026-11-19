@@ -51,7 +51,7 @@ RESCUE_E = 1e-3
 RESCUE_MODE = "--mid"            # --max (MITOS2 sensitive pass) was > 10 min per genome, --mid 13 s
 THRESHOLD = 0.5
 # EXPERIMENTAL (2026-11-19, benchmark/results/trna_circ_2026-11-19): circular-aware overlaps (loci, overlap features,
-# call clustering, end pairs across the origin) and no appended copy for linear sequences. Off by default: the
+# call clustering, end pairs across the origin) for circular sequences. Off by default: the
 # shipped classifiers were trained with the old features; on with MITOM_TRNA_CIRC=1 or predict(circ_fix=True).
 CIRC_FIX = os.environ.get("MITOM_TRNA_CIRC", "") not in ("", "0")
 COMP = str.maketrans("ACGTUNacgtun", "TGCAANtgcaan")
@@ -266,12 +266,14 @@ def drop_wrap_duplicates(rows: List[Dict[str, Any]], L: int) -> List[Dict[str, A
 
 
 def scan(seq: str, lineage: str, pan: Path, cdir: Optional[Path], cmsearch: str, cmalign: str, tmp: Path,
-         cpu: int = 1, rescue: bool = True, wrap: bool = True) -> List[Dict[str, Any]]:
-    """wrap False: a linear sequence, searched without its first WRAP nt appended (CIRC_FIX)."""
+         cpu: int = 1, rescue: bool = True) -> List[Dict[str, Any]]:
+    """A linear sequence is searched with its first WRAP nt appended too: without them a tRNA cut by an end is called
+    as a 28-62 nt fragment (NC_000931.1 opened at 11 of 44 tRNA positions, 2026-11-19); a call across the end is
+    left out by the caller (annotate_trnas_ml, inside_linear)."""
     seq = seq.upper()
     L = len(seq)
     q = tmp / "q.fa"
-    ext = seq + seq[:WRAP] if wrap else seq
+    ext = seq + seq[:WRAP]
     q.write_text(f">q\n{ext}\n")
     paths = model_paths(pan, cdir, lineage)
     info = {}
@@ -526,7 +528,7 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
             circular: bool = True, circ_fix: Optional[bool] = None) -> List[Dict[str, Any]]:
     """tRNA calls of one (circular) sequence: dicts with family (A..Y, L1/L2, S1/S2), aa, anticodon, start, end
     (1-based; end > len(seq) for a tRNA across the origin), strand, p (classifier probability), bound_p.
-    circ_fix (default CIRC_FIX): circular-aware overlaps for a circular sequence, no appended copy for a linear one."""
+    circ_fix (default CIRC_FIX): circular-aware overlaps when circular."""
     models = Path(models) if models is not None else MODELS
     circ_fix = CIRC_FIX if circ_fix is None else circ_fix
     L = len(seq) if circ_fix and circular else 0
@@ -535,7 +537,7 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
         clf, bclf = classifiers(models)              # ran 99 threads each (load 160 on 72 cores)
         cdir = clade_dir(models) if use_clades else None
         with tempfile.TemporaryDirectory() as td:
-            hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu, wrap=circular or not circ_fix)
+            hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu)
         calls = call(candidates(hits, ext_hits(ext_preds), code, L), clf, thr, L)
         refine_ends(calls, seq.upper(), bclf, bool(L))
     return [{"family": c["family"], "aa": c["family"][0], "anticodon": c["anticodon"], "start": c["start"],
