@@ -15,10 +15,12 @@ Built and benchmarked in projects/invert_trna (REQUIREMENTS #53). For one sequen
   3. ends   candidate (start, end) pairs from all source ends +-1 scored by a second model (source agreement,
             CM end reached, acceptor-stem pairing).
 The two models are trained from the training tables shipped in models/trna_ml (genomes of held-out families, i.e.
-scanned with clade models that never saw their family) and cached per scikit-learn version, so no pickled model is
-downloaded or shared between versions; they and the unpacked clade CMs go to the user data folder
-(~/.local/share/mitom/trna_ml, $MITOM_DATA; work_dir()) by `mitom setup` or at the first run, so the install folder
-may be read-only (models/trna_ml/{clades,cache} are used when present there).
+scanned with clade models that never saw their family) and shipped as plain JSON trees (models/trna_ml/caller_model.json,
+bounds_model.json; mito_gbdt.py evaluates them with numpy: no pickle, no scikit-learn at run time). scikit-learn is
+needed only to retrain them (`python3 trna_ml.py --train`, or automatically into the user data folder when a table
+no longer matches its JSON). The unpacked clade CMs go to the user data folder (~/.local/share/mitom/trna_ml,
+$MITOM_DATA; work_dir()) by `mitom setup` or at the first run, so the install folder may be read-only.
+MITOM_TRNA_PICKLE=1 selects the former per-scikit-learn-version pickles.
 
 Benchmark (1,069 RefSeq invertebrate mitogenomes of families unseen by the clade models and absent from MITOS2
 refseq89m; 22,099 RefSeq tRNAs; projects/invert_trna/REPORT.md): see that report for the numbers.
@@ -31,6 +33,7 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
+import hashlib
 import json
 import math
 import os
@@ -114,31 +117,96 @@ def clade_dir(models: Optional[Path] = None) -> Path:
     return dest
 
 
-def _train(table: Path, feats: List[str], out: Path, **kw):
+PARAMS = {"caller": (FEATS, dict(max_iter=400, learning_rate=0.05, max_leaf_nodes=31, l2_regularization=1.0)),
+          "bounds": (BFEATS, dict(max_iter=500, learning_rate=0.05, max_leaf_nodes=31))}
+
+
+def _fit(table: Path, feats: List[str], **kw):
+    """HistGradientBoostingClassifier fitted on a shipped training table (scikit-learn: training only)."""
     from sklearn.ensemble import HistGradientBoostingClassifier
     with gzip.open(table, "rt", newline="") as fh:
         rows = list(csv.DictReader(fh, delimiter="\t"))
     clf = HistGradientBoostingClassifier(random_state=0, **kw)
     clf.fit([[float(r[k]) for k in feats] for r in rows], [int(r["label"]) for r in rows],
             sample_weight=[float(r.get("weight") or 1) for r in rows])   # shuffled-genome negatives: weight 0.1
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=out.parent, prefix=f".{out.name}.")
-    with os.fdopen(fd, "wb") as fh:                  # parallel first runs: each pickle appears complete or not at all
-        pickle.dump(clf, fh)
-    os.replace(tmp, out)
     return clf
 
 
-def classifiers(models: Optional[Path] = None):
-    """(caller, boundary model): cached pickles (models/cache, else work_dir()/cache), trained from the shipped tables
-    into work_dir()/cache when missing or older than the tables."""
+def _atomic(out: Path, write) -> None:
+    """write(fh) to a temporary file next to `out`, then rename: parallel first runs see a file complete or not at all."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=out.parent, prefix=f".{out.name}.")
+    with os.fdopen(fd, "wb") as fh:
+        write(fh)
+    os.chmod(tmp, 0o644)                             # mkstemp makes 0600
+    os.replace(tmp, out)
+
+
+def _table_sha(table: Path) -> str:
+    return hashlib.sha256(table.read_bytes()).hexdigest()
+
+
+def train_json(name: str, models: Optional[Path] = None, out: Optional[Path] = None) -> Path:
+    """Train classifier `name` ("caller" / "bounds") from its shipped table and write it as JSON trees (mito_gbdt):
+    `out`, default models/trna_ml/<name>_model.json. The only place that needs scikit-learn
+    (`python3 trna_ml.py --train`)."""
+    import mito_gbdt
     models = Path(models) if models is not None else MODELS
+    feats, kw = PARAMS[name]
+    table = models / f"{name}_train.tsv.gz"
+    clf = _fit(table, feats, **kw)
+    import sklearn
+    meta = {"model": "HistGradientBoostingClassifier " + json.dumps(kw), "scikit_learn": sklearn.__version__,
+            "table_sha256": _table_sha(table), "features": feats, **mito_gbdt.export_hgb(clf)}
+    out = Path(out) if out is not None else models / f"{name}_model.json"
+    _atomic(out, lambda fh: fh.write((json.dumps(meta) + "\n").encode()))
+    return out
+
+
+def _json_model(name: str, models: Path):
+    """The JSON model of `name` that matches the shipped table (models/trna_ml, else work_dir()/cache), or None."""
+    import mito_gbdt
+    table = models / f"{name}_train.tsv.gz"
+    sha = None
+    for p in (models / f"{name}_model.json", work_dir(models) / "cache" / f"{name}_model.json"):
+        if not p.exists():
+            continue
+        meta = json.loads(p.read_text())
+        sha = sha or _table_sha(table)
+        if meta.get("table_sha256") == sha and meta.get("features") == PARAMS[name][0]:
+            return mito_gbdt.Trees(meta)
+    return None
+
+
+def classifiers(models: Optional[Path] = None):
+    """(caller, boundary model), each with predict_proba(rows): plain JSON trees evaluated with numpy
+    (models/trna_ml/<name>_model.json, mito_gbdt), no scikit-learn at run time. When the JSON does not match the
+    shipped table (table changed), it is trained again into work_dir()/cache (scikit-learn then needed).
+    MITOM_TRNA_PICKLE=1: the former per-scikit-learn-version pickles."""
+    models = Path(models) if models is not None else MODELS
+    if os.environ.get("MITOM_TRNA_PICKLE"):
+        return _classifiers_pickle(models)
+    out = []
+    for name in ("caller", "bounds"):
+        m = _json_model(name, models)
+        if m is None:
+            try:
+                import sklearn  # noqa: F401
+            except ImportError:
+                raise RuntimeError(f"{models / (name + '_model.json')} is missing or does not match "
+                                   f"{name}_train.tsv.gz: run `python3 trna_ml.py --train` (needs scikit-learn)")
+            train_json(name, models, work_dir(models) / "cache" / f"{name}_model.json")
+            m = _json_model(name, models)
+        out.append(m)
+    return out[0], out[1]
+
+
+def _classifiers_pickle(models: Path):
+    """Former behaviour: pickles cached per scikit-learn version (models/cache, else work_dir()/cache)."""
     import sklearn
     sub = Path("cache") / f"sklearn{sklearn.__version__}"
     out = []
-    for name, feats, kw in (("caller", FEATS, dict(max_iter=400, learning_rate=0.05, max_leaf_nodes=31,
-                                                   l2_regularization=1.0)),
-                            ("bounds", BFEATS, dict(max_iter=500, learning_rate=0.05, max_leaf_nodes=31))):
+    for name, (feats, kw) in PARAMS.items():
         table = models / f"{name}_train.tsv.gz"
         fresh = [p for p in (models / sub / f"{name}.pkl", work_dir(models) / sub / f"{name}.pkl")
                  if p.exists() and p.stat().st_mtime >= table.stat().st_mtime]
@@ -146,7 +214,9 @@ def classifiers(models: Optional[Path] = None):
             with open(fresh[0], "rb") as fh:
                 out.append(pickle.load(fh))
         else:
-            out.append(_train(table, feats, work_dir(models) / sub / f"{name}.pkl", **kw))
+            clf = _fit(table, feats, **kw)
+            _atomic(work_dir(models) / sub / f"{name}.pkl", lambda fh: pickle.dump(clf, fh))
+            out.append(clf)
     return out[0], out[1]
 
 
@@ -512,8 +582,12 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
     """tRNA calls of one (circular) sequence: dicts with family (A..Y, L1/L2, S1/S2), aa, anticodon, start, end
     (1-based; end > len(seq) for a tRNA across the origin), strand, p (classifier probability), bound_p."""
     models = Path(models) if models is not None else MODELS
-    from threadpoolctl import threadpool_limits      # installed with scikit-learn
-    with threadpool_limits(limits=max(1, cpu)):     # its OpenMP pool otherwise takes every core: 16 parallel records
+    try:
+        from threadpoolctl import threadpool_limits   # only with scikit-learn (MITOM_TRNA_PICKLE / retraining)
+    except ImportError:
+        threadpool_limits = None
+    from contextlib import nullcontext
+    with (threadpool_limits(limits=max(1, cpu)) if threadpool_limits else nullcontext()):   # sklearn's OpenMP pool
         clf, bclf = classifiers(models)              # ran 99 threads each (load 160 on 72 cores)
         cdir = clade_dir(models) if use_clades else None
         with tempfile.TemporaryDirectory() as td:
@@ -526,6 +600,11 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
 
 
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv == ["--train"]:                       # retrain both classifiers from the shipped tables (scikit-learn)
+        for name in PARAMS:
+            print(train_json(name))
+        return 0
     import mito_env
     from Bio import SeqIO
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
