@@ -114,6 +114,7 @@ from mito_common import (GB_SUFFIXES as GB_EXT, move_position_qualifiers, stop_q
                          write_tsv)                                                                       # (CC0)
 import mito_common  # noqa: E402
 from mito_common import cli_guard, count_seq_records, prepare_input, require_records  # noqa: E402
+import mito_intron_exon  # noqa: E402
 import mito_intron_rules  # noqa: E402,F401  (tests patch its functions)
 from mito_intron_rules import (  # noqa: E402, F401  (re-exported: aa_score, refine_junction, REFINE_MIN_GAIN, TYPE_II_MIN)
     MAX_INTRON,
@@ -718,6 +719,44 @@ def conflicting_cds(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -
     return out
 
 
+def short_exon_model(rec, L: int, gene: str, c: dict, lib: Dict[str, LibProt], grp: List[Report], m: Optional[Model],
+                     why: str, a, own: str) -> Optional[Model]:
+    """The chain of Exonerate alignments plus the short divergent exons it does not align (mito_intron_exon: homolog
+    vote against a shuffled null, issue #15). A model with the new exons, or None when the chain has no hole of
+    >= 12 residues or no significant locus. Only single-strand chains in protein order are completed."""
+    if why or len({r.strand for r in grp}) != 1 or wrap_steps(grp):
+        return None
+    strand = grp[0].strand
+    seq = str(rec.seq).upper()
+    use = seq if strand == 1 else str(Seq(seq).reverse_complement())
+    prot = lib[c["prot"]].seq
+    homs = [v.seq for k_, v in lib.items() if v.gene == gene and k_ != c["prot"] and not k_.startswith("C:")
+            and not (a.exclude_own_species and v.species == own)]
+    blocked = []
+    for f in rec.features:
+        if f.type in ("CDS", "rRNA", "tRNA") and not (f.qualifiers.get("gene") and
+                                                       norm_gene(f.qualifiers["gene"][0]) == norm_gene(gene)):
+            for p_ in f.location.parts:
+                blocked.append((int(p_.start), int(p_.end)) if strand == 1 else (L - int(p_.end), L - int(p_.start)))
+
+    def tx(e):
+        return e if strand == 1 else (L + 1 - e[1], L + 1 - e[0])
+    reps = sorted(((r.qab, r.qae, min(tx(e)[0] for e in r.exons), max(tx(e)[1] for e in r.exons)) for r in grp))
+    own_exons = sorted(tx(e) for r in grp for e in r.exons)
+    new, note = mito_intron_exon.complete_chain(use, own_exons, reps, prot, homs, a.genetic_code, blocked, a.maxintron,
+                                                MIN_INTRON)
+    if not note:
+        return None
+    exons = sorted(tx(e) for e in new)
+    first, last = min(e[0] for e in own_exons), max(e[1] for e in own_exons)
+    n_hole = any(e[1] < first for e in new)                      # in transcript order
+    c_hole = any(e[0] > last for e in new)
+    qn, qc = (m.qmiss_n, m.qmiss_c) if m else (min(r.qab for r in grp), len(prot) - max(r.qae for r in grp))
+    out = Model(c["prot"], gene, strand, exons, sum(r.score for r in grp), 1.0, 0 if c_hole else qc,
+                0 if n_hole else qn)
+    return out
+
+
 def conflicting_genes(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -> List[str]:
     """Gene names of conflicting_cds."""
     return [f.qualifiers["gene"][0] for f in conflicting_cds(rec, gene, strand, exons)]
@@ -1088,6 +1127,10 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
         if why == ACROSS_ORIGIN:
             across.append((gene, c, groups[0]))
             continue
+        if groups and getattr(a, "short_exons", False) and m is None and not why:
+            m2 = short_exon_model(rec, L, gene, c, lib, groups[0], m, why if m is None else "", a, own)
+            if m2 is not None:
+                m, why = m2, ""
         # nad4/nad5 (and other paralogues) are homologous: when the best chain overlaps another gene's CDS,
         # the next chain that does not is used (NC_006902.1 ND5); otherwise the best one is reported as low.
         if m is not None and conflicting_genes(rec, m.gene, m.strand, m.exons):
@@ -1315,6 +1358,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="when an intron Rfam cannot type is written: continuity = the homologs of the gene are "
                         "continuous across its junction (an intron removes DNA only); splice = it has a type-I splice "
                         "score >= %d (before 2026-11-09)" % UNTYPED_MIN_SPLICE)
+    p.add_argument("--short_exons", action="store_true",
+                   help="EXPERIMENTAL: search short divergent exons Exonerate leaves unaligned, for genes with no "
+                        "model (homolog vote against a shuffled null, issue #15); gained nothing on the NCBI set")
     p.add_argument("--stop_rule", choices=["homolog", "first"], default="first",
                    help="3' end when no existing CDS end is available: 'homolog' = stop where the homolog ends "
                         "(complete or T/TA stop there); 'first' = first in-frame complete stop codon")

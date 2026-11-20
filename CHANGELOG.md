@@ -5,6 +5,10 @@ installed one.
 
 ## Unreleased (0.0.2)
 
+### Added
+- `mito_intron --short_exons` (experimental, off by default): homolog-vote search for short divergent exons Exonerate does
+  not align (issue #15). No gain on the 134 NCBI records; benchmark/results/short_exons_2026-11-20/README.md.
+
 ### Fixed
 - Intron transfer: a strong, continuous model is no longer refused because of a weak conflicting core CDS inside its
   exon (MW592986.1 atp6, issue #15); the weak call is replaced. 1 of 134 NCBI records changed.
