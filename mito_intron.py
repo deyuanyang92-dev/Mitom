@@ -702,7 +702,7 @@ def product_for(gene: str) -> str:
     return PRODUCTS.get(norm_gene(gene), f"{gene} protein")
 
 
-def conflicting_genes(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -> List[str]:
+def conflicting_cds(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -> list:
     """Existing CDS (e.g. the core's) of a *different* standard mitochondrial protein gene that the
     model's exons overlap by >= 30 nt (intron-encoded ORFs such as heg are not conflicts)."""
     out = []
@@ -714,8 +714,37 @@ def conflicting_genes(rec, gene: str, strand: int, exons: List[Tuple[int, int]])
             continue                      # same gene, or intron-encoded ORF (heg/LAGLIDADG/orf...) that may overlap exons
         parts = [(int(p.start) + 1, int(p.end)) for p in f.location.parts]
         if sum(overlap(x, y) for x in exons for y in parts) >= 30:
-            out.append(other)
+            out.append(f)
     return out
+
+
+def conflicting_genes(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -> List[str]:
+    """Gene names of conflicting_cds."""
+    return [f.qualifiers["gene"][0] for f in conflicting_cds(rec, gene, strand, exons)]
+
+
+WEAK_CONFLICT_RATIO = 3          # a model whose exonerate score is >= 3 x the score of the CDS it overlaps wins over it
+WEAK_CONFLICT_INSIDE = 0.8       # ... when >= 80 % of that CDS lies inside the model's exons (the same DNA, explained twice)
+
+
+def outweighed_conflicts(rec, m, exons: List[Tuple[int, int]]) -> Optional[list]:
+    """The conflicting CDS of model m when every one is a weak call of the core inside m's exons (note 'ref ... score N',
+    N * WEAK_CONFLICT_RATIO <= m.score, WEAK_CONFLICT_INSIDE of its length in the exons); None when a conflict stands.
+    MW592986.1 atp6: score 528, 161 + 68 aa on exons 16007..16488 / 17095..17314, against an ATP8 of score 84 inside
+    exon 2 (the real atp8 is elsewhere) - the strong continuous gene is better evidence than the weak small one.
+    A CDS without a core score (the submitter's annotation) is never outweighed."""
+    found = conflicting_cds(rec, m.gene, m.strand, exons)
+    if not found:
+        return None
+    for f in found:
+        sc = re.search(r"\bscore (\d+(?:\.\d+)?)", " ".join(f.qualifiers.get("note", [])))
+        if not sc or float(sc.group(1)) * WEAK_CONFLICT_RATIO > m.score:
+            return None
+        parts = [(int(p.start) + 1, int(p.end)) for p in f.location.parts]
+        inside = sum(overlap(x, y) for x in exons for y in parts)
+        if inside < WEAK_CONFLICT_INSIDE * sum(b - a + 1 for a, b in parts):
+            return None
+    return found
 
 
 def repair_chain(rec, prot_id: str, gene: str, groups: List[List[Report]], qlen: int
@@ -795,6 +824,7 @@ def apply_model(rec, m: Model, exons: List[Tuple[int, int]], intron_info: List[d
         else:
             keep.append(ft)
     names = [f.qualifiers.get("gene", [""])[0] for f in hit if f.type == "CDS" and f.qualifiers.get("gene")]
+    names = [x for x in names if norm_gene(x) == norm_gene(m.gene)] or names      # (not the name of a replaced weak call)
     name = names[0] if names else m.gene
     products = [f.qualifiers["product"][0] for f in hit if f.type == "CDS" and f.qualifiers.get("product")]
     product = products[0] if products else product_for(name)
@@ -1193,7 +1223,12 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
                                          f"(< {UNTYPED_MIN_COVERAGE:.0%})")
         clash = conflicting_genes(rec, m.gene, m.strand, g_exons)
         if clash:
-            confidence, reason = "low", f"model overlaps existing {','.join(sorted(set(clash)))} CDS (different gene)"
+            weak = outweighed_conflicts(rec, m, g_exons) if confidence != "low" else None
+            if weak is not None:             # apply_model replaces them: the strong gene explains that DNA
+                reason += (f"; replaces the weak {','.join(sorted(set(clash)))} call "
+                           f"({', '.join(f.qualifiers['note'][0] for f in weak)})")
+            else:
+                confidence, reason = "low", f"model overlaps existing {','.join(sorted(set(clash)))} CDS (different gene)"
         hom = lib[m.query]
         name = (apply_model(rec, m, g_exons, info, a.genetic_code, partial5, partial3)
                 if confidence != "low" else m.gene)

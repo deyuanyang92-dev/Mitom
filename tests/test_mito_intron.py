@@ -657,3 +657,28 @@ def test_splicing_gain_rejects_an_intron_the_gene_does_not_need():
     s2 = e1 + junk + e1 + e2                                                 # the gene reads on in place
     ex2 = [(1, len(e1)), (len(e1) + len(junk) + len(e1) + 1, len(s2))]
     assert splicing_gain(s2, ex2, 0, 5, homolog_scorer(P)) < 20
+
+
+def test_strong_model_outweighs_a_weak_core_call_but_not_a_strong_or_submitted_one():
+    """#15 (MW592986.1 atp6): a continuous model (exonerate score 528) is not refused because of a weak ATP8 (core score
+    84) inside its exon 2; a CDS of similar score, one mostly outside the exons, or one without a core score stays a
+    conflict."""
+    import types
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    import mito_intron as MI
+    exons = [(16007, 16488), (17095, 17314)]
+    m = types.SimpleNamespace(gene="atp6", strand=1, score=528)
+
+    def rec_with(start, end, note):
+        r = SeqRecord(Seq("A" * 20000))
+        r.features = [SeqFeature(FeatureLocation(start, end, 1), type="CDS",
+                                 qualifiers={"gene": ["ATP8"], **({"note": [note]} if note else {})})]
+        return r
+    weak = "ref NC_034006:atp8-1-10981-11148 score 84 residues 1-53/55"
+    assert MI.outweighed_conflicts(rec_with(17127, 17287, weak), m, exons)                     # inside exon 2, weak
+    assert MI.outweighed_conflicts(rec_with(17127, 17287, weak.replace("score 84", "score 300")), m, exons) is None
+    assert MI.outweighed_conflicts(rec_with(17127, 17287, ""), m, exons) is None               # submitter's annotation
+    assert MI.outweighed_conflicts(rec_with(17200, 17500, weak), m, exons) is None             # mostly outside the exons
+    assert MI.outweighed_conflicts(rec_with(30000 - 11000, 19100, weak), m, exons) is None     # no conflict at all

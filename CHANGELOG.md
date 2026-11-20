@@ -3,6 +3,13 @@
 Notable changes of MitoM. Versions follow semantic versioning (major.minor.patch); `mitom --version` prints the
 installed one.
 
+## Unreleased (0.0.2)
+
+### Fixed
+- Intron transfer: a strong, continuous model is no longer refused because of a weak conflicting core CDS inside its
+  exon (MW592986.1 atp6, issue #15); the weak call is replaced. 1 of 134 NCBI records changed.
+  benchmark/results/weak_conflict_2026-11-20/README.md.
+
 ## 0.0.1 - 2026-11-20 (beta, first tagged test release)
 
 MitoM is still being tested: check introns, tRNAs and gene boundaries by hand before publishing or submitting to NCBI.
