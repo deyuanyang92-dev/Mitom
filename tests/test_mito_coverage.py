@@ -38,3 +38,19 @@ def test_tables_and_flat_map(tmp_path):
     fig = mc.flat_figure(rec, d)
     assert mc.save_figure(fig, tmp_path / "flat", ["png"])[0].stat().st_size > 1000
     assert mc._runs(d == 0) == [(0, 5)]
+
+
+def test_issue_12_columns_and_gz(tmp_path):
+    """Issue #12: coverage.tsv has mapped_reads, % >= 100x, topology and GC %; depth.tsv.gz on request."""
+    import gzip
+    rec = SeqRecord(Seq("GGCC" + "A" * 46), id="x", annotations={"topology": "circular"})
+    sam = ["x\t0\tx\t1\t60\t30M\t*\t0\t0\t*\t*", "x\t16\tx\t11\t60\t20M\t*\t0\t0\t*\t*", "x\t4\t*\t0\t0\t*\t*\t0\t0\t*\t*"]
+    reads = {}
+    d = mc.count_sam(sam, {"x": 50}, reads=reads)["x"]
+    assert reads == {"x": 2} and d.max() == 2
+    paths = mc.write_tables({"x": d}, tmp_path / "p", [rec], reads, gz=True)
+    assert paths[0].name == "p.depth.tsv.gz" and gzip.open(paths[0], "rt").readline() == "x\t1\t1\n"
+    head, row = paths[1].read_text().splitlines()
+    cols = dict(zip(head.split("\t"), row.split("\t")))
+    assert cols["mapped_reads"] == "2" and cols["topology"] == "circular" and cols["gc_pct"] == "8.00"
+    assert cols["pct_ge100"] == "0.00" and head.split("\t")[:3] == ["record", "length", "mean"]

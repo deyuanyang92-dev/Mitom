@@ -48,6 +48,10 @@ for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUME
 HERE = Path(__file__).resolve().parent
 MITOS_REF = "refseq89m"
 REF_URL = "https://zenodo.org/records/4284483/files/refseq89m.tar.bz2"      # MITOS2 reference data, 19.6 MB
+# Sources in the order tried (issue #11: Zenodo is unreachable from some networks, e.g. mainland China). The second is a
+# copy in the MITOS-Container repository (same md5, supports Range); every download is checked against REF_MD5.
+REF_URLS = (REF_URL,
+            "https://raw.githubusercontent.com/OMahoneyM/MITOS-Container/refs/heads/main/reflibs/refseq89/refseq89m.tar.bz2")
 REF_MD5 = "bb6325e27612e61a6995e88e8ffcecf8"
 # what each program is needed for, and the conda environment (env/*.yml) that installs it
 TOOLS = {
@@ -428,8 +432,31 @@ def extract_tar(tgz: Path, dest: Path) -> None:
         tf.extractall(dest)
 
 
+def download_ref(tgz: Path, urls=REF_URLS, timeout: int = 60) -> bool:
+    """Download refseq89m to tgz from the first source that works and has the right md5 (a source that fails, stalls
+    for `timeout` s or gives another file is reported and the next one is tried). honours https_proxy."""
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as r, open(tgz, "wb") as out:
+                shutil.copyfileobj(r, out)
+        except OSError as exc:                                  # (URLError, timeouts, a broken connection)
+            print(f"  {url}: {exc}", file=sys.stderr)
+            tgz.unlink(missing_ok=True)
+            # urllib through a proxy often fails the TLS handshake where curl does not (issue #11)
+            curl = shutil.which("curl")
+            if not curl or subprocess.run([curl, "-fsSL", "--retry", "2", "-m", "600", "-o", str(tgz), url],
+                                          capture_output=True).returncode:
+                tgz.unlink(missing_ok=True)
+                continue
+        if hashlib.md5(tgz.read_bytes()).hexdigest() == REF_MD5:
+            return True
+        print(f"  {url}: checksum mismatch", file=sys.stderr)
+        tgz.unlink(missing_ok=True)
+    return False
+
+
 def setup(refdir: Optional[str] = None) -> int:
-    """Download the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked) into refdir (default
+    """Download the MITOS2 reference data refseq89m (Zenodo 4284483, or its copy on GitHub; md5 checked) into refdir (default
     $MITOS_REFDIR or ~/mitos_refs) unless it is found, then save the found locations (doctor --write-config)."""
     have = refdir if refdir and (Path(refdir).expanduser() / MITOS_REF).is_dir() else None if refdir else mitos_refdir()
     if have:
@@ -439,15 +466,9 @@ def setup(refdir: Optional[str] = None) -> int:
         target.mkdir(parents=True, exist_ok=True)
         tgz = target / f"{MITOS_REF}.tar.bz2"
         print(f"downloading the MITOS2 reference data {MITOS_REF} (19.6 MB) to {target}", flush=True)
-        try:
-            urllib.request.urlretrieve(REF_URL, tgz)            # honours https_proxy
-        except OSError as exc:
-            print(f"download failed: {exc}\n  get {REF_URL} yourself and run: mitom setup --refdir <its folder>",
-                  file=sys.stderr)
-            return 1
-        if hashlib.md5(tgz.read_bytes()).hexdigest() != REF_MD5:
-            tgz.unlink()
-            print(f"checksum mismatch for {tgz.name}: run mitom setup again", file=sys.stderr)
+        if not download_ref(tgz):
+            print("download failed from every source:\n  " + "\n  ".join(REF_URLS) +
+                  "\n  get the file yourself and run: mitom setup --refdir <its folder>", file=sys.stderr)
             return 1
         extract_tar(tgz, target)
         tgz.unlink()

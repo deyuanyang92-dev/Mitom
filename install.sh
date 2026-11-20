@@ -4,7 +4,7 @@
 #   this Python, nothing is installed into the system Python - and the programs (BLAST, exonerate, Infernal, HMMER,
 #   table2asn, ARAGORN, tRNAscan-SE, MAFFT, bwa). Java for MiTFi: the system Java when there is one, else openjdk 8
 #   is added to the environment. Then the `mitom` command (in the environment and
-#   in ~/.local/bin) and `mitom setup`: the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked) and the
+#   in ~/.local/bin) and `mitom setup`: the MITOS2 reference data refseq89m (Zenodo 4284483, or its copy on GitHub; md5 checked) and the
 #   config file, so no tool path has to be typed.
 #   `--envs "mitotools mitos"` also installs MITOS2 2.1.10 (optional: --engine mitos2, --rescue yes, mito_trna.py).
 #   MitoZ is never installed (optional --engine mitoz: install it yourself, see mito_engines.py).

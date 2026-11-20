@@ -184,7 +184,9 @@ def test_setup_downloads_checks_and_writes_the_config(tmp_path, monkeypatch):
     tgz = tmp_path / "refseq89m.tar.bz2"
     with tarfile.open(tgz, "w:bz2") as tf:
         tf.add(tmp_path / "src" / "refseq89m", arcname="refseq89m")
-    monkeypatch.setattr(mito_env.urllib.request, "urlretrieve", lambda url, dest: shutil.copy(tgz, dest))
+    import io
+    monkeypatch.setattr(mito_env.urllib.request, "urlopen", lambda url, timeout=0: io.BytesIO(tgz.read_bytes()))
+    monkeypatch.setattr(mito_env.shutil, "which", lambda name: None)       # (no curl fallback in the test)
     monkeypatch.setattr(mito_env, "REF_MD5", hashlib.md5(tgz.read_bytes()).hexdigest())
     monkeypatch.setenv("YZZ_MITO_CONFIG", str(tmp_path / "cfg.json"))
     # setup() sets os.environ["MITOS_REFDIR"] to the fake refs: setenv first, so that monkeypatch restores it
@@ -199,8 +201,8 @@ def test_setup_downloads_checks_and_writes_the_config(tmp_path, monkeypatch):
         assert str(tmp_path / "refs") in (tmp_path / "cfg.json").read_text()
         monkeypatch.setattr(mito_env, "REF_MD5", "0" * 32)                # present: nothing downloaded again
         mito_env.setup(str(tmp_path / "refs"))
-        monkeypatch.setattr(mito_env.urllib.request, "urlretrieve", lambda url, dest: Path(dest).write_text("bad"))
-        assert mito_env.setup(str(tmp_path / "other")) == 1               # checksum mismatch
+        monkeypatch.setattr(mito_env.urllib.request, "urlopen", lambda url, timeout=0: io.BytesIO(b"bad"))
+        assert mito_env.setup(str(tmp_path / "other")) == 1               # checksum mismatch at every source
     finally:
         mito_env.config.cache_clear()
 

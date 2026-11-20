@@ -4,7 +4,7 @@ MitoM output
 summary.tsv    one row per record: gene counts, orientation, round, NCBI errors - read this first
 annotation/    the result: <accession>.gb per record (cox1 first, plus strand), all_records.gb, genes.fna (protein genes and rRNAs), proteins.faa, plots/ (genome maps)
 submission/    NCBI submission files, one folder per record (<accession>/: .fsa .tbl .sqn .val); submission_summary.tsv, validation_messages.tsv
-qc/            checks and decisions: original_vs_mitom.tsv and one report per step (deduplication, curation, ...)
+qc/            checks and decisions: original_vs_mitom.tsv and one report per step (deduplication, curation, ...); with --infq coverage.tsv (read depth per record) and depth.tsv.gz (per base)
 input/         the input records unchanged (GenBank input only), same file names
 logs/          run.log (everything the run did, with all commands), run_params.json, intron_fix.log, failed records
 

@@ -125,3 +125,20 @@ def test_genes_fna_leaves_out_pseudo_cds(tmp_path):
     ng, npr = mitom_output.write_sequences([gb], tmp_path / "g.fna", tmp_path / "p.faa")
     assert (ng, npr) == (1, 1)
     assert "cox1" in (tmp_path / "g.fna").read_text() and "nad1" not in (tmp_path / "g.fna").read_text()
+
+
+def test_summary_gets_depth_columns_and_coverage_step_skips_without_reads(tmp_path):
+    """Issue #12: mean_depth / breadth_1x_pct in summary.tsv when qc has coverage.tsv; --coverage auto without --infq
+    does nothing, yes without --infq says so."""
+    import argparse
+    import mitom_steps
+    from mito_common import reports_dir
+    (tmp_path / "annotation-summary.tsv").write_text("sample_name\tPCG\ttRNA\trRNA\tori\tbody\tmeta\nA\t13\t22\t2\tyes\tphase2\tno\n")
+    (reports_dir(tmp_path) / "coverage.tsv").write_text("record\tmean\tpct_ge1\tsample\nA.1\t55.20\t99.90\tA\n")
+    mitom_output.write_summary(tmp_path)
+    head, row = (tmp_path / "summary.tsv").read_text().splitlines()
+    assert head.endswith("\tmean_depth\tbreadth_1x_pct") and row.endswith("\t55.20\t99.90")
+    a = argparse.Namespace(coverage="auto", infq=None)
+    assert mitom_steps.run_coverage(a, tmp_path, tmp_path).summary.startswith("skipped")
+    r = mitom_steps.run_coverage(argparse.Namespace(coverage="yes", infq=None), tmp_path, tmp_path)
+    assert not r.ok and "--infq" in r.summary

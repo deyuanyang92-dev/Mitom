@@ -367,7 +367,8 @@ GROUPED_LAYOUT = [
                     "(protein genes and rRNAs), proteins.faa, plots/ (genome maps)"),
     ("submission/", "NCBI submission files, one folder per record (<accession>/: .fsa .tbl .sqn .val); "
                     "submission_summary.tsv, validation_messages.tsv"),
-    ("qc/", "checks and decisions: original_vs_mitom.tsv and one report per step (deduplication, curation, ...)"),
+    ("qc/", "checks and decisions: original_vs_mitom.tsv and one report per step (deduplication, curation, ...); "
+            "with --infq coverage.tsv (read depth per record) and depth.tsv.gz (per base)"),
     ("input/", "the input records unchanged (GenBank input only), same file names"),
     ("logs/", "run.log (everything the run did, with all commands), run_params.json, intron_fix.log, failed records"),
     ("work/", "intermediate files (only with --keep_intermediate yes)"),
@@ -433,7 +434,17 @@ def write_summary(out_root: Path) -> None:
             c = line.split("\t")
             if len(c) > 1:
                 errs[c[0]] = c[1]
-    rows = ["record\tprotein_genes\ttRNAs\trRNAs\tcox1_first\tannotation_used\toriginal_header_restored\tncbi_errors"]
+    depth: Dict[str, tuple] = {}                              # sample -> (mean depth, % >= 1x) of --coverage
+    cov = reports_dir(out_root) / "coverage.tsv"
+    if cov.is_file():
+        head = cov.read_text(encoding="utf-8").splitlines()
+        col = {n: i for i, n in enumerate(head[0].split("\t"))}
+        for line in head[1:]:
+            c = line.split("\t")
+            if "sample" in col and len(c) > col["sample"]:
+                depth[c[col["sample"]]] = (c[col["mean"]], c[col["pct_ge1"]])
+    rows = ["record\tprotein_genes\ttRNAs\trRNAs\tcox1_first\tannotation_used\toriginal_header_restored\tncbi_errors"
+            + ("\tmean_depth\tbreadth_1x_pct" if depth else "")]
     for line in src.read_text(encoding="utf-8").splitlines()[1:]:
         c = line.split("\t") + [""] * 7
         name, pcg, trn, rrn, ori, body, meta = c[:7]
@@ -443,7 +454,7 @@ def write_summary(out_root: Path) -> None:
         if "partial_no_gene_merged" in body:
             used += " + extra contigs"
         rows.append("\t".join([name, pcg, trn, rrn, ori, used, "yes" if "transferred" in meta else "no",
-                               errs.get(name, "")]))
+                               errs.get(name, "")] + (list(depth.get(name, ("", ""))) if depth else [])))
     (out_root / "summary.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
     src.unlink()
 

@@ -205,6 +205,11 @@ def build_parser() -> argparse.ArgumentParser:
         fq = sp.add_argument_group("FASTQ (optional - read depth ring of the genome maps, --plot)")
         fq.add_argument("--infq", default=None,
                         help="Directory with the paired FASTQ files of the samples (matched by sample name).")
+        fq.add_argument("--coverage", choices=["auto", "yes", "no"], default="auto",
+                        help="Read depth of every final record from the --infq reads: coverage.tsv (mean / median / "
+                             "min / max depth, %% bases >= 1x / 10x / 100x, mapped reads, GC %%) and depth.tsv.gz (depth "
+                             "per base) in qc/, mean_depth and breadth_1x in summary.tsv. auto (default) = when --infq "
+                             "is given; no = never (the depth ring of the maps stays).")
         fq.add_argument("--fq_position", choices=["flat", "sample_dir"], default="flat")
         fq.add_argument("--suffix_fq", default="_1.clean.fq.gz,_2.clean.fq.gz")
 

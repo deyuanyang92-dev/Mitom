@@ -45,11 +45,12 @@ usage: mitom run [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_maxlen
                  [--intron_rule {continuity,splice}] [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB]
                  [--intron_ref_gb INTRON_REF_GB] [--output_layout {grouped,classic}]
                  [--keep_intermediate {yes,no}] [--threads THREADS] [--jobs N] [--clade CLADE]
-                 [--genetic_code GENETIC_CODE] [--infq INFQ] [--fq_position {flat,sample_dir}]
-                 [--suffix_fq SUFFIX_FQ] [--scheduler_backend {auto,snakemake,threads}]
-                 [--snakemake_bin SNAKEMAKE_BIN] [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
-                 [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG] [--engine {native,mitoz,mitos2}]
-                 [--mitoz_bin MITOZ_BIN] [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
+                 [--genetic_code GENETIC_CODE] [--infq INFQ] [--coverage {auto,yes,no}]
+                 [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
+                 [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
+                 [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
+                 [--smk_extra FLAG] [--engine {native,mitoz,mitos2}] [--mitoz_bin MITOZ_BIN]
+                 [--mitos_args MITOS_ARGS] [--topology {auto,label,circular,linear}]
                  [--if_reannotation_2 {yes,auto,no}] [--preserve_phase1_metadata {yes,no}]
                  [--smart_metadata {yes,no}] [--auto_accept_metadata {yes,no}]
 
@@ -207,6 +208,11 @@ Annotation:
 
 FASTQ (optional - read depth ring of the genome maps, --plot):
   --infq INFQ           Directory with the paired FASTQ files of the samples (matched by sample name).
+  --coverage {auto,yes,no}
+                        Read depth of every final record from the --infq reads: coverage.tsv (mean / median
+                        / min / max depth, % bases >= 1x / 10x / 100x, mapped reads, GC %) and depth.tsv.gz
+                        (depth per base) in qc/, mean_depth and breadth_1x in summary.tsv. auto (default) =
+                        when --infq is given; no = never (the depth ring of the maps stays).
   --fq_position {flat,sample_dir}
   --suffix_fq SUFFIX_FQ
 
@@ -251,7 +257,7 @@ usage: mitom import [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_max
                     [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                     [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                     [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
-                    [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
+                    [--coverage {auto,yes,no}] [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
                     [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
                     [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB] [--smk_latency_wait SMK_LATENCY_WAIT]
                     [--smk_extra FLAG] [--preserve_phase1_metadata {yes,no}] [--smart_metadata {yes,no}]
@@ -398,6 +404,11 @@ Annotation:
 
 FASTQ (optional - read depth ring of the genome maps, --plot):
   --infq INFQ           Directory with the paired FASTQ files of the samples (matched by sample name).
+  --coverage {auto,yes,no}
+                        Read depth of every final record from the --infq reads: coverage.tsv (mean / median
+                        / min / max depth, % bases >= 1x / 10x / 100x, mapped reads, GC %) and depth.tsv.gz
+                        (depth per base) in qc/, mean_depth and breadth_1x in summary.tsv. auto (default) =
+                        when --infq is given; no = never (the depth ring of the maps stays).
   --fq_position {flat,sample_dir}
   --suffix_fq SUFFIX_FQ
 
@@ -427,7 +438,7 @@ usage: mitom annotate [-h] -i INPUT [-o OUT] [--if_split_fasta {yes,no}] [--id_m
                       [--intron_bin INTRON_BIN] [--intron_lib INTRON_LIB] [--intron_ref_gb INTRON_REF_GB]
                       [--output_layout {grouped,classic}] [--keep_intermediate {yes,no}] [--threads THREADS]
                       [--jobs N] [--clade CLADE] [--genetic_code GENETIC_CODE] [--infq INFQ]
-                      [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
+                      [--coverage {auto,yes,no}] [--fq_position {flat,sample_dir}] [--suffix_fq SUFFIX_FQ]
                       [--scheduler_backend {auto,snakemake,threads}] [--snakemake_bin SNAKEMAKE_BIN]
                       [--smk_cores SMK_CORES] [--smk_mem_mb SMK_MEM_MB]
                       [--smk_latency_wait SMK_LATENCY_WAIT] [--smk_extra FLAG]
@@ -576,6 +587,11 @@ Annotation:
 
 FASTQ (optional - read depth ring of the genome maps, --plot):
   --infq INFQ           Directory with the paired FASTQ files of the samples (matched by sample name).
+  --coverage {auto,yes,no}
+                        Read depth of every final record from the --infq reads: coverage.tsv (mean / median
+                        / min / max depth, % bases >= 1x / 10x / 100x, mapped reads, GC %) and depth.tsv.gz
+                        (depth per base) in qc/, mean_depth and breadth_1x in summary.tsv. auto (default) =
+                        when --infq is given; no = never (the depth ring of the maps stays).
   --fq_position {flat,sample_dir}
   --suffix_fq SUFFIX_FQ
 
@@ -717,8 +733,9 @@ options:
 ```text
 usage: mitom setup [-h] [--refdir REFDIR]
 
-Download the MITOS2 reference data refseq89m (Zenodo 4284483, md5 checked) into refdir (default
-$MITOS_REFDIR or ~/mitos_refs) unless it is found, then save the found locations (doctor --write-config).
+Download the MITOS2 reference data refseq89m (Zenodo 4284483, or its copy on GitHub; md5 checked) into
+refdir (default $MITOS_REFDIR or ~/mitos_refs) unless it is found, then save the found locations (doctor
+--write-config).
 
 options:
   -h, --help       show this help message and exit
@@ -1492,7 +1509,7 @@ options:
 usage: mito_coverage.py [-h] -i INPUT -o OUT [--fq1 FQ1] [--fq2 FQ2] [--depth_file DEPTH_FILE]
                         [--mapper {bwa,bwa-mem2,minimap2,bowtie2}] [--threads THREADS] [--min_mapq MIN_MAPQ]
                         [--circular] [--plot PLOT] [--log_scale] [--smooth BP] [--formats FORMATS]
-                        [--prefix PREFIX]
+                        [--prefix PREFIX] [--depth_gz]
 
 mito_coverage.py - read depth of a mitogenome (or any small reference): compute it, summarise it, draw it.
 
@@ -1507,7 +1524,8 @@ count (GenBank topology, `topology=circular` in the FASTA header, or --circular)
 
 Output (prefix = --prefix, default the reference file name):
   <prefix>.depth.tsv       record, position (1-based), depth - the format of `samtools depth -a`
-  <prefix>.coverage.tsv    one row per record: length, mean / median / min / max depth, % bases >= 1x / 10x / 0.2 x mean
+  <prefix>.coverage.tsv    one row per record: length, mean / median / min / max depth, % bases >= 1x / 10x / 0.2 x mean /
+                           100x, mapped_reads (with reads), topology, gc_pct; --depth_gz writes <prefix>.depth.tsv.gz
   <prefix>.<record>.flat.png|pdf     flat map: depth along the sequence on a log or linear axis, genes below (GenBank),
                                      bases with no reads marked (the view of GetOrganelle and of using_bwa_draw_coverage)
   <record>.png|pdf                   circular maps (--plot circos | mitom) with the depth ring, drawn by mito_plot.py
@@ -1533,6 +1551,7 @@ options:
   --smooth BP           flat map: running mean over BP bases
   --formats FORMATS     comma-separated (default png,pdf)
   --prefix PREFIX       prefix of the output files (default: the reference file name)
+  --depth_gz            write <prefix>.depth.tsv.gz (default: plain .tsv)
 ```
 
 ## mitom nuc

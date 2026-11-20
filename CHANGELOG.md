@@ -3,7 +3,31 @@
 Notable changes of MitoM. Versions follow semantic versioning (major.minor.patch); `mitom --version` prints the
 installed one.
 
-## Unreleased
+## 0.0.1 - 2026-11-20 (beta, first tagged test release)
+
+MitoM is still being tested: check introns, tRNAs and gene boundaries by hand before publishing or submitting to NCBI.
+
+### Fixed (review of 2026-11-20; benchmark/results/review_check_2026-11-20/README.md)
+- Exonerate second batch: the better 5'-partial placement was chosen by comparing a window end with a score.
+- `complete_claim`: every sample of a multi-record GenBank file took the first record's DEFINITION (4 of 170 annelid
+  RefSeq records would have been turned circular wrongly).
+- Curation: a stop-looking codon read by an internal `/transl_except` is no internal stop (the CDS was written
+  `/pseudo`); an imported `/pseudo` CDS is left as it is and gets no `/translation`; O1 keeps internal exceptions.
+- rRNA fill (R1) no longer stretches an rRNA to the end of a linear sequence; `genes.fna` leaves out `/pseudo` CDS.
+- `mito_nuc` reads `.gbff`; `mito_check` checks the last coding codon of an abbreviated-stop CDS; the intron-tool
+  check of `mitom run` works when exonerate is missing.
+- Known-site intron transfer keeps the de novo model when neither the merged nor the transferred model translates.
+- `mito_pcg_hmm`: `/translation` written, genes across the origin compared on the circle, `--k` help corrected.
+- `.mitom.lock` is created atomically (48 runs started together: exactly one gets the folder).
+
+### Added
+- `mitom run --coverage auto|yes|no` (issue #12): with `--infq`, qc/coverage.tsv (mean / median / min / max depth,
+  % bases >= 1x / 10x / 100x, mapped reads, topology, GC %) and qc/depth.tsv.gz; summary.tsv gets mean_depth and
+  breadth_1x_pct. `mitom coverage` writes the same columns and `--depth_gz`.
+- `mitom setup` downloads refseq89m from Zenodo or its copy on GitHub (md5 checked), with curl as a fallback
+  (issue #11).
+
+## Earlier changes (before the first tag)
 
 ### Fixed (frameshift joins)
 - Curation P9: before joining a protein gene over a "frameshift", an uninterrupted ORF in another frame covering

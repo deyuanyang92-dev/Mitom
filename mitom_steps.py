@@ -466,6 +466,56 @@ def _plot_file(job: Tuple[Path, Path, List[str], int, str]) -> Tuple[int, int, L
     return n, depth_n, msgs
 
 
+def run_coverage(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> StepResult:
+    """Read depth of the final records (issue #12): reports/coverage.tsv (mito_coverage.write_tables + the sample) and
+    reports/depth.tsv.gz, from the --infq reads of each sample (minimap2 when installed, else bwa mem). A report: a
+    failure never ends the run."""
+    mode = getattr(args, "coverage", "auto")
+    if mode == "no" or (mode == "auto" and not getattr(args, "infq", None)):
+        return StepResult("skipped (no --infq reads)" if mode == "auto" else "skipped (--coverage no)")
+    if not getattr(args, "infq", None):
+        logging.error("[COVERAGE] --coverage yes needs --infq")
+        return StepResult("skipped: --coverage yes needs --infq", ok=False)
+    try:
+        import mito_coverage as mc
+        import mito_env
+        infq = Path(args.infq).resolve()
+        s1, s2 = parse_suffix_fq(args.suffix_fq)
+        mapper = "minimap2" if mito_env.find("minimap2") else "bwa"
+        depths, mapped, sample_of, recs_all, no_reads = {}, {}, {}, [], []
+        for gbf in sorted(gb_dir.rglob("*.gbf")):
+            reads = [str(x) for x in find_fq_pair_for_sample(gbf.stem, infq, args.fq_position, s1, s2) if x]
+            if not reads:
+                no_reads.append(gbf.stem)
+                continue
+            recs = list(SeqIO.parse(str(gbf), "genbank"))
+            try:
+                d = mc.depth_from_reads(recs, reads, mapper, int(args.threads), reads_out=mapped)
+            except Exception as exc:                       # noqa: BLE001  (one sample must not end the report)
+                logging.warning(f"[COVERAGE] {gbf.stem}: {exc}")
+                no_reads.append(gbf.stem)
+                continue
+            for r in recs:
+                sample_of[r.id] = gbf.stem
+            depths.update(d)
+            recs_all += recs
+        if not depths:
+            return StepResult("no sample has reads in --infq (suffix / --fq_position?)", ok=False)
+        rep = reports_dir(out_root)
+        mc.write_tables(depths, rep / "cov", recs_all, mapped, gz=True)
+        (rep / "cov.depth.tsv.gz").replace(rep / "depth.tsv.gz")
+        lines = (rep / "cov.coverage.tsv").read_text().splitlines()
+        (rep / "cov.coverage.tsv").unlink()
+        (rep / "coverage.tsv").write_text(lines[0] + "\tsample\n" + "".join(
+            f"{ln}\t{sample_of.get(ln.split(chr(9))[0], '')}\n" for ln in lines[1:]), encoding="utf-8")
+        return StepResult(f"{len(depths)} record(s): coverage.tsv, depth.tsv.gz ({mapper})"
+                          + (f"; no reads: {', '.join(no_reads[:5])}" + (" ..." if len(no_reads) > 5 else "")
+                             if no_reads else ""))
+    except Exception as exc:                               # noqa: BLE001  (a report: must not end the run)
+        logging.error(f"[COVERAGE] failed: {exc!r}")
+        return StepResult("coverage failed (see run.log); the annotation itself is complete", ok=False)
+
+
 def run_compare(args: argparse.Namespace, gb_dir: Path, out_root: Path, original: Optional[Path] = None) -> StepResult:
     """mito_compare.py: the original annotation of the input records (`original`: original_annotation/, GenBank input
     only) vs MitoM's, gene by gene -> original_vs_mitom.tsv. A report: a failure never ends the run."""

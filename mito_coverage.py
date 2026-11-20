@@ -12,7 +12,8 @@ count (GenBank topology, `topology=circular` in the FASTA header, or --circular)
 
 Output (prefix = --prefix, default the reference file name):
   <prefix>.depth.tsv       record, position (1-based), depth - the format of `samtools depth -a`
-  <prefix>.coverage.tsv    one row per record: length, mean / median / min / max depth, % bases >= 1x / 10x / 0.2 x mean
+  <prefix>.coverage.tsv    one row per record: length, mean / median / min / max depth, % bases >= 1x / 10x / 0.2 x mean /
+                           100x, mapped_reads (with reads), topology, gc_pct; --depth_gz writes <prefix>.depth.tsv.gz
   <prefix>.<record>.flat.png|pdf     flat map: depth along the sequence on a log or linear axis, genes below (GenBank),
                                      bases with no reads marked (the view of GetOrganelle and of using_bwa_draw_coverage)
   <record>.png|pdf                   circular maps (--plot circos | mitom) with the depth ring, drawn by mito_plot.py
@@ -115,8 +116,10 @@ def mapper_command(mapper: str, fa: Path, reads: Sequence[str], threads: int, lo
     raise ValueError(f"unknown mapper {mapper!r} ({', '.join(MAPPERS)})")
 
 
-def count_sam(lines, ref_len: Dict[str, int], min_mapq: int = 0) -> Dict[str, np.ndarray]:
-    """Per-base depth from SAM lines: the reference span (CIGAR M D N = X) of every mapped primary alignment."""
+def count_sam(lines, ref_len: Dict[str, int], min_mapq: int = 0, reads: Optional[Dict[str, int]] = None
+              ) -> Dict[str, np.ndarray]:
+    """Per-base depth from SAM lines: the reference span (CIGAR M D N = X) of every mapped primary alignment; reads
+    (given: filled) = the number of those alignments per record (a pair counts twice)."""
     diff = {k: np.zeros(n + 1, dtype=np.int64) for k, n in ref_len.items()}
     for line in lines:
         if line[0] == "@":
@@ -133,14 +136,17 @@ def count_sam(lines, ref_len: Dict[str, int], min_mapq: int = 0) -> Dict[str, np
             sum(int(k) for k, op in CIGAR.findall(cig) if op in "MDN=X")
         d[start] += 1
         d[min(start + span, len(d) - 1)] -= 1
+        if reads is not None:
+            reads[f[2]] = reads.get(f[2], 0) + 1
     return {k: np.cumsum(d[:-1]) for k, d in diff.items()}
 
 
 def depth_from_reads(recs: Sequence[SeqRecord], reads: Sequence[str], mapper: str = "bwa", threads: int = 1,
-                     circular: Optional[bool] = None, min_mapq: int = 0, keep_log: Optional[Path] = None
-                     ) -> Dict[str, np.ndarray]:
+                     circular: Optional[bool] = None, min_mapq: int = 0, keep_log: Optional[Path] = None,
+                     reads_out: Optional[Dict[str, int]] = None) -> Dict[str, np.ndarray]:
     """{record id: per-base depth} of `recs` from one FASTQ or a pair. A circular record is mapped with its first
-    ORIGIN_EXT nt appended and the extension is folded back onto the start."""
+    ORIGIN_EXT nt appended and the extension is folded back onto the start. reads_out (given: filled): mapped
+    alignments per record."""
     if not 1 <= len(reads) <= 2:
         raise ValueError(f"1 or 2 FASTQ files expected, got {len(reads)}")
     ext: Dict[str, int] = {}
@@ -156,7 +162,7 @@ def depth_from_reads(recs: Sequence[SeqRecord], reads: Sequence[str], mapper: st
         with open(logf, "w") as log:
             cmd = mapper_command(mapper, fa, list(map(str, reads)), threads, log)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log, text=True)
-            cov = count_sam(p.stdout, ref_len, min_mapq)
+            cov = count_sam(p.stdout, ref_len, min_mapq, reads_out)
             rc = p.wait()
         tail = logf.read_text().strip().splitlines()[-STDERR_TAIL:]
         TOOL_LOG.debug(f"[CMD rc={rc} {time.time() - t0:.1f}s] {command_line(cmd)}" +
@@ -196,21 +202,41 @@ def summarise(depth: np.ndarray) -> Dict[str, float]:
     cut = 0.2 * mean
     return {"length": len(depth), "mean": mean, "median": float(np.median(depth)), "min": int(depth.min()),
             "max": int(depth.max()), "pct_ge1": 100 * float((depth >= 1).mean()),
-            "pct_ge10": 100 * float((depth >= 10).mean()), "pct_ge_0.2mean": 100 * float((depth >= cut).mean())}
+            "pct_ge10": 100 * float((depth >= 10).mean()),
+            "pct_ge100": 100 * float((depth >= 100).mean()), "pct_ge_0.2mean": 100 * float((depth >= cut).mean())}
 
 
-def write_tables(depths: Dict[str, np.ndarray], prefix: Path) -> List[Path]:
-    dpath, spath = Path(f"{prefix}.depth.tsv"), Path(f"{prefix}.coverage.tsv")
-    with open(dpath, "w") as h:
+def gc_pct(rec: SeqRecord) -> float:
+    seq = str(rec.seq).upper()
+    acgt = sum(seq.count(c) for c in "ACGT")
+    return 100 * (seq.count("G") + seq.count("C")) / acgt if acgt else 0.0
+
+
+def write_tables(depths: Dict[str, np.ndarray], prefix: Path, recs: Optional[Sequence[SeqRecord]] = None,
+                 mapped: Optional[Dict[str, int]] = None, gz: bool = False) -> List[Path]:
+    """<prefix>.depth.tsv (.gz: gz) and <prefix>.coverage.tsv. recs adds topology and GC %, mapped (reads per record)
+    adds mapped_reads (issue #12); columns after the first eight keep their order for old readers."""
+    import gzip
+    dpath = Path(f"{prefix}.depth.tsv" + (".gz" if gz else ""))
+    spath = Path(f"{prefix}.coverage.tsv")
+    with (gzip.open(dpath, "wt") if gz else open(dpath, "w")) as h:
         for rid, d in depths.items():
             h.write("".join(f"{rid}\t{i}\t{v}\n" for i, v in enumerate(d.tolist(), 1)))
-    cols = ["length", "mean", "median", "min", "max", "pct_ge1", "pct_ge10", "pct_ge_0.2mean"]
+    cols = ["length", "mean", "median", "min", "max", "pct_ge1", "pct_ge10", "pct_ge_0.2mean", "pct_ge100"]
+    by_id = {r.id: r for r in recs or []}
+    extra = (["mapped_reads"] if mapped is not None else []) + (["topology", "gc_pct"] if by_id else [])
     with open(spath, "w") as h:
-        h.write("record\t" + "\t".join(cols) + "\n")
+        h.write("record\t" + "\t".join(cols + extra) + "\n")
         for rid, d in depths.items():
             s = summarise(d)
-            h.write(rid + "\t" + "\t".join(f"{s[c]:.2f}" if isinstance(s[c], float) else str(s[c])
-                                           for c in cols) + "\n")
+            cells = [f"{s[c]:.2f}" if isinstance(s[c], float) else str(s[c]) for c in cols]
+            if mapped is not None:
+                cells.append(str(mapped.get(rid, 0)))
+            if by_id:
+                r = by_id.get(rid)
+                cells += [("circular" if is_circular(r, None) else "linear") if r is not None else "",
+                          f"{gc_pct(r):.2f}" if r is not None else ""]
+            h.write(rid + "\t" + "\t".join(cells) + "\n")
     return [dpath, spath]
 
 
@@ -314,6 +340,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--smooth", type=int, default=0, metavar="BP", help="flat map: running mean over BP bases")
     p.add_argument("--formats", default="png,pdf", help="comma-separated (default png,pdf)")
     p.add_argument("--prefix", help="prefix of the output files (default: the reference file name)")
+    p.add_argument("--depth_gz", action="store_true", help="write <prefix>.depth.tsv.gz (default: plain .tsv)")
     a = p.parse_args(argv)
     if bool(a.fq1) == bool(a.depth_file):
         p.error("give reads (--fq1 [--fq2]) or --depth_file")
@@ -324,20 +351,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     if bad:
         p.error(f"unknown --plot {bad} (choose from {', '.join(PLOTS)} or none)")
     formats = [x.strip() for x in a.formats.split(",") if x.strip()]
+    mapped: Optional[Dict[str, int]] = None if a.depth_file else {}
     try:
         recs = read_reference(a.input)
         if a.depth_file:
             depths = read_depth_file(a.depth_file, recs)
         else:
             depths = depth_from_reads(recs, [x for x in (a.fq1, a.fq2) if x], a.mapper, a.threads, a.circular,
-                                      a.min_mapq)
+                                      a.min_mapq, reads_out=mapped)
     except (RuntimeError, ValueError, OSError) as exc:
         print(f"[mito_coverage] {exc}", file=sys.stderr)
         return 1
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     prefix = out / (a.prefix or re.sub(r"\.(gb\w*|genbank|fa\w*|fna)$", "", Path(a.input).name))
-    written = write_tables(depths, prefix)
+    written = write_tables(depths, prefix, recs, mapped, a.depth_gz)
     used: set = set()
     for rec in recs:
         d = depths[rec.id]

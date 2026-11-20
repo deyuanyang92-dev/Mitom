@@ -38,6 +38,7 @@
   "genetic_code": 4,
   "species_name": null,
   "infq": null,
+  "coverage": "auto",
   "fq_position": "flat",
   "suffix_fq": "_1.clean.fq.gz,_2.clean.fq.gz",
   "scheduler_backend": "auto",

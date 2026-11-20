@@ -50,6 +50,7 @@ from mitom_steps import (
     run_orf,
     run_pcg_hmm,
     run_multipart,
+    run_coverage,
     run_plots,
     run_rescue,
     run_rrna_hmm,
@@ -535,7 +536,9 @@ def stage_maps(r: RunState) -> Optional[int]:
     """Circular genome maps (--plot)."""
     r.steps.start("maps", "Genome maps (circular plots)")
     maps = run_plots(r.args, r.merge_dir, r.out_root)
-    r.steps.done(maps.summary, maps.ok)
+    cov = run_coverage(r.args, r.merge_dir, r.out_root)        # (same step: the reads are the maps' reads)
+    r.steps.done(maps.summary + ("" if cov.summary.startswith("skipped") else "; coverage: " + cov.summary),
+                 maps.ok and cov.ok)
     return None
 
 
