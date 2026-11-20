@@ -249,6 +249,12 @@ def missing_genes(rec: SeqRecord) -> List[str]:
     return [g for g in sorted(PCG) if g not in have]
 
 
+def overlaps(lo: int, hi: int, a: int, b: int, n: int) -> bool:
+    """Whether the intervals lo..hi and a..b share a position on a circle of n nt (an end past n runs across the
+    origin: place() gives hi > n for such a gene; 2026-11-20 review: it was compared as a line)."""
+    return any(lo < b + shift and a + shift < hi for shift in (-n, 0, n))
+
+
 def translation_of(rec: SeqRecord, cds: SeqFeature, code: int, partial5: bool) -> str:
     """/translation of a CDS made here ('' when it has an internal stop): codons of its location, a start codon of the
     table giving M unless the 5' end is open, the terminal stop dropped (a T / TA stop has no complete codon)."""
@@ -308,7 +314,7 @@ def search_record(rec: SeqRecord, refs: Dict[str, list], default_code: int, gene
                 if pl is None:
                     continue
                 lo, hi, strand, open5, trna = pl
-                if any(lo < b and a < hi for a, b in taken):
+                if any(overlaps(lo, hi, a, b, len(rec.seq)) for a, b in taken):
                     continue
                 cover = (h["hmm_to"] - h["hmm_from"] + 1) / h["leng"]
                 note = (f"{NOTE}: profile HMM of the {h['n_ref']} nearest references ({base['shared_lineage']}), "

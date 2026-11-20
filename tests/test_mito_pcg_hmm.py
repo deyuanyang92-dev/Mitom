@@ -67,3 +67,12 @@ def test_a_divergent_gene_is_found_with_the_profile_of_its_relatives(tmp_path):
     assert cds and P.NOTE in cds[0].qualifiers["note"][0]
     tr = cds[0].qualifiers.get("translation", [""])[0]                  # 2026-11-20 review: it was never written
     assert tr and "*" not in tr and len(tr) == (len(gene) - 3) // 3
+
+
+def test_overlap_across_the_origin():
+    """A gene found across the origin (end > n) overlaps one at the start of the sequence."""
+    n = 1000
+    assert P.overlaps(950, 1030, 10, 40, n)             # 951..1030 runs over the origin onto 11..30
+    assert P.overlaps(10, 40, 950, 1030, n)
+    assert not P.overlaps(950, 1030, 100, 200, n)
+    assert not P.overlaps(100, 200, 300, 400, n) and P.overlaps(100, 300, 250, 400, n)
