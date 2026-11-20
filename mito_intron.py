@@ -719,6 +719,9 @@ def conflicting_cds(rec, gene: str, strand: int, exons: List[Tuple[int, int]]) -
     return out
 
 
+SHORT_EXON_MIN_GAIN = 40         # BLOSUM62 bits the new exons must add to the homolog alignment of an existing chain
+
+
 def short_exon_model(rec, L: int, gene: str, c: dict, lib: Dict[str, LibProt], grp: List[Report], m: Optional[Model],
                      why: str, a, own: str) -> Optional[Model]:
     """The chain of Exonerate alignments plus the short divergent exons it does not align (mito_intron_exon: homolog
@@ -747,6 +750,16 @@ def short_exon_model(rec, L: int, gene: str, c: dict, lib: Dict[str, LibProt], g
                                                 MIN_INTRON)
     if not note:
         return None
+    added = [e for e in new if e not in set(own_exons)]
+    scorer = homolog_scorer(prot, *homs[:3])
+    new = mito_intron_exon.fit_new_exons(use, sorted(new), added, a.genetic_code, scorer, MIN_INTRON)
+    if m is not None:
+        # a chain that exists is replaced only when the new exons add real homology (a false exon adds little)
+        def med(ex):
+            sc = sorted(scorer(_translate(use, ex, a.genetic_code).rstrip("*")))
+            return sc[(len(sc) - 1) // 2]
+        if med(new) - med(own_exons) < SHORT_EXON_MIN_GAIN or "*" in _translate(use, new, a.genetic_code).rstrip("*"):
+            return None
     exons = sorted(tx(e) for e in new)
     first, last = min(e[0] for e in own_exons), max(e[1] for e in own_exons)
     n_hole = any(e[1] < first for e in new)                      # in transcript order
@@ -1127,7 +1140,7 @@ def process_record(rec, lib: Dict[str, LibProt], lib_db: Path, a, tools: Dict[st
         if why == ACROSS_ORIGIN:
             across.append((gene, c, groups[0]))
             continue
-        if groups and getattr(a, "short_exons", False) and m is None and not why:
+        if groups and getattr(a, "short_exons", "off") != "off" and (m is None or a.short_exons == "all") and (m is not None or not why):
             m2 = short_exon_model(rec, L, gene, c, lib, groups[0], m, why if m is None else "", a, own)
             if m2 is not None:
                 m, why = m2, ""
@@ -1358,9 +1371,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="when an intron Rfam cannot type is written: continuity = the homologs of the gene are "
                         "continuous across its junction (an intron removes DNA only); splice = it has a type-I splice "
                         "score >= %d (before 2026-11-09)" % UNTYPED_MIN_SPLICE)
-    p.add_argument("--short_exons", action="store_true",
-                   help="EXPERIMENTAL: search short divergent exons Exonerate leaves unaligned, for genes with no "
-                        "model (homolog vote against a shuffled null, issue #15); gained nothing on the NCBI set")
+    p.add_argument("--short_exons", choices=["off", "new", "all"], default="off",
+                   help="EXPERIMENTAL: search short divergent exons Exonerate leaves unaligned (homolog vote against "
+                        "a shuffled null, issue #15): 'new' = only genes with no model, 'all' = also holes of "
+                        "existing chains")
     p.add_argument("--stop_rule", choices=["homolog", "first"], default="first",
                    help="3' end when no existing CDS end is available: 'homolog' = stop where the homolog ends "
                         "(complete or T/TA stop there); 'first' = first in-frame complete stop codon")

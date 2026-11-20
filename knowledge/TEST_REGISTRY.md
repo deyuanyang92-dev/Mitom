@@ -173,3 +173,4 @@ knowledge/experiments/*、Mitom_review/*、CHANGELOG、git log 汇总（数字�
 | 内含子：Chaetopterus 约 300 nt 预测、Decemunciger ND4 未确证 | docs/METHODS.md; benchmark/results/intron_gold_2026-10-29/gold_README.md |
 | 注释步骤超时、[organism=.] 占位待用户决定；Docker 全新安装未测 | Mitom_review/FIX_REVIEW_2026-11-05.md; Mitom_review/FIX_STATUS_2026-11-06_install.md |
 | 2026-11-20 | cody | 同源投票+打乱零模型能否找回 Exonerate 漏掉的短外显子（issue #15，19 条 bryozoan 漏检内含子） | intron_ncbi_2026-11-09 的 134 条 NCBI 记录 | intron_only.py，eval_introns.py，mitotools | 全链搜索：exact 148→146、missed 22→25（新外显子边界偏 ~40 nt，并给已正确的 cox1/cox2 加假外显子）；仅无模型基因：与 head 完全相同（148/22/3） | 无增益；`--short_exons` 保持默认关闭 | benchmark/results/short_exons_2026-11-20/README.md |
+| 2026-11-20 | cody | 短外显子：边界/框架拟合 + 增益守卫（--short_exons=all）（issue #15） | intron_ncbi_2026-11-09 的 134 条 NCBI 记录 | intron_only.py，eval_introns.py，mitotools | exact 148→151、missed 22→19、fp 3，无回退（3 条 cob 变 exact） | 有净增益；金标准/无内含子集未跑，默认仍关闭 | benchmark/results/short_exons_2026-11-20/README.md |

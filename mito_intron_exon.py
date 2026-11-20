@@ -143,6 +143,46 @@ def locate(use: str, prot: str, homs: List[str], q_lo: int, q_hi: int, nt_lo: in
     return left + [(s, e)] + right
 
 
+FIT_WINDOW = 60            # nt each end of a new exon may move when its frame and boundaries are fitted
+
+
+def fit_new_exons(use: str, exons: List[Tuple[int, int]], new: List[Tuple[int, int]], gencode: int, to_ref,
+                  min_intron: int, window: int = FIT_WINDOW) -> List[Tuple[int, int]]:
+    """Boundaries and frame of the exons found by `locate` (1-based inclusive transcript coordinates; `exons` = the whole
+    chain, `new` the members found here). The vote gives only the place, its ends are whole codons of the hit and
+    cannot know the phase at the junctions. Each new exon's ends are searched (+-window nt, intron >= min_intron to its
+    neighbours; the outer end of a first / last exon stays): the placement kept is the one whose spliced protein has no
+    internal stop codon and aligns best to the homologs (median of to_ref), ties to the smaller shift."""
+    from Bio.Seq import Seq as _Seq
+    ex = sorted(exons)
+    for n in sorted(new):
+        i = ex.index(n)
+        lo_s = ex[i - 1][1] + min_intron + 1 if i > 0 else n[0]
+        hi_e = ex[i + 1][0] - min_intron - 1 if i + 1 < len(ex) else n[1]
+        best, best_key = None, None
+        for a in range(-window if i > 0 else 0, (window if i > 0 else 0) + 1):
+            st = n[0] + a
+            if st < lo_s or st < 1:
+                continue
+            for b in range(-window if i + 1 < len(ex) else 0, (window if i + 1 < len(ex) else 0) + 1):
+                en = n[1] + b
+                if en > hi_e or en - st < 14 or en > len(use):
+                    continue
+                cand = ex[:i] + [(st, en)] + ex[i + 1:]
+                nt = "".join(use[x - 1:y] for x, y in cand)
+                prot = str(_Seq(nt[:len(nt) - len(nt) % 3]).translate(table=str(gencode)))
+                if "*" in prot.rstrip("*"):
+                    continue
+                sc = to_ref(prot)
+                sc = sorted(sc if isinstance(sc, list) else [sc])
+                key = (sc[(len(sc) - 1) // 2], -(abs(a) + abs(b)))
+                if best_key is None or key > best_key:
+                    best, best_key = cand, key
+        if best is not None:
+            ex = best
+    return ex
+
+
 def complete_chain(use: str, tx_exons: List[Tuple[int, int]], reports: List[Tuple[int, int, int, int]], prot: str,
                    homs: List[str], gencode: int, blocked: List[Tuple[int, int]], maxintron: int, min_intron: int
                    ) -> Tuple[List[Tuple[int, int]], str]:
