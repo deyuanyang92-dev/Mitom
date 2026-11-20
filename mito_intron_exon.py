@@ -68,7 +68,10 @@ def _best_hit(frames, piece: str, al: PairwiseAligner):
     for off, t in frames:
         if not t:
             continue
-        a = al.align(t, piece)[0]
+        try:
+            a = al.align(t, piece)[0]
+        except (IndexError, ValueError):
+            continue                  # no positive-scoring alignment in this frame (e.g. a window of N)
         sc = float(al.score(t, piece))
         if best is None or sc > best[0]:
             ts, ps = a.aligned

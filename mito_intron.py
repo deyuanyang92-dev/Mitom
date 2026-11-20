@@ -745,7 +745,7 @@ def short_exon_model(rec, L: int, gene: str, c: dict, lib: Dict[str, LibProt], g
     def tx(e):
         return e if strand == 1 else (L + 1 - e[1], L + 1 - e[0])
     reps = sorted(((r.qab, r.qae, min(tx(e)[0] for e in r.exons), max(tx(e)[1] for e in r.exons)) for r in grp))
-    own_exons = sorted(tx(e) for r in grp for e in r.exons)
+    own_exons = sorted(to_transcript(m, L)) if m is not None else sorted(tx(e) for r in grp for e in r.exons)
     new, note = mito_intron_exon.complete_chain(use, own_exons, reps, prot, homs, a.genetic_code, blocked, a.maxintron,
                                                 MIN_INTRON)
     if not note:
@@ -761,6 +761,8 @@ def short_exon_model(rec, L: int, gene: str, c: dict, lib: Dict[str, LibProt], g
         if med(new) - med(own_exons) < SHORT_EXON_MIN_GAIN or "*" in _translate(use, new, a.genetic_code).rstrip("*"):
             return None
     exons = sorted(tx(e) for e in new)
+    if m is not None and not valid_exons(exons):
+        return None
     first, last = min(e[0] for e in own_exons), max(e[1] for e in own_exons)
     n_hole = any(e[1] < first for e in new)                      # in transcript order
     c_hole = any(e[0] > last for e in new)
