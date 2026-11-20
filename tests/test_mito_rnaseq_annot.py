@@ -78,3 +78,37 @@ def test_junction_past_circular_end_wraps_and_does_not_raise():
     m.step_introns(rec, t, np.full(n, 100), rows)          # must not raise
     t.junctions[(n + 5, n + 60)] = 20
     m.step_introns(rec, t, np.full(n, 100), rows)
+
+
+def test_tap_cigar_n_counts_and_nonadjacent_supplementary_does_not():
+    seq = "A" * 100
+    lines = ["a\t0\tc\t1\t60\t50M100N50M\t*\t0\t0\t" + seq + "\t*",
+             # 50M100S + 100S50M: 50 read bases between the alignments are unexplained -> no junction
+             "b\t0\tc\t51\t60\t50M100S\t*\t0\t0\t" + "A" * 150 + "\t*\tSA:Z:c,201,+,100S50M,60,0;"]
+    t = m.Tap(lines, 400)
+    list(t)
+    assert dict(t.junctions) == {(49, 150): 1}
+
+
+def test_tap_ignores_other_reference_sequences():
+    lines = ["@SQ\tSN:c\tLN:400", "@SQ\tSN:other\tLN:400",
+             "a\t0\tother\t11\t60\t10M1I20M\t*\t0\t0\t" + "A" * 31 + "\t*",
+             "b\t0\tc\t11\t60\t40M60S\t*\t0\t0\t" + "A" * 100 + "\t*\tSA:Z:other,201,+,40S60M,60,0;"]
+    t = m.Tap(lines, 400, "c")
+    list(t)
+    assert not t.ins and not t.junctions
+
+
+def test_in_frame_indel_is_not_called_a_frameshift():
+    import numpy as np
+    rec = SeqRecord(Seq("ATG" + "GCT" * 60 + "TAA"), id="c")
+    _cds(rec, "COX1", FeatureLocation(0, 186, 1))
+    t = m.Tap([], 186)
+    t.ins[(50, 3)] = 30
+    rows = []
+    m.step_rna_indels(rec, t, np.full(186, 100), rows)
+    assert rows and "frameshift" not in rows[0]["detail"] and "in frame" in rows[0]["detail"]
+    t.ins[(50, 1)] = 15
+    rows = []
+    m.step_rna_indels(rec, t, np.full(186, 100), rows)
+    assert "frameshift" in rows[0]["detail"]

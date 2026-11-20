@@ -132,19 +132,23 @@ def internal_priming(seq: str, pos: int, strand: int) -> bool:
     return longest >= INTERNAL_RUN or w.count("A") >= INTERNAL_A
 
 
-def parse_sam(lines: Iterable[str], n: int) -> dict:
+def parse_sam(lines: Iterable[str], n: int, ref_name: Optional[str] = None) -> dict:
     """Depth by fragment strand, poly(A) 3' ends, sense counts per position. The fragment strand of a pair is read 1's
     strand (read 2 reversed) - for a stranded library it is (or is opposite to) the transcript's strand."""
     depth = {1: np.zeros(n, dtype=np.int64), -1: np.zeros(n, dtype=np.int64)}
     polya: Counter = Counter()
     used = low = 0
     edits = aligned = 0
+    n_sq = 0
     for ln in lines:
         if ln.startswith("@"):
+            n_sq += ln.startswith("@SQ")
             continue
         c = ln.split("\t", 11)
         flag = int(c[1])
         if flag & 0x904:                                    # unmapped, secondary, supplementary
+            continue
+        if ref_name is not None and n_sq != 1 and c[2] != ref_name:   # another reference sequence in the BAM: not this genome
             continue
         if int(c[4]) < MIN_MAPQ:
             low += 1
@@ -183,8 +187,8 @@ def parse_sam(lines: Iterable[str], n: int) -> dict:
             "edit_rate": edits / aligned if aligned else 0.0}
 
 
-def features_of(rec: SeqRecord) -> List[Tuple[str, str, int, int, int]]:
-    """(name, type, start, end, strand) of genes, rRNAs, tRNAs, ORFs and non-coding regions."""
+def _feature_rows(rec: SeqRecord) -> list:
+    """(feature, name, type) of genes, rRNAs, tRNAs, ORFs and non-coding regions, in record order."""
     out = []
     for f in rec.features:
         if f.type not in ("CDS", "rRNA", "tRNA", "misc_feature") or f.location is None:
@@ -195,10 +199,34 @@ def features_of(rec: SeqRecord) -> List[Tuple[str, str, int, int, int]]:
             if not note.startswith("non-coding region"):
                 continue
             name = note.split(",")[0].replace("non-coding region ", "")
+        out.append((f, name, f.type))
+    return out
+
+
+def features_of(rec: SeqRecord) -> List[Tuple[str, str, int, int, int]]:
+    """(name, type, start, end, strand) of genes, rRNAs, tRNAs, ORFs and non-coding regions (bounding span)."""
+    out = []
+    for f, name, t in _feature_rows(rec):
         parts = list(f.location.parts)
-        out.append((name, f.type, min(int(p.start) for p in parts), max(int(p.end) for p in parts),
+        out.append((name, t, min(int(p.start) for p in parts), max(int(p.end) for p in parts),
                     f.location.strand or 1))
     return out
+
+
+def feature_parts(rec: SeqRecord) -> List[Tuple[List[Tuple[int, int]], int]]:
+    """For each row of features_of: ([(start, end) of every part, 0-based], 0-based 3' end base in transcript sense).
+    A joined feature is measured over its parts, not the span between them (introns, the origin of a circular record)."""
+    out = []
+    for f, _, _ in _feature_rows(rec):
+        parts = [(int(p.start), int(p.end)) for p in f.location.parts]
+        st = f.location.strand or 1
+        last = list(f.location.parts)[-1]            # parts are in transcript order
+        out.append((parts, int(last.end) - 1 if st == 1 else int(last.start)))
+    return out
+
+
+def _over(arr, parts) -> np.ndarray:
+    return np.concatenate([arr[a:b] for a, b in parts]) if parts else arr[:0]
 
 
 def polya_sites(polya: Counter) -> List[Tuple[int, int, int]]:
@@ -230,11 +258,12 @@ def _duplicated_share(seg: str, kcount: Counter, k: int = 25) -> float:
     return sum(1 for x in km if kcount[x] > 1) / len(km) if km else 0.0
 
 
-def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict], dict]:
+def analyse(rec: SeqRecord, sam: Iterable[str], ref: Optional[str] = None) -> Tuple[List[dict], List[dict], dict]:
     n = len(rec.seq)
-    res = parse_sam(sam, n)
+    res = parse_sam(sam, n, ref)
     tot = res["depth"][1] + res["depth"][-1]
     feats = features_of(rec)
+    geom = feature_parts(rec)
     pcg = [f for f in feats if f[1] == "CDS" and gene_name({"gene": [f[0]]}, "CDS") in PCG]
     gene_depths = [float(tot[s:e].mean()) for _, _, s, e, _ in pcg]
     med = statistics.median(gene_depths) if pcg else 0.0
@@ -254,13 +283,14 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
     tRNA_ends = {(e - 1 if st == 1 else s, st) for nm, t, s, e, st in feats if t == "tRNA"}
     rows = []
     kcount = _kmer_counts(str(rec.seq).upper())
-    for nm, t, s, e, st in feats:
-        d = float(tot[s:e].mean()) if e > s else 0.0
-        dup = _duplicated_share(str(rec.seq).upper()[s:e], kcount)
-        end = e - 1 if st == 1 else s
+    useq = str(rec.seq).upper()
+    for (nm, t, s, e, st), (parts, end) in zip(feats, geom):
+        tt = _over(tot, parts)
+        d = float(tt.mean()) if tt.size else 0.0
+        dup = _duplicated_share("".join(useq[a:b] for a, b in parts), kcount)
         pa = sum(c for p, sst, c in sites if (sst == st) and abs(p - end) <= END_WINDOW)
-        ss = float(res["depth"][st][s:e].sum()) / max(1.0, float(tot[s:e].sum()))
-        cov = float((tot[s:e] >= COVERED * med).mean()) if e > s and med else 0.0
+        ss = float(_over(res["depth"][st], parts).sum()) / max(1.0, float(tt.sum()))
+        cov = float((tt >= COVERED * med).mean()) if tt.size and med else 0.0
         rows.append({"record": rec.id, "feature": nm, "type": t, "start": s + 1, "end": e,
                      "strand": "+" if st == 1 else "-", "length": e - s, "mean_depth": f"{d:.1f}",
                      "relative_depth": f"{d / med:.2f}" if med else "", "covered_share": f"{cov:.2f}",
@@ -272,7 +302,7 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
     for p, st, c in sites + primed:
         if (p, st) in tRNA_ends or any(abs(p - x) <= 1 and sx == st for x, sx in tRNA_ends):
             continue                                     # (CCA-tailed tRNA 3' end)
-        ends = [(abs(p - (e - 1 if fs == 1 else s)), nm) for nm, t, s, e, fs in feats
+        ends = [(abs(p - g[1]), nm) for (nm, t, s, e, fs), g in zip(feats, geom)
                 if t != "misc_feature" and fs == st]
         dist, nm = min(ends) if ends else (None, "")
         srows.append({"record": rec.id, "position": p + 1, "strand": "+" if st == 1 else "-", "reads": c,

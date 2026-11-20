@@ -60,6 +60,7 @@ JUNCTION_RATIO = 0.2       # ... and >= this share of the depth at its flanks (a
                            # 0.66-1.38; 305 of 311 other split-read gaps < 0.01 - chimeras / template switching)
 MIN_FLANK_DEPTH = 50       # an unannotated junction is judged only at this flank depth
 JUNCTION_MERGE = 5         # junction ends within 5 nt are one junction (alignment wobble at boundaries)
+ADJACENT = 5              # nt of read allowed between a primary and a supplementary alignment (microhomology)
 MIN_GAP = 20               # a split-read gap shorter than this is not counted as an intron
 MIN_CUT_READS = 10         # poly(A) reads at a tRNA / gene start that move an overlapping stop there
 RNA_INDEL_SHARE = 0.2      # share of reads with an indel at a position ...
@@ -75,15 +76,17 @@ COLUMNS = ["step", "feature", "verdict", "detail"]
 class Tap:
     """Passes SAM lines on to mito_rna.analyse and tallies split-read junctions and indels on the way."""
 
-    def __init__(self, lines: Iterable[str], n: int):
-        self.lines, self.n = lines, n
+    def __init__(self, lines: Iterable[str], n: int, ref: Optional[str] = None):
+        self.lines, self.n, self.ref, self.n_sq = lines, n, ref, 0
         self.junctions: Counter = Counter()
         self.ins: Counter = Counter()          # (0-based position after which bases are inserted, length)
         self.dels: Counter = Counter()         # (0-based first deleted position, length)
 
     def __iter__(self) -> Iterator[str]:
         for ln in self.lines:
-            if not ln.startswith("@"):
+            if ln.startswith("@"):
+                self.n_sq += ln.startswith("@SQ")
+            else:
                 self._read(ln)
             yield ln
 
@@ -92,6 +95,8 @@ class Tap:
         flag = int(c[1])
         if flag & 0x904 or int(c[4]) < mito_rna.MIN_MAPQ:
             return
+        if self.ref is not None and self.n_sq != 1 and c[2] != self.ref:
+            return                                   # another reference sequence in the BAM: not this genome
         pos, ops = int(c[3]) - 1, CIGAR.findall(c[5])
         ref = pos
         for k, op in ops:
@@ -100,6 +105,8 @@ class Tap:
                 self.ins[((ref - 1) % self.n, k)] += 1
             elif op == "D":
                 self.dels[(ref % self.n, k)] += 1
+            elif op == "N" and k > MIN_GAP:             # ordinary spliced alignment
+                self.junctions[((ref - 1) % self.n, (ref + k) % self.n)] += 1
             if op in "MD=XN":
                 ref += k
         sa = next((t for t in c[11:] if t.startswith("SA:Z:")), None)
@@ -107,17 +114,27 @@ class Tap:
             return
         strand = "-" if flag & 16 else "+"
         lead = int(ops[0][0]) if ops and ops[0][1] in "SH" else 0
+        qend = lead + sum(int(k) for k, op in ops if op in "MI=X")      # query interval of this alignment
         for s in sa[5:].strip().split(";"):
             if not s:
                 continue
-            _, sp, sst, scig, mq, _ = s.split(",")
-            if sst != strand or int(mq) < mito_rna.MIN_MAPQ:
-                continue
+            _, sp, sst, scig, mq, _ = s.split(",")[:6]
+            if s.split(",")[0] != c[2] or sst != strand or int(mq) < mito_rna.MIN_MAPQ:
+                continue                             # other contig / other strand / weak
             sp = int(sp) - 1
             sops = CIGAR.findall(scig)
             slead = int(sops[0][0]) if sops and sops[0][1] in "SH" else 0
+            sqend = slead + sum(int(k) for k, op in sops if op in "MI=X")
             slen = sum(int(k) for k, op in sops if op in "MD=X")
-            a, b = (ref - 1, sp) if lead < slead else (sp + slen - 1, pos)   # last base before / first after the gap
+            # the two alignments must be neighbours on the read (no unexplained read bases between them)
+            if lead < slead:
+                if abs(qend - slead) > ADJACENT:
+                    continue
+                a, b = ref - 1, sp
+            else:
+                if abs(sqend - lead) > ADJACENT:
+                    continue
+                a, b = sp + slen - 1, pos                # last base before / first after the gap
             if b - a - 1 > MIN_GAP:
                 self.junctions[(a % self.n, b % self.n)] += 1      # ends past the end of a circular genome wrap
 
@@ -281,10 +298,12 @@ def step_rna_indels(rec: SeqRecord, tap: Tap, depth, rows: list) -> None:
               [(int(q.start), int(q.end)) for q in f.location.parts] if f.type == "CDS" else None)
              for f in rec.features if f.type in ("CDS", "rRNA") and f.location is not None]
     for kind, tally in (("insertion", tap.ins), ("deletion", tap.dels)):
-        per = defaultdict(int)
+        per, alleles = defaultdict(int), defaultdict(dict)
         for (p, k), c in tally.items():
             per[p] += c
+            alleles[p][k] = alleles[p].get(k, 0) + c
         for p, c in per.items():
+            al = alleles[p]
             d = int(depth[p])
             if d < MIN_INDEL_DEPTH or c < RNA_INDEL_SHARE * d:
                 continue
@@ -296,12 +315,17 @@ def step_rna_indels(rec: SeqRecord, tap: Tap, depth, rows: list) -> None:
                      ", ".join(f"{n} intron" if parts else n for n, parts in inside))
             run = re.match(r"(.)\1*", seq[p + 1:]) if kind == "insertion" else re.match(r"(.)\1*", seq[p:])
             hp = f"{run.group(1)}{len(run.group(0))}" if run else ""
-            effect = ("a frameshift in those transcripts" if coding else
+            shift = any(k % 3 for k in al)               # any allele that moves the reading frame
+            top = ", ".join(f"{k} nt: {n}" for k, n in sorted(al.items(), key=lambda t: -t[1])[:3])
+            effect = (("a frameshift in those transcripts" if shift else
+                       "a multiple of 3 nt (alleles " + top + "): in frame, adds / removes whole codons") if coding else
                       "not in a coding part (intron / rRNA): no effect on a protein")
+            if shift and coding and len(al) > 1:
+                effect += f" (alleles {top})"
             if c >= SEQ_ERROR_SHARE * d:
                 effect = ("nearly all reads: the transcribed sequence differs from the genome here - a base error in "
                           "the assembly (same specimen) or a polymorphism (another individual)"
-                          + ("; inside a protein gene, so the genome frame is suspect" if coding else ""))
+                          + ("; inside a protein gene, so the genome frame is suspect" if coding and shift else ""))
             rows.append({"step": 4, "feature": where, "verdict": "flagged", "detail":
                          f"RNA {kind} at {p + 1} in {c} of {d} reads ({c / d:.0%})"
                          + (f", homopolymer {hp}" if hp else "")
@@ -331,8 +355,8 @@ def step_expression(features: List[dict], med: float, rows: list) -> None:
 
 def annotate(rec: SeqRecord, sam: Iterable[str], run: str = "") -> tuple:
     """-> (revised record, evidence rows, info). The record is changed in place."""
-    tap = Tap(sam, len(rec.seq))
-    features, sites, info = mito_rna.analyse(rec, tap)
+    tap = Tap(sam, len(rec.seq), rec.id)
+    features, sites, info = mito_rna.analyse(rec, tap, rec.id)
     depth = info["depth"][1] + info["depth"][-1]
     rows: List[dict] = []
     er, med = info["edit_rate"], info["pcg_median_depth"]

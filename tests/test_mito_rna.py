@@ -145,3 +145,19 @@ def test_minus_strand_polya_never_shortens_a_plus_strand_cds_even_when_unstrande
     sites = [{"position": "95", "strand": "-", "reads": "20", "internal_priming": ""}]
     assert R.refine(rec, [], sites, stranded=False) == []
     assert (rec.features[0].location.start, rec.features[0].location.end) == (0, 108)
+
+
+def test_joined_feature_measured_over_its_parts_and_other_contigs_ignored():
+    from Bio.SeqFeature import CompoundLocation
+    rnd = random.Random(2)
+    rec = SeqRecord(Seq("".join(rnd.choice("ACGT") for _ in range(1000))), id="M.1")
+    loc = CompoundLocation([FeatureLocation(900, 1000, 1), FeatureLocation(0, 100, 1)])   # across the origin
+    rec.features = [SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"]})]
+    sam = ["@SQ\tSN:M.1\tLN:1000", "@SQ\tSN:X\tLN:900"]
+    for i in range(50):
+        sam += [read(f"a{i}", 900, 100, 0), read(f"b{i}", 0, 100, 0)]
+    sam += [read(f"f{i}", 0, 50, 0, None, "50M10S").replace("M.1", "X") for i in range(10)]   # foreign contig
+    rows, sites, info = R.analyse(rec, sam, "M.1")
+    r = rows[0]
+    assert r["mean_depth"] == "50.0" and r["covered_share"] == "1.00"
+    assert info["reads_used"] == 100
