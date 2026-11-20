@@ -454,6 +454,13 @@ def merge_existing(G: Genome, rec, m: GeneModel, code: int) -> str:
         nt = "".join(G.sub(st, a, b) for st, a, b in exons)
         prot = codon_translate(nt, code).rstrip("*")
         if "*" in prot:
+            # the merged exons do not translate: the de novo introns outside the library were wrong, so the transferred
+            # model alone is used - unless that does not translate either, then the de novo model is the better base
+            # (2026-11-20 review: both were replaced by a model with an internal stop)
+            alone = "".join(G.sub(st, a, b) for st, a, b in m.exons)
+            if "*" in codon_translate(alone, code).rstrip("*"):
+                raise KeepDeNovo("neither the merged nor the transferred model translates (internal stop codon); "
+                                 "de novo model kept")
             return "not merged with the de novo model: internal stop codon"
         m.protein = prot
 

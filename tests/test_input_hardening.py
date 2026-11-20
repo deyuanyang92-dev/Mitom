@@ -172,3 +172,22 @@ def test_gb2fasta_same_file_name_in_two_subfolders(tmp_path):
                         "-o", str(tmp_path / "out")], capture_output=True, text=True)
     assert p.returncode == 0, p.stderr
     assert sorted(x.name for x in (tmp_path / "out").iterdir()) == ["mt.fasta", "mt_2.fasta"]
+
+
+def test_lock_is_exclusive_when_runs_start_together(tmp_path):
+    """2026-11-20 review: a run that read the lock of another before its pid was written took it for stale and deleted
+    it, so several runs got the folder. 48 runs started at the same moment: exactly one holds it."""
+    import subprocess
+    import sys
+    import time
+    code = ("import sys, time; sys.path.insert(0, %r); import mitom_prepare as P\n"
+            "t = float(sys.argv[2])\n"
+            "while time.time() < t: pass\n"
+            "r = P.lock_output(__import__('pathlib').Path(sys.argv[1]))\n"
+            "print('OK' if r == '' else 'REFUSED')\n"
+            "time.sleep(2)\n") % str(Path(__file__).resolve().parent.parent)
+    start = time.time() + 3.0
+    procs = [subprocess.Popen([sys.executable, "-c", code, str(tmp_path / "out"), str(start)],
+                              stdout=subprocess.PIPE, text=True) for _ in range(48)]
+    outs = [p.communicate()[0].strip() for p in procs]
+    assert outs.count("OK") == 1 and outs.count("REFUSED") == 47, outs

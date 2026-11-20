@@ -98,6 +98,15 @@ def record_phylum(rec) -> str:
 _EXCEPT_RE = re.compile(r"pos:(complement\()?(\d+)\.\.(\d+)\)?,aa:(\w+)")
 
 
+def has_internal_except(f: SeqFeature) -> bool:
+    """Whether the CDS carries a /transl_except other than the TERM of its stop (an amino acid read for a codon)."""
+    for q in f.qualifiers.get("transl_except", []):
+        m = _EXCEPT_RE.search(q.replace(" ", ""))
+        if m and m.group(4).upper() != "TERM":
+            return True
+    return False
+
+
 def internal_excepts(f: SeqFeature) -> List[str]:
     """Keep the /transl_except of codons inside the gene (an ambiguous codon read as Trp, NCBI NC_001636.1 ATP8) and
     drop the TERM one of the old stop (written again by the caller) and any outside the final location; returns the

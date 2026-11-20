@@ -65,3 +65,5 @@ def test_a_divergent_gene_is_found_with_the_profile_of_its_relatives(tmp_path):
     assert rows[0]["status"] == "found" and rows[0]["start"] == len(fill) + 1 and rows[0]["end"] == len(fill) + len(gene)
     cds = [f for f in rec.features if f.type == "CDS" and f.qualifiers["gene"] == ["ATP8"]]
     assert cds and P.NOTE in cds[0].qualifiers["note"][0]
+    tr = cds[0].qualifiers.get("translation", [""])[0]                  # 2026-11-20 review: it was never written
+    assert tr and "*" not in tr and len(tr) == (len(gene) - 3) // 3

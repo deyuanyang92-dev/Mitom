@@ -315,6 +315,27 @@ def test_merge_with_de_novo_model():
                for n in f.qualifiers.get("note", []))
 
 
+def test_de_novo_model_kept_when_no_candidate_model_translates(monkeypatch):
+    """2026-11-20 review: when the merged model has an internal stop and so has the transferred model alone, the record
+    got the transferred one (an internal stop) in place of the de novo model; now the de novo model is kept."""
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
+    import mito_intron_ref as R
+    rec = ncbi("NC_010217")
+    q = bare(rec, 0)
+    exons = [(10830, 11553), (11935, 11944), (13068, 13905)]
+    loc = CompoundLocation([FeatureLocation(a, b, strand=1) for a, b in exons])
+    q.features = [SeqFeature(loc, type="CDS", qualifiers={"gene": ["COX1"]}),
+                  SeqFeature(FeatureLocation(11553, 11935, strand=1), type="intron", qualifiers={"gene": ["COX1"]}),
+                  SeqFeature(FeatureLocation(11944, 13068, strand=1), type="intron", qualifiers={"gene": ["COX1"]})]
+    lib = M.ref_genes(rec)
+    lib[0].junctions = [j for j in lib[0].junctions if j.k == 2]
+    monkeypatch.setattr(R, "codon_translate", lambda nt, code: "MK*K")      # nothing translates
+    models, rows, written = annotate(q, lib, 4)
+    assert written == []
+    cds = next(f for f in q.features if f.type == "CDS")
+    assert [(int(p.start), int(p.end)) for p in cds.location.parts] == exons      # the de novo model as it was
+
+
 def test_leave_out_from_environment(monkeypatch):
     """mitom_lo: MITOM_EXCLUDE_REF leaves the record and its RefSeq / INSDC copy out, MITOM_EXCLUDE_LEVEL its species /
     genus; unset: the whole library."""

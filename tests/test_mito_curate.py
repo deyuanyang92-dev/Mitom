@@ -1334,3 +1334,29 @@ def test_rrna_fill_does_not_run_to_the_end_of_a_linear_sequence():
     s = _by(rec, "rRNA", "rrnS")
     assert int(s.location.start) == 150                              # not pulled to 0 (150 nt < max_fill 300)
     assert int(_by(rec, "rRNA", "rrnL").location.end) == 1500         # a neighbour (cox1 from 1501) is still filled to
+
+
+def _cds_rec(body, quals):
+    from Bio.SeqFeature import FeatureLocation
+    seq = "ATG" + body + "TAA" + "ACGTACGTAC" * 3
+    n = 3 + len(body) + 3
+    return _mkrec(seq, [("CDS", FeatureLocation(0, n, 1), "COX1", quals)]), n
+
+
+def test_internal_transl_except_is_no_internal_stop():
+    """2026-11-20 review: a CDS with a stop-looking codon read as Trp by /transl_except was written /pseudo."""
+    rec, n = _cds_rec("AAATAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                      {"transl_except": ["(pos:7..9,aa:Trp)"]})
+    _curate_rec(rec)
+    f = _by(rec, "CDS", "COX1")
+    assert "pseudo" not in f.qualifiers
+    assert f.qualifiers.get("transl_except") and f.qualifiers["translation"][0][2] == "W"
+
+
+def test_existing_pseudo_cds_is_left_alone():
+    """2026-11-20 review: an imported /pseudo CDS got its ends moved and a /translation next to /pseudo."""
+    rec, n = _cds_rec("AAACCCGGG", {"pseudo": [None]})
+    before = str(_by(rec, "CDS", "COX1").location)
+    _curate_rec(rec)
+    f = _by(rec, "CDS", "COX1")
+    assert str(f.location) == before and "translation" not in f.qualifiers

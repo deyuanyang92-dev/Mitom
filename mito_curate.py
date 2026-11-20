@@ -106,6 +106,7 @@ import mito_tbl  # noqa: E402  (record_code: the genetic code of a record's taxo
 from mito_curate_base import (  # noqa: F401  (re-exported: the rule constants and helpers)
     _EXCEPT_RE,
     apply_excepts,
+    has_internal_except,
     BICISTRONIC,
     FRAMESHIFT_MAX_TRIM,
     FRAMESHIFT_NOTE,
@@ -282,10 +283,19 @@ class Curator(OriginRules, PcgRules, RnaRules):
                 # shifted, joined over 'frameshifts' or written /pseudo (Grok 1.11, 2026-11-05); only translated
                 self.log(f, "P4", span(f), span(f), f"/codon_start={f.qualifiers['codon_start'][0]}: not curated")
                 continue
+            if f.type == "CDS" and ("pseudo" in f.qualifiers or "pseudogene" in f.qualifiers):
+                # an imported /pseudo CDS is the submitter's call: boundaries and translation are left as they are
+                # (2026-11-20 review: its ends were moved and a /translation written next to /pseudo)
+                self.log(f, "P4", span(f), span(f), "existing /pseudo CDS: not curated")
+                continue
             if f.type == "CDS":
                 self.origin_cut(f)
-                self.frameshift(f)
-                self.frame_repair(f)
+                if has_internal_except(f):        # a codon read as another amino acid by /transl_except: its
+                    self.log(f, "P4", span(f), span(f),   # stop-looking codon is no frameshift (P7 / P8 would cut it)
+                             "internal /transl_except: frameshift / frame rules not applied")
+                else:
+                    self.frameshift(f)
+                    self.frame_repair(f)
                 self.stop_trim(f)
                 self.pcg(f)
                 self.across_origin(f)

@@ -249,6 +249,22 @@ def missing_genes(rec: SeqRecord) -> List[str]:
     return [g for g in sorted(PCG) if g not in have]
 
 
+def translation_of(rec: SeqRecord, cds: SeqFeature, code: int, partial5: bool) -> str:
+    """/translation of a CDS made here ('' when it has an internal stop): codons of its location, a start codon of the
+    table giving M unless the 5' end is open, the terminal stop dropped (a T / TA stop has no complete codon)."""
+    nt = str(cds.extract(rec.seq)).upper()
+    table = CodonTable.unambiguous_dna_by_id[code]
+    nt = nt[: len(nt) - len(nt) % 3]
+    prot = "".join(table.forward_table.get(nt[i:i + 3], "*" if nt[i:i + 3] in table.stop_codons else "X")
+                   for i in range(0, len(nt), 3))
+    prot = prot[:-1] if prot.endswith("*") else prot
+    if not prot or "*" in prot:
+        return ""
+    if not partial5 and nt[:3] in table.start_codons:
+        prot = "M" + prot[1:]
+    return prot
+
+
 def search_record(rec: SeqRecord, refs: Dict[str, list], default_code: int, genes: Optional[Sequence[str]] = None,
                   k: int = K, exclude_acc: set = frozenset(), exclude_genus: set = frozenset(),
                   bin_dir: Optional[str] = None, write: bool = True) -> List[dict]:
@@ -307,8 +323,12 @@ def search_record(rec: SeqRecord, refs: Dict[str, list], default_code: int, gene
                              "note": [note]}
                     for q, v in stop_qualifiers(rec, loc, code).items():
                         quals[q] = quals.get(q, []) + v
+                    cds = SeqFeature(loc, type="CDS", qualifiers=quals)
+                    tr = translation_of(rec, cds, code, open5)
+                    if tr:
+                        cds.qualifiers["translation"] = [tr]          # (run alone, or with --curate no, the record keeps it)
                     rec.features.append(SeqFeature(loc, type="gene", qualifiers={"gene": [sym]}))
-                    rec.features.append(SeqFeature(loc, type="CDS", qualifiers=quals))
+                    rec.features.append(cds)
                 taken.append((lo, hi))
                 rows.append({**base, "status": "found", "start": lo + 1, "end": hi, "strand": "+" if strand == 1 else "-",
                              "codons": (hi - lo) // 3, "evalue": f"{h['evalue']:.1e}", "model_cover": f"{cover:.2f}",
@@ -335,7 +355,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("-i", "--input", required=True, help="GenBank file or folder (written in place)")
     s.add_argument("--refs", default=str(REFS))
     s.add_argument("--genetic_code", type=int, default=5, help="for records without /transl_table (default 5)")
-    s.add_argument("--k", type=int, default=K, help=f"references per profile (default {K})")
+    s.add_argument("--k", type=int, default=K, help=f"annotated relatives that give the prior of a gene being present (default {K}); the profiles use "
+                                                       f"the {SIZES} nearest references")
     s.add_argument("--genes", default="", help="comma-separated genes to search (default: the missing ones)")
     s.add_argument("--exclude_acc", default="", help="accessions left out of the references (benchmarks; also "
                    "$MITOM_EXCLUDE_REF)")

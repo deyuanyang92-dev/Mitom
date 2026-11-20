@@ -295,24 +295,46 @@ def lock_output(out_root: Path) -> str:
         return f"ERROR: cannot write into the output folder {out_root}: {exc.strerror or exc} (give -o a folder you can write to)"
     lock = out_root / LOCK_NAME
     me = str(os.getpid())
-    for _ in range(2):
-        try:
-            fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
+    content = f"{me} {_process_start(os.getpid())}".rstrip() + "\n"
+    # The lock appears complete or not at all: the content is written to a private file first and hard-linked to the
+    # lock name (atomic, fails when it exists). With O_CREAT | O_EXCL + write, a second run reading the still empty
+    # lock took it for a stale one and deleted it (2026-11-20 review: two runs wrote into one folder).
+    mine = out_root / f"{LOCK_NAME}.{me}.tmp"
+    mine.write_text(content)
+    try:
+        for _ in range(2):
             try:
-                held = lock.read_text().split()
-                other = int(held[0])
-                if not _lock_holder_alive(other, held[1] if len(held) > 1 else ""):
-                    raise ProcessLookupError(other)
-            except (ValueError, IndexError, OSError):
-                lock.unlink(missing_ok=True)           # stale (the run was killed): take it over
-                continue
-            return (f"ERROR: another MitoM run (pid {other}) is writing into {out_root}; wait for it, stop it, or "
-                    f"use another -o folder (a stale lock: delete {lock})")
-        with os.fdopen(fd, "w") as fh:
-            fh.write(f"{me} {_process_start(os.getpid())}".rstrip() + "\n")
-        atexit.register(_release_lock, lock, me)
-        return ""
+                os.link(mine, lock)
+            except FileExistsError:
+                text = None
+                try:
+                    text = lock.read_text()
+                    held = text.split()
+                    other = int(held[0])
+                    if not _lock_holder_alive(other, held[1] if len(held) > 1 else ""):
+                        raise ProcessLookupError(other)
+                except FileNotFoundError:
+                    continue                             # released meanwhile: try again
+                except (ValueError, IndexError, OSError):
+                    try:                                  # stale (the run was killed): take it over, unless it changed
+                        if text is not None and lock.read_text() == text:
+                            lock.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+                    continue
+                return (f"ERROR: another MitoM run (pid {other}) is writing into {out_root}; wait for it, stop it, or "
+                        f"use another -o folder (a stale lock: delete {lock})")
+            except OSError:                              # no hard links on this file system: create exclusively
+                try:
+                    fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                except FileExistsError:
+                    continue
+                with os.fdopen(fd, "w") as fh:
+                    fh.write(content)
+            atexit.register(_release_lock, lock, me)
+            return ""
+    finally:
+        mine.unlink(missing_ok=True)
     return f"ERROR: cannot lock {lock}"
 
 

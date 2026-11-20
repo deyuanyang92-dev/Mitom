@@ -21,7 +21,9 @@ from mito_curate_base import (
     NO_START_NOTE,
     NO_STOP_NOTE,
     PSEUDO_NOTE,
+    apply_excepts,
     gene_feature,
+    internal_excepts,
     set_span,
     simple,
     span,
@@ -71,8 +73,8 @@ class OriginRules:
                     if g is not None and simple(g):
                         set_span(g, gs, ge)
                     f.qualifiers.pop("translation", None)
-                    f.qualifiers["transl_except"] = [transl_except_term(gs, ge, 1 if f.location.strand == 1 else -1,
-                                                                        tail)]
+                    f.qualifiers["transl_except"] = internal_excepts(f) + [transl_except_term(
+                        gs, ge, 1 if f.location.strand == 1 else -1, tail)]
                     f.qualifiers["note"] = [n for n in f.qualifiers.get("note", []) if "completed by the addition" not in n] \
                         + [POLYA_NOTE]
                     self.log(f, "O1", old, (gs, ge), f"abbreviated stop {('T', 'TA')[tail - 1]} at the sequence end "
@@ -105,7 +107,7 @@ class OriginRules:
         if len(tail) > MAX_ORIGIN_EXT or len(head) < 60:
             return
         nt = str(f.location.extract(self.rec.seq)).upper()
-        if ends_with_stop(nt, self.stops) and "*" not in codon_translate(nt[:len(nt) - len(nt) % 3], self.code)[:-1]:
+        if ends_with_stop(nt, self.stops) and "*" not in apply_excepts(f, codon_translate(nt[:len(nt) - len(nt) % 3], self.code))[:-1]:
             # a complete gene across the origin (NCBI / MITOS2 records, a rotated input): not the core's run-on into
             # cox1 (2026-10-31 review: ~25 real genes were cut in half, some given an invented T / TA stop)
             return
@@ -123,7 +125,7 @@ class OriginRules:
         origin on -, NC_023783.1 cox3; table2asn NoStop): the joined sequence is checked like a single interval -
         internal stops /pseudo, no start codon 5'-partial, no stop 3'-partial with the NCBI notes."""
         nt = str(f.extract(self.rec.seq)).upper()
-        prot = codon_translate(nt, self.code)
+        prot = apply_excepts(f, codon_translate(nt, self.code))
         parts = list(f.location.parts)
         minus = f.location.strand == -1
         if prot.rstrip("*").count("*"):

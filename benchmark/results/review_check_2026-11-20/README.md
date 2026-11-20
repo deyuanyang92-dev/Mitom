@@ -17,4 +17,10 @@ Report: `~/mitom (1).md` (not in the repo). Each claim was read against the code
 | P0-4 code 14/33 | 理论上对；本地无数据，NCBI 几乎不用 14/33，未改 / not changed, no data |
 | P0-9 span 大内含子 | 2026-10-31 已按最大空隙修过，极端情形未复现 / not reproduced |
 
-未处理 / not done: P0-3 (/pseudo + transl_except), P1-1, P1-2, P2-4 lock race, P2-5 fork.
+第二批 / second batch (same day): 
+| P0-3 /pseudo、/transl_except | 真；pcg_check / origin_join_check 先用 apply_excepts，导入的 /pseudo CDS 不再 curate、不写 /translation，O1 保留内部例外，带例外的 CDS 跳过 P7/P8 / real, fixed |
+| P1-1 KeepDeNovo | 部分：合并与单独转移模型都有内部终止子时保留 de novo；只有合并模型有终止子时仍用转移模型（de novo 多出的内含子多半是错的）/ partly, fixed |
+| P1-2 pcg_hmm | `--k` 已传给 prior()（报告过时）；改了错误的帮助文字，补 /translation；`taken` 环形取模未验证 / partly stale |
+| P2-4 .mitom.lock | 真；临时文件 + os.link 原子建锁；48 进程同时抢锁，旧代码 3/3 失败、新代码 3/3 通过 / real, fixed |
+
+未处理 / not done: P2-5 fork -> spawn (risk, no evidence), P1-2 `taken` modulo n, P0-4 code 14/33 (no data).

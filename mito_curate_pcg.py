@@ -501,7 +501,7 @@ class PcgRules:
         s = self.tseq(f)
         a, b = self.tx(f)
         nt = s[a - 1:b]
-        prot = codon_translate(nt, self.code)
+        prot = apply_excepts(f, codon_translate(nt, self.code))      # a codon read as an amino acid is no stop
         n_stop = prot.rstrip("*").count("*")
         if n_stop:
             self.log(f, "P4", span(f), span(f), f"{n_stop} internal stop codon(s): wrong frame, frameshift "
@@ -547,6 +547,8 @@ class PcgRules:
         dropped (a record is always rewritten). A start codon of the table gives M unless the CDS is 5'-partial
         (NCBI convention). Not written when an internal stop remains (P4 reports it)."""
         f.qualifiers.pop("translation", None)
+        if "pseudo" in f.qualifiers or "pseudogene" in f.qualifiers:
+            return                                      # a /pseudo CDS has no /translation
         nt = str(f.extract(self.rec.seq)).upper()[int(f.qualifiers.get("codon_start", ["1"])[0]) - 1:]
         nt = nt[: len(nt) - len(nt) % 3]
         if not nt:
