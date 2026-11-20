@@ -382,6 +382,9 @@ def _strand(h) -> int:
     return 1 if h[3] >= h[2] else -1
 
 
+CHAIN_GAP_SLACK = 1500  # nt of query-only sequence tolerated between chained HSPs
+
+
 def chains(hsps: list, min_bits: float = MIN_CHAIN_BITS) -> List[list]:
     """collinear HSP chains of one reference, best first; HSPs of a chain do not overlap the query span of a
     better chain (copies on one contig become separate chains)"""
@@ -397,6 +400,11 @@ def chains(hsps: list, min_bits: float = MIN_CHAIN_BITS) -> List[list]:
                     ok = H[j][0] < H[i][0] and H[j][1] < H[i][1] and H[j][1] <= H[i][0] + 50 and \
                         (H[j][2] < H[i][2] and H[j][3] < H[i][3] and H[j][3] <= H[i][2] + 50 if st == 1 else
                          H[j][2] > H[i][2] and H[j][3] > H[i][3] and H[j][3] >= H[i][2] - 50)
+                    if ok:
+                        # query gap must match the reference gap (ITS length varies, a whole extra tandem copy does not)
+                        qg = H[i][0] - H[j][1]
+                        sg = (H[i][2] - H[j][3]) if st == 1 else (H[j][3] - H[i][2])
+                        ok = qg <= 2 * max(sg, 0) + CHAIN_GAP_SLACK
                     if ok and sc[j] + H[i][4] > sc[i]:
                         sc[i], prev[i] = sc[j] + H[i][4], j
             if H:
@@ -411,7 +419,9 @@ def chains(hsps: list, min_bits: float = MIN_CHAIN_BITS) -> List[list]:
             break
         out.append(best)
         lo, hi = best[0][0], best[-1][1]
-        left = [h for h in left if h not in best and (h[1] < lo or h[0] > hi)]
+        # drop HSPs outside the span and those overlapping a chain HSP; HSPs of another tandem copy inside the span stay
+        left = [h for h in left if h not in best and (h[1] < lo or h[0] > hi or
+                                                     all(h[1] < b[0] or h[0] > b[1] for b in best))]
     return out
 
 
