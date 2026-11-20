@@ -26,9 +26,12 @@ installed one.
   - RNA-seq: poly(A) sites of the opposite strand never shorten, extend or confirm a CDS, also for unstranded libraries.
   - `--clade auto`: an annotated CDS /transl_table is kept when the record has no taxonomy.
   - Nuclear histones: the consensus protein follows codon_start; `nuc_features.tsv` has a `codon_start` column.
-- Not yet fixed (from the same review): rDNA chain across tandem copies (mito_nuc_lib.py chaining), foreign-contig and
-  supplementary SAM alignments as evidence, joined-feature coverage, CIGAR `N` junctions, 5.8S rescue without a first
-  hit, in-frame indels reported as frameshifts, stale nuclear outputs on rerun.
+  - Nuclear rDNA: HSP chains no longer join different tandem copies (query gap must match the reference gap); HSPs of
+    other copies are kept. 5.8S rescue also works without a first hit; a rerun clears stale generated outputs.
+  - RNA-seq evidence: reads on other reference sequences are ignored; supplementary alignments count only when adjacent
+    on the read; CIGAR `N` junctions are counted; joined features (also across the origin) are measured over their parts;
+    in-frame indels are no longer reported as frameshifts.
+- Checked after these fixes: full pytest passes, all 9 golden cases unchanged (TEST_REGISTRY 2026-11-20).
 
 ## 0.0.1 - 2026-11-20 (beta, first tagged test release)
 
