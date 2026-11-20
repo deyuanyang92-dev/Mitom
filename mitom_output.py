@@ -586,6 +586,8 @@ def write_sequences(gb_files: List[Path], genes_out: Path, proteins_out: Path) -
                     continue
                 gene = f.qualifiers.get("gene", f.qualifiers.get("product", ["?"]))[0]
                 name = f"{rec.id}|{'_'.join(gene.split())}|{org}"
+                if "pseudo" in f.qualifiers or "pseudogene" in f.qualifiers:
+                    continue                                 # (as proteins.faa: no frame-shifted copy in a matrix)
                 genes.append(f">{name}\n{f.extract(rec.seq)}\n")
                 tr = f.qualifiers.get("translation", [""])[0]
                 if f.type == "CDS" and tr and "pseudo" not in f.qualifiers:

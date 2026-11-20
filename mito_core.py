@@ -386,7 +386,7 @@ def annotate_pcgs(genome: str, genome_fa: Path, refdir: Path, code: int, threads
                 continue
             tab = coding_frame(window, tab, tae, table)    # a frameshift near the start can put the alignment off frame
             s, e, partial = place_cds(window, tab, tae, qab, table, gene not in no_down)
-            if placed is None or placed[-1] and (not partial or score > placed[5]):
+            if placed is None or placed[-1] and (not partial or score > placed[6]):
                 placed = (ref, qab, qae, reflen, s, e, score, partial)
         if placed is None:
             # exonerate aligns only a fragment of a divergent gene that blastx covers end to end (flatworm atp6 of

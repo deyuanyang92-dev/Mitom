@@ -468,6 +468,21 @@ def test_complete_genome_labelled_linear_is_circular(tmp_path):
         assert mt.complete_claim(si) == want
 
 
+def test_complete_claim_reads_the_samples_own_record_of_a_multi_record_file(tmp_path):
+    """2026-11-20 review: every sample of a multi-record file took the first record's DEFINITION (a partial record
+    after a 'complete genome' one was turned circular)."""
+    from Bio.SeqRecord import SeqRecord
+    recs = [SeqRecord(Seq("ACGT" * 10), id=i, name=i.split(".")[0], description=d,
+                      annotations={"molecule_type": "DNA", "topology": "linear"})
+            for i, d in (("A1.1", "X mitochondrion, complete genome."), ("B2.1", "Y mitochondrion, partial genome."))]
+    gb = tmp_path / "multi.gb"
+    SeqIO.write(recs, str(gb), "genbank")
+    for acc, want in (("A1.1", "complete genome"), ("B2.1", "")):
+        si = SampleInfo(sample_name=acc, orig_token=acc, internal_id="S1", topology="linear",
+                        source_fasta=gb, internal_fasta=gb, orig_gb_path=gb)
+        assert mt.complete_claim(si) == want
+
+
 def test_reverse_complement_keeps_the_source_on_the_plus_strand():
     """Issue #8: a record turned to the strand of its orientation gene keeps source 1..L (not complement(1..L))."""
     from Bio.SeqFeature import FeatureLocation, SeqFeature

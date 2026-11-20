@@ -69,12 +69,12 @@ class RnaRules:
                         s = ne + 1
                 changed = True
         if self.a.rrna_bounds == "fill":
-            left = max([ne for ns, ne in neigh if ne < s] or [0])
-            right = min([ns for ns, ne in neigh if ns > e] or [self.L + 1])
-            if 0 < s - left - 1 <= self.a.max_fill:
-                s = left + 1
-            if 0 < right - e - 1 <= self.a.max_fill:
-                e = right - 1
+            lefts = [ne for ns, ne in neigh if ne < s]          # fill only up to a neighbouring gene, never to the
+            rights = [ns for ns, ne in neigh if ns > e]         # end of the sequence (2026-11-20 review)
+            if lefts and 0 < s - max(lefts) - 1 <= self.a.max_fill:
+                s = max(lefts) + 1
+            if rights and 0 < min(rights) - e - 1 <= self.a.max_fill:
+                e = min(rights) - 1
         cds_ov = max([min(e, ne) - max(s, ns) + 1 for x in self.others(f, types=("CDS",)) for ns, ne in spans(x)] or [0])
         if cds_ov > 50:
             self.log(f, "R3", old, (s, e), f"rRNA overlaps a CDS by {cds_ov} nt - boundary or assembly problem?")

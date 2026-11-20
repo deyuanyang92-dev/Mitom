@@ -320,7 +320,7 @@ def open_input(path: Path, work: Path) -> Tuple[Path, Optional[FastaIndex], Dict
     (rewriting a 460 Mb assembly took 15 s)"""
     with open(path, "rb") as f:
         first = f.readline()
-    if path.suffix.lower() not in (".gb", ".gbk", ".gbf", ".genbank") and not re.search(b"[ \t\r]", first):
+    if path.suffix.lower() not in (".gb", ".gbk", ".gbf", ".genbank", ".gbff") and not re.search(b"[ \t\r]", first):
         idx = FastaIndex(path)
         if idx.plain:
             return path, idx, {}, len(idx.at), idx.nt, set()
@@ -334,7 +334,7 @@ def read_input(path: Path, work: Path) -> Tuple[Path, Dict[str, str], int, int, 
     number of sequences and of nucleotides, and the ids of circular sequences (GetOrganelle paths named
     '...(circular)', GenBank topology circular). Records are read back on demand (FastaIndex), so an assembly of
     millions of contigs is never held in memory."""
-    fmt = "genbank" if path.suffix.lower() in (".gb", ".gbk", ".gbf", ".genbank") else "fasta"
+    fmt = "genbank" if path.suffix.lower() in (".gb", ".gbk", ".gbf", ".genbank", ".gbff") else "fasta"
     ids, org, nt, circ = set(), {}, 0, set()
     fa = work / "input.fa"
     with open(fa, "w") as o:
@@ -578,7 +578,7 @@ def definition(organism: str, src: Dict[str, str], feats: List[SeqFeature]) -> s
 
 
 def _source_quals(inp: Path, ids: set) -> Dict[str, Dict[str, str]]:
-    if inp.suffix.lower() not in (".gb", ".gbk", ".gbf", ".genbank"):
+    if inp.suffix.lower() not in (".gb", ".gbk", ".gbf", ".genbank", ".gbff"):
         return {}
     out = {}
     for r in SeqIO.parse(str(inp), "genbank"):

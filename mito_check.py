@@ -123,7 +123,7 @@ def check_cds(rec: SeqRecord, f: SeqFeature, name: str, code: Optional[int]) -> 
         return out
     if table is not None:
         stops = set(table.stop_codons)
-        internal = [i + 1 for i, c in enumerate(codons[:-1]) if c in stops]
+        internal = [i + 1 for i, c in enumerate(codons if len(nt) % 3 else codons[:-1]) if c in stops]
         if internal:
             out.append(Issue("ERROR", "internal_stop", label, _loc(f),
                              f"{len(internal)} internal stop codon(s) at codon {internal[:5]} (table {table_id})"))

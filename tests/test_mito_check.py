@@ -134,3 +134,19 @@ def test_length_and_frame_checked_without_transl_table():
     issues = mc.check_record(rec, None, 22)
     assert "pcg_length" in codes(issues, "ERROR") and "frame" in codes(issues, "ERROR"), codes(issues)
     assert "no_transl_table" in codes(issues, "WARNING") and "internal_stop" not in codes(issues)
+
+
+def test_abbreviated_stop_cds_checks_its_last_coding_codon():
+    """2026-11-20 review: for a CDS whose length is not a multiple of 3 (T / TA stop completed by polyadenylation) the
+    last coding codon was skipped as if it were the stop, so an internal stop there went unreported."""
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    seq = "ATG" + "AAA" * 3 + "TAA" + "T"                  # M K K K * + a lone T: the stop codon is not last
+    rec = SeqRecord(Seq(seq), id="X1.1")
+    rec.annotations["molecule_type"] = "DNA"
+    f = SeqFeature(FeatureLocation(0, len(seq), 1), type="CDS",
+                   qualifiers={"gene": ["cox1"], "transl_except": ["(pos:10..12,aa:TERM)"], "codon_start": ["1"]})
+    rec.features = [f]
+    issues = mc.check_cds(rec, f, "cox1", 5)
+    assert any(i.code == "internal_stop" for i in issues)

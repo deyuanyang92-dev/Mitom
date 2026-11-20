@@ -107,3 +107,21 @@ def test_grouped_layout(tmp_path):
     assert mitom_output.where(a, "reports/curation_report.tsv") == "qc/curation_report.tsv"
     assert mitom_output.where(a, "reports/failed_logs/") == "logs/failed_logs/"
     assert mitom_output.where(argparse.Namespace(output_layout="classic"), "reports/x.tsv") == "reports/x.tsv"
+
+
+def test_genes_fna_leaves_out_pseudo_cds(tmp_path):
+    """2026-11-20 review: proteins.faa skipped /pseudo CDS but genes.fna kept them (frame-shifted copies in a matrix)."""
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    rec = SeqRecord(Seq("ATGAAATTTGGGCCCTAA" * 4), id="P1.1", description="")
+    rec.annotations.update(molecule_type="DNA", organism="Genus sp.", topology="linear")
+    rec.features = [SeqFeature(FeatureLocation(0, 18, 1), type="CDS", qualifiers={"gene": ["cox1"], "translation": ["MKFGP"]}),
+                    SeqFeature(FeatureLocation(18, 36, 1), type="CDS",
+                               qualifiers={"gene": ["nad1"], "pseudo": [""], "translation": ["MKFGP"]})]
+    gb = tmp_path / "P.gb"
+    SeqIO.write([rec], str(gb), "genbank")
+    ng, npr = mitom_output.write_sequences([gb], tmp_path / "g.fna", tmp_path / "p.faa")
+    assert (ng, npr) == (1, 1)
+    assert "cox1" in (tmp_path / "g.fna").read_text() and "nad1" not in (tmp_path / "g.fna").read_text()

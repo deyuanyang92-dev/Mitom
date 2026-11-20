@@ -1318,3 +1318,19 @@ def test_p9_other_frame_orf_instead_of_frameshift_join():
     assert len(cds.location.parts) == 1, rows                          # no join
     assert (int(cds.location.start), int(cds.location.end)) == (100, 100 + len(orf)), rows
     assert _mc().FRAMESHIFT_NOTE not in cds.qualifiers.get("note", [])
+
+
+def test_rrna_fill_does_not_run_to_the_end_of_a_linear_sequence():
+    """2026-11-20 review: with no gene on one side, R1 'fill' stretched an rRNA lying within max_fill of a linear
+    sequence end to that end (non-coding sequence taken into the rRNA). Only a neighbouring gene is a fill target."""
+    import random
+    from Bio.SeqFeature import FeatureLocation
+    rnd = random.Random(7)
+    seq = "".join(rnd.choice("ACGT") for _ in range(3000))
+    rec = _mkrec(seq, [("CDS", FeatureLocation(1500, 2100, 1), "COX1"),
+                       ("rRNA", FeatureLocation(1000, 1400, 1), "rrnL", {"product": ["16S ribosomal RNA"]}),
+                       ("rRNA", FeatureLocation(150, 700, 1), "rrnS", {"product": ["12S ribosomal RNA"]})], "linear")
+    _curate_rec(rec)
+    s = _by(rec, "rRNA", "rrnS")
+    assert int(s.location.start) == 150                              # not pulled to 0 (150 nt < max_fill 300)
+    assert int(_by(rec, "rRNA", "rrnL").location.end) == 1500         # a neighbour (cox1 from 1501) is still filled to

@@ -28,14 +28,17 @@ from __future__ import annotations
 import argparse
 import csv
 import dataclasses
+import functools
 from mitom_output import where
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Callable, Dict, List, Tuple
 
 from Bio import SeqIO
 
+from mito_common import safe_name
 from mito_taxa import linear_mtdna
 from mitom_inputs import SampleInfo, UNLABELLED, write_one_record_fasta
 from mitom_log import record_event
@@ -89,16 +92,43 @@ COMPLETE_CLAIM = re.compile(r"complete (?:mitochondrial )?genome|complete mitoge
                             r"genome assembly, organelle: mitochondrion", re.I)
 
 
+@functools.lru_cache(maxsize=64)
+def _file_definitions(path: str, stamp: tuple = ()) -> dict:
+    """{record id / name / accession.version: DEFINITION} of the records of a GenBank file ('' = the DEFINITION when
+    the file has one record); read once per file and (modification time, size)."""
+    from mitom_metadata import gb_record_accession
+    out: dict = {}
+    try:
+        recs = list(SeqIO.parse(path, "genbank"))
+    except Exception:  # noqa: BLE001  (no evidence rather than a failed run)
+        return out
+    for rec in recs:
+        for key in (rec.id, rec.name, safe_name(rec.id), gb_record_accession(rec)):
+            out.setdefault(key, rec.description or "")
+    if len(recs) == 1:
+        out[""] = recs[0].description or ""
+    return out
+
+
 def complete_claim(si: SampleInfo) -> str:
-    """The words of a GenBank record's DEFINITION saying the sequence is a whole mitochondrial genome ('' if none)."""
+    """The words of the sample's own GenBank record's DEFINITION saying the sequence is a whole mitochondrial genome
+    ('' if none). A multi-record file gives each sample its own record's DEFINITION, never the first record's."""
     path = getattr(si, "orig_gb_path", None)
     if not path:
         return ""
     try:
-        rec = next(SeqIO.parse(str(path), "genbank"))
-    except Exception:  # noqa: BLE001  (no evidence rather than a failed run)
+        st = os.stat(path)
+        defs = _file_definitions(str(path), (st.st_mtime_ns, st.st_size))
+    except OSError:
         return ""
-    m = COMPLETE_CLAIM.search(rec.description or "")
+    description = ""
+    for key in (si.orig_token, si.sample_name, safe_name(si.orig_token)):
+        if key in defs:
+            description = defs[key]
+            break
+    else:
+        description = defs.get("", "")
+    m = COMPLETE_CLAIM.search(description)
     return m.group(0) if m else ""
 
 

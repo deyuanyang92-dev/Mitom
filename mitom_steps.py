@@ -380,7 +380,7 @@ def run_intron_fix(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     exe = (str(Path(args.intron_bin) / "exonerate") if args.intron_bin else shutil.which("exonerate")) or ""
     if args.intron_bin and not (Path(args.intron_bin) / "blastp").exists():
         exe = ""
-    if not script.exists() or not Path(exe).exists():          # on the console: introns would be missing silently
+    if not script.exists() or not exe or not Path(exe).is_file():          # on the console: introns would be missing silently
         msg = "[INTRON_FIX] skipped: exonerate / blastp not found (install.sh installs them; or --intron_bin)"
         logging.error(msg) if args.intron_fix == "yes" else logging.warning(msg)
         return StepResult(INTRON_LABEL + "skipped: exonerate / blastp not found (--intron_bin)",
