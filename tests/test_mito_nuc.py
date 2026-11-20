@@ -817,3 +817,32 @@ def test_consensus_protein_of_a_partial_histone_follows_codon_start(tmp_path):
     nuc.write_consensus(tmp_path, cons)
     faa = next((tmp_path / "consensus").glob("H3.faa")).read_text().split("\n")[1]
     assert faa == "A" * 20
+
+
+def test_58s_rescue_also_searches_sequences_without_any_initial_hit(tmp_path, monkeypatch):
+    import mito_nuc_rdna as R
+    fa = tmp_path / "regions.fa"
+    fa.write_text(">short\n" + "ACGT" * 40 + "\n")
+    queries = []
+
+    def fake(cmd):
+        queries.append(cmd)
+        return ""
+    monkeypatch.setattr(R, "program_output", fake)
+    monkeypatch.setattr(R, "tool", lambda n: n)
+
+    class Lib:
+        rdna_db = "db"
+        org = {}
+    R._rescue_58s({}, fa, Lib(), tmp_path, {}, 1, {"short": 160})
+    assert len(queries) == 1
+
+
+def test_rerun_removes_outputs_of_the_previous_run(tmp_path):
+    for d in ("genes", "consensus", "submission"):
+        (tmp_path / d).mkdir()
+        (tmp_path / d / "H3.fasta").write_text(">x\nA\n")
+    for f in ("nuc_features.tsv", "nuc_annotation.gb", "consensus.tsv", "nuc.log"):
+        (tmp_path / f).write_text("x")
+    nuc.clear_generated(tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["nuc.log"]

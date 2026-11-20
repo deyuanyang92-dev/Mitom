@@ -944,10 +944,27 @@ def write_consensus(out: Path, cons: List[dict]) -> None:
         (d / f"{g}.faa").write_text(txt)
 
 
+GENERATED = ("nuc_features.tsv", "nuc_annotation.gb", "genes", "submission", "consensus", "consensus.tsv")
+
+
+def clear_generated(out: Path) -> None:
+    """A rerun in the same output directory replaces the previous results: files of genes / stages absent from this
+    run (e.g. histone FASTAs after a `--genes rdna` rerun) would otherwise stay and read as current results."""
+    for name in GENERATED:
+        p = out / name
+        if p.is_dir() and not p.is_symlink():
+            logging.info(f"[NUC] previous output removed: {p}/")
+            shutil.rmtree(p)
+        elif p.exists() or p.is_symlink():
+            logging.info(f"[NUC] previous output removed: {p}")
+            p.unlink()
+
+
 def annotate(inp: Path, out: Path, lib_dir: Path, genes: List[str], threads: int,
              leave_out: Optional[Path] = None, consensus_identity: float = 0.99,
              organism: Optional[str] = None, src_table: Optional[Path] = None, refine: bool = True) -> List[dict]:
     out.mkdir(parents=True, exist_ok=True)
+    clear_generated(out)
     work = out / "tmp"
     if work.exists():
         shutil.rmtree(work)

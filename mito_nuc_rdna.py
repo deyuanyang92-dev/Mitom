@@ -201,7 +201,8 @@ def _rescue_58s(loci: Dict[str, List[dict]], regions: Path, lib: Library, work: 
     voted on like a whole unit: the spacer where 18S and 28S were found but no 5.8S, and the whole sequence
     (<= MAX_RESCUE nt) where no 5.8S was found at all (5.8S RNA records, ITS amplicons, short contigs)"""
     spacers = {}
-    for q, ls in loci.items():
+    for q in qlens:                          # also sequences without any initial locus
+        ls = loci.get(q, [])
         if any("5.8S" in L["feats"] for L in ls):
             continue
         n = qlens[q]
@@ -263,7 +264,7 @@ def _rescue_58s(loci: Dict[str, List[dict]], regions: Path, lib: Library, work: 
                      aln={x + a - 1 for x in f["aln"]})
             if i < 0:
                 L = dict(x, feats={})
-                loci[q].append(L)
+                loci.setdefault(q, []).append(L)
             else:
                 L = loci[q][i]
             L["feats"]["5.8S"] = f
