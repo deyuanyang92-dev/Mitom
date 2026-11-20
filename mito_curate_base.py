@@ -95,16 +95,49 @@ def record_phylum(rec) -> str:
 
 
 
-_EXCEPT_RE = re.compile(r"pos:(complement\()?(\d+)\.\.(\d+)\)?,aa:(\w+)")
+_EXCEPT_RE = re.compile(r"pos:(complement\()?(\d+)\.\.(\d+)\)?,aa:(\w+)")      # contiguous form only; see parse_except
+_EXCEPT_FULL = re.compile(r"\(?pos:(.+),aa:([A-Za-z]+)\)?$")
+
+
+def parse_except(q: str) -> Optional[Tuple[List[int], str]]:
+    """(0-based genome positions of the codon in transcript order, amino acid) of one /transl_except value, or None.
+    Any location the INSDC allows: a..b, a, complement(..), join(..), complement(join(..)); the join written by a
+    rotation across the origin is read too (2026-11-20 Codex review: only a..b was, the recoded codon turned X)."""
+    m = _EXCEPT_FULL.search(q.replace(" ", ""))
+    if not m:
+        return None
+    loc = m.group(1)
+    rev = False
+    while True:
+        if loc.startswith("complement(") and loc.endswith(")"):
+            rev, loc = not rev, loc[11:-1]
+        elif loc.startswith("join(") and loc.endswith(")"):
+            loc = loc[5:-1]
+        else:
+            break
+    out: List[int] = []
+    for part in loc.split(","):
+        pm = re.fullmatch(r"(\d+)(?:\.\.(\d+))?", part)
+        if not pm:
+            return None
+        a, b = int(pm.group(1)), int(pm.group(2) or pm.group(1))
+        out += list(range(a - 1, b))
+    return (out[::-1] if rev else out), m.group(2)
+
+
+def internal_except_positions(f: SeqFeature) -> List[List[int]]:
+    """Genome positions (0-based) of each codon read as an amino acid by a /transl_except other than the TERM one."""
+    out = []
+    for q in f.qualifiers.get("transl_except", []):
+        pe = parse_except(q)
+        if pe and pe[1].upper() != "TERM":
+            out.append(pe[0])
+    return out
 
 
 def has_internal_except(f: SeqFeature) -> bool:
     """Whether the CDS carries a /transl_except other than the TERM of its stop (an amino acid read for a codon)."""
-    for q in f.qualifiers.get("transl_except", []):
-        m = _EXCEPT_RE.search(q.replace(" ", ""))
-        if m and m.group(4).upper() != "TERM":
-            return True
-    return False
+    return bool(internal_except_positions(f))
 
 
 def internal_excepts(f: SeqFeature) -> List[str]:
@@ -114,8 +147,8 @@ def internal_excepts(f: SeqFeature) -> List[str]:
     pos = {i for p in f.location.parts for i in range(int(p.start), int(p.end))}
     keep = []
     for q in f.qualifiers.get("transl_except", []):
-        m = _EXCEPT_RE.search(q.replace(" ", ""))
-        if m and m.group(4).upper() != "TERM" and int(m.group(2)) - 1 in pos and int(m.group(3)) - 1 in pos:
+        pe = parse_except(q)
+        if pe and pe[1].upper() != "TERM" and all(i in pos for i in pe[0]):
             keep.append(q)
     if keep:
         f.qualifiers["transl_except"] = keep
@@ -132,14 +165,13 @@ def apply_excepts(f: SeqFeature, prot: str, offset: int = 0) -> str:
     index = {g: k for k, g in enumerate(order)}
     out = list(prot)
     for q in f.qualifiers.get("transl_except", []):
-        m = _EXCEPT_RE.search(q.replace(" ", ""))
-        if not m or m.group(4).upper() == "TERM":
+        pe = parse_except(q)
+        if not pe or pe[1].upper() == "TERM":
             continue
-        first = int(m.group(3)) - 1 if m.group(1) else int(m.group(2)) - 1      # the codon's first base (transcript)
-        k = index.get(first)
+        k = index.get(pe[0][0])                                                  # the codon's first base (transcript)
         if k is None or (k - offset) % 3:
             continue
-        aa = seq1(m.group(4)) if len(m.group(4)) == 3 else m.group(4)[:1]
+        aa = seq1(pe[1]) if len(pe[1]) == 3 else pe[1][:1]
         if 0 <= (k - offset) // 3 < len(out) and aa and aa != "X":
             out[(k - offset) // 3] = aa
     return "".join(out)

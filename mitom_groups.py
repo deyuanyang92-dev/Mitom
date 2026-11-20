@@ -102,6 +102,7 @@ def decide(args: argparse.Namespace) -> Plan:
         plan.error = f"no GenBank or FASTA file in {args.input}"
         return plan
     todo: List[Tuple[Row, str]] = []                      # rows to classify by blastx, with the sequence
+    declared: Dict[int, int] = {}                         # id(row) -> the CDS /transl_table of its record
     for f in files:
         try:
             recs = list(SeqIO.parse(str(f), "genbank" if kind == "genbank" else "fasta"))
@@ -110,6 +111,11 @@ def decide(args: argparse.Namespace) -> Plan:
             return plan
         for rec in recs:
             row = Row(rec.id, f.name)
+            if kind == "genbank":                         # an annotated /transl_table is input evidence, taxonomy or not
+                dec = Counter(str(x.qualifiers["transl_table"][0]) for x in rec.features
+                              if x.type == "CDS" and "transl_table" in x.qualifiers)
+                if dec and dec.most_common(1)[0][0].isdigit():
+                    declared[id(row)] = int(dec.most_common(1)[0][0])
             tax = [str(t) for t in rec.annotations.get("taxonomy", []) if t] if kind == "genbank" else []
             if tax:
                 ph = _phylum(tax)
@@ -159,6 +165,9 @@ def decide(args: argparse.Namespace) -> Plan:
                     plan.warnings.append(f"{row.record}: {c.note} ({c.codon_check}) - check, or give --genetic_code")
             else:
                 row.note = "; ".join(x for x in (row.note, c.note) if x)
+    for r in plan.rows:                                   # (the declared table also beats blastx / the fallback)
+        if declared.get(id(r)) and r.code != declared[id(r)]:
+            r.code, r.code_from = declared[id(r)], "CDS transl_table"
     undecided = [r for r in plan.rows if not r.code]
     decided = [r for r in plan.rows if r.code]
     for r in decided:

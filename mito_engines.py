@@ -346,17 +346,29 @@ def import_results(src: Path, fastas: Sequence[Path] = (), code: Optional[int] =
     if mitos:
         if not code:
             raise ValueError("MITOS2 results: give --genetic_code (the code MITOS2 ran with)")
-        seqs: Dict[str, str] = {}
-        for fa in [*fastas, *(p for m in mitos for d in (m, m.parent) for p in sorted(d.glob("*"))
-                               if p.is_file() and _plain_suffix(p) in FA_SUFFIXES)]:
-            for r in SeqIO.parse(io.StringIO(_read_text(Path(fa))), "fasta"):
-                seqs.setdefault(r.id, str(r.seq).upper())
+        def read_fastas(paths) -> Dict[str, Optional[str]]:
+            """id -> sequence; None when one id names different sequences (ambiguous, never guessed)."""
+            out: Dict[str, Optional[str]] = {}
+            for fa in paths:
+                for r in SeqIO.parse(io.StringIO(_read_text(Path(fa))), "fasta"):
+                    sq = str(r.seq).upper()
+                    out[r.id] = sq if out.get(r.id, sq) == sq else None
+            return out
+        given = read_fastas(fastas)
         for m in mitos:
+            # the FASTA next to this result folder (its own run) first, then the --fasta files; never another
+            # sample's sequence of the same name (2026-11-20 Codex review: pooled ids let the first genome win)
+            local = read_fastas(p for d in (m, m.parent) for p in sorted(d.glob("*"))
+                                if p.is_file() and _plain_suffix(p) in FA_SUFFIXES)
             for sid in mitos2_seq_ids(m):
-                if sid not in seqs:
+                sq = local[sid] if sid in local else given.get(sid)
+                if sid not in local and sid not in given:
                     raise ValueError(f"MITOS2 result {m}: genome sequence '{sid}' not found; give it with --fasta")
+                if sq is None:
+                    raise ValueError(f"MITOS2 result {m}: sequence name '{sid}' is used for different sequences "
+                                     "in the FASTA files; give one FASTA per sample with unique names")
                 topo = topology if topology != "auto" else (mitos2_topology(m) or "circular")
-                recs.append(mitos2_record(m, seqs[sid], sid, code, topo))
+                recs.append(mitos2_record(m, sq, sid, code, topo))
         notes.append(f"{len(mitos)} MITOS2 result folder(s) converted (genetic code {code})")
     seen: Dict[str, int] = {}
     used = {r.id for r in recs}

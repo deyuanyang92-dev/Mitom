@@ -59,3 +59,19 @@ def test_mitfi_skipped_only_when_it_cannot_change_the_result(monkeypatch):
     assert run(weak_copy) == (0, list(mito_trna.TRNA_NAMES))      # a weaker copy below 0.9 is dropped anyway
     monkeypatch.setattr(mito_trna, "ALWAYS_MITFI", True)
     assert run(full)[0] == 1
+
+
+def test_call_merges_one_trna_seen_at_both_ends_of_a_circular_sequence():
+    """A pan-model hit at 1..68 and a clade-model hit at L..L+67 are one tRNA: the final filter is circular-aware."""
+    import numpy as np
+
+    class Clf:
+        def predict_proba(self, X):
+            return np.array([[0.1, 0.9]] * len(X))
+
+    L = 1000
+    base = {k: 0 for k in trna_ml.FEATS}
+    a = dict(base, locus=0, family="M", strand=1, start=1, end=68, p=0)
+    b = dict(base, locus=1, family="M", strand=1, start=L, end=L + 67, p=0)
+    assert len(trna_ml.call([dict(a), dict(b)], Clf(), 0.5, L)) == 1
+    assert len(trna_ml.call([dict(a), dict(b)], Clf(), 0.5, 0)) == 2   # linear: two places, as before

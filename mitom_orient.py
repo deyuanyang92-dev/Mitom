@@ -173,7 +173,7 @@ def edge_gene_truncated(f: "SeqFeature", seq: "Seq", total: int, code: int = 5) 
     table = CodonTable.unambiguous_dna_by_id.get(int(code), CodonTable.unambiguous_dna_by_id[5])
     nt = str(f.extract(seq)).upper()
     rem = len(nt) % 3
-    tail = abbreviated_stop(nt)
+    tail = abbreviated_stop(nt, code)
     if rem and not tail:
         return True
     minus = loc.strand == -1

@@ -93,6 +93,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from Bio.Data import CodonTable
+from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature
 
 import mito_env  # noqa: E402  (finds external programs: config, PATH, conda environments)
@@ -112,6 +113,7 @@ from mito_curate_base import (  # noqa: F401  (re-exported: the rule constants a
     FRAMESHIFT_NOTE,
     FRAMESHIFT_WINDOW,
     gene_feature,
+    internal_except_positions,
     internal_excepts,
     INTERNAL_NOTE,
     MAX_END_EXTENSION,
@@ -169,9 +171,10 @@ class Curator(OriginRules, PcgRules, RnaRules):
                           "old": f"{old[0]}..{old[1]}", "new": f"{new[0]}..{new[1]}", "reason": why})
 
     def others(self, f: SeqFeature, types=("tRNA", "rRNA", "CDS"), same_strand: bool = False) -> List[SeqFeature]:
-        return [g for g in self.rec.features if g is not f and g.type in types
-                and (not same_strand or g.location.strand == f.location.strand)
-                and gene_feature(self.rec, g) is not gene_feature(self.rec, f)]
+        fg = gene_feature(self.rec, f)       # features of one gene (a join's parts) are not neighbours; with no
+        return [g for g in self.rec.features if g is not f and g.type in types   # gene feature nothing is excluded
+                and (not same_strand or g.location.strand == f.location.strand)  # (2026-11-20 Codex: None is None)
+                and (fg is None or gene_feature(self.rec, g) is not fg)]
 
     def frame_differs(self, f: SeqFeature, other: Tuple[int, int]) -> bool:
         """Reading frames of two same-strand CDS: anchored at the genome start on +, at the genome END on -
@@ -260,7 +263,17 @@ class Curator(OriginRules, PcgRules, RnaRules):
         return (a, b) if f.location.strand == 1 else (self.L + 1 - b, self.L + 1 - a)
 
     def tseq(self, f: SeqFeature) -> str:
-        s = self.seq if f.location.strand == 1 else str(self.rec.seq.reverse_complement()).upper()
+        s = self.seq
+        ex = internal_except_positions(f) if f.type == "CDS" else []
+        if ex:                  # a codon read as an amino acid by /transl_except is no stop / start: masked (NNN) here,
+            m = list(s)         # so every stop search sees what the translation sees (2026-11-20 Codex review)
+            for pos in ex:
+                for i in pos:
+                    if 0 <= i < len(m):
+                        m[i] = "N"
+            s = "".join(m)
+        if f.location.strand != 1:
+            s = str(Seq(s).reverse_complement())
         return s
 
     # ── PCG rules ──
@@ -442,8 +455,15 @@ def run(a: argparse.Namespace) -> int:
             code = known or 5
             if t2a:
                 val_before += nv.validate_record(copy.deepcopy(rec), out / "validation" / "before", t2a, code=code)
+            declared = {str(ft.qualifiers["transl_table"][0]) for ft in rec.features
+                        if ft.type == "CDS" and str(ft.qualifiers.get("transl_table", [""])[0]).isdigit()}
+            if not a.genetic_code and len(declared) > 1:   # the rules and the translation use ONE code per record
+                raise InputError(f"{rec.id}: the CDS declare different /transl_table ({', '.join(sorted(declared))}); "
+                                 "give --genetic_code to set one code for the record")
             for ft in rec.features if known else ():     # before the backup: kept when curation fails (Bugbot, PR #3)
-                if ft.type == "CDS" and not str(ft.qualifiers.get("transl_table", [""])[0]).isdigit():
+                # an explicit --genetic_code replaces a declared table too: a kept /transl_table=2 beside a translation
+                # made with 5 contradicts itself (2026-11-20 Codex review)
+                if ft.type == "CDS" and (a.genetic_code or not str(ft.qualifiers.get("transl_table", [""])[0]).isdigit()):
                     ft.qualifiers["transl_table"] = [str(code)]
             codes.append(code)
             backup = copy.deepcopy(rec)                  # run() edits in place: a failure must not leave a half-curated record

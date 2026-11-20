@@ -135,3 +135,13 @@ def test_refine_utr_extension_and_duplication():
     f = {x.qualifiers["gene"][0]: x for x in rec.features}
     assert any("ends 20 nt after the stop codon" in n for n in f["A"].qualifiers["note"])
     assert any("occurs elsewhere" in n for n in f["D"].qualifiers["note"])
+
+
+def test_minus_strand_polya_never_shortens_a_plus_strand_cds_even_when_unstranded():
+    """A poly(A) site's strand is the transcript's whatever the library is: 20 minus-strand sites at 95 leave the CDS."""
+    seq = "ATG" + "GCT" * 30 + "TAT" + "GCT" * 3 + "TAA"      # 108 nt, complete; a cut at 95 would end ...TA
+    rec = SeqRecord(Seq(seq), id="M.1")
+    rec.features = [SeqFeature(FeatureLocation(0, 108, 1), type="CDS", qualifiers={"gene": ["X"], "transl_table": ["5"]})]
+    sites = [{"position": "95", "strand": "-", "reads": "20", "internal_priming": ""}]
+    assert R.refine(rec, [], sites, stranded=False) == []
+    assert (rec.features[0].location.start, rec.features[0].location.end) == (0, 108)

@@ -492,7 +492,7 @@ def collect(recs, rdna, hist, base_cov: Optional[float] = None) -> Tuple[List[di
                          "exons": ";".join(f"{x}-{y}" for x, y in ex), "best_ref": m["ref"],
                          "best_ref_organism": m["ref_org"], "identity": "",
                          "evidence": "internal stop codon" if "*" in prot else "exonerate", "aligned_nt": "",
-                         "copy_ratio": f"{rt:.1f}" if rt is not None else "", "class": cls, "class_evidence": why})
+                         "copy_ratio": f"{rt:.1f}" if rt is not None else "", "class": cls, "class_evidence": why, "codon_start": cs})
     return rows, feats
 
 
@@ -500,7 +500,7 @@ def write_outputs(out: Path, recs, org: Dict[str, str], rows: List[dict], feats:
     rows.sort(key=lambda r: (r["contig"], r["start"]))
     cols = ["contig", "contig_len", "contig_cov", "type", "gene", "start", "end", "strand", "partial_5", "partial_3",
             "length", "exons", "best_ref", "best_ref_organism", "identity", "evidence", "aligned_nt", "copy_ratio",
-            "class", "class_evidence"]
+            "class", "class_evidence", "codon_start"]
     with open(out / "nuc_features.tsv", "w", newline="") as o:
         w = csv.DictWriter(o, cols, delimiter="\t", restval="")
         w.writeheader()
@@ -906,7 +906,7 @@ def consensus(rows: List[dict], recs, lib: "Library", work: Path, min_ident: flo
                     "partial_5": int(r["partial_5"]), "partial_3": int(r["partial_3"]), "contigs": r["contig"],
                     "class": r.get("class", ""),
                     "dropped": f"{len(cds) - 1} other copies" + (f" ({n_rep} replacement)" if n_rep else ""),
-                    "seq": str(_gene_seq(r, recs))})
+                    "codon_start": int(r.get("codon_start") or 1), "seq": str(_gene_seq(r, recs))})
     return out
 
 
@@ -936,7 +936,8 @@ def write_consensus(out: Path, cons: List[dict]) -> None:
         name = re.sub(r"[^A-Za-z0-9_.-]", "_", f"{c['sample']}_{c['gene']}") if multi else c["gene"]
         fa[c["gene"]] += f">{name} {part}fragments={c['n_fragments']} length={c['length']}\n{c['seq']}\n"
         if c["gene"] in HISTONES:
-            faa[c["gene"]] += f">{name}\n{str(Seq(c['seq']).translate(table=1)).rstrip('*')}\n"
+            nt = c["seq"][int(c.get("codon_start") or 1) - 1:]          # a partial 5' end: the frame is codon_start
+            faa[c["gene"]] += f">{name}\n{str(Seq(nt[:len(nt) // 3 * 3]).translate(table=1)).rstrip('*')}\n"
     for g, txt in fa.items():
         (d / f"{g}.fasta").write_text(txt)
     for g, txt in faa.items():

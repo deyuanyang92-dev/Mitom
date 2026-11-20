@@ -618,7 +618,9 @@ def predict(seq: str, lineage: str, code: int, pan: Path, cmsearch: str, cmalign
         cdir = clade_dir(models) if use_clades else None
         with tempfile.TemporaryDirectory() as td:
             hits = scan(seq, lineage, pan, cdir, cmsearch, cmalign, Path(td), cpu, pre=bool(L))
-        calls = call(candidates(hits, ext_hits(ext_preds), code, L), clf, thr, L)
+        # the final same-strand overlap filter is circular-aware always (a pan-model hit at 1..68 and a clade-model hit at
+        # L..L+67 are one tRNA); only the classifier features wait for CIRC_FIX (the shipped models were trained without)
+        calls = call(candidates(hits, ext_hits(ext_preds), code, L), clf, thr, len(seq) if circular else 0)
         refine_ends(calls, seq.upper(), bclf, bool(L))
     return [{"family": c["family"], "aa": c["family"][0], "anticodon": c["anticodon"], "start": c["start"],
              "end": c["end"], "strand": c["strand"], "p": round(c["p"], 4), "bound_p": round(c.get("bound_p", 0), 4)}

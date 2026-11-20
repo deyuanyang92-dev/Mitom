@@ -258,7 +258,7 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
         d = float(tot[s:e].mean()) if e > s else 0.0
         dup = _duplicated_share(str(rec.seq).upper()[s:e], kcount)
         end = e - 1 if st == 1 else s
-        pa = sum(c for p, sst, c in sites if (sst == st or not stranded) and abs(p - end) <= END_WINDOW)
+        pa = sum(c for p, sst, c in sites if (sst == st) and abs(p - end) <= END_WINDOW)
         ss = float(res["depth"][st][s:e].sum()) / max(1.0, float(tot[s:e].sum()))
         cov = float((tot[s:e] >= COVERED * med).mean()) if e > s and med else 0.0
         rows.append({"record": rec.id, "feature": nm, "type": t, "start": s + 1, "end": e,
@@ -273,7 +273,7 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
         if (p, st) in tRNA_ends or any(abs(p - x) <= 1 and sx == st for x, sx in tRNA_ends):
             continue                                     # (CCA-tailed tRNA 3' end)
         ends = [(abs(p - (e - 1 if fs == 1 else s)), nm) for nm, t, s, e, fs in feats
-                if t != "misc_feature" and (fs == st or not stranded)]
+                if t != "misc_feature" and fs == st]
         dist, nm = min(ends) if ends else (None, "")
         srows.append({"record": rec.id, "position": p + 1, "strand": "+" if st == 1 else "-", "reads": c,
                       "feature_ending_here": nm if dist is not None and dist <= END_WINDOW else "",
@@ -290,7 +290,7 @@ def analyse(rec: SeqRecord, sam: Iterable[str]) -> Tuple[List[dict], List[dict],
 
 def _site_reads(sites: List[dict], pos1: int, strand: str, stranded: bool, window: int) -> int:
     return sum(int(x["reads"]) for x in sites if not x.get("internal_priming")
-               and (x["strand"] == strand or not stranded) and abs(int(x["position"]) - pos1) <= window)
+               and (x["strand"] == strand) and abs(int(x["position"]) - pos1) <= window)
 
 
 def _stop_codons(code: int) -> set:
@@ -358,7 +358,7 @@ def refine(rec: SeqRecord, features: List[dict], sites: List[dict], stranded: bo
                          f"{float(r['covered_share']):.0%} of its length transcribed")
         cand = []                                    # (k = transcript length up to the site, reads)
         for x in usable:
-            if stranded and x["strand"] != sign:
+            if x["strand"] != sign:      # a poly(A) site's strand is the transcript's, stranded library or not
                 continue
             pos = int(x["position"])                                       # 1-based last base before the tail
             cand.append((pos - s0 if st == 1 else e0 - pos + 1, int(x["reads"])))
@@ -366,7 +366,7 @@ def refine(rec: SeqRecord, features: List[dict], sites: List[dict], stranded: bo
         if f.type == "CDS":
             code = int(f.qualifiers.get("transl_table", ["5"])[0])
             nt0 = str(f.location.extract(rec.seq)).upper()
-            has_stop = (len(nt0) % 3 == 0 and nt0[-3:] in _stop_codons(code)) or abbreviated_stop(nt0)
+            has_stop = (len(nt0) % 3 == 0 and nt0[-3:] in _stop_codons(code)) or abbreviated_stop(nt0, code)
             if not has_stop:              # no stop codon: a site beyond the end does not confirm it
                 at_end = sum(reads for k, reads in cand if L - END_WINDOW <= k <= L)
         if f.type == "CDS" and at_end < MIN_POLYA_READS:                    # a confirmed end is never moved
@@ -380,7 +380,7 @@ def refine(rec: SeqRecord, features: List[dict], sites: List[dict], stranded: bo
                     continue
                 loc = FeatureLocation(s0, s0 + k, st) if st == 1 else FeatureLocation(e0 - k, e0, st)
                 nt = str(loc.extract(rec.seq)).upper()
-                if not abbreviated_stop(nt) or "*" in codon_translate(nt, code):
+                if not abbreviated_stop(nt, code) or "*" in codon_translate(nt, code):
                     continue
                 if extend and not free_between(e0 if st == 1 else e0 - k, s0 + k if st == 1 else s0, st):
                     continue

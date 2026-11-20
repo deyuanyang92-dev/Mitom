@@ -272,7 +272,7 @@ class PcgRules:
         internal_excepts(f)                             # the old TERM exception goes; codon exceptions inside stay
         loc = f.location                               # an end left 3'-partial (cut by a linear sequence end) may continue
         cut = isinstance(loc.end, AfterPosition) if loc.strand == 1 else isinstance(loc.start, BeforePosition)
-        if abbreviated_stop(nt) and not cut:           # (table2asn PartialProblemHasStop with a T / TA stop)
+        if abbreviated_stop(nt, self.code) and not cut:           # (table2asn PartialProblemHasStop with a T / TA stop)
             gs, ge = span(f)
             f.qualifiers["transl_except"] = internal_excepts(f) + [transl_except_term(gs, ge, 1 if f.location.strand == 1
                                                                                       else -1, tail)]

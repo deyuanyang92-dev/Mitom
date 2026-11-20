@@ -14,6 +14,21 @@ installed one.
 - Intron transfer: a strong, continuous model is no longer refused because of a weak conflicting core CDS inside its
   exon (MW592986.1 atp6, issue #15); the weak call is replaced. 1 of 134 NCBI records changed.
   benchmark/results/weak_conflict_2026-11-20/README.md.
+- Codex deep review of the whole annotation (2026-11-20; reports in ~/.cache/second-opinion/20261120-184455.MaDH and
+  20261120-185447.SAqI), accepted findings, each with a regression test:
+  - MITOS2 import: records of two samples that share a sequence name no longer take the first sample's sequence.
+  - Curation: neighbour overlap counts CDS without a gene feature; internal /transl_except codons (all INSDC location
+    forms, also across the origin) are masked, so a recoded stop is no stop for P8; an explicit --genetic_code replaces
+    declared transl_tables, mixed declared tables without it are refused.
+  - Incomplete stop (T / TA made TAA by poly(A)) only where TAA is a stop (not in table 14); the transl_except of such a
+    stop is placed correctly on split / origin-spanning CDS.
+  - tRNA: the final overlap filter is circular-aware, so one tRNA seen at both ends of the sequence is called once.
+  - RNA-seq: poly(A) sites of the opposite strand never shorten, extend or confirm a CDS, also for unstranded libraries.
+  - `--clade auto`: an annotated CDS /transl_table is kept when the record has no taxonomy.
+  - Nuclear histones: the consensus protein follows codon_start; `nuc_features.tsv` has a `codon_start` column.
+- Not yet fixed (from the same review): rDNA chain across tandem copies (mito_nuc_lib.py chaining), foreign-contig and
+  supplementary SAM alignments as evidence, joined-feature coverage, CIGAR `N` junctions, 5.8S rescue without a first
+  hit, in-frame indels reported as frameshifts, stale nuclear outputs on rerun.
 
 ## 0.0.1 - 2026-11-20 (beta, first tagged test release)
 

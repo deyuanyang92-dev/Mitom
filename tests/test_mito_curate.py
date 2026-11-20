@@ -211,6 +211,47 @@ def _one_cds(tmp_path, nt, code, gene_loc=None):
     return SeqIO.read(str(tmp_path / "out" / "x.gbf"), "genbank")
 
 
+def test_explicit_genetic_code_replaces_a_declared_transl_table(tmp_path):
+    """2026-11-20 Codex review: --genetic_code 5 kept /transl_table=2 on a CDS translated with 5 (AGA: Ser vs stop)."""
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    nt = "ATG" + "GCC" * 20 + "AGA" + "GCC" * 20 + "TAA"
+    rec = SeqRecord(Seq("CCCGGG" * 10 + nt + "CCCGGG" * 10), id="X", description="")
+    rec.annotations.update(molecule_type="DNA", topology="linear")
+    loc = FeatureLocation(60, 60 + len(nt), 1)
+    rec.features = [SeqFeature(FeatureLocation(0, len(rec.seq), 1), type="source"),
+                    SeqFeature(loc, type="gene", qualifiers={"gene": ["ND4L"]}),
+                    SeqFeature(loc, type="CDS", qualifiers={"gene": ["ND4L"], "codon_start": ["1"], "transl_table": ["2"]})]
+    d = tmp_path / "in"
+    d.mkdir()
+    SeqIO.write(rec, str(d / "x.gbf"), "genbank")
+    subprocess.run([sys.executable, "-W", "ignore", str(SCRIPT), "-i", str(d), "-o", str(tmp_path / "out"),
+                    "--genetic_code", "5", "--no_validate"], check=True, capture_output=True)
+    cds = next(f for f in SeqIO.read(str(tmp_path / "out" / "x.gbf"), "genbank").features if f.type == "CDS")
+    assert cds.qualifiers["transl_table"] == ["5"] and "S" in cds.qualifiers["translation"][0]
+
+
+def test_mixed_transl_tables_without_override_are_refused(tmp_path):
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import FeatureLocation, SeqFeature
+    from Bio.SeqRecord import SeqRecord
+    nt = "ATG" + "GCC" * 20 + "TAA"
+    rec = SeqRecord(Seq("CCCGGG" * 10 + nt + "CCCGGG" * 10 + nt + "CCCGGG" * 10), id="X", description="")
+    rec.annotations.update(molecule_type="DNA", topology="linear")
+    rec.features = [SeqFeature(FeatureLocation(0, len(rec.seq), 1), type="source")]
+    for k, tb in enumerate(("2", "5")):
+        st = 60 + k * (len(nt) + 60)
+        rec.features.append(SeqFeature(FeatureLocation(st, st + len(nt), 1), type="CDS",
+                                       qualifiers={"gene": [f"G{k}"], "codon_start": ["1"], "transl_table": [tb]}))
+    d = tmp_path / "in"
+    d.mkdir()
+    SeqIO.write(rec, str(d / "x.gbf"), "genbank")
+    r = subprocess.run([sys.executable, "-W", "ignore", str(SCRIPT), "-i", str(d), "-o", str(tmp_path / "out"),
+                        "--no_validate"], capture_output=True, text=True)
+    assert r.returncode != 0 and "different /transl_table" in r.stderr + r.stdout
+
+
 def test_illegal_start_marked_partial(tmp_path):
     """2026-10-21 table2asn: SEQ_FEAT.StartCodon ERROR on echinoderm nad4l (ATT/ATC, code 9 starts are ATG/GTG only);
     NCBI writes the same CDS as <start with note 'start codon not determined' (NC_001627.1, NC_061414.1)."""
@@ -358,6 +399,63 @@ def test_wrapped_trna_does_not_block_p1():
     rows = _curate_rec(rec)
     assert any(r["rule"] == "P1" for r in rows), rows
     assert int(_by(rec, "CDS", "ND1").location.start) + 1 == 301
+
+
+def test_neighbours_count_without_gene_features():
+    """2026-11-20 Codex review: with no 'gene' features gene_feature() is None for both, `None is not None` was False and
+    every neighbour was dropped: a T- stop was extended through the following tRNA to a TAA at 363."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "ATG" + "GCC" * 99 + "T" + "GC" + "GCC" * 19 + "TAA" + "GCC" * 200
+    assert seq[300:303] == "TGC" and seq[360:363] == "TAA"
+    feats = [("CDS", FeatureLocation(0, 301, 1), "ND1"),
+             ("tRNA", FeatureLocation(301, 371, 1), "trnY", {"product": ["tRNA-Tyr"]})]
+    rec = _mkrec(seq, feats)
+    rec.features = [f for f in rec.features if f.type != "gene"]
+    _curate_rec(rec)
+    assert int(_by(rec, "CDS", "ND1").location.end) == 301
+    with_genes = _mkrec(seq, feats)
+    _curate_rec(with_genes)
+    assert int(_by(with_genes, "CDS", "ND1").location.end) == 301
+
+
+def test_parse_except_reads_every_location_form():
+    """2026-11-20 Codex review: only a..b was read; a rotation across the origin writes join(...)."""
+    from mito_curate_base import parse_except
+    assert parse_except("(pos:151..153,aa:Trp)") == ([150, 151, 152], "Trp")
+    assert parse_except("(pos:complement(151..153),aa:Trp)") == ([152, 151, 150], "Trp")
+    assert parse_except("(pos:join(999..1000,1),aa:Trp)") == ([998, 999, 0], "Trp")
+    assert parse_except("(pos:complement(join(999..1000,1)),aa:Trp)") == ([0, 999, 998], "Trp")
+    assert parse_except("(pos:152,aa:TERM)") == ([151], "TERM")
+    assert parse_except("garbage") is None
+
+
+def test_recoded_stop_codon_is_no_stop_for_p8():
+    """2026-11-20 Codex review: under table 4 TAA / TAG are stops; an internal TAA read as Gln by /transl_except made
+    P8 cut a 100-aa CDS to 51 aa."""
+    from Bio.SeqFeature import FeatureLocation
+    seq = "ATG" + "GCC" * 49 + "TAA" + "GCC" * 49 + "TAG" + "GCC" * 200
+    q = {"transl_table": ["4"], "transl_except": ["(pos:151..153,aa:Gln)"]}
+    rec = _mkrec(seq, [("CDS", FeatureLocation(0, 303, 1), "ND1", q)])
+    _curate_rec(rec, genetic_code=4)
+    cds = _by(rec, "CDS", "ND1")
+    assert (int(cds.location.start), int(cds.location.end)) == (0, 303)
+    assert len(cds.qualifiers["translation"][0]) == 100 and "pseudo" not in cds.qualifiers
+
+
+def test_recoded_codon_across_the_origin_keeps_its_amino_acid():
+    """Same review: the exception of a CDS rotated across the origin is join(...); the codon was X."""
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation
+    L = 1000
+    seq = "ATG" + "GCC" * 49 + "NCC" + "GCC" * 49 + "TAA"                    # 303 nt, NCC at 151..153
+    seq = (seq + "GCC" * 200)[:L].ljust(L, "G")
+    rot = 152                                                               # rotated: codon at L-1..L,1
+    seq = seq[rot:] + seq[:rot]
+    loc = CompoundLocation([FeatureLocation(L - rot, L, 1), FeatureLocation(0, 303 - rot, 1)])
+    q = {"transl_except": ["(pos:join(%d..%d,1),aa:Trp)" % (L - 1, L)]}
+    from mito_curate_base import apply_excepts
+    from Bio.SeqFeature import SeqFeature
+    f = SeqFeature(loc, type="CDS", qualifiers=q)
+    assert apply_excepts(f, "M" + "A" * 49 + "X" + "A" * 49 + "*")[50] == "W"
 
 
 def _rrna_rec(feats, n=3000):

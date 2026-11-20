@@ -423,27 +423,51 @@ def transl_except_term(start: int, end: int, strand: int, tail: int) -> str:
     return f"(pos:{pos},aa:TERM)"
 
 
-def abbreviated_stop(nt: str) -> bool:
+def abbreviated_stop(nt: str, code: Optional[int] = None) -> bool:
     """The CDS sequence nt ends with an incomplete stop codon, T or TA after its last whole codon (mitochondrial
-    transcripts complete it by polyadenylation)."""
+    transcripts complete it by polyadenylation). With `code`, only when TAA is a stop of that genetic code (table 14:
+    TAA is Tyr, polyA makes no stop; 2026-11-20 Codex review)."""
     tail = len(nt) % 3
+    if code and codon_translate("TAA", code) != "*":
+        return False
     return bool(tail) and nt[-tail:] in ("T", "TA")
 
 
 def ends_with_stop(nt: str, stops) -> bool:
     """The CDS sequence nt ends with a stop codon of `stops` in frame, or with an abbreviated stop (T / TA)."""
-    return abbreviated_stop(nt) if len(nt) % 3 else nt[-3:] in stops
+    return (abbreviated_stop(nt) and "TAA" in stops) if len(nt) % 3 else nt[-3:] in stops
 
 
 def stop_qualifiers(rec, loc, code: int) -> Dict[str, List[str]]:
     """Incomplete stop (T / TA completed by polyadenylation): /transl_except and the standard note."""
     nt = str(loc.extract(rec.seq)).upper()
     tail = len(nt) % 3
-    if not abbreviated_stop(nt):
+    if not abbreviated_stop(nt, code):
         return {}
-    last = loc.parts[-1]
-    return {"transl_except": [transl_except_term(int(last.start) + 1, int(last.end), last.strand, tail)],
-            "note": [POLYA_NOTE]}
+    return {"transl_except": [f"(pos:{tail_location(loc, tail)},aa:TERM)"], "note": [POLYA_NOTE]}
+
+
+def tail_location(loc, tail: int) -> str:
+    """INSDC location of the last `tail` nt of the CDS location loc (transcript order), also when they lie in two parts
+    (a CDS across the origin ending with TA split 1 + 1; 2026-11-20 Codex review: pos:0..1 was written)."""
+    strand = loc.parts[-1].strand
+    pos: List[int] = []                                        # 0-based genome positions, 3' end first
+    for part in reversed(loc.parts):
+        run = range(int(part.end) - 1, int(part.start) - 1, -1) if strand != -1 else range(int(part.start), int(part.end))
+        pos += list(run)[:tail - len(pos)]
+        if len(pos) >= tail:
+            break
+    pos = sorted(pos) if strand == -1 else pos[::-1]           # genome order for complement(), transcript order for +
+    runs: List[List[int]] = []
+    for i in pos:
+        if runs and i == runs[-1][1] + 1:
+            runs[-1][1] = i
+        else:
+            runs.append([i, i])
+    txt = ",".join(f"{a + 1}..{b + 1}" if b > a else f"{a + 1}" for a, b in runs)
+    if len(runs) > 1:
+        txt = f"join({txt})"
+    return f"complement({txt})" if strand == -1 else txt
 
 
 def codon_translate(nt, code: int) -> str:

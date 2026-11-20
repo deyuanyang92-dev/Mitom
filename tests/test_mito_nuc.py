@@ -807,3 +807,13 @@ def test_fasta_index_context_manager_closes_once(tmp_path):
     idx.close()                                  # idempotent
     with pytest.raises(OSError):
         os.fstat(fd)
+
+
+def test_consensus_protein_of_a_partial_histone_follows_codon_start(tmp_path):
+    """Codex 2026-11-20: the .faa translated from base 1 although the CDS has codon_start=2."""
+    import mito_nuc as nuc
+    cons = [{"gene": "H3", "length": 62, "n_fragments": 1, "n_dropped": 0, "internal_N": 0, "partial_5": 1,
+             "partial_3": 0, "class": "", "contigs": "c", "dropped": "", "codon_start": 2, "seq": "C" + "GCT" * 20 + "TAA"}]
+    nuc.write_consensus(tmp_path, cons)
+    faa = next((tmp_path / "consensus").glob("H3.faa")).read_text().split("\n")[1]
+    assert faa == "A" * 20

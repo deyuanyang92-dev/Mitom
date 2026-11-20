@@ -179,3 +179,25 @@ def test_write_tsv_lf_header_always_and_csv_quoting(tmp_path):
     assert text == old.getvalue().replace("\r\n", "\n")
     mc.write_tsv(tmp_path / "empty.tsv", ["a", "b"], [])
     assert (tmp_path / "empty.tsv").read_text() == "a\tb\n"
+
+
+def test_stop_qualifiers_split_ta_stop_and_table_14():
+    """2026-11-20 Codex review: a TA stop split by the origin got pos:0..1; table 14 (TAA = Tyr) got a TERM exception."""
+    from Bio.Seq import Seq
+    from Bio.SeqFeature import CompoundLocation, FeatureLocation
+    from Bio.SeqRecord import SeqRecord
+    import mito_common as mc
+    L = 999
+    seq = "A" + "G" * (L - 2) + "T"                                        # ... T | A across the origin
+    rec = SeqRecord(Seq(seq))
+    loc = CompoundLocation([FeatureLocation(L - 301, L, 1), FeatureLocation(0, 1, 1)])   # 301 + 1 nt: ends ...T|A
+    nt = str(loc.extract(rec.seq))
+    assert nt.endswith("TA") and len(nt) % 3 == 2
+    q = mc.stop_qualifiers(rec, loc, 5)
+    assert q["transl_except"] == ["(pos:join(%d,1),aa:TERM)" % L]
+    minus = CompoundLocation([FeatureLocation(0, 1, -1), FeatureLocation(L - 301, L, -1)][::-1])
+    assert mc.tail_location(minus, 2).startswith("complement(")
+    plain = SeqRecord(Seq("ATG" + "GCC" * 99 + "TA"))
+    assert mc.stop_qualifiers(plain, FeatureLocation(0, len(plain.seq), 1), 5)["transl_except"] == ["(pos:301..302,aa:TERM)"]
+    assert mc.stop_qualifiers(plain, FeatureLocation(0, len(plain.seq), 1), 14) == {}
+    assert not mc.abbreviated_stop("ATG" + "GCC" * 99 + "T", 14) and mc.abbreviated_stop("ATG" + "GCC" * 99 + "T", 5)

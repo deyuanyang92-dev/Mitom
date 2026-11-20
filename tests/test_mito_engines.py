@@ -88,6 +88,29 @@ def test_import_mitos2_needs_the_genetic_code_and_the_sequence(tmp_path):
     assert [r.id for r in recs] == ["X"] and recs[0].annotations["topology"] == "linear" and "MITOS2" in notes[0]
 
 
+def test_import_mitos2_same_sequence_name_in_two_samples_keeps_each_genome(tmp_path):
+    """2026-11-20 Codex review: sequence ids were pooled, the first genome won for every result folder."""
+    other = "TTGCA" * 800
+    dirs = []
+    for name, sq in (("s1", SEQ), ("s2", other)):
+        d = tmp_path / name / "mitos"
+        d.mkdir(parents=True)
+        (d / "result.bed").write_text(BED)
+        (d / "result.gff").write_text("X\tmitos\tregion\t1\t4000\t.\t+\t.\tID=X:1..4000;Is_circular=True\n")
+        (tmp_path / name / "genome.fa").write_text(f">X\n{sq}\n")
+        dirs.append(d)
+    recs, _ = me.import_results(tmp_path, code=5)
+    assert sorted(str(r.seq) for r in recs) == sorted([SEQ, other])
+    # two --fasta files giving one name two sequences, no local FASTA: refused, never guessed
+    d = tmp_path / "s3" / "mitos"
+    d.mkdir(parents=True)
+    (d / "result.bed").write_text(BED)
+    (tmp_path / "a.fa").write_text(f">X\n{SEQ}\n")
+    (tmp_path / "b.fa").write_text(f">X\n{other}\n")
+    with pytest.raises(ValueError, match="different sequences"):
+        me.import_results(d, fastas=[tmp_path / "a.fa", tmp_path / "b.fa"], code=5)
+
+
 def test_engine_cmd_per_engine():
     def cmd(*extra):
         a = mitom_cli.build_parser().parse_args(["run", "-i", "x", "-o", "y", "--clade", "Mollusca", "--genetic_code", "5",

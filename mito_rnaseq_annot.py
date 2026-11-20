@@ -244,13 +244,13 @@ def step_overlap_cut(rec: SeqRecord, sites: List[dict], stranded: bool, run: str
         cut1 = s0 + k if st == 1 else e0 - k + 1                           # 1-based last base of the cut mRNA
         end1 = e0 if st == 1 else s0 + 1
         sign = "+" if st == 1 else "-"
-        ok = [s for s in sites if not s.get("internal_priming") and (s["strand"] == sign or not stranded)]
+        ok = [s for s in sites if not s.get("internal_priming") and s["strand"] == sign]
         near = [s for s in ok if abs(int(s["position"]) - cut1) <= 1]
         at_cut = sum(int(s["reads"]) for s in near)
         if near:                                       # the observed site, not the computed cut, ends the mRNA
             obs = int(max(near, key=lambda s: int(s["reads"]))["position"])
             k += (obs - cut1) * st
-        if not abbreviated_stop(nt[:k]):
+        if not abbreviated_stop(nt[:k], code):
             continue
         at_end = sum(int(s["reads"]) for s in ok if 0 <= (int(s["position"]) - end1) * st <= 2)
         name = _name(f)

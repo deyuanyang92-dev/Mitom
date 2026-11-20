@@ -52,6 +52,14 @@ def test_mixed_phyla_genbank_gives_one_group_per_phylum_and_code(tmp_path):
     assert {r.record: r.group for r in plan.rows}["NC_3.1"] == "Chordata_gc13"
 
 
+def test_declared_transl_table_is_kept_when_the_record_has_no_taxonomy(tmp_path):
+    """Codex 2026-11-20: a CDS /transl_table=2 without taxonomy got the fallback code 5."""
+    p = tmp_path / "notax.gb"
+    SeqIO.write([rec("NC_9.1", None, 2)], str(p), "genbank")
+    plan = mg.decide(args_for(p))
+    assert [(r.record, r.code, r.code_from) for r in plan.rows] == [("NC_9.1", 2, "CDS transl_table")]
+
+
 def test_code_from_lineage_when_there_is_no_cds():
     """A record with a taxonomy but no annotation: the code of the reference genomes of its group (tunicates 13)."""
     assert mc.code_of_lineage("Eukaryota;Metazoa;Chordata;Tunicata;Ascidiacea") == 13
