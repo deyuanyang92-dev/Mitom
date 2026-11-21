@@ -72,3 +72,14 @@ annotate 内部各工具累计(同一条记录):
 - cmsearch 3 次共 14.4s,是单次最重的工具;可考虑限制搜索范围或复用结果。
 - cmalign 22 次小调用,合并后可省启动开销。
 - 注:`[CMD]` 里 python 包装调用的 85s 是嵌套外层,不要与上表相加。
+
+## --jobs 8 --threads 1 总内存(logs/jobs8_total_memory/)
+每 2s 对整棵进程树(同一 session)求和 RSS,`samples.tsv` 列:t_s、total_rss_MB、n_proc、mem_avail_MB。10 条 ann10.gb,总耗时 9m36s(含采样)。
+
+| 指标 | 数值 |
+|---|---|
+| 总 RSS 峰值 | 1434MB(t=510s,19 个进程) |
+| 系统可用内存最低 | 1008MB(WSL 约 2.9GB) |
+| `time -v` 报告的峰值 | 317MB(只含主进程,低估) |
+
+说明:总 RSS 把共享页重复计入,真实占用略低于 1434MB。结论:`--jobs 8` 在 3GB 下没有 OOM,但总内存约为 `time -v` 数字的 4.5 倍;评估 16GB/4GB 机器时应以总 RSS 为准,不能用 `time -v`。
