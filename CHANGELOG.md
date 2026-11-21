@@ -6,6 +6,7 @@ installed one.
 ## Unreleased (0.0.2)
 
 ### Added
+- `install.sh --slim` (env/mitotools-slim.yml, 142 packages, 1.4 GB) and `--lock` (pinned list); doctor no longer needs scikit-learn when the JSON tRNA models ship; table2asn per-record progress; resumable reference download; resource/speed table in USAGE_zh.md (issues #16-#19).
 - `mito_intron --short_exons {off,new,all}` (experimental, default off): homolog-vote search for short divergent exons Exonerate does
   not align (issue #15), with boundary/frame fit and a gain guard; `all` gives 3 more exact introns, no loss on the 134 NCBI
   records; benchmark/results/short_exons_2026-11-20/README.md.
