@@ -67,6 +67,8 @@ mitom doctor           # 必需程序都应显示 OK
 mitom --version
 ```
 
+更快或更小 / Faster or smaller：`bash install.sh --lock`（Linux x86_64，用固定的包清单 `env/mitotools-linux-64.lock`，不做依赖求解 / pinned package list, no solving）；`bash install.sh --slim`（只装 `mitom run` 必需的程序，`env/mitotools-slim.yml`，不含 aragorn、tRNAscan-SE、bwa、mafft、scikit-learn、pytest / core programs only; add extras later with `mamba install -n mitotools -c conda-forge -c bioconda <name>`）。`mitom doctor` 在 slim 下仍应全 OK / `mitom doctor` stays OK on slim.
+
 `install.sh` 会：按 `env/mitotools.yml` 建环境；安装 `mitom` 入口；运行 `mitom setup`（下载 MITOS2 的 refseq89m、准备 tRNA 模型、写配置）。不往系统 Python 装包。
 `install.sh` does: builds the environment from `env/mitotools.yml`; installs the `mitom` entry point; runs `mitom setup` (downloads MITOS2 refseq89m, prepares tRNA models, writes config). It does not install into system Python.
 
@@ -425,6 +427,16 @@ mitom debug out
 | 输入错误一行 `ERROR:`、退出码 2 / one-line `ERROR:` on bad input, exit code 2 | 空文件、截断下载、蛋白序列等；`--debug` 看细节 / empty file, truncated download, protein sequence, etc.; see details with `--debug` |
 | `ncbi_errors` ≠ 0 | 看 / see `submission/<id>/<id>.val` |
 | 很慢 / slow | `--threads` × `--jobs` ≤ CPU；内含子约 10–20 s / 条 / introns are the slow step (time per record: see BENCHMARK.md) |
+
+**资源与下载 / Resources and downloads**（issues #16–#19）
+
+| 项目 / Item | 说明 / Note |
+|---|---|
+| 内存 / Memory | 线粒体注释每进程峰值约 0.3 GB（4 GB 机器够用）；`mitom nuc` 约为输入基因组的 2.6 倍（0.66 GB 基因组 → 1.7 GB），4 GB 机器上核输入约 1.5 GB 为上限。`--jobs N` 的总内存约为单进程的 N 倍（含共享页重复计）。数据：`benchmark/wsl-2026-11-21/`。 / Mitogenome annotation peaks at ~0.3 GB per process (fits 4 GB); `mitom nuc` is ~2.6x the input (0.66 GB genome -> 1.7 GB), so ~1.5 GB of nuclear input is the limit on 4 GB. Total memory under `--jobs N` is about N times one process. Data: `benchmark/wsl-2026-11-21/`. |
+| 速度 / Speed | 约 60–70 秒 / 条（默认 `--jobs 1`，核心注释占 88%：blastx、cmsearch、cmalign）；`--jobs 8 --threads 1` 约快 1.4 倍。README 的 26 分钟是另一批数据与机器，跨机器请以自己的 `logs/run.log` 为准。 / About 60-70 s per record (default `--jobs 1`; the core annotation is 88%: blastx, cmsearch, cmalign); `--jobs 8 --threads 1` is ~1.4x faster. The README's 26 min was another data set and machine; use your own `logs/run.log` for planning. |
+| table2asn | 逐条在日志打印 `[SUBMISSION] table2asn i/N`；大基因组一条可能数分钟 / logs `[SUBMISSION] table2asn i/N` per record; one large genome can take minutes |
+| 下载慢或中断 / Slow or dropped downloads | NCBI FTP 可能只有 ~0.25 MB/s 且断线。`mitom setup` 的 curl 现在断点续传（`-C -`，重试 5 次）。自己下 reads 时：`curl -C - --retry 5 -O URL` 或 `aria2c -c -x 8 URL`；优先 ENA 镜像或 `prefetch` + `fasterq-dump`，再用 `--infq` / ENA mirror or `prefetch` + `fasterq-dump` preferred, then pass the reads with `--infq` |
+| 安装体积 / Install size | 约 157 个包，minimap2 单独约 0.5 GB（可选，不装也能运行）。安装前先 `mamba env create -f env/mitotools.yml --dry-run` 看体积。 / ~157 packages; minimap2 alone ~0.5 GB (optional). Preview with `--dry-run` first. |
 
 更多行见历史手册中的完整 FAQ（CHANGELOG 与 issue 跟踪）。报告问题时附上 `mitom doctor` 与 `mitom debug` 输出。
 More rows: see the full FAQ in the older manual (CHANGELOG and issue tracker). When reporting a problem, attach the `mitom doctor` and `mitom debug` output.

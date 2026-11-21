@@ -9,6 +9,7 @@ for the step summary of `run`, the folder of the GenBank files after the step, a
 from __future__ import annotations
 
 import argparse
+import time
 import functools
 import logging
 import shutil
@@ -204,8 +205,15 @@ def run_submission(args: argparse.Namespace, gb_dir: Path, out_root: Path) -> St
     sub.mkdir(parents=True, exist_ok=True)
     summary, msgs = [], []
     unchecked = 0                                    # records table2asn could not validate (crash, no .val)
-    for gbf in sorted(gb_dir.rglob("*.gbf")):
+    gbfs = sorted(gb_dir.rglob("*.gbf"))
+    total = sum(1 for g in gbfs for _ in SeqIO.parse(str(g), "genbank"))
+    t_start, done = time.time(), 0
+    for gbf in gbfs:
         for rec in SeqIO.parse(str(gbf), "genbank"):
+            # table2asn is silent for minutes on a large record (issue #17): say which record is running
+            logging.info(f"[SUBMISSION] table2asn {done + 1}/{total}: {rec.id} ({len(rec.seq):,} bp), "
+                         f"{time.time() - t_start:.0f} s so far")
+            done += 1
             rows = nv.validate_record(rec, sub / "_work", t2a, getattr(args, "sbt", None))
             d = nv.record_dir(sub / "_work", rec.id)
             for ext in (".fsa", ".tbl", ".sqn", ".val"):
