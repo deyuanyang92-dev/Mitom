@@ -381,9 +381,12 @@ def doctor(write: bool = False) -> int:
     bio = biopython_version()          # required: all MitoM scripts read GenBank files with it
     print(f"  {'OK ' if bio else '!! '}{'Biopython':12} "
           f"{('version ' + bio) if bio else 'not found for ' + sys.executable:60} sequence input / output (all scripts)")
-    skl, npv = module_version("sklearn"), module_version("numpy")   # required: MitoM-ML tRNA caller (trna_ml.py)
+    skl, npv = module_version("sklearn"), module_version("numpy")   # MitoM-ML tRNA caller (trna_ml.py)
+    import trna_ml
+    if not skl and npv and (trna_ml.MODELS / "caller_model.json").exists() and (trna_ml.MODELS / "bounds_model.json").exists():
+        skl = "n/a (not needed: the shipped JSON models run on numpy)"
     print(f"  {'OK ' if skl and npv else '!! '}{'scikit-learn':12} "
-          f"{('version ' + skl + ('' if skl == SKLEARN_VALIDATED else f' (validated: {SKLEARN_VALIDATED})')) if skl else 'not found for ' + sys.executable:60} "
+          f"{(('' if skl.startswith('n/a') else 'version ') + skl + ('' if skl == SKLEARN_VALIDATED or skl.startswith('n/a') else f' (validated: {SKLEARN_VALIDATED})')) if skl else 'not found for ' + sys.executable:60} "
           "MitoM-ML tRNA caller (trna_ml.py, the default tRNAs)")
     mpl = matplotlib_version()         # optional: without it run with --plot no
     print(f"  {'OK ' if mpl else '-- '}{'matplotlib':12} "
@@ -441,10 +444,10 @@ def download_ref(tgz: Path, urls=REF_URLS, timeout: int = 60) -> bool:
                 shutil.copyfileobj(r, out)
         except OSError as exc:                                  # (URLError, timeouts, a broken connection)
             print(f"  {url}: {exc}", file=sys.stderr)
-            tgz.unlink(missing_ok=True)
+            # the partial file is kept: curl -C - resumes it (issue #19); it is removed if curl fails too
             # urllib through a proxy often fails the TLS handshake where curl does not (issue #11)
             curl = shutil.which("curl")
-            if not curl or subprocess.run([curl, "-fsSL", "--retry", "2", "-m", "600", "-o", str(tgz), url],
+            if not curl or subprocess.run([curl, "-fsSL", "-C", "-", "--retry", "5", "--retry-delay", "3", "-m", "1800", "-o", str(tgz), url],
                                           capture_output=True).returncode:
                 tgz.unlink(missing_ok=True)
                 continue

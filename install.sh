@@ -8,6 +8,8 @@
 #   config file, so no tool path has to be typed.
 #   `--envs "mitotools mitos"` also installs MITOS2 2.1.10 (optional: --engine mitos2, --rescue yes, mito_trna.py).
 #   MitoZ is never installed (optional --engine mitoz: install it yourself, see mito_engines.py).
+#   --slim  core programs only (env/mitotools-slim.yml: no aragorn, tRNAscan-SE, bwa, mafft, scikit-learn, pytest)
+#   --lock  Linux x86_64: install the pinned list env/mitotools-linux-64.lock (no solving; full environment only)
 # Existing environments are kept (--force recreates them). Safe to run again.
 #
 # Platforms (checked with mamba solves, 2026-10-20):
@@ -23,13 +25,17 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REFDIR="${MITOS_REFDIR:-$HOME/mitos_refs}"
 ENVS="mitotools"            # MitoM needs only this one; --envs "mitotools mitos" adds the optional MITOS2
 FORCE=0
+SLIM=0                      # --slim: core programs only (env/mitotools-slim.yml), extras can be added later
+LOCK=0                      # --lock: install the pinned package list env/mitotools-linux-64.lock (no solving)
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --force) FORCE=1 ;;
     --refdir) REFDIR="$2"; shift ;;
     --envs) ENVS="$2"; shift ;;
-    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+    --slim) SLIM=1 ;;
+    --lock) LOCK=1 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -83,15 +89,21 @@ say "using $SOLVER"
 env_exists() { "$SOLVER" env list 2>/dev/null | awk '{print $1}' | grep -qx "$1"; }
 
 for e in $ENVS; do
+  YML="$HERE/env/$e.yml"; [ "$e" = mitotools ] && [ "$SLIM" = 1 ] && YML="$HERE/env/mitotools-slim.yml"
   if env_exists "$e" && [ "$FORCE" = 0 ]; then
     say "environment '$e' exists - updating it from env/$e.yml (use --force to recreate)"
-    "$SOLVER" env update -n "$e" -f "$HERE/env/$e.yml"
+    "$SOLVER" env update -n "$e" -f "$YML"
     continue
   fi
   say "creating environment '$e' from env/$e.yml"
   if env_exists "$e"; then "$SOLVER" env remove -y -n "$e"; fi
   # (a conda without `env create -y`: the retry never waits for a keyboard, D14)
-  "$SOLVER" env create -y -n "$e" -f "$HERE/env/$e.yml" 2>/dev/null || "$SOLVER" env create -n "$e" -f "$HERE/env/$e.yml" </dev/null
+  if [ "$e" = mitotools ] && [ "$LOCK" = 1 ] && [ "$OS-$ARCH" = Linux-x86_64 ] && [ -f "$HERE/env/mitotools-linux-64.lock" ] && [ "$SLIM" = 0 ]; then
+    say "pinned package list env/mitotools-linux-64.lock (no solving)"
+    "$SOLVER" create -y -n "$e" --file "$HERE/env/mitotools-linux-64.lock" </dev/null && continue
+    say "the pinned list failed: solving env/mitotools.yml instead"
+  fi
+  "$SOLVER" env create -y -n "$e" -f "$YML" 2>/dev/null || "$SOLVER" env create -n "$e" -f "$YML" </dev/null
 done
 
 # ── Java for MiTFi (its classes are Java 5: any Java runs it): the system one, else openjdk 8 in the environment ──

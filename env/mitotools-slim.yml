@@ -1,0 +1,16 @@
+# MitoM slim environment (install.sh --slim): only what `mitom run` needs. The full env/mitotools.yml adds optional
+# extras: extra tRNA callers (aragorn, trnascan-se), bwa (depth ring of the maps), mafft (rebuild the rRNA HMM
+# library), scikit-learn (retrain the tRNA classifiers; the shipped JSON trees run on numpy), pytest, defusedxml.
+# Add any of them later with: mamba install -n mitotools -c conda-forge -c bioconda <name>
+name: mitotools
+channels: [conda-forge, bioconda]
+dependencies:
+  - python=3.11
+  - biopython
+  - numpy
+  - matplotlib-base
+  - exonerate=2.4.0
+  - blast=2.17.0
+  - infernal=1.1.5
+  - table2asn=1.28.1179
+  - hmmer=3.4
