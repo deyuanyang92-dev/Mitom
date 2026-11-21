@@ -1,0 +1,23 @@
+	Command being timed: "mitom run -i $WORK/ann10.gb -o $WORK/out_j4 --jobs 4 --threads 2"
+	User time (seconds): 3058.80
+	System time (seconds): 51.70
+	Percent of CPU this job got: 509%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:10.89
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 317424
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 468
+	Minor (reclaiming a frame) page faults: 4733180
+	Voluntary context switches: 147191
+	Involuntary context switches: 30216
+	Swaps: 0
+	File system inputs: 1240631
+	File system outputs: 219432
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
