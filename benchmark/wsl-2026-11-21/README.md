@@ -46,3 +46,29 @@
 2. add_missing 中 intron 约 54s/10 条,可考虑缓存参考库或并行。
 3. `--jobs` 加速仅 1.43x,可能受 3GB 内存或核心步骤自身多线程影响,待补总内存采样。
 4. 本机无法测试 16GB 内存场景。
+
+## 单条 --debug 拆分(logs/single_record_debug/,data/ann1.gb = ann10.gb 第一条)
+命令:`mitom run -i data/ann1.gb -o $WORK --debug --keep_intermediate yes`。总 1m41s,CPU 282%,峰值 RSS 317MB。`run.log` 中每条外部命令都有 `[CMD rc=0 N.Ns]`。
+
+| 步骤 | 耗时 |
+|---|---|
+| STEP 2 annotate | 57.8s |
+| STEP 6 add_missing | 26.2s(introns 21.3s,pcg_hmm 4.8s) |
+| 其余步骤合计 | 约 3s |
+| 启动与环境检查 | 约 10s(未计入步骤,从日志时间戳估算) |
+
+annotate 内部各工具累计(同一条记录):
+| 工具 | 调用 | 累计耗时 |
+|---|---|---|
+| blastx | 13 次(逐基因,串行) | 26.3s |
+| cmsearch | 3 次 | 14.4s |
+| cmalign | 22 次 | 10.2s(每次 0.1 到 1.0s) |
+| nhmmer | 2 次 | 2.0s |
+| blastp / tblastn / aragorn | 各 1 次 | 1.9s / 1.5s / 1.9s |
+| exonerate | 47 次 | 0.6s |
+
+结论:这三个工具合计约 51s,占 annotate 的 88%。
+- blastx 对 13 个蛋白基因逐个调用,每次 0.7 到 4.3s,耗时在串行调用;可考虑合并为一次查询或并行。
+- cmsearch 3 次共 14.4s,是单次最重的工具;可考虑限制搜索范围或复用结果。
+- cmalign 22 次小调用,合并后可省启动开销。
+- 注:`[CMD]` 里 python 包装调用的 85s 是嵌套外层,不要与上表相加。
